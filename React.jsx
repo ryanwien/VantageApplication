@@ -150,7 +150,7 @@ const I18N = {
     "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "O, para reuniones creadas y gestionadas dentro de Vantage (con enlaces de acceso aquí), conecta tus propias apps OAuth abajo — consulta MEETINGS_SETUP.md. Esta es la parte que necesita credenciales .env.",
     "Backend not reachable. Start it in the project folder:": "No se puede acceder al backend. Inícialo en la carpeta del proyecto:",
     "retry": "reintentar", "create app": "crear app",
-    "connected": "conectado", "not connected": "no conectado", "not configured (.env)": "no configurado (.env)",
+    "connected": "conectado", "not connected": "no conectado", "optional — not set up": "opcional — sin configurar",
     "Sign in to connect": "Inicia sesión para conectar", "Connect": "Conectar",
     "creating…": "creando…", "New meeting": "Nueva reunión", "disconnect": "desconectar",
     "RECENT MEETINGS": "REUNIONES RECIENTES",
@@ -283,7 +283,7 @@ const I18N = {
     "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "Ou, pour des réunions créées et suivies dans Vantage (avec les liens de connexion ici), connectez vos propres applis OAuth ci-dessous — voir MEETINGS_SETUP.md. C'est la partie qui nécessite des identifiants .env.",
     "Backend not reachable. Start it in the project folder:": "Backend inaccessible. Démarrez-le dans le dossier du projet :",
     "retry": "réessayer", "create app": "créer une appli",
-    "connected": "connecté", "not connected": "non connecté", "not configured (.env)": "non configuré (.env)",
+    "connected": "connecté", "not connected": "non connecté", "optional — not set up": "optionnel — non configuré",
     "Sign in to connect": "Connectez-vous pour relier", "Connect": "Relier",
     "creating…": "création…", "New meeting": "Nouvelle réunion", "disconnect": "déconnecter",
     "RECENT MEETINGS": "RÉUNIONS RÉCENTES",
@@ -416,7 +416,7 @@ const I18N = {
     "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "Oder verbinden Sie für innerhalb von Vantage erstellte und verfolgte Meetings (mit Beitrittslinks hier) unten Ihre eigenen OAuth-Apps — siehe MEETINGS_SETUP.md. Das ist der Teil, der .env-Anmeldedaten benötigt.",
     "Backend not reachable. Start it in the project folder:": "Backend nicht erreichbar. Starten Sie es im Projektordner:",
     "retry": "erneut versuchen", "create app": "App erstellen",
-    "connected": "verbunden", "not connected": "nicht verbunden", "not configured (.env)": "nicht konfiguriert (.env)",
+    "connected": "verbunden", "not connected": "nicht verbunden", "optional — not set up": "optional — nicht eingerichtet",
     "Sign in to connect": "Zum Verbinden anmelden", "Connect": "Verbinden",
     "creating…": "wird erstellt…", "New meeting": "Neues Meeting", "disconnect": "trennen",
     "RECENT MEETINGS": "LETZTE MEETINGS",
@@ -548,7 +548,7 @@ const I18N = {
     "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "Ou, para reuniões criadas e geridas dentro do Vantage (com ligações de acesso aqui), ligue as suas próprias apps OAuth abaixo — consulte MEETINGS_SETUP.md. Esta é a parte que precisa de credenciais .env.",
     "Backend not reachable. Start it in the project folder:": "Backend inacessível. Inicie-o na pasta do projeto:",
     "retry": "tentar novamente", "create app": "criar app",
-    "connected": "ligado", "not connected": "não ligado", "not configured (.env)": "não configurado (.env)",
+    "connected": "ligado", "not connected": "não ligado", "optional — not set up": "opcional — não configurado",
     "Sign in to connect": "Inicie sessão para ligar", "Connect": "Ligar",
     "creating…": "a criar…", "New meeting": "Nova reunião", "disconnect": "desligar",
     "RECENT MEETINGS": "REUNIÕES RECENTES",
@@ -680,7 +680,7 @@ const I18N = {
     "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "Oppure, per riunioni create e gestite dentro Vantage (con i link di partecipazione qui), collega le tue app OAuth qui sotto — vedi MEETINGS_SETUP.md. Questa è la parte che richiede le credenziali .env.",
     "Backend not reachable. Start it in the project folder:": "Backend non raggiungibile. Avvialo nella cartella del progetto:",
     "retry": "riprova", "create app": "crea app",
-    "connected": "connesso", "not connected": "non connesso", "not configured (.env)": "non configurato (.env)",
+    "connected": "connesso", "not connected": "non connesso", "optional — not set up": "opzionale — non configurato",
     "Sign in to connect": "Accedi per collegare", "Connect": "Collega",
     "creating…": "creazione…", "New meeting": "Nuova riunione", "disconnect": "disconnetti",
     "RECENT MEETINGS": "RIUNIONI RECENTI",
@@ -3506,10 +3506,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       setOllamaTagErr(names.length ? "" : "no models installed — run: ollama pull llama3.1");
     } catch {
       setOllamaTags([]);
-      // Almost always CORS: Ollama only answers origins in its allow-list. Use THIS page's exact origin
-      // (localhost ≠ 127.0.0.1 to a browser), or a wildcard for the simplest setup.
-      const origin = (typeof window !== "undefined" && window.location?.origin) || "http://127.0.0.1:5173";
-      setOllamaTagErr(`can't reach Ollama — run it so this page is allowed: OLLAMA_ORIGINS=${origin} ollama serve  (or OLLAMA_ORIGINS=* to allow any). And check it's running at ${base}.`);
+      // A wildcard origin is the simplest reliable fix (localhost ≠ 127.0.0.1 to a browser, so an
+      // exact-origin allow-list often mismatches). Keep this calm — it's a setup hint, not an error.
+      setOllamaTagErr(`Ollama isn't reachable at ${base}. Start it so this page is allowed:  OLLAMA_ORIGINS=* ollama serve`);
     }
   }, [aiModels]);
   const [aiQuestion, setAiQuestion] = useState("");
@@ -8049,7 +8048,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                                 </div>
                               )}
                               {ollamaTagErr
-                                ? <div style={{ fontFamily: MONO, fontSize: 9, color: C.down, marginTop: 4, lineHeight: 1.4 }}>{ollamaTagErr}</div>
+                                ? <div style={{ fontFamily: MONO, fontSize: 9, color: C.muted, marginTop: 4, lineHeight: 1.4 }}>{ollamaTagErr}</div>
                                 : ollamaTags.length === 0 && <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginTop: 4, lineHeight: 1.4 }}>{t("Lists the models on your Ollama server — the same set as `ollama list`.")}</div>}
                             </div>
                           )}
@@ -8393,7 +8392,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   ) : (
                     [["zoom", "Zoom", "#2D8CFF", "https://marketplace.zoom.us/develop/create", "Z"], ["google", "Google Meet", "#00897B", "https://console.cloud.google.com/apis/credentials", "M"]].map(([id, name, col, setupUrl, letter]) => {
                       const st = meetStatus[id] || {};
-                      const pill = st.connected ? { fg: C.up, label: t("connected") } : st.configured ? { fg: C.muted, label: t("not connected") } : { fg: C.down, label: t("not configured (.env)") };
+                      const pill = st.connected ? { fg: C.up, label: t("connected") } : st.configured ? { fg: C.muted, label: t("not connected") } : { fg: C.faint, label: t("optional — not set up") };
                       return (
                         <div key={id} style={{ border: `1px solid ${st.connected ? C.amber : C.panelEdge}`, borderRadius: 8, padding: 14, display: "flex", flexDirection: "column", gap: 12, background: `linear-gradient(160deg, ${col}14, transparent 55%)` }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
