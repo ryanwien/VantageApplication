@@ -195,6 +195,7 @@ const I18N = {
     "Auto-fallback to a local model.": "Recurrir automáticamente a un modelo local.",
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Si los modelos de pago fallan (sin créditos, clave incorrecta, sin conexión), la mesa y los informes reintentan automáticamente con tu modelo local (Ollama o LM Studio). Configura uno abajo — establece su BASE URL e inicia el servidor local.",
     "ACTIVE": "ACTIVO", "use only this": "usar solo este", "BASE URL": "BASE URL", "MODEL": "MODELO",
+    "Run local-only (AMD / ROCm)": "Ejecutar solo en local (AMD / ROCm)", "Switch the desk to local": "Cambiar la mesa a local", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic apunta la mesa a tu modelo local de Ollama (localhost:11434) y desactiva todos los modelos en la nube — así todo el agente se ejecuta con inferencia local (p. ej. una GPU AMD Radeon con ROCm), sin claves. También se abre con ?local=1 en la URL.",
     "format:": "formato:", "e.g.": "p. ej.", "browse models": "explorar modelos",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo aún no tiene una API alojada oficial — ejecuta un puente local compatible con OpenAI y apunta la BASE URL a él.", "Lumo bridge": "puente Lumo",
     "API KEY": "CLAVE API",
@@ -326,6 +327,7 @@ const I18N = {
     "Auto-fallback to a local model.": "Bascule automatique vers un modèle local.",
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Si les modèles payants échouent (pas de crédits, mauvaise clé, hors ligne), le plateau et les rapports réessaient automatiquement avec votre modèle local (Ollama ou LM Studio). Configurez-en un ci-dessous — définissez sa BASE URL et démarrez le serveur local.",
     "ACTIVE": "ACTIF", "use only this": "utiliser seulement celui-ci", "BASE URL": "BASE URL", "MODEL": "MODÈLE",
+    "Run local-only (AMD / ROCm)": "Exécuter en local uniquement (AMD / ROCm)", "Switch the desk to local": "Basculer le plateau en local", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic pointe le plateau vers votre modèle Ollama local (localhost:11434) et désactive tous les modèles cloud — tout l'agent tourne alors en inférence locale (par ex. un GPU AMD Radeon via ROCm), sans clés. S'ouvre aussi avec ?local=1 dans l'URL.",
     "format:": "format :", "e.g.": "par ex.", "browse models": "parcourir les modèles",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo n'a pas encore d'API hébergée officielle — exécutez un pont local compatible OpenAI et faites pointer la BASE URL dessus.", "Lumo bridge": "pont Lumo",
     "API KEY": "CLÉ API",
@@ -457,6 +459,7 @@ const I18N = {
     "Auto-fallback to a local model.": "Automatischer Rückgriff auf ein lokales Modell.",
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Wenn kostenpflichtige Modelle fehlschlagen (keine Credits, falscher Schlüssel, offline), versuchen das Pult und die Berichte es automatisch erneut mit Ihrem lokalen Modell (Ollama oder LM Studio). Konfigurieren Sie unten eines — legen Sie seine BASE URL fest und starten Sie den lokalen Server.",
     "ACTIVE": "AKTIV", "use only this": "nur dieses verwenden", "BASE URL": "BASE URL", "MODEL": "MODELL",
+    "Run local-only (AMD / ROCm)": "Nur lokal ausführen (AMD / ROCm)", "Switch the desk to local": "Pult auf lokal umstellen", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Ein Klick richtet das Pult auf dein lokales Ollama-Modell (localhost:11434) und schaltet alle Cloud-Modelle ab — der gesamte Agent läuft dann mit lokaler Inferenz (z. B. einer AMD-Radeon-GPU über ROCm), ohne Schlüssel. Öffnet sich auch mit ?local=1 in der URL.",
     "format:": "Format:", "e.g.": "z. B.", "browse models": "Modelle durchsuchen",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo hat noch keine offizielle gehostete API — betreiben Sie eine lokale OpenAI-kompatible Brücke und richten Sie die BASE URL darauf aus.", "Lumo bridge": "Lumo-Brücke",
     "API KEY": "API-SCHLÜSSEL",
@@ -587,6 +590,7 @@ const I18N = {
     "Auto-fallback to a local model.": "Recorrer automaticamente a um modelo local.",
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Se os modelos pagos falharem (sem créditos, chave errada, offline), a mesa e os relatórios tentam novamente com o seu modelo local (Ollama ou LM Studio) automaticamente. Configure um abaixo — defina a BASE URL e inicie o servidor local.",
     "ACTIVE": "ATIVO", "use only this": "usar apenas este", "BASE URL": "BASE URL", "MODEL": "MODELO",
+    "Run local-only (AMD / ROCm)": "Executar apenas local (AMD / ROCm)", "Switch the desk to local": "Mudar a mesa para local", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Um clique aponta a mesa para o teu modelo local do Ollama (localhost:11434) e desliga todos os modelos na nuvem — assim todo o agente corre com inferência local (por ex. uma GPU AMD Radeon via ROCm), sem chaves. Também abre com ?local=1 no URL.",
     "format:": "formato:", "e.g.": "por ex.", "browse models": "explorar modelos",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "O Proton Lumo ainda não tem uma API alojada oficial — execute uma ponte local compatível com OpenAI e aponte a BASE URL para ela.", "Lumo bridge": "ponte Lumo",
     "API KEY": "CHAVE API",
@@ -717,6 +721,7 @@ const I18N = {
     "Auto-fallback to a local model.": "Ripiego automatico su un modello locale.",
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Se i modelli a pagamento falliscono (niente crediti, chiave errata, offline), la postazione e i rapporti riprovano automaticamente sul tuo modello locale (Ollama o LM Studio). Configurane uno qui sotto — imposta la sua BASE URL e avvia il server locale.",
     "ACTIVE": "ATTIVO", "use only this": "usa solo questo", "BASE URL": "BASE URL", "MODEL": "MODELLO",
+    "Run local-only (AMD / ROCm)": "Esegui solo in locale (AMD / ROCm)", "Switch the desk to local": "Passa la postazione a locale", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic punta la postazione al tuo modello Ollama locale (localhost:11434) e disattiva tutti i modelli cloud — così l'intero agente gira con inferenza locale (es. una GPU AMD Radeon via ROCm), senza chiavi. Si apre anche con ?local=1 nell'URL.",
     "format:": "formato:", "e.g.": "es.", "browse models": "sfoglia i modelli",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo non ha ancora un'API ospitata ufficiale — esegui un bridge locale compatibile con OpenAI e punta la BASE URL su di esso.", "Lumo bridge": "bridge Lumo",
     "API KEY": "CHIAVE API",
@@ -3362,6 +3367,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [accountMenu, setAccountMenu] = useState(false); // header account dropdown open?
   const [billingCfg, setBillingCfg] = useState(null);    // Stripe availability (Layer 3), probed on demand
   const [billingBusy, setBillingBusy] = useState("");    // plan id mid-checkout, for button state
+  const [agentPrefs, setAgentPrefs] = useState(null);     // server-stored opt-in scheduled briefing settings
+  const [agentBusy, setAgentBusy] = useState(false);
 
   // ---- developer / testing mode: bypass ALL plan gates so every premium feature is testable now ----
   // Turn on via ?dev=1 in the URL, or the toggle in settings → ACCOUNT. Persisted per-browser.
@@ -3456,6 +3463,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   useEffect(() => {
     try { window.localStorage.setItem("tape-ai-models", JSON.stringify(aiModels.map(m => ({ id: m.id, enabled: m.enabled, apiKey: m.apiKey || "", model: m.model, baseUrl: m.baseUrl })))); } catch { /* storage full/blocked */ }
   }, [aiModels]);
+  // AMD / ROCm demo shortcut: "?local=1" runs the desk on the local Ollama model only and lifts plan gates,
+  // so the whole agent runs on local (AMD Radeon) inference with no cloud keys — one URL, no manual setup.
+  useEffect(() => {
+    try {
+      if (new URLSearchParams(window.location.search).has("local")) {
+        setDevMode(true);
+        setAiModels(ms => ms.map(m => ({ ...m, enabled: m.id === "ollama" })));
+      }
+    } catch { /* ignore */ }
+  }, []);
   const [anthropicApiKey, setAnthropicApiKey] = useState(() =>
     (typeof window !== "undefined" && window.localStorage.getItem("tape-anthropic-key")) || "");
   useEffect(() => {
@@ -5114,7 +5131,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     }
     // returning from Stripe Checkout (Layer 3): confirm the new plan and show the ACCOUNT tab
     const checkout = u.searchParams.get("checkout"), boughtPlan = u.searchParams.get("plan");
-    if (checkout === "success" && boughtPlan) { onChangePlan?.(boughtPlan); setSettingsTab("account"); setShowSettings(true); }
+    if (checkout === "success" && boughtPlan) {
+      // A verified Stripe webhook, never this query parameter, grants a paid plan.
+      fetch("/api/auth/me", { headers: authHdr }).then(r => r.ok ? r.json() : null).then(a => { if (a) onChangePlan?.(a.plan); });
+      setSettingsTab("account"); setShowSettings(true);
+    }
     if (checkout) { u.searchParams.delete("checkout"); u.searchParams.delete("plan"); window.history.replaceState({}, "", u.toString()); }
   }, [refreshMeetStatus, onChangePlan]);
   // load provider status whenever the Meetings tab is opened
@@ -5131,6 +5152,24 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     return () => { ok = false; };
   }, [showSettings, settingsTab, billingCfg]);
 
+  useEffect(() => {
+    if (!showSettings || settingsTab !== "account" || !account?.backend || !account?.token) return;
+    let active = true;
+    fetch("/api/agent/preferences", { headers: authHdr }).then(r => r.ok ? r.json() : null).then(j => active && setAgentPrefs(j)).catch(() => active && setAgentPrefs(null));
+    return () => { active = false; };
+  }, [showSettings, settingsTab, account?.backend, account?.token, authHdr]);
+
+  const saveAgentPrefs = async (enabled) => {
+    if (!account?.backend || !account?.token) return;
+    setAgentBusy(true);
+    try {
+      const r = await fetch("/api/agent/preferences", { method: "POST", headers: { "Content-Type": "application/json", ...authHdr }, body: JSON.stringify({ enabled, symbols: watchlist }) });
+      const j = await r.json(); if (!r.ok) throw new Error(j.error || "Could not save agent settings");
+      setAgentPrefs(j);
+    } catch (e) { setCmdMsg(`Market brief agent: ${e.message || e}`); }
+    finally { setAgentBusy(false); }
+  };
+
   // ---- change plan. Free/downgrade is instant & local. A paid upgrade with Stripe
   // configured opens Stripe Checkout in this tab; without Stripe it's a simulated unlock. ----
   const startPlanChange = async (planId) => {
@@ -5145,7 +5184,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         const j = await r.json();
         if (r.ok && j.url) { window.location.href = j.url; return; } // hand off to Stripe's page
         throw new Error(j.error || "Checkout unavailable");
-      } catch { /* fall through to simulated unlock so the demo still works */ }
+      } catch (e) { setCmdMsg(`Checkout unavailable: ${e.message || e}`); return; }
       finally { setBillingBusy(""); }
     }
     onChangePlan?.(planId); // simulated / local plan switch
@@ -6086,6 +6125,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     const prompt = buildPrompt(q);
     // plan-gated: the AI desk needs Pro Desk. Treat all models as disabled below the required plan.
     if (!planAllows("ai")) { setCmdMsg(`AI desk answers are a ${planFor("ai")} feature — upgrade in settings → ACCOUNT.`); return; }
+    const hostedAi = !!(account?.backend && account?.token);
+    if (hostedAi) {
+      completeMission("ask");
+      setAiResponses(p => (p.nav ? { nav: p.nav } : {}));
+      const t0 = performance.now();
+      setResp("desk", { status: "running", text: "", ms: null, via: "Vantage hosted AI", model: "Gemini on Vertex AI", tried: [] });
+      fetch("/api/ai/brief", {
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${account.token}` },
+        body: JSON.stringify({ prompt }),
+      }).then(async r => {
+        const j = await r.json(); if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+        setResp("desk", { status: "done", text: j.text, ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", model: j.model || "Gemini", tried: [] });
+        if (autoSpeak && j.text) speak("desk", j.text);
+      }).catch(e => setResp("desk", { status: "error", text: String(e.message || e), ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", tried: [] }));
+      return;
+    }
     const enabled = aiModels.filter(m => m.enabled);
     if (enabled.length === 0) { setCmdMsg("Enable at least one model in the AI desk config"); return; }
     completeMission("ask");
@@ -7889,6 +7944,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       {lockChip("ai")} {t("AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).").replace("{plan}", planFor("ai"))}
                     </div>
                   )}
+                  {/* AMD / ROCm one-click: run the whole agent on the local Ollama model, no cloud keys */}
+                  <div style={{ border: `1px solid ${C.amber}`, borderRadius: 6, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: C.amber }}>⚡ {t("Run local-only (AMD / ROCm)")}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, lineHeight: 1.6 }}>
+                      {t("One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.")}
+                    </span>
+                    <button onClick={() => { setDevMode(true); soloModel("ollama"); }}
+                      style={{ alignSelf: "flex-start", background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 14px", cursor: "pointer" }}>
+                      {t("Switch the desk to local")}
+                    </button>
+                  </div>
                   <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.muted, background: "rgba(255,179,0,0.06)", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "8px 10px" }}>
                     <b style={{ color: C.text }}>{enabledCount > 1 ? t("{n} models enabled").replace("{n}", enabledCount) : t("One model at a time")}.</b>{" "}
                     {lang === "en"
@@ -8356,6 +8422,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         <div style={{ fontFamily: MONO, fontSize: 10, color: C.up, marginTop: 3 }}>{account.backend ? t("secured on server") : t("stored on this device")}</div>
                       </div>
                     </div>
+
+                    {account.backend && (
+                      <div style={{ border: `1px solid ${agentPrefs?.enabled ? C.amber : C.panelEdge}`, borderRadius: 8, padding: 12, background: agentPrefs?.enabled ? "rgba(255,179,0,0.05)" : "transparent" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                          <div>
+                            <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", color: C.amber }}>AI MARKET-BRIEF AGENT</div>
+                            <div style={{ marginTop: 5, fontFamily: MONO, fontSize: 10, lineHeight: 1.55, color: C.muted }}>Runs daily on your current watchlist, stores a factual brief, and never trades or makes recommendations.</div>
+                          </div>
+                          <button onClick={() => saveAgentPrefs(!agentPrefs?.enabled)} disabled={agentBusy || !agentPrefs}
+                            style={{ background: agentPrefs?.enabled ? "transparent" : C.amber, color: agentPrefs?.enabled ? C.amber : "#0B0E14", border: agentPrefs?.enabled ? `1px solid ${C.amber}` : "none", borderRadius: 4, fontFamily: MONO, fontSize: 10, fontWeight: 700, padding: "6px 10px", cursor: agentBusy ? "default" : "pointer", opacity: agentBusy || !agentPrefs ? 0.6 : 1, whiteSpace: "nowrap" }}>
+                            {agentBusy ? "…" : agentPrefs?.enabled ? "PAUSE" : "ENABLE"}
+                          </button>
+                        </div>
+                        {agentPrefs?.enabled && <div style={{ marginTop: 8, fontFamily: MONO, fontSize: 9, color: C.faint }}>Watching: {agentPrefs.symbols?.join(" · ") || "no symbols"}</div>}
+                      </div>
+                    )}
 
                     {/* plan chooser */}
                     <div>
