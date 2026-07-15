@@ -197,6 +197,7 @@ const I18N = {
     "ACTIVE": "ACTIVO", "use only this": "usar solo este", "BASE URL": "BASE URL", "MODEL": "MODELO",
     "Run local-only (AMD / ROCm)": "Ejecutar solo en local (AMD / ROCm)", "Switch the desk to local": "Cambiar la mesa a local", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic apunta la mesa a tu modelo local de Ollama (localhost:11434) y desactiva todos los modelos en la nube — así todo el agente se ejecuta con inferencia local (p. ej. una GPU AMD Radeon con ROCm), sin claves. También se abre con ?local=1 en la URL.",
     "format:": "formato:", "e.g.": "p. ej.", "browse models": "explorar modelos",
+    "detect installed models": "detectar modelos instalados", "Lists the models on your Ollama server — the same set as `ollama list`.": "Lista los modelos en tu servidor Ollama — el mismo conjunto que `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo aún no tiene una API alojada oficial — ejecuta un puente local compatible con OpenAI y apunta la BASE URL a él.", "Lumo bridge": "puente Lumo",
     "API KEY": "CLAVE API",
     "Local endpoints need CORS enabled to accept requests from this page:": "Los endpoints locales necesitan CORS activado para aceptar solicitudes desde esta página:",
@@ -329,6 +330,7 @@ const I18N = {
     "ACTIVE": "ACTIF", "use only this": "utiliser seulement celui-ci", "BASE URL": "BASE URL", "MODEL": "MODÈLE",
     "Run local-only (AMD / ROCm)": "Exécuter en local uniquement (AMD / ROCm)", "Switch the desk to local": "Basculer le plateau en local", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic pointe le plateau vers votre modèle Ollama local (localhost:11434) et désactive tous les modèles cloud — tout l'agent tourne alors en inférence locale (par ex. un GPU AMD Radeon via ROCm), sans clés. S'ouvre aussi avec ?local=1 dans l'URL.",
     "format:": "format :", "e.g.": "par ex.", "browse models": "parcourir les modèles",
+    "detect installed models": "détecter les modèles installés", "Lists the models on your Ollama server — the same set as `ollama list`.": "Liste les modèles sur votre serveur Ollama — le même ensemble que `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo n'a pas encore d'API hébergée officielle — exécutez un pont local compatible OpenAI et faites pointer la BASE URL dessus.", "Lumo bridge": "pont Lumo",
     "API KEY": "CLÉ API",
     "Local endpoints need CORS enabled to accept requests from this page:": "Les points de terminaison locaux ont besoin de CORS activé pour accepter les requêtes de cette page :",
@@ -461,6 +463,7 @@ const I18N = {
     "ACTIVE": "AKTIV", "use only this": "nur dieses verwenden", "BASE URL": "BASE URL", "MODEL": "MODELL",
     "Run local-only (AMD / ROCm)": "Nur lokal ausführen (AMD / ROCm)", "Switch the desk to local": "Pult auf lokal umstellen", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Ein Klick richtet das Pult auf dein lokales Ollama-Modell (localhost:11434) und schaltet alle Cloud-Modelle ab — der gesamte Agent läuft dann mit lokaler Inferenz (z. B. einer AMD-Radeon-GPU über ROCm), ohne Schlüssel. Öffnet sich auch mit ?local=1 in der URL.",
     "format:": "Format:", "e.g.": "z. B.", "browse models": "Modelle durchsuchen",
+    "detect installed models": "installierte Modelle erkennen", "Lists the models on your Ollama server — the same set as `ollama list`.": "Listet die Modelle auf deinem Ollama-Server — dieselbe Menge wie `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo hat noch keine offizielle gehostete API — betreiben Sie eine lokale OpenAI-kompatible Brücke und richten Sie die BASE URL darauf aus.", "Lumo bridge": "Lumo-Brücke",
     "API KEY": "API-SCHLÜSSEL",
     "Local endpoints need CORS enabled to accept requests from this page:": "Lokale Endpunkte benötigen aktiviertes CORS, um Anfragen von dieser Seite zu akzeptieren:",
@@ -592,6 +595,7 @@ const I18N = {
     "ACTIVE": "ATIVO", "use only this": "usar apenas este", "BASE URL": "BASE URL", "MODEL": "MODELO",
     "Run local-only (AMD / ROCm)": "Executar apenas local (AMD / ROCm)", "Switch the desk to local": "Mudar a mesa para local", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Um clique aponta a mesa para o teu modelo local do Ollama (localhost:11434) e desliga todos os modelos na nuvem — assim todo o agente corre com inferência local (por ex. uma GPU AMD Radeon via ROCm), sem chaves. Também abre com ?local=1 no URL.",
     "format:": "formato:", "e.g.": "por ex.", "browse models": "explorar modelos",
+    "detect installed models": "detetar modelos instalados", "Lists the models on your Ollama server — the same set as `ollama list`.": "Lista os modelos no teu servidor Ollama — o mesmo conjunto que `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "O Proton Lumo ainda não tem uma API alojada oficial — execute uma ponte local compatível com OpenAI e aponte a BASE URL para ela.", "Lumo bridge": "ponte Lumo",
     "API KEY": "CHAVE API",
     "Local endpoints need CORS enabled to accept requests from this page:": "Os endpoints locais precisam de CORS ativado para aceitar pedidos desta página:",
@@ -723,6 +727,7 @@ const I18N = {
     "ACTIVE": "ATTIVO", "use only this": "usa solo questo", "BASE URL": "BASE URL", "MODEL": "MODELLO",
     "Run local-only (AMD / ROCm)": "Esegui solo in locale (AMD / ROCm)", "Switch the desk to local": "Passa la postazione a locale", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic punta la postazione al tuo modello Ollama locale (localhost:11434) e disattiva tutti i modelli cloud — così l'intero agente gira con inferenza locale (es. una GPU AMD Radeon via ROCm), senza chiavi. Si apre anche con ?local=1 nell'URL.",
     "format:": "formato:", "e.g.": "es.", "browse models": "sfoglia i modelli",
+    "detect installed models": "rileva i modelli installati", "Lists the models on your Ollama server — the same set as `ollama list`.": "Elenca i modelli sul tuo server Ollama — lo stesso insieme di `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo non ha ancora un'API ospitata ufficiale — esegui un bridge locale compatibile con OpenAI e punta la BASE URL su di esso.", "Lumo bridge": "bridge Lumo",
     "API KEY": "CHIAVE API",
     "Local endpoints need CORS enabled to accept requests from this page:": "Gli endpoint locali necessitano di CORS abilitato per accettare richieste da questa pagina:",
@@ -3439,15 +3444,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // ---- AI desk ----
   // OpenRouter is the primary model (first in the cascade + enabled by default); Claude is off by default.
   const AI_MODELS_DEFAULT = [
-    { id: "openrouter", label: "OpenRouter", kind: "openai", baseUrl: "https://openrouter.ai/api/v1", model: "openai/gpt-4o-mini", apiKey: "", needsKey: true, enabled: true },
-    { id: "claude", label: "Claude", kind: "claude", baseUrl: "https://api.anthropic.com/v1", model: "claude-sonnet-4-5", apiKey: "", needsKey: true, enabled: false },
-    { id: "openai", label: "OpenAI", kind: "openai", baseUrl: "https://api.openai.com/v1", model: "gpt-4o-mini", apiKey: "", needsKey: true, enabled: false },
-    { id: "gemini", label: "Gemini", kind: "gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta", model: "gemini-2.0-flash", apiKey: "", needsKey: true, enabled: false },
+    // local models lead — they run on your own hardware (incl. an AMD Radeon GPU via ROCm), no key
     { id: "ollama", label: "Ollama (local)", kind: "ollama", baseUrl: "http://localhost:11434", model: "llama3.1", enabled: false },
     { id: "lmstudio", label: "LM Studio (local)", kind: "openai", baseUrl: "http://localhost:1234/v1", model: "local-model", enabled: false },
     // Proton Lumo — privacy-first AI. No official hosted API yet, so this points at a local
     // OpenAI-compatible bridge (proton-cli / pyLumo); localhost baseUrl ⇒ treated as key-less like Ollama.
-    { id: "proton", label: "Proton (Lumo)", kind: "openai", baseUrl: "http://localhost:8080/v1", model: "lumo", enabled: false },
+    { id: "proton", label: "Proton (Lumo, local)", kind: "openai", baseUrl: "http://localhost:8080/v1", model: "lumo", enabled: false },
+    // cloud models — OpenRouter stays the default-enabled primary for accounts that use hosted AI
+    { id: "openrouter", label: "OpenRouter", kind: "openai", baseUrl: "https://openrouter.ai/api/v1", model: "openai/gpt-4o-mini", apiKey: "", needsKey: true, enabled: true },
+    { id: "claude", label: "Claude", kind: "claude", baseUrl: "https://api.anthropic.com/v1", model: "claude-sonnet-4-5", apiKey: "", needsKey: true, enabled: false },
+    { id: "openai", label: "OpenAI", kind: "openai", baseUrl: "https://api.openai.com/v1", model: "gpt-4o-mini", apiKey: "", needsKey: true, enabled: false },
+    { id: "gemini", label: "Gemini", kind: "gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta", model: "gemini-2.0-flash", apiKey: "", needsKey: true, enabled: false },
   ];
   const [aiModels, setAiModels] = useState(() => {
     // restore saved per-model config (enabled, apiKey, model, baseUrl) so keys survive refreshes
@@ -3483,6 +3490,25 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [fallbackLocal, setFallbackLocal] = useState(() =>
     (typeof window === "undefined") ? true : window.localStorage.getItem("tape-fallback-local") !== "off");
   useEffect(() => { window.localStorage?.setItem?.("tape-fallback-local", fallbackLocal ? "on" : "off"); }, [fallbackLocal]);
+  // detect the models installed on the local Ollama server (same list as `ollama list`) so the user
+  // can pick one instead of typing an id that might not be pulled.
+  const [ollamaTags, setOllamaTags] = useState([]);
+  const [ollamaTagErr, setOllamaTagErr] = useState("");
+  const detectOllama = useCallback(async () => {
+    const om = aiModels.find(m => m.id === "ollama");
+    const base = (om?.baseUrl || "http://localhost:11434").replace(/\/$/, "");
+    try {
+      const r = await fetch(`${base}/api/tags`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const j = await r.json();
+      const names = (j.models || []).map(m => m.name).filter(Boolean);
+      setOllamaTags(names);
+      setOllamaTagErr(names.length ? "" : "no models installed — run: ollama pull llama3.1");
+    } catch {
+      setOllamaTags([]);
+      setOllamaTagErr("can't reach Ollama — start it: OLLAMA_ORIGINS=http://127.0.0.1:5173 ollama serve");
+    }
+  }, [aiModels]);
   const [aiQuestion, setAiQuestion] = useState("");
   const [aiResponses, setAiResponses] = useState({}); // id -> {status:'idle'|'running'|'done'|'error', text, ms}
   const [lastAsked, setLastAsked] = useState("");
@@ -8005,6 +8031,23 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                             <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginTop: 3, lineHeight: 1.4 }}>
                               {t("Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.")}{" "}
                               <a href="https://github.com/carlostkd/Lumo-Api" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("Lumo bridge")} ↗</a>
+                            </div>
+                          )}
+                          {mm.id === "ollama" && (
+                            <div style={{ marginTop: 4 }}>
+                              <button type="button" onClick={detectOllama}
+                                style={{ background: "transparent", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 9, padding: "4px 8px", cursor: "pointer" }}>↻ {t("detect installed models")}</button>
+                              {ollamaTags.length > 0 && (
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
+                                  {ollamaTags.map(name => (
+                                    <button key={name} type="button" onClick={() => updateModel("ollama", { model: name })}
+                                      style={{ background: mm.model === name ? "rgba(255,179,0,0.18)" : "#0D121C", border: `1px solid ${mm.model === name ? C.amber : C.panelEdge}`, color: mm.model === name ? C.amber : C.muted, borderRadius: 999, fontFamily: MONO, fontSize: 9, padding: "3px 8px", cursor: "pointer" }}>{name}</button>
+                                  ))}
+                                </div>
+                              )}
+                              {ollamaTagErr
+                                ? <div style={{ fontFamily: MONO, fontSize: 9, color: C.down, marginTop: 4, lineHeight: 1.4 }}>{ollamaTagErr}</div>
+                                : ollamaTags.length === 0 && <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginTop: 4, lineHeight: 1.4 }}>{t("Lists the models on your Ollama server — the same set as `ollama list`.")}</div>}
                             </div>
                           )}
                         </div>
