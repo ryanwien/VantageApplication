@@ -3518,9 +3518,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }, [live]);
 
   // ---- live polling ----
+  const liveStaleRef = useRef(false); // true when the market's closed (last trade is old) → poll far less
   const pollLive = useCallback(async () => {
-    if (!live) return;
+    if (!live) return false;
     const syms = [...new Set([selected, ...watchlist])];
+    let hit429 = false;
     for (const s of syms) {
       try {
         const q = await fetchQuote(s, apiKey);
@@ -3541,17 +3543,28 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           setWatchlist(w => w.filter(x => x !== s));
           setSelected(sel => (sel === s ? (watchlist.find(x => x !== s) || "SPY") : sel));
         }
-        if (e.status === 429) { setLiveErr("live feed rate-limited (HTTP 429) — backing off. Use your own Finnhub key in settings → DATA for higher limits."); break; } // stop hammering this cycle
+        if (e.status === 429) { setLiveErr("live feed rate-limited (HTTP 429) — backing off. Use your own Finnhub key in settings → DATA for higher limits."); hit429 = true; break; } // stop hammering this cycle
       }
       await new Promise(r => setTimeout(r, 1100)); // ~1 req/sec keeps the free tier under its limit
     }
+    return hit429;
   }, [live, apiKey, watchlist, selected]);
 
+  // Self-scheduling poll: exponential backoff on 429 (the shared demo key is easily rate-limited),
+  // plus a much slower cadence when the market is closed — quotes aren't moving, so don't burn the quota.
   useEffect(() => {
     if (!live) return;
-    pollLive();
-    const id = setInterval(pollLive, 15000);
-    return () => clearInterval(id);
+    let stopped = false, timer;
+    let backoff = 1;
+    const run = async () => {
+      if (stopped) return;
+      const hit429 = await pollLive();
+      backoff = hit429 ? Math.min(backoff * 2, 8) : 1;
+      const base = liveStaleRef.current ? 60000 : 15000;
+      timer = setTimeout(run, Math.min(base * backoff, 5 * 60 * 1000));
+    };
+    run();
+    return () => { stopped = true; clearTimeout(timer); };
   }, [live, pollLive]);
 
   // ---- unified view of a symbol ----
@@ -3581,6 +3594,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     const asOf = q.t * 1000;
     return (Date.now() - asOf) > 5 * 60 * 1000 ? new Date(asOf) : null;
   }, [live, liveQuotes, selected]);
+  useEffect(() => { liveStaleRef.current = !!liveStale; }, [liveStale]);
 
   // ---- panel visibility ----
   const [panels, setPanels] = useState({ tape: true, watchlist: true, movers: true, news: true, calendar: true, portfolio: true });
@@ -7921,27 +7935,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     </div>
                   </div>
 
-                  <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.panelEdge}` }}>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("DAILY BRIEF")} <span style={{ color: C.faint }}>{t("(auto-download while the app is open)")}</span></label>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontFamily: MONO, fontSize: 11, color: C.muted }}>{t("at")}</span>
-                      <input type="time" value={briefTime} onChange={e => setBriefTime(e.target.value)}
-                        style={{ background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px" }} />
-                      <select value={briefFormat} onChange={e => setBriefFormat(e.target.value)}
-                        style={{ background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px" }}>
-                        <option value="pptx">PowerPoint</option>
-                        <option value="docx">Word</option>
-                        <option value="xlsx">Excel</option>
-                      </select>
-                      {briefTime && <button onClick={() => setBriefTime("")} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 10px", cursor: "pointer" }}>{t("off")}</button>}
-                      <button onClick={runDailyBrief} style={{ background: "transparent", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 10px", cursor: "pointer" }}>{t("run now")}</button>
-                    </div>
-                    <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
-                      {briefTime
-                        ? t("Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.").replace("{time}", to12h(briefTime)).replace("{sym}", selected).replace("{fmt}", briefFormat.toUpperCase())
-                        : t("Set a time to auto-generate and download a branded report each day. Leave blank to disable.")}
-                    </div>
-                  </div>
                 </>
               )}
 
