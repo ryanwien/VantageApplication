@@ -108,7 +108,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Escribe un símbolo y pulsa Enter  ·  HELP para comandos",
     "OPEN": "ABIERTO", "CLOSED": "CERRADO",
     "standing by": "en espera",
-    "voice & anchor settings": "ajustes de voz y presentador",
+    "voice & anchor settings": "ajustes de voz y presentador", "SET": "SET", "stop reading": "detener lectura",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Haz una pregunta abajo — las respuestas aparecen aquí, y el presentador puede leerlas en directo.",
     "ASK ALL": "PREGUNTAR A TODOS",
     "WATCHLIST": "LISTA DE SEGUIMIENTO", "TOP MOVERS": "MAYORES MOVIMIENTOS", "full chart": "gráfico completo",
@@ -174,7 +174,7 @@ const I18N = {
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "EN DIRECTO",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "El modo demo ejecuta un motor de mercado de paseo aleatorio con semilla — una sesión simulada reproducible, sin clave ni red.",
     "FINNHUB API KEY (free tier works)": "CLAVE API DE FINNHUB (el plan gratuito funciona)", "paste key": "pega la clave",
-    "Key is held in memory only — never stored or sent anywhere except finnhub.io.": "La clave se guarda solo en memoria — nunca se almacena ni se envía a ningún sitio salvo a finnhub.io.",
+    "Key is saved on this device and sent only to finnhub.io.": "La clave se guarda en este dispositivo y solo se envía a finnhub.io.",
     "get a free key": "obtener una clave gratis",
     "YOUTUBE DATA API KEY": "CLAVE API DE YOUTUBE DATA", "(optional — real, playable video results)": "(opcional — resultados de vídeo reales y reproducibles)",
     "paste key (AIza…)": "pega la clave (AIza…)", "needs": "requiere",
@@ -238,7 +238,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Saisissez un symbole et appuyez sur Entrée  ·  HELP pour les commandes",
     "OPEN": "OUVERT", "CLOSED": "FERMÉ",
     "standing by": "en attente",
-    "voice & anchor settings": "réglages voix et présentateur",
+    "voice & anchor settings": "réglages voix et présentateur", "SET": "DÉCOR", "stop reading": "arrêter la lecture",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Posez une question ci-dessous — les réponses apparaissent ici, et le présentateur peut les lire à l'antenne.",
     "ASK ALL": "TOUT DEMANDER",
     "WATCHLIST": "LISTE DE SUIVI", "TOP MOVERS": "PLUS FORTES VARIATIONS", "full chart": "graphique complet",
@@ -304,7 +304,7 @@ const I18N = {
     "replay tutorial": "revoir le tutoriel", "DEMO": "DÉMO", "LIVE": "EN DIRECT",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "Le mode démo utilise un moteur de marché à marche aléatoire avec graine — une séance simulée reproductible, sans clé ni réseau.",
     "FINNHUB API KEY (free tier works)": "CLÉ API FINNHUB (l'offre gratuite suffit)", "paste key": "collez la clé",
-    "Key is held in memory only — never stored or sent anywhere except finnhub.io.": "La clé reste uniquement en mémoire — jamais stockée ni envoyée ailleurs que sur finnhub.io.",
+    "Key is saved on this device and sent only to finnhub.io.": "La clé est enregistrée sur cet appareil et envoyée uniquement à finnhub.io.",
     "get a free key": "obtenir une clé gratuite",
     "YOUTUBE DATA API KEY": "CLÉ API YOUTUBE DATA", "(optional — real, playable video results)": "(optionnel — résultats vidéo réels et lisibles)",
     "paste key (AIza…)": "collez la clé (AIza…)", "needs": "nécessite",
@@ -368,7 +368,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Symbol eingeben und Enter drücken  ·  HELP für Befehle",
     "OPEN": "OFFEN", "CLOSED": "GESCHLOSSEN",
     "standing by": "bereit",
-    "voice & anchor settings": "Stimme & Moderator-Einstellungen",
+    "voice & anchor settings": "Stimme & Moderator-Einstellungen", "SET": "KULISSE", "stop reading": "Vorlesen stoppen",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Stellen Sie unten eine Frage — Antworten erscheinen hier, und der Moderator kann jede davon vorlesen.",
     "ASK ALL": "ALLE FRAGEN",
     "WATCHLIST": "BEOBACHTUNGSLISTE", "TOP MOVERS": "GRÖSSTE BEWEGUNGEN", "full chart": "vollständiges Diagramm",
@@ -434,7 +434,7 @@ const I18N = {
     "replay tutorial": "Tutorial wiederholen", "DEMO": "DEMO", "LIVE": "LIVE",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "Der Demo-Modus nutzt eine Random-Walk-Markt-Engine mit festem Startwert — eine reproduzierbare simulierte Sitzung, ohne Schlüssel oder Netzwerk.",
     "FINNHUB API KEY (free tier works)": "FINNHUB-API-SCHLÜSSEL (kostenlose Stufe genügt)", "paste key": "Schlüssel einfügen",
-    "Key is held in memory only — never stored or sent anywhere except finnhub.io.": "Der Schlüssel bleibt nur im Speicher — wird nie gespeichert oder irgendwohin außer an finnhub.io gesendet.",
+    "Key is saved on this device and sent only to finnhub.io.": "Der Schlüssel wird auf diesem Gerät gespeichert und nur an finnhub.io gesendet.",
     "get a free key": "kostenlosen Schlüssel holen",
     "YOUTUBE DATA API KEY": "YOUTUBE-DATA-API-SCHLÜSSEL", "(optional — real, playable video results)": "(optional — echte, abspielbare Videoergebnisse)",
     "paste key (AIza…)": "Schlüssel einfügen (AIza…)", "needs": "erfordert",
@@ -498,7 +498,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Escreva um símbolo e prima Enter  ·  HELP para comandos",
     "OPEN": "ABERTO", "CLOSED": "FECHADO",
     "standing by": "em espera",
-    "voice & anchor settings": "definições de voz e apresentador",
+    "voice & anchor settings": "definições de voz e apresentador", "SET": "CENÁRIO", "stop reading": "parar leitura",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Faça uma pergunta abaixo — as respostas aparecem aqui, e o apresentador pode lê-las ao vivo.",
     "ASK ALL": "PERGUNTAR A TODOS",
     "WATCHLIST": "LISTA DE ACOMPANHAMENTO", "TOP MOVERS": "MAIORES VARIAÇÕES", "full chart": "gráfico completo",
@@ -563,7 +563,7 @@ const I18N = {
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "AO VIVO",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "O modo demo usa um motor de mercado de passeio aleatório com semente — uma sessão simulada reproduzível, sem chave nem rede.",
     "FINNHUB API KEY (free tier works)": "CHAVE API FINNHUB (o plano gratuito funciona)", "paste key": "cole a chave",
-    "Key is held in memory only — never stored or sent anywhere except finnhub.io.": "A chave fica apenas na memória — nunca é armazenada nem enviada para outro lugar além de finnhub.io.",
+    "Key is saved on this device and sent only to finnhub.io.": "A chave é guardada neste dispositivo e enviada apenas para finnhub.io.",
     "get a free key": "obter uma chave gratuita",
     "YOUTUBE DATA API KEY": "CHAVE API YOUTUBE DATA", "(optional — real, playable video results)": "(opcional — resultados de vídeo reais e reproduzíveis)",
     "paste key (AIza…)": "cole a chave (AIza…)", "needs": "requer",
@@ -627,7 +627,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Digita un simbolo e premi Invio  ·  HELP per i comandi",
     "OPEN": "APERTO", "CLOSED": "CHIUSO",
     "standing by": "in attesa",
-    "voice & anchor settings": "impostazioni voce e conduttore",
+    "voice & anchor settings": "impostazioni voce e conduttore", "SET": "SET", "stop reading": "ferma lettura",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Fai una domanda qui sotto — le risposte appaiono qui, e il conduttore può leggerle in diretta.",
     "ASK ALL": "CHIEDI A TUTTI",
     "WATCHLIST": "LISTA DI OSSERVAZIONE", "TOP MOVERS": "MAGGIORI VARIAZIONI", "full chart": "grafico completo",
@@ -692,7 +692,7 @@ const I18N = {
     "replay tutorial": "rivedi il tutorial", "DEMO": "DEMO", "LIVE": "IN DIRETTA",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "La modalità demo usa un motore di mercato a passeggiata casuale con seme — una sessione simulata riproducibile, senza chiave né rete.",
     "FINNHUB API KEY (free tier works)": "CHIAVE API FINNHUB (il piano gratuito funziona)", "paste key": "incolla la chiave",
-    "Key is held in memory only — never stored or sent anywhere except finnhub.io.": "La chiave resta solo in memoria — mai memorizzata né inviata altrove se non a finnhub.io.",
+    "Key is saved on this device and sent only to finnhub.io.": "La chiave viene salvata su questo dispositivo e inviata solo a finnhub.io.",
     "get a free key": "ottieni una chiave gratuita",
     "YOUTUBE DATA API KEY": "CHIAVE API YOUTUBE DATA", "(optional — real, playable video results)": "(opzionale — risultati video reali e riproducibili)",
     "paste key (AIza…)": "incolla la chiave (AIza…)", "needs": "richiede",
@@ -936,11 +936,17 @@ const CHARACTERS = [
   { id: "marina", name: "Marina", skin: "#E8C39E", hairColor: "#1FA9A0", hair: "long", suit: "#186A72", shirt: "#2FD3C6", tieBase: false, earrings: true, hat: "mermaid" },
   { id: "aurora", name: "Aurora", skin: "#E8C6A8", hairColor: "#6B3B1F", hair: "long", suit: "#7A2E5A", shirt: "#E9A8C8", tieBase: false, earrings: true, hat: "crown" },
   { id: "diana", name: "Diana", skin: "#C68863", hairColor: "#1A1512", hair: "long", suit: "#2E5A3A", shirt: "#C9A24B", tieBase: false, earrings: true, hat: "amazon" },
+  // genre anchors — each genre has a male + female option so the roster stays gender-balanced
   { id: "blaze", name: "Blaze", skin: "#C68863", hairColor: "#1A1A1A", hair: "short", suit: "#3B4A2F", shirt: "#5A6B3F", tieBase: false, hat: "action" },
+  { id: "zara", name: "Zara", skin: "#C68863", hairColor: "#1A1A1A", hair: "long", suit: "#3B4A2F", shirt: "#5A6B3F", tieBase: false, earrings: true, hat: "action" },
   { id: "kit", name: "Kit", skin: "#D9A57E", hairColor: "#4A3421", hair: "short", suit: "#6B5334", shirt: "#8A6F45", tieBase: false, hat: "explorer" },
+  { id: "sienna", name: "Sienna", skin: "#D9A57E", hairColor: "#4A3421", hair: "long", suit: "#6B5334", shirt: "#8A6F45", tieBase: false, earrings: true, hat: "explorer" },
   { id: "vesper", name: "Vesper", skin: "#CFC9CE", hairColor: "#0A0A0A", hair: "short", suit: "#14121A", shirt: "#3A0E14", tieBase: false, hat: "horror" },
+  { id: "lilith", name: "Lilith", skin: "#CFC9CE", hairColor: "#0A0A0A", hair: "long", suit: "#14121A", shirt: "#3A0E14", tieBase: false, earrings: true, hat: "horror" },
   { id: "colt", name: "Colt", skin: "#C68863", hairColor: "#3B2417", hair: "short", beard: true, suit: "#5A3A24", shirt: "#8A5A34", tieBase: false, hat: "cowboy" },
+  { id: "dakota", name: "Dakota", skin: "#D9A57E", hairColor: "#5A3A1E", hair: "long", suit: "#5A3A24", shirt: "#8A5A34", tieBase: false, earrings: true, hat: "cowboy" },
   { id: "marlowe", name: "Marlowe", skin: "#B9A9A0", hairColor: "#20201F", hair: "short", suit: "#2E2E30", shirt: "#D8D8D8", tieBase: true, hat: "noir" },
+  { id: "vivienne", name: "Vivienne", skin: "#CDB8AE", hairColor: "#20201F", hair: "long", suit: "#2E2E30", shirt: "#D8D8D8", tieBase: false, earrings: true, hat: "noir" },
 ];
 
 // all-caps words that look like tickers but aren't, for intent parsing
@@ -1015,6 +1021,7 @@ const ENVIRONMENTS = [
   { id: "horror", name: "Haunted Manor" },
   { id: "western", name: "Wild West" },
   { id: "noir", name: "Film Noir" },
+  { id: "cyber", name: "Cyber Core" },
 ];
 
 // Clock timezones the user can pick in settings. The header clock shows the chosen zone; the
@@ -1437,9 +1444,11 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
           i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
         }
         ctx.stroke(); ctx.globalAlpha = 1;
-        // station logo panel, upper left
-        ctx.fillStyle = "rgba(255,179,0,0.10)"; ctx.fillRect(10, 14, 42, 14);
-        ctx.fillStyle = C.amber; ctx.font = "700 9px monospace"; ctx.fillText("VANTAGE", 20, 24);
+        // station logo panel, upper left — size the pill to the measured text so it never overflows
+        ctx.font = "700 9px monospace";
+        const logoW = ctx.measureText("VANTAGE").width;
+        ctx.fillStyle = "rgba(255,179,0,0.10)"; ctx.fillRect(10, 14, logoW + 12, 15);
+        ctx.fillStyle = C.amber; ctx.textBaseline = "middle"; ctx.fillText("VANTAGE", 16, 22); ctx.textBaseline = "alphabetic";
         // rim lights
         ctx.fillStyle = "rgba(232,235,242,0.03)";
         ctx.fillRect(0, 0, 6, H); ctx.fillRect(W - 6, 0, 6, H);
@@ -1635,6 +1644,21 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         if (!reduced) for (let i = 0; i < 24; i++) { const rx = (i * 37 + t / 3) % W, ry = ((i * 53 + t / 2) % (H + 20)) - 10; ctx.strokeStyle = "rgba(180,190,205,0.18)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 2, ry + 8); ctx.stroke(); } // rain
         const lg = ctx.createRadialGradient(24, H - 10, 2, 24, H - 10, 60); lg.addColorStop(0, "rgba(230,220,190,0.14)"); lg.addColorStop(1, "rgba(230,220,190,0)"); // desk-lamp cone
         ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(24, H - 10, 60, 0, Math.PI * 2); ctx.fill();
+      } else if (env === "cyber") {
+        const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#05070F"); g.addColorStop(1, "#0A0616"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        const horizon = H * 0.6;
+        ctx.strokeStyle = "rgba(80,220,255,0.22)"; ctx.lineWidth = 1; // perspective neon grid floor
+        for (let i = 1; i <= 8; i++) { const y = horizon + (H - horizon) * (i / 8) * (i / 8); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+        for (let i = -6; i <= 6; i++) { ctx.beginPath(); ctx.moveTo(W / 2 + i * 6, horizon); ctx.lineTo(W / 2 + i * 40, H); ctx.stroke(); }
+        if (!reduced) for (let i = 0; i < 16; i++) { const dx = (i * 13) % W, dy = (t / 6 + i * 37) % (horizon + 20); ctx.fillStyle = `rgba(120,255,180,${0.1 + ((i + Math.floor(t / 100)) % 3 === 0 ? 0.16 : 0)})`; ctx.fillRect(dx, dy, 2, 6); } // data rain
+        const pulse = reduced ? 0.6 : 0.5 + Math.abs(Math.sin(t / 400)) * 0.5; // holographic core
+        const cg = ctx.createRadialGradient(W / 2, horizon - 20, 2, W / 2, horizon - 20, 26); cg.addColorStop(0, `rgba(120,220,255,${0.5 * pulse})`); cg.addColorStop(1, "rgba(120,220,255,0)");
+        ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(W / 2, horizon - 20, 26, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = `rgba(150,230,255,${0.5 * pulse})`; ctx.lineWidth = 1.5;
+        for (const rr of [8, 13]) { ctx.beginPath(); ctx.ellipse(W / 2, horizon - 20, rr, rr * 0.5, t / 600, 0, Math.PI * 2); ctx.stroke(); }
+        ctx.strokeStyle = "rgba(255,80,200,0.35)"; ctx.lineWidth = 1; // edge circuit traces
+        ctx.beginPath(); ctx.moveTo(6, 20); ctx.lineTo(6, 50); ctx.lineTo(22, 50); ctx.moveTo(W - 6, 30); ctx.lineTo(W - 6, 64); ctx.lineTo(W - 22, 64); ctx.stroke();
+        ctx.fillStyle = "rgba(255,80,200,0.6)"; ctx.beginPath(); ctx.arc(22, 50, 2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(W - 22, 64, 2, 0, Math.PI * 2); ctx.fill();
       }
       // dim the whole set so the anchor stays the subject
       ctx.fillStyle = "rgba(11,14,20,0.38)";
@@ -2222,7 +2246,9 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         ctx.beginPath(); ctx.ellipse(cx, hy, 34, 38, 0, 0, Math.PI * 2); ctx.fill();
 
         // a full helmet (knight/astronaut) or wizard hat covers the hair, so skip drawing it
-        const hideHair = ch.hat === "knight" || ch.hat === "astronaut" || ch.hat === "wizard" || ch.hat === "explorer" || ch.hat === "cowboy" || ch.hat === "noir" || ch.hat === "horror";
+        // brimmed / hooded hats cover short hair; long hair still falls to the shoulders beneath them
+        const brimHat = ch.hat === "knight" || ch.hat === "astronaut" || ch.hat === "wizard" || ch.hat === "explorer" || ch.hat === "cowboy" || ch.hat === "noir" || ch.hat === "horror";
+        const hideHair = brimHat && ch.hair !== "long";
         ctx.fillStyle = ch.hairColor || "#2A2118";
         if (hideHair) {
           /* hair hidden under headgear */
@@ -2442,10 +2468,13 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
           ctx.strokeStyle = tanD; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, hy - 40); ctx.lineTo(cx, hy - 22); ctx.stroke(); // dent
           ctx.fillStyle = "#3A2A18"; ctx.fillRect(cx - 26, hy - 18, 52, 5); // band
         } else if (ch.hat === "horror") {
-          // vampire: slicked hair + widow's peak + a tall standing collar behind the head
-          ctx.fillStyle = ch.hairColor || "#0A0A0A";
-          ctx.beginPath(); ctx.ellipse(cx, hy - 12, 33, 26, 0, Math.PI, 0); ctx.fill(); // slicked dome
-          ctx.beginPath(); ctx.moveTo(cx - 16, hy - 18); ctx.lineTo(cx, hy - 4); ctx.lineTo(cx + 16, hy - 18); ctx.quadraticCurveTo(cx, hy - 24, cx - 16, hy - 18); ctx.closePath(); ctx.fill(); // widow's peak
+          // vampire: a tall standing collar behind the head. Short-haired variant gets slicked
+          // hair + a widow's peak; the long-haired variant keeps its own flowing hair (drawn earlier).
+          if (ch.hair !== "long") {
+            ctx.fillStyle = ch.hairColor || "#0A0A0A";
+            ctx.beginPath(); ctx.ellipse(cx, hy - 12, 33, 26, 0, Math.PI, 0); ctx.fill(); // slicked dome
+            ctx.beginPath(); ctx.moveTo(cx - 16, hy - 18); ctx.lineTo(cx, hy - 4); ctx.lineTo(cx + 16, hy - 18); ctx.quadraticCurveTo(cx, hy - 24, cx - 16, hy - 18); ctx.closePath(); ctx.fill(); // widow's peak
+          }
           ctx.fillStyle = "#160910"; // collar wings
           for (const side of [-1, 1]) {
             ctx.beginPath(); ctx.moveTo(cx + side * 20, hy + 36);
@@ -3351,9 +3380,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     </span>
   );
 
-  const [mode, setMode] = useState("demo"); // 'demo' | 'live'
-  const [apiKey, setApiKey] = useState("d99u7s9r01qh9urlps6gd99u7s9r01qh9urlps70");
-  const [keyDraft, setKeyDraft] = useState("d99u7s9r01qh9urlps6gd99u7s9r01qh9urlps70");
+  // mode + Finnhub key persist across reloads, so choosing LIVE once sticks (no re-toggling in settings)
+  const FINNHUB_DEFAULT = "d99u7s9r01qh9urlps6gd99u7s9r01qh9urlps70";
+  const loadFinnhubKey = () => { try { return window.localStorage.getItem("tape-finnhub-key") || FINNHUB_DEFAULT; } catch { return FINNHUB_DEFAULT; } };
+  const [mode, setMode] = useState(() => { try { return window.localStorage.getItem("tape-mode") === "live" ? "live" : "demo"; } catch { return "demo"; } }); // 'demo' | 'live'
+  const [apiKey, setApiKey] = useState(loadFinnhubKey);
+  const [keyDraft, setKeyDraft] = useState(loadFinnhubKey);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState("quick");
   const [justApplied, setJustApplied] = useState(false);
@@ -3367,6 +3399,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [liveErr, setLiveErr] = useState("");
   const [liveBad, setLiveBad] = useState({});         // sym -> true when Finnhub doesn't recognize it
   const tickRef = useRef(null);
+  // remember the DEMO/LIVE choice and the Finnhub key so the app reopens where you left it
+  useEffect(() => { try { window.localStorage.setItem("tape-mode", mode); } catch { /* storage blocked */ } }, [mode]);
+  useEffect(() => { try { if (apiKey) window.localStorage.setItem("tape-finnhub-key", apiKey); else window.localStorage.removeItem("tape-finnhub-key"); } catch { /* storage blocked */ } }, [apiKey]);
 
   // any symbol works in demo mode: unknown tickers get a deterministic synthetic session
   const ensureDemoSymbol = useCallback((sym) => {
@@ -3944,6 +3979,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         case "vega": seq([1046.5, 784, 1318.5], 0.08, 0.4, 0.08, "sine"); break;                       // co-anchor: bright sparkle
         case "kwan": [659.3, 880].forEach((f, i) => tone(now + i * 0.06, f, 0.06, 0.05, "square")); tone(now + 0.14, 1108.7, 0.08, 0.4, "sine"); break; // analyst: crisp then chime
         case "moss": tone(now, 196, 0.12, 0.5, "sawtooth"); tone(now + 0.14, 293.7, 0.1, 0.55, "triangle"); break; // veteran: warm low horn
+        case "blaze": tone(now, 110, 0.13, 0.22, "sawtooth"); tone(now + 0.09, 164.8, 0.12, 0.26, "square"); tone(now + 0.19, 220, 0.11, 0.34, "sawtooth"); break;   // action: tense brass stabs
+        case "zara": tone(now, 146.8, 0.12, 0.2, "sawtooth"); tone(now + 0.09, 220, 0.11, 0.24, "square"); tone(now + 0.19, 293.7, 0.1, 0.32, "sawtooth"); break;    // action: brighter stabs
+        case "kit": seq([392, 523.3, 659.3, 784], 0.09, 0.5, 0.09, "triangle"); break;                          // adventure: heroic fanfare
+        case "sienna": seq([523.3, 659.3, 784, 1046.5], 0.09, 0.48, 0.08, "triangle"); break;                    // adventure: fanfare up an octave
+        case "vesper": tone(now, 220, 0.1, 0.6, "sine"); tone(now, 233.1, 0.07, 0.6, "sine"); tone(now + 0.2, 196, 0.09, 0.55, "sine"); break;   // horror: dissonant descent
+        case "lilith": tone(now, 277.2, 0.09, 0.6, "sine"); tone(now, 293.7, 0.06, 0.6, "sine"); tone(now + 0.2, 246.9, 0.08, 0.55, "sine"); break; // horror: higher eerie beat
+        case "colt": tone(now, 392, 0.11, 0.45, "triangle"); tone(now + 0.15, 587.3, 0.1, 0.5, "triangle"); break;  // western: lonesome fifth twang
+        case "dakota": tone(now, 523.3, 0.1, 0.42, "triangle"); tone(now + 0.15, 784, 0.09, 0.48, "triangle"); break; // western: brighter twang
+        case "marlowe": tone(now, 220, 0.09, 0.5, "sine"); tone(now + 0.12, 392, 0.08, 0.5, "sine"); tone(now + 0.24, 466.2, 0.1, 0.55, "sine"); break; // noir: smoky jazz phrase
+        case "vivienne": tone(now, 277.2, 0.08, 0.5, "sine"); tone(now + 0.12, 466.2, 0.08, 0.5, "sine"); tone(now + 0.24, 554.4, 0.1, 0.55, "sine"); break; // noir: sultry phrase
         default: tone(now, 660, 0.08, 0.09, "triangle"); tone(now + 0.1, 880, 0.09, 0.4, "triangle"); break; // sting
       }
     } catch { /* audio unavailable */ }
@@ -4350,6 +4395,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const rain = noise("highpass", 3200, 0.7, 0.14); lfo(rain.g, "gain", 0.3, 0.04, 0.14); noise("lowpass", 300, 0.6, 0.12); // rain + room floor
       drone(146.8, 0.03); drone(220, 0.02); // muted sax-ish drone
       every(5000, () => { if (Math.random() < 0.4) blip(330, 262, 0.5, 0.04, "sine"); }); // soft jazz note
+    } else if (env === "cyber") {
+      drone(60, 0.08); drone(90, 0.05); const hum = noise("bandpass", 2000, 2, 0.05); lfo(hum.g, "gain", 0.4, 0.03, 0.05); // electronic hum
+      every(1500, () => { if (Math.random() < 0.6) { const f = 400 + Math.floor(Math.random() * 6) * 150; blip(f, f * 1.5, 0.06, 0.04, "square"); } }); // data blips
     } else { // studio — soft room tone
       const rt = noise("lowpass", 350, 0.5, 0.18); lfo(rt.g, "gain", 0.1, 0.05, 0.16);
     }
@@ -6557,44 +6605,37 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     : null
                   }
                 />
-                {/* character switcher */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 6, width: 190 }}>
-                  <button
-                    onClick={() => {
-                      const i = CHARACTERS.findIndex(c => c.id === characterId);
-                      setCharacterId(CHARACTERS[(i - 1 + CHARACTERS.length) % CHARACTERS.length].id);
-                    }}
-                    aria-label="Previous anchor"
-                    style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "3px 8px", cursor: "pointer" }}>‹</button>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {CHARACTERS.map(c => (
-                      <button key={c.id} onClick={() => setCharacterId(c.id)}
-                        aria-label={`Switch anchor to ${c.name}`}
-                        title={c.name}
-                        style={{
-                          width: 8, height: 8, borderRadius: "50%", padding: 0, cursor: "pointer",
-                          border: "none",
-                          background: c.id === characterId ? C.amber : C.faint,
-                        }} />
-                    ))}
+                {/* anchor + environment pickers — dropdowns scale cleanly past a dozen options; arrows browse */}
+                <div style={{ display: "grid", gap: 6, marginTop: 8, width: 190 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <button
+                      onClick={() => { const i = CHARACTERS.findIndex(c => c.id === characterId); setCharacterId(CHARACTERS[(i - 1 + CHARACTERS.length) % CHARACTERS.length].id); }}
+                      aria-label="Previous anchor"
+                      style={{ flexShrink: 0, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 12, lineHeight: 1, padding: "5px 8px", cursor: "pointer" }}>‹</button>
+                    <select value={characterId} onChange={e => setCharacterId(e.target.value)} aria-label="Anchor"
+                      style={{ flex: 1, minWidth: 0, background: C.bg, border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, fontWeight: 600, padding: "5px 6px", cursor: "pointer" }}>
+                      {CHARACTERS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                    <button
+                      onClick={() => { const i = CHARACTERS.findIndex(c => c.id === characterId); setCharacterId(CHARACTERS[(i + 1) % CHARACTERS.length].id); }}
+                      aria-label="Next anchor"
+                      style={{ flexShrink: 0, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 12, lineHeight: 1, padding: "5px 8px", cursor: "pointer" }}>›</button>
                   </div>
-                  <button
-                    onClick={() => {
-                      const i = CHARACTERS.findIndex(c => c.id === characterId);
-                      setCharacterId(CHARACTERS[(i + 1) % CHARACTERS.length].id);
-                    }}
-                    aria-label="Next anchor"
-                    style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "3px 8px", cursor: "pointer" }}>›</button>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8, width: 190 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint, flexShrink: 0 }}>{t("SET")}</span>
+                    <select value={envId} onChange={e => setEnvId(e.target.value)} aria-label="Environment"
+                      style={{ flex: 1, minWidth: 0, background: C.bg, border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.muted, fontFamily: MONO, fontSize: 11, padding: "5px 6px", cursor: "pointer" }}>
+                      {ENVIRONMENTS.map(ev => <option key={ev.id} value={ev.id}>{ev.name}</option>)}
+                    </select>
+                  </div>
                   {speakingId ? (
                     <button onClick={stopSpeak}
-                      style={{ background: "transparent", border: `1px solid ${C.down}`, color: C.down, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 0", cursor: "pointer" }}>
-                      ■ stop reading
+                      style={{ background: "transparent", border: `1px solid ${C.down}`, color: C.down, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 0", cursor: "pointer" }}>
+                      ■ {t("stop reading")}
                     </button>
                   ) : (
                     <button onClick={() => { setKeyDraft(apiKey); setSettingsTab("anchor"); setShowSettings(true); }}
-                      style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.faint, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 0", cursor: "pointer" }}>
+                      style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.faint, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 0", cursor: "pointer" }}>
                       {t("voice & anchor settings")}
                     </button>
                   )}
@@ -7745,7 +7786,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 10px" }}
                       />
                       <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
-                        {t("Key is held in memory only — never stored or sent anywhere except finnhub.io.")}{" "}
+                        {t("Key is saved on this device and sent only to finnhub.io.")}{" "}
                         <a href="https://finnhub.io/register" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("get a free key")} ↗</a>
                       </div>
                       <TestBtn kind="finnhub" />
