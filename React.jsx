@@ -187,6 +187,19 @@ const I18N = {
     "at": "a las", "off": "desactivar", "run now": "ejecutar ahora",
     "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Cada día a las {time}, la mesa redacta un informe de analista sobre {sym} y descarga automáticamente un resumen en {fmt}. Requiere que esta pestaña esté abierta (los navegadores no pueden ejecutarlo cerrada) y una clave de Anthropic para la redacción.",
     "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Establece una hora para generar y descargar automáticamente un informe con tu marca cada día. Déjalo en blanco para desactivar.",
+    // AI tab
+    "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Las respuestas de la mesa de IA requieren {plan}. Los modelos de abajo están desactivados hasta que mejores tu plan (o actives el modo desarrollador en CUENTA).",
+    "{n} models enabled": "{n} modelos activados", "One model at a time": "Un modelo a la vez",
+    "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Usa \"solo este\" para un único modelo, o activa varios — la mesa responde en un solo cuadro, probándolos de arriba abajo y recurriendo al siguiente si uno falla (p. ej. Claude → OpenRouter).",
+    "Auto-fallback to a local model.": "Recurrir automáticamente a un modelo local.",
+    "If Claude fails (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Si Claude falla (sin créditos, clave incorrecta, sin conexión), la mesa y los informes reintentan automáticamente con tu modelo local (Ollama o LM Studio). Configura uno abajo — establece su BASE URL e inicia el servidor local.",
+    "ACTIVE": "ACTIVO", "use only this": "usar solo este", "BASE URL": "BASE URL", "MODEL": "MODELO",
+    "format:": "formato:", "e.g.": "p. ej.", "browse models": "explorar modelos",
+    "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo aún no tiene una API alojada oficial — ejecuta un puente local compatible con OpenAI y apunta la BASE URL a él.", "Lumo bridge": "puente Lumo",
+    "API KEY": "CLAVE API",
+    "Local endpoints need CORS enabled to accept requests from this page:": "Los endpoints locales necesitan CORS activado para aceptar solicitudes desde esta página:",
+    "start with": "inicia con", "or": "o", "Developer tab → enable server + turn on CORS": "pestaña Developer → activa el servidor + activa CORS",
+    "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "La ranura de LM Studio funciona con cualquier cosa que hable el formato de chat de OpenAI (llama.cpp, vLLM…).",
   },
   fr: {
     "Export": "Exporter", "More": "Plus", "Settings": "Réglages", "sign in": "se connecter",
@@ -276,6 +289,19 @@ const I18N = {
     "at": "à", "off": "désactiver", "run now": "lancer maintenant",
     "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Chaque jour à {time}, le plateau rédige un rapport d'analyste sur {sym} et télécharge automatiquement un brief en {fmt}. Nécessite que cet onglet reste ouvert (les navigateurs ne peuvent pas l'exécuter fermé) et une clé Anthropic pour la rédaction.",
     "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Définissez une heure pour générer et télécharger automatiquement un rapport à votre marque chaque jour. Laissez vide pour désactiver.",
+    // AI tab
+    "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Les réponses du plateau IA nécessitent {plan}. Les modèles ci-dessous sont désactivés jusqu'à ce que vous passiez à l'offre supérieure (ou activiez le mode développeur dans COMPTE).",
+    "{n} models enabled": "{n} modèles activés", "One model at a time": "Un modèle à la fois",
+    "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Utilisez \"only this\" pour un seul modèle, ou activez-en plusieurs — le plateau répond dans une seule fenêtre, en les essayant de haut en bas et en passant au suivant si l'un échoue (par ex. Claude → OpenRouter).",
+    "Auto-fallback to a local model.": "Bascule automatique vers un modèle local.",
+    "If Claude fails (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Si Claude échoue (pas de crédits, mauvaise clé, hors ligne), le plateau et les rapports réessaient automatiquement avec votre modèle local (Ollama ou LM Studio). Configurez-en un ci-dessous — définissez sa BASE URL et démarrez le serveur local.",
+    "ACTIVE": "ACTIF", "use only this": "utiliser seulement celui-ci", "BASE URL": "BASE URL", "MODEL": "MODÈLE",
+    "format:": "format :", "e.g.": "par ex.", "browse models": "parcourir les modèles",
+    "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo n'a pas encore d'API hébergée officielle — exécutez un pont local compatible OpenAI et faites pointer la BASE URL dessus.", "Lumo bridge": "pont Lumo",
+    "API KEY": "CLÉ API",
+    "Local endpoints need CORS enabled to accept requests from this page:": "Les points de terminaison locaux ont besoin de CORS activé pour accepter les requêtes de cette page :",
+    "start with": "démarrez avec", "or": "ou", "Developer tab → enable server + turn on CORS": "onglet Developer → activez le serveur + activez CORS",
+    "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "L'emplacement LM Studio fonctionne avec tout ce qui parle le format de chat OpenAI (llama.cpp, vLLM…).",
   },
   de: {
     "Export": "Exportieren", "More": "Mehr", "Settings": "Einstellungen", "sign in": "anmelden",
@@ -365,6 +391,19 @@ const I18N = {
     "at": "um", "off": "aus", "run now": "jetzt ausführen",
     "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Jeden Tag um {time} verfasst das Pult einen Analystenbericht zu {sym} und lädt automatisch ein {fmt}-Briefing herunter. Erfordert, dass dieser Tab geöffnet ist (Browser können es nicht geschlossen ausführen) und einen Anthropic-Schlüssel für den Text.",
     "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Legen Sie eine Uhrzeit fest, um täglich automatisch einen Bericht mit Ihrer Marke zu erstellen und herunterzuladen. Leer lassen zum Deaktivieren.",
+    // AI tab
+    "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "KI-Pult-Antworten erfordern {plan}. Die Modelle unten sind deaktiviert, bis Sie upgraden (oder den Entwicklermodus in KONTO aktivieren).",
+    "{n} models enabled": "{n} Modelle aktiviert", "One model at a time": "Ein Modell zur Zeit",
+    "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Verwenden Sie \"only this\" für ein einzelnes Modell oder aktivieren Sie mehrere — das Pult antwortet in einem Feld, probiert sie von oben nach unten durch und wechselt zum nächsten, wenn eines fehlschlägt (z. B. Claude → OpenRouter).",
+    "Auto-fallback to a local model.": "Automatischer Rückgriff auf ein lokales Modell.",
+    "If Claude fails (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Wenn Claude fehlschlägt (keine Credits, falscher Schlüssel, offline), versuchen das Pult und die Berichte es automatisch erneut mit Ihrem lokalen Modell (Ollama oder LM Studio). Konfigurieren Sie unten eines — legen Sie seine BASE URL fest und starten Sie den lokalen Server.",
+    "ACTIVE": "AKTIV", "use only this": "nur dieses verwenden", "BASE URL": "BASE URL", "MODEL": "MODELL",
+    "format:": "Format:", "e.g.": "z. B.", "browse models": "Modelle durchsuchen",
+    "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo hat noch keine offizielle gehostete API — betreiben Sie eine lokale OpenAI-kompatible Brücke und richten Sie die BASE URL darauf aus.", "Lumo bridge": "Lumo-Brücke",
+    "API KEY": "API-SCHLÜSSEL",
+    "Local endpoints need CORS enabled to accept requests from this page:": "Lokale Endpunkte benötigen aktiviertes CORS, um Anfragen von dieser Seite zu akzeptieren:",
+    "start with": "starten mit", "or": "oder", "Developer tab → enable server + turn on CORS": "Developer-Tab → Server aktivieren + CORS einschalten",
+    "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "Der LM-Studio-Slot funktioniert mit allem, das das OpenAI-Chat-Format spricht (llama.cpp, vLLM…).",
   },
   pt: {
     "Export": "Exportar", "More": "Mais", "Settings": "Definições", "sign in": "iniciar sessão",
@@ -453,6 +492,19 @@ const I18N = {
     "at": "às", "off": "desativar", "run now": "executar agora",
     "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Todos os dias às {time}, a mesa redige um relatório de analista sobre {sym} e descarrega automaticamente um resumo em {fmt}. Requer que este separador esteja aberto (os navegadores não o executam fechado) e uma chave Anthropic para a redação.",
     "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Defina uma hora para gerar e descarregar automaticamente um relatório com a sua marca todos os dias. Deixe em branco para desativar.",
+    // AI tab
+    "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "As respostas da mesa de IA requerem {plan}. Os modelos abaixo estão desativados até fazer o upgrade (ou ativar o modo programador em CONTA).",
+    "{n} models enabled": "{n} modelos ativados", "One model at a time": "Um modelo de cada vez",
+    "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Use \"only this\" para um único modelo, ou ative vários — a mesa responde numa só caixa, testando-os de cima para baixo e recorrendo ao seguinte se um falhar (por ex. Claude → OpenRouter).",
+    "Auto-fallback to a local model.": "Recorrer automaticamente a um modelo local.",
+    "If Claude fails (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Se o Claude falhar (sem créditos, chave errada, offline), a mesa e os relatórios tentam novamente com o seu modelo local (Ollama ou LM Studio) automaticamente. Configure um abaixo — defina a BASE URL e inicie o servidor local.",
+    "ACTIVE": "ATIVO", "use only this": "usar apenas este", "BASE URL": "BASE URL", "MODEL": "MODELO",
+    "format:": "formato:", "e.g.": "por ex.", "browse models": "explorar modelos",
+    "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "O Proton Lumo ainda não tem uma API alojada oficial — execute uma ponte local compatível com OpenAI e aponte a BASE URL para ela.", "Lumo bridge": "ponte Lumo",
+    "API KEY": "CHAVE API",
+    "Local endpoints need CORS enabled to accept requests from this page:": "Os endpoints locais precisam de CORS ativado para aceitar pedidos desta página:",
+    "start with": "inicie com", "or": "ou", "Developer tab → enable server + turn on CORS": "separador Developer → ative o servidor + ative CORS",
+    "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "A ranhura do LM Studio funciona com qualquer coisa que fale o formato de chat da OpenAI (llama.cpp, vLLM…).",
   },
   it: {
     "Export": "Esporta", "More": "Altro", "Settings": "Impostazioni", "sign in": "accedi",
@@ -541,6 +593,19 @@ const I18N = {
     "at": "alle", "off": "disattiva", "run now": "esegui ora",
     "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Ogni giorno alle {time}, la postazione redige un rapporto d'analisi su {sym} e scarica automaticamente un brief in {fmt}. Richiede che questa scheda resti aperta (i browser non possono eseguirlo da chiusa) e una chiave Anthropic per la stesura.",
     "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Imposta un orario per generare e scaricare automaticamente ogni giorno un rapporto con il tuo marchio. Lascia vuoto per disattivare.",
+    // AI tab
+    "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Le risposte della postazione IA richiedono {plan}. I modelli qui sotto sono disattivati finché non esegui l'upgrade (o attivi la modalità sviluppatore in ACCOUNT).",
+    "{n} models enabled": "{n} modelli attivati", "One model at a time": "Un modello alla volta",
+    "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Usa \"only this\" per un singolo modello, oppure attivane diversi — la postazione risponde in un unico riquadro, provandoli dall'alto in basso e passando al successivo se uno fallisce (es. Claude → OpenRouter).",
+    "Auto-fallback to a local model.": "Ripiego automatico su un modello locale.",
+    "If Claude fails (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Se Claude fallisce (niente crediti, chiave errata, offline), la postazione e i rapporti riprovano automaticamente sul tuo modello locale (Ollama o LM Studio). Configurane uno qui sotto — imposta la sua BASE URL e avvia il server locale.",
+    "ACTIVE": "ATTIVO", "use only this": "usa solo questo", "BASE URL": "BASE URL", "MODEL": "MODELLO",
+    "format:": "formato:", "e.g.": "es.", "browse models": "sfoglia i modelli",
+    "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo non ha ancora un'API ospitata ufficiale — esegui un bridge locale compatibile con OpenAI e punta la BASE URL su di esso.", "Lumo bridge": "bridge Lumo",
+    "API KEY": "CHIAVE API",
+    "Local endpoints need CORS enabled to accept requests from this page:": "Gli endpoint locali necessitano di CORS abilitato per accettare richieste da questa pagina:",
+    "start with": "avvia con", "or": "o", "Developer tab → enable server + turn on CORS": "scheda Developer → abilita il server + attiva CORS",
+    "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "Lo slot LM Studio funziona con qualsiasi cosa parli il formato chat di OpenAI (llama.cpp, vLLM…).",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -7469,18 +7534,20 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 <div style={{ display: "grid", gap: 12 }}>
                   {!planAllows("ai") && (
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.amber, background: "rgba(255,179,0,0.08)", border: `1px solid ${C.amber}`, borderRadius: 6, padding: "8px 10px" }}>
-                      {lockChip("ai")} AI desk answers need {planFor("ai")}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).
+                      {lockChip("ai")} {t("AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).").replace("{plan}", planFor("ai"))}
                     </div>
                   )}
                   <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.muted, background: "rgba(255,179,0,0.06)", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "8px 10px" }}>
-                    <b style={{ color: C.text }}>{enabledCount > 1 ? `${enabledCount} models enabled` : "One model at a time"}.</b>{" "}
-                    Use <span style={{ color: C.amber }}>only this</span> for a single model, or enable several — the desk answers in <b style={{ color: C.text }}>one box</b>, trying them top-to-bottom and <b style={{ color: C.text }}>falling back to the next if one errors</b> (e.g. Claude → OpenRouter).
+                    <b style={{ color: C.text }}>{enabledCount > 1 ? t("{n} models enabled").replace("{n}", enabledCount) : t("One model at a time")}.</b>{" "}
+                    {lang === "en"
+                      ? <>Use <span style={{ color: C.amber }}>only this</span> for a single model, or enable several — the desk answers in <b style={{ color: C.text }}>one box</b>, trying them top-to-bottom and <b style={{ color: C.text }}>falling back to the next if one errors</b> (e.g. Claude → OpenRouter).</>
+                      : t("Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).")}
                   </div>
                   <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.text, cursor: "pointer", border: `1px solid ${fallbackLocal ? C.amber : C.panelEdge}`, borderRadius: 6, padding: "8px 10px" }}>
                     <input type="checkbox" checked={fallbackLocal} onChange={e => setFallbackLocal(e.target.checked)} style={{ marginTop: 2 }} />
                     <span>
-                      <b style={{ color: fallbackLocal ? C.amber : C.text }}>Auto-fallback to a local model.</b>{" "}
-                      If Claude fails (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.
+                      <b style={{ color: fallbackLocal ? C.amber : C.text }}>{t("Auto-fallback to a local model.")}</b>{" "}
+                      {t("If Claude fails (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.")}
                     </span>
                   </label>
                   {aiModels.map(mm => (
@@ -7489,50 +7556,50 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 12, fontWeight: 600, color: mm.enabled ? C.text : C.faint, cursor: "pointer" }}>
                           <input type="checkbox" checked={mm.enabled} disabled={!planAllows("ai")} onChange={e => updateModel(mm.id, { enabled: e.target.checked })} />
                           {mm.label}
-                          {mm.enabled && enabledCount === 1 && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em", color: C.amber, border: `1px solid ${C.amber}`, borderRadius: 3, padding: "1px 5px" }}>ACTIVE</span>}
+                          {mm.enabled && enabledCount === 1 && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em", color: C.amber, border: `1px solid ${C.amber}`, borderRadius: 3, padding: "1px 5px" }}>{t("ACTIVE")}</span>}
                         </label>
                         <button onClick={() => soloModel(mm.id)}
                           disabled={mm.enabled && enabledCount === 1}
                           title={`Turn off every other model and use only ${mm.label}`}
                           style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: (mm.enabled && enabledCount === 1) ? C.faint : C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "3px 9px", cursor: (mm.enabled && enabledCount === 1) ? "default" : "pointer", whiteSpace: "nowrap" }}>
-                          use only this
+                          {t("use only this")}
                         </button>
                       </div>
                       <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                         <div style={{ flex: 2, minWidth: 180 }}>
-                          <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>BASE URL</label>
+                          <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>{t("BASE URL")}</label>
                           <input value={mm.baseUrl || ""} onChange={e => updateModel(mm.id, { baseUrl: e.target.value })}
                             style={{ width: "100%", boxSizing: "border-box", marginTop: 3, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, padding: "7px 8px" }} />
                         </div>
                         <div style={{ flex: 1, minWidth: 110 }}>
-                          <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>MODEL</label>
+                          <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>{t("MODEL")}</label>
                           <input value={mm.model || ""} onChange={e => updateModel(mm.id, { model: e.target.value })}
                             style={{ width: "100%", boxSizing: "border-box", marginTop: 3, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, padding: "7px 8px" }} />
                           {mm.id === "openrouter" && (
                             <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginTop: 3, lineHeight: 1.4 }}>
-                              format: <span style={{ color: C.muted }}>provider/model</span> — e.g. openai/gpt-4o-mini, meta-llama/llama-3.3-70b-instruct.{" "}
-                              <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>browse models ↗</a>
+                              {t("format:")} <span style={{ color: C.muted }}>provider/model</span> — {t("e.g.")} openai/gpt-4o-mini, meta-llama/llama-3.3-70b-instruct.{" "}
+                              <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("browse models")} ↗</a>
                             </div>
                           )}
                           {mm.id === "proton" && (
                             <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginTop: 3, lineHeight: 1.4 }}>
-                              Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.{" "}
-                              <a href="https://github.com/carlostkd/Lumo-Api" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>Lumo bridge ↗</a>
+                              {t("Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.")}{" "}
+                              <a href="https://github.com/carlostkd/Lumo-Api" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("Lumo bridge")} ↗</a>
                             </div>
                           )}
                         </div>
                         {(mm.kind === "claude" || mm.needsKey) && (
                           <div style={{ flexBasis: "100%" }}>
                             <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>
-                              API KEY ·{" "}
+                              {t("API KEY")} ·{" "}
                               <a href={mm.kind === "claude" ? "https://console.anthropic.com/settings/keys" : mm.id === "gemini" ? "https://aistudio.google.com/apikey" : mm.id === "openrouter" ? "https://openrouter.ai/keys" : "https://platform.openai.com/api-keys"}
                                 target="_blank" rel="noopener noreferrer" style={{ color: C.amber, letterSpacing: "0.04em" }}>
-                                get a key ↗
+                                {t("get a key")} ↗
                               </a>
                             </label>
                             <input type="password" value={mm.kind === "claude" ? anthropicApiKey : (mm.apiKey || "")}
                               onChange={e => mm.kind === "claude" ? setAnthropicApiKey(e.target.value) : updateModel(mm.id, { apiKey: e.target.value })}
-                              placeholder="paste key"
+                              placeholder={t("paste key")}
                               style={{ width: "100%", boxSizing: "border-box", marginTop: 3, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, padding: "7px 8px" }} />
                             <TestBtn kind={mm.id} />
                           </div>
@@ -7541,10 +7608,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     </div>
                   ))}
                   <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, lineHeight: 1.7 }}>
-                    Local endpoints need CORS enabled to accept requests from this page:<br />
-                    · Ollama — start with <span style={{ color: C.muted }}>OLLAMA_ORIGINS="https://claude.ai"</span> (or *)<br />
-                    · LM Studio — Developer tab → enable server + turn on CORS<br />
-                    The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).
+                    {lang === "en" ? (
+                      <>Local endpoints need CORS enabled to accept requests from this page:<br />
+                      · Ollama — start with <span style={{ color: C.muted }}>OLLAMA_ORIGINS="https://claude.ai"</span> (or *)<br />
+                      · LM Studio — Developer tab → enable server + turn on CORS<br />
+                      The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).</>
+                    ) : (
+                      <>{t("Local endpoints need CORS enabled to accept requests from this page:")}<br />
+                      · Ollama — {t("start with")} <span style={{ color: C.muted }}>OLLAMA_ORIGINS="https://claude.ai"</span> ({t("or")} *)<br />
+                      · LM Studio — {t("Developer tab → enable server + turn on CORS")}<br />
+                      {t("The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).")}</>
+                    )}
                   </div>
                 </div>
               )}
