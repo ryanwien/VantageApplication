@@ -4855,7 +4855,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     if (!breakingOn) return;
     const { day, mins } = etNow();
     const marketOpen = day >= 1 && day <= 5 && mins >= 570 && mins < 960; // 9:30–16:00 ET weekdays
-    if (!live && !marketOpen) return; // only during live trading
+    if (!live || !marketOpen) return; // only during genuine live trading — live data AND market open (not demo, not after hours)
     if (live && apiKey) { // real market wire from Finnhub
       try {
         const r = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${apiKey}`);
@@ -4873,7 +4873,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const bucket = `${mover.sym}:${Math.round(mover.chgPct)}`;
       if (!breakingSeenRef.current.has(bucket)) {
         breakingSeenRef.current.add(bucket);
-        pushBreaking(`${mover.sym} ${mover.chgPct >= 0 ? "surges" : "slides"} ${Math.abs(mover.chgPct).toFixed(1)}% ${mover.chgPct >= 0 ? "higher" : "lower"} in the session`, live ? "market tape" : "SIM");
+        pushBreaking(`${mover.sym} ${mover.chgPct >= 0 ? "surges" : "slides"} ${Math.abs(mover.chgPct).toFixed(1)}% ${mover.chgPct >= 0 ? "higher" : "lower"} in the session`, "market tape");
       }
     }
   }, [breakingOn, live, apiKey, selected, watchlist, getRow, pushBreaking]);
