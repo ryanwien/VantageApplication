@@ -1062,10 +1062,13 @@ const tzAbbrev = (tz, when) => {
 // Spotlight coach-marks: each step highlights a REAL element (by id) and the anchor narrates `say`.
 const TOUR_STEPS = [
   { target: "tour-symbol", title: "Command bar", body: "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.", say: "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it." },
-  { target: "tour-anchor", title: "Your anchor — that's me", body: "I run a live trading day: opening bell, meals, breaks. I read any answer on air. Swap my character, environment, and sounds in settings.", say: "That's me, your anchor. I run a live trading day and I can read anything on air." },
+  { target: "tour-anchor", title: "Your anchor — that's me", body: "I run a live trading day and read any answer on air. Pick from 22 anchors and 18 environments right here — news desks, a wizard tower, film-noir, a haunted manor, even a robot in a cyber core. Each anchor has its own voice, and every set its own soundscape.", say: "That's me, your anchor. Pick from twenty-two anchors and eighteen environments right here — each with its own voice and soundscape." },
+  { target: "tour-lang", title: "Speak your language", body: "Switch the whole interface — and my spoken answers — between English, Spanish, French, German, Portuguese and Italian. Your choice is remembered next time.", say: "Switch the whole app, and my answers, into any of six languages right here." },
   { target: "tour-ask", title: "The AI desk", body: "Ask a question here and I answer in one box, cascading across your models. I also take commands — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.", say: "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix." },
   { target: "tour-response", title: "Answers, news & Watch", body: "Everything lands here in one box — desk answers, the navigator, news, and the streaming catalog. Trailers and public-domain films play right inside.", say: "Answers, news, and the streaming catalog all appear here, in one place." },
-  { target: "tour-ticker", title: "Ticker tape", body: "Your whole watchlist scrolls across the top with live-style movement.", say: "Your watchlist scrolls across the ticker tape, up top." },
+  { target: "tour-export", title: "Export & edit anything", body: "Download the whole session as Word, PowerPoint or Excel — all built inside Vantage, no server. A Review & Edit step lets you fix every number, headline and slide before it saves.", say: "Download your session as Word, PowerPoint or Excel — and a review step lets you edit everything before it saves." },
+  { target: "tour-ticker", title: "Ticker tape", body: "Your whole watchlist scrolls across the top with live-style movement. Flip DEMO to LIVE in settings to stream real Finnhub quotes — that choice now sticks between visits.", say: "Your watchlist scrolls across the ticker tape. Switch to live Finnhub quotes in settings and it stays live." },
+  { target: "app-calendar-panel", title: "Market calendar", body: "Add your own events — the moment one is due, I break in with an on-air reminder. Upcoming market events are merged in automatically.", say: "Add events to your calendar, and I'll break in with an on-air reminder the moment they're due." },
   { target: "tour-settings", title: "Why setup? (mostly optional)", body: "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.", say: "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!" },
 ];
 
@@ -3258,11 +3261,10 @@ function AuthScreen({ onAuthed, onGuest }) {
           {/* ---------- WELCOME ---------- */}
           {step === "welcome" && (<>
             <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20 }}>{t("The AI broadcast desk for the markets.")}</div>
-            <div style={{ fontFamily: MONO, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>Create an account to save your watchlist, portfolio and plan — or jump straight into the live demo, no sign-up required.</div>
+            <div style={{ fontFamily: MONO, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>Create a free account to save your watchlist, portfolio and plan. It takes a moment and works entirely on this device.</div>
             {socialBlock}
             <button style={primaryBtn()} onClick={() => { setErr(""); setStep("signup"); }}>{t("Create account")}</button>
             <button style={{ ...primaryBtn(), background: "transparent", color: C.text, border: `1px solid ${C.panelEdge}` }} onClick={() => { setErr(""); setStep("login"); }}>{t("Log in")}</button>
-            <button style={{ ...ghostBtn, marginTop: 2, alignSelf: "center" }} onClick={onGuest}>{t("Explore in demo mode →")}</button>
           </>)}
 
           {/* ---------- LOG IN ---------- */}
@@ -3273,9 +3275,8 @@ function AuthScreen({ onAuthed, onGuest }) {
             <input style={field} type="email" placeholder="Email" value={email} autoComplete="username" onChange={e => setEmail(e.target.value)} />
             <input style={field} type="password" placeholder="Password" value={password} autoComplete="current-password" onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && emailOk && password && doLogin()} />
             <button style={primaryBtn({ opacity: busy || !emailOk || !password ? 0.6 : 1 })} disabled={busy || !emailOk || !password} onClick={doLogin}>{busy ? "Signing in…" : "Log in"}</button>
-            <div style={{ display: "flex", justifyContent: "space-between", fontFamily: MONO, fontSize: 11, color: C.faint }}>
+            <div style={{ display: "flex", justifyContent: "flex-start", fontFamily: MONO, fontSize: 11, color: C.faint }}>
               <button style={ghostBtn} onClick={() => { setErr(""); setStep("signup"); }}>Create account</button>
-              <button style={ghostBtn} onClick={onGuest}>Skip → demo</button>
             </div>
           </>)}
 
@@ -3289,9 +3290,8 @@ function AuthScreen({ onAuthed, onGuest }) {
             <input style={field} type="password" placeholder="Password (min 6 characters)" value={password} autoComplete="new-password" onChange={e => setPassword(e.target.value)} />
             <button style={primaryBtn({ opacity: !emailOk || password.length < 6 ? 0.6 : 1 })} disabled={!emailOk || password.length < 6} onClick={() => { setErr(""); setStep("plan"); }}>Continue → choose a plan</button>
             {socialProviders.google && <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, textAlign: "center", lineHeight: 1.5 }}>Proton has no "sign in with Proton" — just sign up with your Proton email above.</div>}
-            <div style={{ display: "flex", justifyContent: "space-between", fontFamily: MONO, fontSize: 11, color: C.faint }}>
+            <div style={{ display: "flex", justifyContent: "flex-start", fontFamily: MONO, fontSize: 11, color: C.faint }}>
               <button style={ghostBtn} onClick={() => { setErr(""); setStep("login"); }}>I already have an account</button>
-              <button style={ghostBtn} onClick={onGuest}>Skip → demo</button>
             </div>
           </>)}
 
@@ -6454,7 +6454,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           const open = eDay >= 1 && eDay <= 5 && eMins >= 570 && eMins < 960; // 9:30–16:00 ET, weekdays
           return (
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, marginLeft: "auto" }} title={`${TIMEZONES.find(z => z.id === clockTz)?.label || clockTz} · change in settings → DATA`}>
-              <select value={lang} onChange={e => setLang(e.target.value)} aria-label={t("Language")} title={t("Language")}
+              <select id="tour-lang" value={lang} onChange={e => setLang(e.target.value)} aria-label={t("Language")} title={t("Language")}
                 style={{ background: "#0D121C", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "3px 6px", cursor: "pointer" }}>
                 {LANGS.map(l => <option key={l.code} value={l.code} style={{ background: C.panel, color: C.text }}>{l.code === "en" ? "🌐 " + l.label : l.label}</option>)}
               </select>
@@ -6497,7 +6497,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <span style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
               {/* visible export menu (Excel / Word / PowerPoint / report), all generated inside Vantage */}
               <span style={{ position: "relative" }}>
-                <button onClick={() => { setShowExportMenu(v => !v); setShowMoreMenu(false); }} aria-label="Export a document"
+                <button id="tour-export" onClick={() => { setShowExportMenu(v => !v); setShowMoreMenu(false); }} aria-label="Export a document"
                   title="Export the current view as Excel, Word, or PowerPoint — built inside Vantage"
                   style={deskBtn(showExportMenu)} {...deskBtnHover(showExportMenu)}>
                   ⬇ {t("Export")} ▾
@@ -8417,8 +8417,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 export default function App() {
   // account: a signed-in user; guest: chose to skip the gate. Either one lets us in.
   const [account, setAccount] = useState(loadAccount);
-  const [guest, setGuest] = useState(false);
-
   // UI + AI language (persisted). Provided app-wide so AuthScreen and the dashboard both translate.
   const [lang, setLangState] = useState(loadLang);
   const setLang = useCallback((code) => { setLangState(code); try { localStorage.setItem("vantage-lang", code); } catch { /* ignore */ } }, []);
@@ -8441,7 +8439,7 @@ export default function App() {
   const signOut = () => {
     // best-effort backend logout; local state always clears
     if (account?.backend && account?.token) { fetch("/api/auth/logout", { method: "POST", headers: { Authorization: `Bearer ${account.token}` } }).catch(() => {}); }
-    saveAccount(null); setAccount(null); setGuest(false);
+    saveAccount(null); setAccount(null);
   };
   // Update the current plan. For a local account, also patch the tape-users record so it
   // survives sign-out/in. (Real paid upgrades route through Stripe in the ACCOUNT tab first.)
@@ -8461,8 +8459,8 @@ export default function App() {
 
   return (
     <I18nContext.Provider value={i18n}>
-      {(!account && !guest)
-        ? <AuthScreen onAuthed={signIn} onGuest={() => setGuest(true)} />
+      {!account
+        ? <AuthScreen onAuthed={signIn} />
         : <MarketDashboard account={account} onSignOut={signOut} onChangePlan={changePlan} />}
     </I18nContext.Provider>
   );
