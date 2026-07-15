@@ -1,4 +1,4 @@
- import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+ import React, { useState, useEffect, useRef, useCallback, useMemo, createContext, useContext } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer, CartesianGrid,
 } from "recharts";
@@ -80,6 +80,85 @@ const C = {
 
 const MONO = "'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace";
 const SANS = "'Archivo', 'Helvetica Neue', Arial, sans-serif";
+
+// ============================================================
+// i18n — UI translation + AI-answer language. English is the base; target
+// dictionaries are pre-baked JSON (keyed by the English source string) so
+// switching works with zero setup (no AI key needed). Anything not in a
+// dictionary falls back to English. AI answers use LANG_AI (the English name
+// of the language) appended to the prose prompts. LTR languages only for now.
+// ============================================================
+const LANGS = [
+  { code: "en", label: "English" },
+  { code: "es", label: "Español" },
+  { code: "fr", label: "Français" },
+  { code: "de", label: "Deutsch" },
+];
+const LANG_AI = { en: "English", es: "Spanish", fr: "French", de: "German" }; // used in AI prompts
+const TTS_LANG = { en: "en-US", es: "es-ES", fr: "fr-FR", de: "de-DE" };       // browser TTS BCP-47 codes
+const I18N = {
+  es: {
+    "Export": "Exportar", "More": "Más", "Settings": "Ajustes", "sign in": "iniciar sesión",
+    "Games": "Juegos", "learn how stocks work": "aprende cómo funcionan las acciones",
+    "Ambient sound": "Sonido ambiente", "waves, jungle, space hum…": "olas, jungla, zumbido espacial…",
+    "Music": "Música", "background score": "música de fondo",
+    "one model on the desk": "un modelo en la mesa",
+    "Type a symbol and press Enter  ·  HELP for commands": "Escribe un símbolo y pulsa Enter  ·  HELP para comandos",
+    "OPEN": "ABIERTO", "CLOSED": "CERRADO",
+    "standing by": "en espera",
+    "voice & anchor settings": "ajustes de voz y presentador",
+    "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Haz una pregunta abajo — las respuestas aparecen aquí, y el presentador puede leerlas en directo.",
+    "ASK ALL": "PREGUNTAR A TODOS",
+    "WATCHLIST": "LISTA DE SEGUIMIENTO", "TOP MOVERS": "MAYORES MOVIMIENTOS", "full chart": "gráfico completo",
+    "Language": "Idioma",
+    "The AI broadcast desk for the markets.": "La mesa de retransmisión con IA para los mercados.",
+    "Create account": "Crear cuenta", "Log in": "Iniciar sesión", "Explore in demo mode →": "Explorar en modo demo →",
+    "ranked by |Δ%| across your watchlist": "ordenado por |Δ%| en tu lista de seguimiento",
+    'Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"': 'Pregunta sobre {sym}, "take me to Robinhood", o "download excel" / "make a powerpoint" / "write a report and export ppt"',
+  },
+  fr: {
+    "Export": "Exporter", "More": "Plus", "Settings": "Réglages", "sign in": "se connecter",
+    "Games": "Jeux", "learn how stocks work": "apprenez le fonctionnement des actions",
+    "Ambient sound": "Son d'ambiance", "waves, jungle, space hum…": "vagues, jungle, bourdonnement spatial…",
+    "Music": "Musique", "background score": "musique de fond",
+    "one model on the desk": "un modèle sur le plateau",
+    "Type a symbol and press Enter  ·  HELP for commands": "Saisissez un symbole et appuyez sur Entrée  ·  HELP pour les commandes",
+    "OPEN": "OUVERT", "CLOSED": "FERMÉ",
+    "standing by": "en attente",
+    "voice & anchor settings": "réglages voix et présentateur",
+    "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Posez une question ci-dessous — les réponses apparaissent ici, et le présentateur peut les lire à l'antenne.",
+    "ASK ALL": "TOUT DEMANDER",
+    "WATCHLIST": "LISTE DE SUIVI", "TOP MOVERS": "PLUS FORTES VARIATIONS", "full chart": "graphique complet",
+    "Language": "Langue",
+    "The AI broadcast desk for the markets.": "Le plateau de diffusion IA pour les marchés.",
+    "Create account": "Créer un compte", "Log in": "Se connecter", "Explore in demo mode →": "Explorer en mode démo →",
+    "ranked by |Δ%| across your watchlist": "classé par |Δ%| dans votre liste de suivi",
+    'Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"': 'Posez une question sur {sym}, "take me to Robinhood", ou "download excel" / "make a powerpoint" / "write a report and export ppt"',
+  },
+  de: {
+    "Export": "Exportieren", "More": "Mehr", "Settings": "Einstellungen", "sign in": "anmelden",
+    "Games": "Spiele", "learn how stocks work": "lerne, wie Aktien funktionieren",
+    "Ambient sound": "Umgebungston", "waves, jungle, space hum…": "Wellen, Dschungel, Weltraumbrummen…",
+    "Music": "Musik", "background score": "Hintergrundmusik",
+    "one model on the desk": "ein Modell am Pult",
+    "Type a symbol and press Enter  ·  HELP for commands": "Symbol eingeben und Enter drücken  ·  HELP für Befehle",
+    "OPEN": "OFFEN", "CLOSED": "GESCHLOSSEN",
+    "standing by": "bereit",
+    "voice & anchor settings": "Stimme & Moderator-Einstellungen",
+    "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Stellen Sie unten eine Frage — Antworten erscheinen hier, und der Moderator kann jede davon vorlesen.",
+    "ASK ALL": "ALLE FRAGEN",
+    "WATCHLIST": "BEOBACHTUNGSLISTE", "TOP MOVERS": "GRÖSSTE BEWEGUNGEN", "full chart": "vollständiges Diagramm",
+    "Language": "Sprache",
+    "The AI broadcast desk for the markets.": "Das KI-Broadcast-Pult für die Märkte.",
+    "Create account": "Konto erstellen", "Log in": "Anmelden", "Explore in demo mode →": "Im Demo-Modus erkunden →",
+    "ranked by |Δ%| across your watchlist": "sortiert nach |Δ%| in Ihrer Beobachtungsliste",
+    'Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"': 'Fragen zu {sym}, "take me to Robinhood", oder "download excel" / "make a powerpoint" / "write a report and export ppt"',
+  },
+};
+const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
+const makeT = (lang) => (s) => (lang === "en" ? s : (I18N[lang]?.[s] ?? s));
+const I18nContext = createContext({ lang: "en", setLang: () => {}, t: (s) => s });
+const useI18n = () => useContext(I18nContext);
 
 // ambient-music playback level (was 0.08 — too quiet to hear); shared by start + speech-duck
 const MUSIC_LEVEL = 0.16;
@@ -696,6 +775,7 @@ function ChessGame({ onCheer, onWin }) {
 
 // ---- DeskAnchor: the animated anchor character, procedural and reactive to props ----
 function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speechRef, crew, env, cue, busy, onAction, onCue }) {
+  const { t } = useI18n();
   const cvsRef = useRef(null);
   const propsRef = useRef({ talking, mood, crew, env, cue, busy, onAction, onCue });
   propsRef.current = { talking, mood, crew, env, cue, busy, onAction, onCue };
@@ -1738,7 +1818,7 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
       <canvas ref={cvsRef} style={{ width: 190, height: 230 }} aria-label={`Desk anchor: ${ch.name}`} />
       <div style={{ fontFamily: MONO, fontSize: 10, color: talking ? C.amber : C.faint, letterSpacing: "0.1em", textAlign: "center", minHeight: 14 }}>
-        {talking ? `● ON AIR — ${ch.name} reading ${speakerLabel || ""}` : `${ch.name.toUpperCase()} · standing by`}
+        {talking ? `● ON AIR — ${ch.name} reading ${speakerLabel || ""}` : `${ch.name.toUpperCase()} · ${t("standing by")}`}
       </div>
     </div>
   );
@@ -2311,6 +2391,7 @@ async function backendReachable() {
 //  onAuthed(account) when the user is in, or onGuest() to explore the demo unwalled.
 // ============================================================
 function AuthScreen({ onAuthed, onGuest }) {
+  const { t } = useI18n();
   const [step, setStep] = useState("welcome");     // welcome | login | signup | plan | legal
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -2419,12 +2500,12 @@ function AuthScreen({ onAuthed, onGuest }) {
 
           {/* ---------- WELCOME ---------- */}
           {step === "welcome" && (<>
-            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20 }}>The AI broadcast desk for the markets.</div>
+            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20 }}>{t("The AI broadcast desk for the markets.")}</div>
             <div style={{ fontFamily: MONO, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>Create an account to save your watchlist, portfolio and plan — or jump straight into the live demo, no sign-up required.</div>
             {socialBlock}
-            <button style={primaryBtn()} onClick={() => { setErr(""); setStep("signup"); }}>Create account</button>
-            <button style={{ ...primaryBtn(), background: "transparent", color: C.text, border: `1px solid ${C.panelEdge}` }} onClick={() => { setErr(""); setStep("login"); }}>Log in</button>
-            <button style={{ ...ghostBtn, marginTop: 2, alignSelf: "center" }} onClick={onGuest}>Explore in demo mode →</button>
+            <button style={primaryBtn()} onClick={() => { setErr(""); setStep("signup"); }}>{t("Create account")}</button>
+            <button style={{ ...primaryBtn(), background: "transparent", color: C.text, border: `1px solid ${C.panelEdge}` }} onClick={() => { setErr(""); setStep("login"); }}>{t("Log in")}</button>
+            <button style={{ ...ghostBtn, marginTop: 2, alignSelf: "center" }} onClick={onGuest}>{t("Explore in demo mode →")}</button>
           </>)}
 
           {/* ---------- LOG IN ---------- */}
@@ -2515,6 +2596,7 @@ function AuthScreen({ onAuthed, onGuest }) {
 
 // ============================================================
 function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
+  const { lang, setLang, t } = useI18n();               // UI translation + AI-answer language
   const [accountMenu, setAccountMenu] = useState(false); // header account dropdown open?
   const [billingCfg, setBillingCfg] = useState(null);    // Stripe availability (Layer 3), probed on demand
   const [billingBusy, setBillingBusy] = useState("");    // plan id mid-checkout, for button state
@@ -2989,8 +3071,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     if (voiceEngine === "elevenlabs" && planAllows("elevenlabs")) { speakEleven(id, text); return; } // else fall through to free browser TTS
     if (!window.speechSynthesis) { setCmdMsg("This browser doesn't support speech synthesis"); return; }
     const u = new SpeechSynthesisUtterance(text);
-    const v = voices.find(x => x.name === voiceName);
-    if (v) u.voice = v; // otherwise the browser default voice speaks
+    u.lang = TTS_LANG[lang] || "en-US"; // speak in the chosen language
+    const v = (lang !== "en" ? voices.find(x => (x.lang || "").toLowerCase().startsWith(lang)) : null) || voices.find(x => x.name === voiceName);
+    if (v) u.voice = v; // prefer a voice matching the language, else the chosen/default voice
     u.rate = speechRate; u.pitch = 1.0;
     u.onboundary = onWordBoundary;
     u.onend = () => { speechMouthRef.current = null; setSpeakingId(cur => (cur === id ? null : cur)); };
@@ -3028,7 +3111,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     if (!window.speechSynthesis) return;
     const st = streamRef.current;                 // capture: a newer stream replaces this object
     const u = new SpeechSynthesisUtterance(text);
-    const v = voices.find(x => x.name === voiceName);
+    u.lang = TTS_LANG[lang] || "en-US"; // speak in the chosen language
+    const v = (lang !== "en" ? voices.find(x => (x.lang || "").toLowerCase().startsWith(lang)) : null) || voices.find(x => x.name === voiceName);
     if (v) u.voice = v;
     u.rate = speechRate; u.pitch = 1.0;
     u.onboundary = onWordBoundary;
@@ -4399,7 +4483,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }, [buildReport]);
 
   const buildPrompt = (question) =>
-    `You are one of several analysts on a trading desk answering the same question side by side. Be concise: 2-4 sentences, no preamble. Never give personalized financial advice; frame observations analytically.\n\n` +
+    `You are one of several analysts on a trading desk answering the same question side by side. Be concise: 2-4 sentences, no preamble. Never give personalized financial advice; frame observations analytically.${lang !== "en" ? ` Respond entirely in ${LANG_AI[lang]}.` : ""}\n\n` +
     `The market snapshot below is this dashboard's own data — treat it as the live tape when it is real quotes, or as a hypothetical scenario (say so briefly) when it is simulated demo data.\n` +
     `For questions about current or recent real-world events — "this week in the market", latest news, a company's recent moves — use web search to ground your answer in up-to-date facts, and don't confuse the simulated snapshot with the real market.\n\n` +
     `Market snapshot (JSON):\n${JSON.stringify(buildMarketContext())}\n\nQuestion: ${question}`;
@@ -4437,7 +4521,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     const snapPrompt =
       `Write a concise equity analyst report on ${selected} using ONLY the dashboard snapshot below (no web access). ` +
       `Sections, each header on its own line (no markdown symbols): Overview, Recent Price Action, Key Drivers, Risks, Outlook. ` +
-      `250–450 words, plain text. If the snapshot is simulated demo data, say so briefly. Never give personalized financial advice.\n\nSnapshot (JSON):\n${ctx}`;
+      `250–450 words, plain text. If the snapshot is simulated demo data, say so briefly. Never give personalized financial advice.${lang !== "en" ? ` Write the entire report in ${LANG_AI[lang]}.` : ""}\n\nSnapshot (JSON):\n${ctx}`;
     const errors = [];
     try {
       for (const m of usable) {
@@ -4445,7 +4529,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           setExportMsg(`Writing analyst report via ${m.label}…`);
           let text = "";
           if (m.kind === "claude") { // Claude: web-search grounded
-            const prompt = `Write a concise but complete equity analyst report on ${selected}. Use web search for the latest real developments. Structure with headers on their own lines (no markdown): Overview, Recent Price Action, Key Drivers, Risks, Outlook. 300–500 words, plain text. If the dashboard snapshot is simulated demo data, note that briefly. Never give personalized financial advice.\n\nDashboard snapshot (JSON):\n${ctx}`;
+            const prompt = `Write a concise but complete equity analyst report on ${selected}. Use web search for the latest real developments. Structure with headers on their own lines (no markdown): Overview, Recent Price Action, Key Drivers, Risks, Outlook. 300–500 words, plain text. If the dashboard snapshot is simulated demo data, note that briefly. Never give personalized financial advice.${lang !== "en" ? ` Write the entire report in ${LANG_AI[lang]}.` : ""}\n\nDashboard snapshot (JSON):\n${ctx}`;
             const r = await fetch(`${getClaudeBaseUrl()}/messages`, { method: "POST", headers: getAnthropicHeaders(), body: JSON.stringify({ model: "claude-sonnet-4-5", max_tokens: 1600, messages: [{ role: "user", content: prompt }], tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 3 }] }) });
             if (!r.ok) throw await anthropicError(r);
             const data = await r.json();
@@ -5486,7 +5570,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             value={cmd}
             onChange={e => setCmd(e.target.value)}
             onKeyDown={e => e.key === "Enter" && runCmd()}
-            placeholder="Type a symbol and press Enter  ·  HELP for commands"
+            placeholder={t("Type a symbol and press Enter  ·  HELP for commands")}
             aria-label="Command bar"
             style={{ flex: 1, background: "transparent", border: "none", color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 8px" }}
           />
@@ -5503,17 +5587,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         )}
         {(() => {
           // clock shows the user's chosen timezone; OPEN/CLOSED always tracks NYSE (Eastern) hours
-          const t = new Intl.DateTimeFormat("en-US", { timeZone: clockTz, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }).format(clockNow);
+          const timeStr = new Intl.DateTimeFormat("en-US", { timeZone: clockTz, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }).format(clockNow);
           const abbr = tzAbbrev(clockTz, clockNow);
           const { day: eDay, mins: eMins } = etNow();
           const open = eDay >= 1 && eDay <= 5 && eMins >= 570 && eMins < 960; // 9:30–16:00 ET, weekdays
           return (
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, marginLeft: "auto" }} title={`${TIMEZONES.find(z => z.id === clockTz)?.label || clockTz} · change in settings → DATA`}>
-              <span style={{ fontSize: 14, color: C.text, letterSpacing: "0.04em", fontVariantNumeric: "tabular-nums" }}>{t}</span>
+              <select value={lang} onChange={e => setLang(e.target.value)} aria-label={t("Language")} title={t("Language")}
+                style={{ background: "#0D121C", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "3px 6px", cursor: "pointer" }}>
+                {LANGS.map(l => <option key={l.code} value={l.code} style={{ background: C.panel, color: C.text }}>{l.code === "en" ? "🌐 " + l.label : l.label}</option>)}
+              </select>
+              <span style={{ fontSize: 14, color: C.text, letterSpacing: "0.04em", fontVariantNumeric: "tabular-nums" }}>{timeStr}</span>
               <span style={{ fontSize: 9, color: C.faint, letterSpacing: "0.08em" }}>{abbr}</span>
               <span title="New York Stock Exchange hours" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, letterSpacing: "0.08em", color: open ? C.up : C.down }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: open ? C.up : C.down, display: "inline-block" }} />
-                NYSE {open ? "OPEN" : "CLOSED"}
+                NYSE {open ? t("OPEN") : t("CLOSED")}
               </span>
             </div>
           );
@@ -5543,7 +5631,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
             <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted }}>
-              AI DESK <span style={{ color: C.faint }}>· {enabledCount > 1 ? `${enabledCount} models · falls back on error` : "one model on the desk"}</span>
+              AI DESK <span style={{ color: C.faint }}>· {enabledCount > 1 ? `${enabledCount} models · falls back on error` : t("one model on the desk")}</span>
             </span>
             <span style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
               {/* visible export menu (Excel / Word / PowerPoint / report), all generated inside Vantage */}
@@ -5551,7 +5639,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 <button onClick={() => { setShowExportMenu(v => !v); setShowMoreMenu(false); }} aria-label="Export a document"
                   title="Export the current view as Excel, Word, or PowerPoint — built inside Vantage"
                   style={deskBtn(showExportMenu)} {...deskBtnHover(showExportMenu)}>
-                  ⬇ Export ▾
+                  ⬇ {t("Export")} ▾
                 </button>
                 {showExportMenu && (
                   <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", minWidth: 150, overflow: "hidden" }}>
@@ -5572,14 +5660,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 <button onClick={() => { setShowMoreMenu(v => !v); setShowExportMenu(false); }} aria-label="More — games, ambient sound and music"
                   title="Games, ambient sound and music"
                   style={deskBtn(showMoreMenu || gameOn || ambienceOn || musicOn)} {...deskBtnHover(showMoreMenu || gameOn || ambienceOn || musicOn)}>
-                  ⋯ More ▾
+                  ⋯ {t("More")} ▾
                 </button>
                 {showMoreMenu && (
                   <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", minWidth: 210, overflow: "hidden" }}>
                     {[
-                      { key: "games", icon: "🎮", label: "Games", sub: "learn how stocks work", active: gameOn, onClick: () => { setShowMoreMenu(false); gameOn ? closeGame() : openGames(); } },
-                      { key: "ambient", icon: "🌊", label: "Ambient sound", sub: "waves, jungle, space hum…", active: ambienceOn, onClick: () => setAmbienceOn(v => !v) },
-                      { key: "music", icon: "♪", label: "Music", sub: "background score", active: musicOn, onClick: () => toggleMusic(!musicOn) },
+                      { key: "games", icon: "🎮", label: t("Games"), sub: t("learn how stocks work"), active: gameOn, onClick: () => { setShowMoreMenu(false); gameOn ? closeGame() : openGames(); } },
+                      { key: "ambient", icon: "🌊", label: t("Ambient sound"), sub: t("waves, jungle, space hum…"), active: ambienceOn, onClick: () => setAmbienceOn(v => !v) },
+                      { key: "music", icon: "♪", label: t("Music"), sub: t("background score"), active: musicOn, onClick: () => toggleMusic(!musicOn) },
                     ].map((it, idx) => (
                       <button key={it.key} onClick={it.onClick} aria-pressed={it.active}
                         style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", background: "transparent", border: "none", borderBottom: idx < 2 ? `1px solid ${C.panelEdge}` : "none", color: C.text, fontFamily: MONO, fontSize: 11, padding: "9px 12px", cursor: "pointer" }}
@@ -5597,7 +5685,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               </span>
               <button id="tour-settings" onClick={() => { setKeyDraft(apiKey); setSettingsTab("quick"); setShowSettings(true); }}
                 style={deskBtn(false)} {...deskBtnHover(false)}>
-                ⚙ Settings
+                ⚙ {t("Settings")}
               </button>
               {/* account chip: signed-in users see their plan + a menu; guests get a Sign in shortcut */}
               <div style={{ position: "relative" }}>
@@ -5607,7 +5695,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   <span style={{ width: 16, height: 16, borderRadius: "50%", background: account ? C.amber : C.panelEdge, color: "#0B0E14", display: "grid", placeItems: "center", fontWeight: 800, fontSize: 9 }}>
                     {account ? (account.name || account.email || "?").trim().charAt(0).toUpperCase() : "?"}
                   </span>
-                  {account ? planLabel(account.plan) : "sign in"}
+                  {account ? planLabel(account.plan) : t("sign in")}
                 </button>
                 {account && accountMenu && (
                   <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50, width: 210, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 8, boxShadow: "0 12px 40px rgba(0,0,0,0.6)", overflow: "hidden" }}>
@@ -5694,7 +5782,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   ) : (
                     <button onClick={() => { setKeyDraft(apiKey); setSettingsTab("anchor"); setShowSettings(true); }}
                       style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.faint, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 0", cursor: "pointer" }}>
-                      voice & anchor settings
+                      {t("voice & anchor settings")}
                     </button>
                   )}
                 </div>
@@ -5836,7 +5924,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               <div id="tour-response" style={{ flex: 1, minWidth: 260, display: gameOn ? "none" : "flex", flexDirection: "column", background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
                 {Object.keys(aiResponses).length === 0 && !writtenReport && !news && !catalog && !deskCalendar && !deskPortfolio && (
                   <div style={{ fontFamily: MONO, fontSize: 11, color: C.faint, padding: 12 }}>
-                    Ask a question below — answers appear here, and the anchor can read any of them on air.
+                    {t("Ask a question below — answers appear here, and the anchor can read any of them on air.")}
                   </div>
                 )}
                 {aiResponses.nav && (
@@ -6171,7 +6259,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               value={aiQuestion}
               onChange={e => setAiQuestion(e.target.value)}
               onKeyDown={e => e.key === "Enter" && askDesk()}
-              placeholder={`Ask about ${selected}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"`}
+              placeholder={t('Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"').replace("{sym}", selected)}
               aria-label="Ask the AI desk or request an export"
               style={{ flex: 1, minWidth: 220, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 10px" }}
             />
@@ -6185,7 +6273,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             )}
             <button onClick={askDesk}
               style={{ background: C.amber, color: "#141414", border: "none", borderRadius: 3, fontFamily: MONO, fontWeight: 600, fontSize: 11, padding: "9px 16px", cursor: "pointer" }}>
-              ASK ALL
+              {t("ASK ALL")}
             </button>
           </div>
         </div>
@@ -6200,7 +6288,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         {/* --- watchlist --- */}
         {panels.watchlist && (
         <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-          <div style={{ padding: "9px 12px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>WATCHLIST</div>
+          <div style={{ padding: "9px 12px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>{t("WATCHLIST")}</div>
           {watchlist.map(s => {
             const r = getRow(s);
             if (!r) return null;
@@ -6249,7 +6337,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               )}
               <button onClick={() => openChart(selected)} title="Open the full interactive TradingView chart inside Vantage"
                 style={{ marginLeft: "auto", background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>
-                📈 full chart
+                📈 {t("full chart")}
               </button>
             </div>
 
@@ -6330,7 +6418,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         {/* --- movers --- */}
         {panels.movers && (
         <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-          <div style={{ padding: "9px 12px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>TOP MOVERS</div>
+          <div style={{ padding: "9px 12px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>{t("TOP MOVERS")}</div>
           {movers.length === 0 && <div style={{ padding: 12, fontFamily: MONO, fontSize: 11, color: C.faint }}>waiting for quotes…</div>}
           {movers.map(r => (
             <button key={r.sym} className="wl-row" onClick={() => setSelected(r.sym)}
@@ -6348,7 +6436,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             </button>
           ))}
           <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 10, color: C.faint, lineHeight: 1.6 }}>
-            ranked by |Δ%| across your watchlist
+            {t("ranked by |Δ%| across your watchlist")}
           </div>
         </div>
         )}
@@ -7450,6 +7538,12 @@ export default function App() {
   const [account, setAccount] = useState(loadAccount);
   const [guest, setGuest] = useState(false);
 
+  // UI + AI language (persisted). Provided app-wide so AuthScreen and the dashboard both translate.
+  const [lang, setLangState] = useState(loadLang);
+  const setLang = useCallback((code) => { setLangState(code); try { localStorage.setItem("vantage-lang", code); } catch { /* ignore */ } }, []);
+  const t = useMemo(() => makeT(lang), [lang]);
+  const i18n = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
+
   // social sign-in return: the backend bounced to /?auth=1&token=…&email=…&name=…&plan=…
   // Consume it once, sign the user in, then scrub the params from the URL.
   useEffect(() => {
@@ -7484,6 +7578,11 @@ export default function App() {
     saveAccount(next); setAccount(next);
   };
 
-  if (!account && !guest) return <AuthScreen onAuthed={signIn} onGuest={() => setGuest(true)} />;
-  return <MarketDashboard account={account} onSignOut={signOut} onChangePlan={changePlan} />;
+  return (
+    <I18nContext.Provider value={i18n}>
+      {(!account && !guest)
+        ? <AuthScreen onAuthed={signIn} onGuest={() => setGuest(true)} />
+        : <MarketDashboard account={account} onSignOut={signOut} onChangePlan={changePlan} />}
+    </I18nContext.Provider>
+  );
 }
