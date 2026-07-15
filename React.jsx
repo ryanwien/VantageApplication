@@ -108,7 +108,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Escribe un símbolo y pulsa Enter  ·  HELP para comandos",
     "OPEN": "ABIERTO", "CLOSED": "CERRADO",
     "standing by": "en espera",
-    "voice & anchor settings": "ajustes de voz y presentador", "SET": "SET", "stop reading": "detener lectura",
+    "voice & anchor settings": "ajustes de voz y presentador", "SET": "SET", "stop reading": "detener lectura", "free": "gratis",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Haz una pregunta abajo — las respuestas aparecen aquí, y el presentador puede leerlas en directo.",
     "ASK ALL": "PREGUNTAR A TODOS",
     "WATCHLIST": "LISTA DE SEGUIMIENTO", "TOP MOVERS": "MAYORES MOVIMIENTOS", "full chart": "gráfico completo",
@@ -238,7 +238,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Saisissez un symbole et appuyez sur Entrée  ·  HELP pour les commandes",
     "OPEN": "OUVERT", "CLOSED": "FERMÉ",
     "standing by": "en attente",
-    "voice & anchor settings": "réglages voix et présentateur", "SET": "DÉCOR", "stop reading": "arrêter la lecture",
+    "voice & anchor settings": "réglages voix et présentateur", "SET": "DÉCOR", "stop reading": "arrêter la lecture", "free": "gratuites",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Posez une question ci-dessous — les réponses apparaissent ici, et le présentateur peut les lire à l'antenne.",
     "ASK ALL": "TOUT DEMANDER",
     "WATCHLIST": "LISTE DE SUIVI", "TOP MOVERS": "PLUS FORTES VARIATIONS", "full chart": "graphique complet",
@@ -368,7 +368,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Symbol eingeben und Enter drücken  ·  HELP für Befehle",
     "OPEN": "OFFEN", "CLOSED": "GESCHLOSSEN",
     "standing by": "bereit",
-    "voice & anchor settings": "Stimme & Moderator-Einstellungen", "SET": "KULISSE", "stop reading": "Vorlesen stoppen",
+    "voice & anchor settings": "Stimme & Moderator-Einstellungen", "SET": "KULISSE", "stop reading": "Vorlesen stoppen", "free": "kostenlos",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Stellen Sie unten eine Frage — Antworten erscheinen hier, und der Moderator kann jede davon vorlesen.",
     "ASK ALL": "ALLE FRAGEN",
     "WATCHLIST": "BEOBACHTUNGSLISTE", "TOP MOVERS": "GRÖSSTE BEWEGUNGEN", "full chart": "vollständiges Diagramm",
@@ -498,7 +498,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Escreva um símbolo e prima Enter  ·  HELP para comandos",
     "OPEN": "ABERTO", "CLOSED": "FECHADO",
     "standing by": "em espera",
-    "voice & anchor settings": "definições de voz e apresentador", "SET": "CENÁRIO", "stop reading": "parar leitura",
+    "voice & anchor settings": "definições de voz e apresentador", "SET": "CENÁRIO", "stop reading": "parar leitura", "free": "grátis",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Faça uma pergunta abaixo — as respostas aparecem aqui, e o apresentador pode lê-las ao vivo.",
     "ASK ALL": "PERGUNTAR A TODOS",
     "WATCHLIST": "LISTA DE ACOMPANHAMENTO", "TOP MOVERS": "MAIORES VARIAÇÕES", "full chart": "gráfico completo",
@@ -627,7 +627,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Digita un simbolo e premi Invio  ·  HELP per i comandi",
     "OPEN": "APERTO", "CLOSED": "CHIUSO",
     "standing by": "in attesa",
-    "voice & anchor settings": "impostazioni voce e conduttore", "SET": "SET", "stop reading": "ferma lettura",
+    "voice & anchor settings": "impostazioni voce e conduttore", "SET": "SET", "stop reading": "ferma lettura", "free": "gratis",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Fai una domanda qui sotto — le risposte appaiono qui, e il conduttore può leggerle in diretta.",
     "ASK ALL": "CHIEDI A TUTTI",
     "WATCHLIST": "LISTA DI OSSERVAZIONE", "TOP MOVERS": "MAGGIORI VARIAZIONI", "full chart": "grafico completo",
@@ -8057,13 +8057,25 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   )}
                   {voiceEngine === "browser" && (
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("VOICE")}</label>
+                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
+                      {t("VOICE")} {voices.length > 0 && <span style={{ color: C.faint, letterSpacing: 0 }}>· {voices.length} {t("free")}</span>}
+                    </label>
                     <select
                       value={voiceName} onChange={e => setVoiceName(e.target.value)}
                       style={{ width: "100%", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px" }}>
-                      {voices.filter(v => v.lang.startsWith("en")).map(v => (
-                        <option key={v.name} value={v.name}>{v.name} {v.localService ? "· local" : "· network"}</option>
-                      ))}
+                      {(() => {
+                        // every voice the OS/browser exposes is free — group them all by language, current language first
+                        const cur = (TTS_LANG[lang] || "en-US").slice(0, 2);
+                        const langName = (code) => { try { return new Intl.DisplayNames([lang], { type: "language" }).of(code) || code; } catch { return code; } };
+                        const groups = {};
+                        for (const v of voices) { const k = (v.lang || "").slice(0, 2) || "··"; (groups[k] = groups[k] || []).push(v); }
+                        const keys = Object.keys(groups).sort((a, b) => (a === cur ? -1 : b === cur ? 1 : (langName(a)).localeCompare(langName(b))));
+                        return keys.map(k => (
+                          <optgroup key={k} label={langName(k)}>
+                            {groups[k].map(v => <option key={v.name} value={v.name}>{v.name} {v.localService ? "· local" : "· network"}</option>)}
+                          </optgroup>
+                        ));
+                      })()}
                     </select>
                   </div>
                   )}
