@@ -4344,11 +4344,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     return {
       generatedAt: new Date().toLocaleString(),
       live: !!live,
-      selected: sel ? { sym: sel.sym, name: sel.name, price: sel.price, chg: sel.chg, chgPct: sel.chgPct, open: sel.open, high: sel.high, low: sel.low, prevClose: sel.prevClose } : null,
-      watchlist: watchlist.map(getRow).filter(Boolean).map(w => ({ sym: w.sym, price: w.price, chg: w.chg, chgPct: w.chgPct })),
-      analysis,
+      selected: overrides.selected ?? (sel ? { sym: sel.sym, name: sel.name, price: sel.price, chg: sel.chg, chgPct: sel.chgPct, open: sel.open, high: sel.high, low: sel.low, prevClose: sel.prevClose } : null),
+      watchlist: overrides.watchlist ?? watchlist.map(getRow).filter(Boolean).map(w => ({ sym: w.sym, price: w.price, chg: w.chg, chgPct: w.chgPct })),
+      analysis: overrides.analysis ?? analysis,
       question: lastAsked,
-      news: (news?.news || []),
+      news: overrides.news ?? (news?.news || []),
       chartImage: chartToDataUrl(),
       writtenReport: overrides.writtenReport ?? writtenReport,
       title: overrides.title || `Vantage Market Report — ${sel?.sym || selected}`,
@@ -4359,14 +4359,24 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // preview/edit before exporting: the user tweaks the title + report body, then downloads
   const [exportDraft, setExportDraft] = useState(null); // { format, title, body } | null
   const openExportPreview = useCallback((format, bodyOverride) => {
-    const sel = getRow(selected);
+    const rep = buildReport();               // snapshot the current structured report so every cell is editable
+    const sel = rep.selected || {};
+    const r2 = (n) => (typeof n === "number" && isFinite(n) ? Math.round(n * 100) / 100 : n); // clean display + clean Excel cells
     const starter = bodyOverride || writtenReport ||
-      `${sel?.name || selected} (${selected})\n\n` +
-      `Price ${fmt(sel?.price)}  (${pct(sel?.chgPct)})\n` +
-      `Open ${fmt(sel?.open)} · High ${fmt(sel?.high)} · Low ${fmt(sel?.low)} · Prev Close ${fmt(sel?.prevClose)}\n\n` +
+      `${sel.name || selected} (${sel.sym || selected})\n\n` +
+      `Price ${fmt(sel.price)}  (${pct(sel.chgPct)})\n` +
+      `Open ${fmt(sel.open)} · High ${fmt(sel.high)} · Low ${fmt(sel.low)} · Prev Close ${fmt(sel.prevClose)}\n\n` +
       `Summary\nAdd your notes here — this text goes into the ${(format || "docx").toUpperCase()} you export.\n`;
-    setExportDraft({ format: format || "docx", title: `${selected} Market Report`, body: starter });
-  }, [selected, writtenReport, getRow]);
+    setExportDraft({
+      format: format || "docx",
+      title: `${sel.sym || selected} Market Report`,
+      body: starter,
+      selected: { ...sel, price: r2(sel.price), chg: r2(sel.chg), chgPct: r2(sel.chgPct), open: r2(sel.open), high: r2(sel.high), low: r2(sel.low), prevClose: r2(sel.prevClose) }, // editable snapshot (Summary sheet / title slide)
+      watchlist: rep.watchlist.map(w => ({ sym: w.sym, price: r2(w.price), chg: r2(w.chg), chgPct: r2(w.chgPct) })), // editable per-cell grid
+      analysis: rep.analysis.map(a => ({ ...a })),    // carried through (still exported)
+      news: rep.news.map(n => ({ ...n })),
+    });
+  }, [buildReport, writtenReport, selected]);
 
   const doExport = useCallback(async (fmt, overrides) => {
     setExportMsg(`Building ${fmt.toUpperCase()}…`);
@@ -5329,13 +5339,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         const FMT = { xlsx: "Excel", docx: "Word", pptx: "PowerPoint" };
         const included = [
           chartData.length > 1 && "chart image",
-          watchlist.length > 0 && `watchlist (${watchlist.length})`,
-          aiResponses.desk?.text && "AI desk answer",
-          news?.news?.length > 0 && `news (${news.news.length})`,
+          (exportDraft.analysis?.length || aiResponses.desk?.text) && "AI desk answer",
+          (exportDraft.news?.length || news?.news?.length) > 0 && `news (${exportDraft.news?.length || news?.news?.length})`,
         ].filter(Boolean);
+        // per-cell edit helpers for the structured draft (watchlist grid + snapshot fields)
+        const setSel = (k, v) => setExportDraft(d => ({ ...d, selected: { ...d.selected, [k]: v } }));
+        const setWl = (i, k, v) => setExportDraft(d => { const wl = d.watchlist.slice(); wl[i] = { ...wl[i], [k]: v }; return { ...d, watchlist: wl }; });
+        const delWl = (i) => setExportDraft(d => ({ ...d, watchlist: d.watchlist.filter((_, j) => j !== i) }));
+        const addWl = () => setExportDraft(d => ({ ...d, watchlist: [...d.watchlist, { sym: "", price: "", chg: "", chgPct: "" }] }));
+        const wlCols = "1.4fr 1fr 1fr 1fr 28px";
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.8)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setExportDraft(null)}>
-            <div onClick={e => e.stopPropagation()} style={{ width: 620, maxWidth: "94vw", maxHeight: "88vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 8, boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
+            <div id="export-modal" onClick={e => e.stopPropagation()} style={{ width: 620, maxWidth: "94vw", maxHeight: "88vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 8, boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${C.panelEdge}` }}>
                 <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: C.amber }}>⬇ REVIEW & EDIT — before you export</span>
                 <button onClick={() => setExportDraft(null)} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 14, cursor: "pointer" }}>✕</button>
@@ -5353,6 +5368,44 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   {!writtenReport && <button onClick={async () => { const t = await generateWrittenReport(); if (t) setExportDraft(d => ({ ...d, body: t })); }} disabled={reportBusy}
                     style={{ marginTop: 6, background: "transparent", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>{reportBusy ? "✍ writing…" : "✨ write it for me (AI)"}</button>}
                 </div>
+
+                {/* editable snapshot — the Summary sheet / title-slide numbers */}
+                <div>
+                  <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>SNAPSHOT · edit any value ({exportDraft.selected?.sym || selected})</label>
+                  <div style={{ marginTop: 6, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {[["name", "Name"], ["price", "Price"], ["chgPct", "Change %"], ["chg", "Change"], ["open", "Open"], ["high", "High"], ["low", "Low"], ["prevClose", "Prev Close"]].map(([k, lbl]) => (
+                      <label key={k} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontFamily: MONO, fontSize: 10, color: C.muted, width: 74, flexShrink: 0 }}>{lbl}</span>
+                        <input value={exportDraft.selected?.[k] ?? ""} onChange={e => setSel(k, e.target.value)}
+                          style={{ flex: 1, minWidth: 0, boxSizing: "border-box", background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px" }} />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* editable watchlist grid — per-cell for the Watchlist sheet / slide / table */}
+                <div>
+                  <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>WATCHLIST · edit any cell, add or remove rows</label>
+                  <div style={{ marginTop: 6, border: `1px solid ${C.panelEdge}`, borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: wlCols, background: "#0D121C", borderBottom: `1px solid ${C.panelEdge}` }}>
+                      {["Symbol", "Price", "Change", "Change %", ""].map((h, i) => (
+                        <span key={i} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", color: C.faint, padding: "6px 8px" }}>{h}</span>
+                      ))}
+                    </div>
+                    {exportDraft.watchlist.map((w, i) => (
+                      <div key={i} style={{ display: "grid", gridTemplateColumns: wlCols, borderBottom: i < exportDraft.watchlist.length - 1 ? `1px solid ${C.panelEdge}` : "none" }}>
+                        {["sym", "price", "chg", "chgPct"].map(k => (
+                          <input key={k} value={w[k] ?? ""} onChange={e => setWl(i, k, e.target.value)} aria-label={`${k} row ${i + 1}`}
+                            style={{ boxSizing: "border-box", background: "transparent", border: "none", borderRight: `1px solid ${C.panelEdge}`, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px", minWidth: 0 }} />
+                        ))}
+                        <button onClick={() => delWl(i)} title="Remove row" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
+                      </div>
+                    ))}
+                    {!exportDraft.watchlist.length && <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, padding: "8px" }}>No rows — add one below.</div>}
+                  </div>
+                  <button onClick={addWl} style={{ marginTop: 6, background: "transparent", border: `1px dashed ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>+ add row</button>
+                </div>
+
                 <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, lineHeight: 1.6 }}>
                   Also included automatically: {included.length ? included.join(" · ") : "snapshot + logo"}. {exportMsg && <span style={{ color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted }}>· {exportMsg}</span>}
                 </div>
@@ -5362,7 +5415,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <button key={f} onClick={() => setExportDraft(d => ({ ...d, format: f }))}
                       style={{ background: exportDraft.format === f ? "rgba(255,179,0,0.16)" : "transparent", border: `1px solid ${exportDraft.format === f ? C.amber : C.panelEdge}`, color: exportDraft.format === f ? C.amber : C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>{FMT[f]}</button>
                   ))}
-                  <button onClick={async () => { await doExport(exportDraft.format, { writtenReport: exportDraft.body, title: exportDraft.title }); setExportDraft(null); }}
+                  <button onClick={async () => {
+                    const toNum = (v) => { if (v === "" || v == null) return null; const n = Number(v); return isNaN(n) ? v : n; };
+                    const sel = exportDraft.selected || {};
+                    await doExport(exportDraft.format, {
+                      title: exportDraft.title,
+                      writtenReport: exportDraft.body,
+                      selected: { ...sel, price: toNum(sel.price), chg: toNum(sel.chg), chgPct: toNum(sel.chgPct), open: toNum(sel.open), high: toNum(sel.high), low: toNum(sel.low), prevClose: toNum(sel.prevClose) },
+                      watchlist: exportDraft.watchlist.map(w => ({ sym: w.sym, price: toNum(w.price), chg: toNum(w.chg), chgPct: toNum(w.chgPct) })),
+                      analysis: exportDraft.analysis,
+                      news: exportDraft.news,
+                    });
+                    setExportDraft(null);
+                  }}
                     style={{ marginLeft: "auto", background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontWeight: 700, fontSize: 12, padding: "9px 18px", cursor: "pointer" }}>⬇ Download {FMT[exportDraft.format]}</button>
                 </div>
               </div>
