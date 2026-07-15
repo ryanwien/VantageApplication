@@ -3506,7 +3506,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       setOllamaTagErr(names.length ? "" : "no models installed — run: ollama pull llama3.1");
     } catch {
       setOllamaTags([]);
-      setOllamaTagErr("can't reach Ollama — start it: OLLAMA_ORIGINS=http://127.0.0.1:5173 ollama serve");
+      // Almost always CORS: Ollama only answers origins in its allow-list. Use THIS page's exact origin
+      // (localhost ≠ 127.0.0.1 to a browser), or a wildcard for the simplest setup.
+      const origin = (typeof window !== "undefined" && window.location?.origin) || "http://127.0.0.1:5173";
+      setOllamaTagErr(`can't reach Ollama — run it so this page is allowed: OLLAMA_ORIGINS=${origin} ollama serve  (or OLLAMA_ORIGINS=* to allow any). And check it's running at ${base}.`);
     }
   }, [aiModels]);
   const [aiQuestion, setAiQuestion] = useState("");
@@ -6207,7 +6210,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       let msg = String(e.message || e);
       if (e.name === "AbortError") return "timed out";
       if (e instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(msg)) {
-        return m.kind === "ollama" ? "can't reach Ollama (OLLAMA_ORIGINS)"
+        return m.kind === "ollama" ? "can't reach Ollama — run: OLLAMA_ORIGINS=* ollama serve"
           : (m.kind === "openai" && !m.needsKey) ? "local server unreachable (CORS?)"
           : "network error";
       }
@@ -7760,7 +7763,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             style={{ width: 520, maxWidth: "94vw", maxHeight: "86vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 8 }}>
 
             {/* tab bar */}
-            <div style={{ display: "flex", borderBottom: `1px solid ${C.panelEdge}`, position: "sticky", top: 0, background: C.panel }}>
+            <div style={{ display: "flex", borderBottom: `1px solid ${C.panelEdge}`, position: "sticky", top: 0, zIndex: 2, background: C.panel }}>
               {[["account", "ACCOUNT"], ["quick", "START"], ["data", "DATA"], ["models", "AI"], ["anchor", "VOICE"], ["meetings", "MEET"]].map(([id, label]) => (
                 <button key={id} onClick={() => setSettingsTab(id)}
                   style={{
