@@ -166,6 +166,27 @@ const I18N = {
     "WHAT'S SET UP": "QUÉ ESTÁ CONFIGURADO", "tap to configure": "toca para configurar",
     "tour · demo · missions": "recorrido · demo · misiones", "pick your anchor": "elige tu presentador",
     "skip — I'll explore on my own": "omitir — exploraré por mi cuenta",
+    // DATA tab
+    "PANELS": "PANELES", "ticker tape": "cinta de cotizaciones", "watchlist": "lista de seguimiento", "top movers": "mayores movimientos", "news & video": "noticias y vídeo", "calendar": "calendario", "portfolio": "cartera",
+    "breaking-news alerts during live trading": "alertas de última hora durante la negociación en directo",
+    "CLOCK TIMEZONE": "ZONA HORARIA DEL RELOJ",
+    "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Ajusta el reloj de la cabecera. La insignia de mercado ABIERTO/CERRADO siempre sigue el horario del NYSE (hora del Este).",
+    "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "EN DIRECTO",
+    "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "El modo demo ejecuta un motor de mercado de paseo aleatorio con semilla — una sesión simulada reproducible, sin clave ni red.",
+    "FINNHUB API KEY (free tier works)": "CLAVE API DE FINNHUB (el plan gratuito funciona)", "paste key": "pega la clave",
+    "Key is held in memory only — never stored or sent anywhere except finnhub.io.": "La clave se guarda solo en memoria — nunca se almacena ni se envía a ningún sitio salvo a finnhub.io.",
+    "get a free key": "obtener una clave gratis",
+    "YOUTUBE DATA API KEY": "CLAVE API DE YOUTUBE DATA", "(optional — real, playable video results)": "(opcional — resultados de vídeo reales y reproducibles)",
+    "paste key (AIza…)": "pega la clave (AIza…)", "needs": "requiere",
+    "Without a key, \"show videos of …\" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.": "Sin una clave, \"mostrar vídeos de …\" pide a Claude que adivine vídeos (a menudo no incrustables). Con una, la mesa obtiene resultados reales e incrustables de YouTube.",
+    "enable API": "activar API",
+    "TMDB API KEY": "CLAVE API DE TMDB", "(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)": "(opcional — catálogo de Netflix / Disney+ / Hulu y tráileres en la app)",
+    "paste TMDB API key (v3 auth)": "pega la clave API de TMDB (auth v3)",
+    "Powers \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via \"free movies …\" (no key needed).": "Impulsa \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — bibliotecas reales con carátulas, valoraciones y tráileres en la mesa. La reproducción se abre en el servicio (bloquean la incrustación); las películas de dominio público se reproducen por completo en la mesa con \"free movies …\" (sin clave).",
+    "DAILY BRIEF": "RESUMEN DIARIO", "(auto-download while the app is open)": "(descarga automática mientras la app está abierta)",
+    "at": "a las", "off": "desactivar", "run now": "ejecutar ahora",
+    "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Cada día a las {time}, la mesa redacta un informe de analista sobre {sym} y descarga automáticamente un resumen en {fmt}. Requiere que esta pestaña esté abierta (los navegadores no pueden ejecutarlo cerrada) y una clave de Anthropic para la redacción.",
+    "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Establece una hora para generar y descargar automáticamente un informe con tu marca cada día. Déjalo en blanco para desactivar.",
   },
   fr: {
     "Export": "Exporter", "More": "Plus", "Settings": "Réglages", "sign in": "se connecter",
@@ -234,6 +255,27 @@ const I18N = {
     "WHAT'S SET UP": "CE QUI EST CONFIGURÉ", "tap to configure": "touchez pour configurer",
     "tour · demo · missions": "visite · démo · missions", "pick your anchor": "choisissez votre présentateur",
     "skip — I'll explore on my own": "passer — je vais explorer par moi-même",
+    // DATA tab
+    "PANELS": "PANNEAUX", "ticker tape": "bandeau de cotation", "watchlist": "liste de suivi", "top movers": "plus fortes variations", "news & video": "actualités et vidéo", "calendar": "calendrier", "portfolio": "portefeuille",
+    "breaking-news alerts during live trading": "alertes de dernière minute pendant la séance en direct",
+    "CLOCK TIMEZONE": "FUSEAU HORAIRE DE L'HORLOGE",
+    "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Règle l'horloge de l'en-tête. Le badge de marché OUVERT/FERMÉ suit toujours les heures du NYSE (heure de l'Est).",
+    "replay tutorial": "revoir le tutoriel", "DEMO": "DÉMO", "LIVE": "EN DIRECT",
+    "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "Le mode démo utilise un moteur de marché à marche aléatoire avec graine — une séance simulée reproductible, sans clé ni réseau.",
+    "FINNHUB API KEY (free tier works)": "CLÉ API FINNHUB (l'offre gratuite suffit)", "paste key": "collez la clé",
+    "Key is held in memory only — never stored or sent anywhere except finnhub.io.": "La clé reste uniquement en mémoire — jamais stockée ni envoyée ailleurs que sur finnhub.io.",
+    "get a free key": "obtenir une clé gratuite",
+    "YOUTUBE DATA API KEY": "CLÉ API YOUTUBE DATA", "(optional — real, playable video results)": "(optionnel — résultats vidéo réels et lisibles)",
+    "paste key (AIza…)": "collez la clé (AIza…)", "needs": "nécessite",
+    "Without a key, \"show videos of …\" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.": "Sans clé, \"show videos of …\" demande à Claude de deviner des vidéos (souvent non intégrables). Avec une clé, le plateau récupère de vrais résultats intégrables de YouTube.",
+    "enable API": "activer l'API",
+    "TMDB API KEY": "CLÉ API TMDB", "(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)": "(optionnel — catalogue Netflix / Disney+ / Hulu et bandes-annonces dans l'app)",
+    "paste TMDB API key (v3 auth)": "collez la clé API TMDB (auth v3)",
+    "Powers \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via \"free movies …\" (no key needed).": "Alimente \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — de vraies bibliothèques avec affiches, notes et bandes-annonces sur le plateau. La lecture s'ouvre toujours sur le service (ils bloquent l'intégration) ; les films du domaine public se lisent entièrement sur le plateau via \"free movies …\" (aucune clé requise).",
+    "DAILY BRIEF": "BRIEF QUOTIDIEN", "(auto-download while the app is open)": "(téléchargement automatique tant que l'app est ouverte)",
+    "at": "à", "off": "désactiver", "run now": "lancer maintenant",
+    "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Chaque jour à {time}, le plateau rédige un rapport d'analyste sur {sym} et télécharge automatiquement un brief en {fmt}. Nécessite que cet onglet reste ouvert (les navigateurs ne peuvent pas l'exécuter fermé) et une clé Anthropic pour la rédaction.",
+    "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Définissez une heure pour générer et télécharger automatiquement un rapport à votre marque chaque jour. Laissez vide pour désactiver.",
   },
   de: {
     "Export": "Exportieren", "More": "Mehr", "Settings": "Einstellungen", "sign in": "anmelden",
@@ -302,6 +344,27 @@ const I18N = {
     "WHAT'S SET UP": "WAS EINGERICHTET IST", "tap to configure": "zum Konfigurieren tippen",
     "tour · demo · missions": "Tour · Demo · Missionen", "pick your anchor": "Moderator wählen",
     "skip — I'll explore on my own": "überspringen — ich erkunde selbst",
+    // DATA tab
+    "PANELS": "PANELS", "ticker tape": "Kursband", "watchlist": "Beobachtungsliste", "top movers": "größte Bewegungen", "news & video": "Nachrichten & Video", "calendar": "Kalender", "portfolio": "Portfolio",
+    "breaking-news alerts during live trading": "Eilmeldungen während des Live-Handels",
+    "CLOCK TIMEZONE": "ZEITZONE DER UHR",
+    "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Stellt die Kopfzeilen-Uhr ein. Das OFFEN/GESCHLOSSEN-Abzeichen folgt immer den NYSE-Zeiten (Eastern).",
+    "replay tutorial": "Tutorial wiederholen", "DEMO": "DEMO", "LIVE": "LIVE",
+    "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "Der Demo-Modus nutzt eine Random-Walk-Markt-Engine mit festem Startwert — eine reproduzierbare simulierte Sitzung, ohne Schlüssel oder Netzwerk.",
+    "FINNHUB API KEY (free tier works)": "FINNHUB-API-SCHLÜSSEL (kostenlose Stufe genügt)", "paste key": "Schlüssel einfügen",
+    "Key is held in memory only — never stored or sent anywhere except finnhub.io.": "Der Schlüssel bleibt nur im Speicher — wird nie gespeichert oder irgendwohin außer an finnhub.io gesendet.",
+    "get a free key": "kostenlosen Schlüssel holen",
+    "YOUTUBE DATA API KEY": "YOUTUBE-DATA-API-SCHLÜSSEL", "(optional — real, playable video results)": "(optional — echte, abspielbare Videoergebnisse)",
+    "paste key (AIza…)": "Schlüssel einfügen (AIza…)", "needs": "erfordert",
+    "Without a key, \"show videos of …\" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.": "Ohne Schlüssel bittet \"show videos of …\" Claude, Videos zu erraten (oft nicht einbettbar). Mit Schlüssel holt das Pult echte einbettbare Ergebnisse von YouTube.",
+    "enable API": "API aktivieren",
+    "TMDB API KEY": "TMDB-API-SCHLÜSSEL", "(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)": "(optional — Netflix / Disney+ / Hulu-Katalog + Trailer in der App)",
+    "paste TMDB API key (v3 auth)": "TMDB-API-Schlüssel einfügen (v3-Auth)",
+    "Powers \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via \"free movies …\" (no key needed).": "Treibt \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" an — echte Bibliotheken mit Postern, Bewertungen und Trailern im Pult. Die Wiedergabe öffnet sich weiterhin beim Dienst (Einbettung wird blockiert); gemeinfreie Filme laufen vollständig im Pult über \"free movies …\" (kein Schlüssel nötig).",
+    "DAILY BRIEF": "TÄGLICHER BRIEFING", "(auto-download while the app is open)": "(automatischer Download, solange die App offen ist)",
+    "at": "um", "off": "aus", "run now": "jetzt ausführen",
+    "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Jeden Tag um {time} verfasst das Pult einen Analystenbericht zu {sym} und lädt automatisch ein {fmt}-Briefing herunter. Erfordert, dass dieser Tab geöffnet ist (Browser können es nicht geschlossen ausführen) und einen Anthropic-Schlüssel für den Text.",
+    "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Legen Sie eine Uhrzeit fest, um täglich automatisch einen Bericht mit Ihrer Marke zu erstellen und herunterzuladen. Leer lassen zum Deaktivieren.",
   },
   pt: {
     "Export": "Exportar", "More": "Mais", "Settings": "Definições", "sign in": "iniciar sessão",
@@ -369,6 +432,27 @@ const I18N = {
     "WHAT'S SET UP": "O QUE ESTÁ CONFIGURADO", "tap to configure": "toque para configurar",
     "tour · demo · missions": "visita · demo · missões", "pick your anchor": "escolha o seu apresentador",
     "skip — I'll explore on my own": "ignorar — vou explorar sozinho",
+    // DATA tab
+    "PANELS": "PAINÉIS", "ticker tape": "fita de cotações", "watchlist": "lista de acompanhamento", "top movers": "maiores variações", "news & video": "notícias e vídeo", "calendar": "calendário", "portfolio": "carteira",
+    "breaking-news alerts during live trading": "alertas de última hora durante a negociação ao vivo",
+    "CLOCK TIMEZONE": "FUSO HORÁRIO DO RELÓGIO",
+    "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Define o relógio do cabeçalho. O crachá de mercado ABERTO/FECHADO segue sempre o horário da NYSE (hora do Leste).",
+    "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "AO VIVO",
+    "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "O modo demo usa um motor de mercado de passeio aleatório com semente — uma sessão simulada reproduzível, sem chave nem rede.",
+    "FINNHUB API KEY (free tier works)": "CHAVE API FINNHUB (o plano gratuito funciona)", "paste key": "cole a chave",
+    "Key is held in memory only — never stored or sent anywhere except finnhub.io.": "A chave fica apenas na memória — nunca é armazenada nem enviada para outro lugar além de finnhub.io.",
+    "get a free key": "obter uma chave gratuita",
+    "YOUTUBE DATA API KEY": "CHAVE API YOUTUBE DATA", "(optional — real, playable video results)": "(opcional — resultados de vídeo reais e reproduzíveis)",
+    "paste key (AIza…)": "cole a chave (AIza…)", "needs": "requer",
+    "Without a key, \"show videos of …\" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.": "Sem uma chave, \"show videos of …\" pede ao Claude para adivinhar vídeos (muitas vezes não incorporáveis). Com uma, a mesa obtém resultados reais e incorporáveis do YouTube.",
+    "enable API": "ativar API",
+    "TMDB API KEY": "CHAVE API TMDB", "(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)": "(opcional — catálogo Netflix / Disney+ / Hulu e trailers na app)",
+    "paste TMDB API key (v3 auth)": "cole a chave API TMDB (auth v3)",
+    "Powers \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via \"free movies …\" (no key needed).": "Alimenta \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — bibliotecas reais com cartazes, classificações e trailers na mesa. A reprodução abre sempre no serviço (bloqueiam a incorporação); os filmes de domínio público reproduzem-se por completo na mesa via \"free movies …\" (sem chave).",
+    "DAILY BRIEF": "RESUMO DIÁRIO", "(auto-download while the app is open)": "(descarga automática enquanto a app está aberta)",
+    "at": "às", "off": "desativar", "run now": "executar agora",
+    "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Todos os dias às {time}, a mesa redige um relatório de analista sobre {sym} e descarrega automaticamente um resumo em {fmt}. Requer que este separador esteja aberto (os navegadores não o executam fechado) e uma chave Anthropic para a redação.",
+    "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Defina uma hora para gerar e descarregar automaticamente um relatório com a sua marca todos os dias. Deixe em branco para desativar.",
   },
   it: {
     "Export": "Esporta", "More": "Altro", "Settings": "Impostazioni", "sign in": "accedi",
@@ -436,6 +520,27 @@ const I18N = {
     "WHAT'S SET UP": "COSA È CONFIGURATO", "tap to configure": "tocca per configurare",
     "tour · demo · missions": "tour · demo · missioni", "pick your anchor": "scegli il tuo conduttore",
     "skip — I'll explore on my own": "salta — esplorerò da solo",
+    // DATA tab
+    "PANELS": "PANNELLI", "ticker tape": "nastro delle quotazioni", "watchlist": "lista di osservazione", "top movers": "maggiori variazioni", "news & video": "notizie e video", "calendar": "calendario", "portfolio": "portafoglio",
+    "breaking-news alerts during live trading": "avvisi dell'ultima ora durante la contrattazione in diretta",
+    "CLOCK TIMEZONE": "FUSO ORARIO DELL'OROLOGIO",
+    "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Imposta l'orologio dell'intestazione. Il badge di mercato APERTO/CHIUSO segue sempre gli orari del NYSE (ora orientale).",
+    "replay tutorial": "rivedi il tutorial", "DEMO": "DEMO", "LIVE": "IN DIRETTA",
+    "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "La modalità demo usa un motore di mercato a passeggiata casuale con seme — una sessione simulata riproducibile, senza chiave né rete.",
+    "FINNHUB API KEY (free tier works)": "CHIAVE API FINNHUB (il piano gratuito funziona)", "paste key": "incolla la chiave",
+    "Key is held in memory only — never stored or sent anywhere except finnhub.io.": "La chiave resta solo in memoria — mai memorizzata né inviata altrove se non a finnhub.io.",
+    "get a free key": "ottieni una chiave gratuita",
+    "YOUTUBE DATA API KEY": "CHIAVE API YOUTUBE DATA", "(optional — real, playable video results)": "(opzionale — risultati video reali e riproducibili)",
+    "paste key (AIza…)": "incolla la chiave (AIza…)", "needs": "richiede",
+    "Without a key, \"show videos of …\" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.": "Senza chiave, \"show videos of …\" chiede a Claude di indovinare i video (spesso non incorporabili). Con una, la postazione ottiene risultati reali e incorporabili da YouTube.",
+    "enable API": "abilita API",
+    "TMDB API KEY": "CHIAVE API TMDB", "(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)": "(opzionale — catalogo Netflix / Disney+ / Hulu e trailer nell'app)",
+    "paste TMDB API key (v3 auth)": "incolla la chiave API TMDB (auth v3)",
+    "Powers \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via \"free movies …\" (no key needed).": "Alimenta \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — librerie reali con locandine, valutazioni e trailer nella postazione. La riproduzione si apre sempre sul servizio (bloccano l'incorporazione); i film di pubblico dominio si riproducono per intero nella postazione tramite \"free movies …\" (nessuna chiave).",
+    "DAILY BRIEF": "BRIEFING GIORNALIERO", "(auto-download while the app is open)": "(download automatico mentre l'app è aperta)",
+    "at": "alle", "off": "disattiva", "run now": "esegui ora",
+    "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Ogni giorno alle {time}, la postazione redige un rapporto d'analisi su {sym} e scarica automaticamente un brief in {fmt}. Richiede che questa scheda resti aperta (i browser non possono eseguirlo da chiusa) e una chiave Anthropic per la stesura.",
+    "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Imposta un orario per generare e scaricare automaticamente ogni giorno un rapporto con il tuo marchio. Lascia vuoto per disattivare.",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -7216,21 +7321,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               {settingsTab === "data" && (
                 <>
                   <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${C.panelEdge}` }}>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>PANELS</label>
+                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("PANELS")}</label>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
                       {[["tape", "ticker tape"], ["watchlist", "watchlist"], ["movers", "top movers"], ["news", "news & video"], ["calendar", "calendar"], ["portfolio", "portfolio"]].map(([k, label]) => (
                         <label key={k} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 11, color: panels[k] ? C.text : C.faint, cursor: "pointer" }}>
                           <input type="checkbox" checked={panels[k]} onChange={() => togglePanel(k)} />
-                          {label}
+                          {t(label)}
                         </label>
                       ))}
                     </div>
                     <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: MONO, fontSize: 11, color: breakingOn ? C.text : C.faint, cursor: "pointer" }}>
                       <input type="checkbox" checked={breakingOn} onChange={() => setBreakingOn(v => !v)} />
-                      ⚡ breaking-news alerts during live trading
+                      ⚡ {t("breaking-news alerts during live trading")}
                     </label>
                     <div style={{ marginTop: 14 }}>
-                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>CLOCK TIMEZONE</label>
+                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("CLOCK TIMEZONE")}</label>
                       <select value={clockTz} onChange={e => setClockTz(e.target.value)}
                         style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px 10px" }}>
                         <optgroup label="Americas">
@@ -7241,12 +7346,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         </optgroup>
                       </select>
                       <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6, lineHeight: 1.6 }}>
-                        Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.
+                        {t("Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.")}
                       </div>
                     </div>
                     <button onClick={() => { setTutStep(0); setShowTutorial(true); setShowSettings(false); }}
                       style={{ marginTop: 12, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "7px 12px", cursor: "pointer" }}>
-                      ↺ replay tutorial
+                      ↺ {t("replay tutorial")}
                     </button>
                   </div>
                   <div style={{ display: "flex", gap: 8, marginBottom: 14, alignItems: "center" }}>
@@ -7267,31 +7372,31 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                           color: locked ? C.faint : mode === mm ? "#141414" : C.muted,
                           border: `1px solid ${mode === mm ? C.amber : C.panelEdge}`,
                           opacity: locked ? 0.6 : 1,
-                        }}>{mm.toUpperCase()}{locked ? " 🔒" : ""}</button>
+                        }}>{t(mm.toUpperCase())}{locked ? " 🔒" : ""}</button>
                       );
                     })}
                     {lockChip("finnhub")}
                   </div>
                   {mode === "demo" && (
                     <div style={{ fontFamily: MONO, fontSize: 11, color: C.muted, lineHeight: 1.7 }}>
-                      Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.
+                      {t("Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.")}
                     </div>
                   )}
                   {mode === "live" && (
                     <>
-                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>FINNHUB API KEY (free tier works)</label>
+                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("FINNHUB API KEY (free tier works)")}</label>
                       <input
                         value={keyDraft} onChange={e => {
                           const next = e.target.value;
                           setKeyDraft(next);
                           if (mode === "live") setApiKey(next.trim());
                         }} type="password"
-                        placeholder="paste key"
+                        placeholder={t("paste key")}
                         style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 10px" }}
                       />
                       <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
-                        Key is held in memory only — never stored or sent anywhere except finnhub.io.{" "}
-                        <a href="https://finnhub.io/register" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>get a free key ↗</a>
+                        {t("Key is held in memory only — never stored or sent anywhere except finnhub.io.")}{" "}
+                        <a href="https://finnhub.io/register" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("get a free key")} ↗</a>
                       </div>
                       <TestBtn kind="finnhub" />
                     </>
@@ -7299,7 +7404,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
                   <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.panelEdge}` }}>
                     <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
-                      YOUTUBE DATA API KEY <span style={{ color: C.faint }}>(optional — real, playable video results)</span>
+                      {t("YOUTUBE DATA API KEY")} <span style={{ color: C.faint }}>{t("(optional — real, playable video results)")}</span>
                       {lockChip("youtube")}
                     </label>
                     <input
@@ -7308,37 +7413,37 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         setYoutubeKeyDraft(next);
                         setYoutubeKey(next.trim());
                       }} type="password"
-                      placeholder={planAllows("youtube") ? "paste key (AIza…)" : `needs ${planFor("youtube")}`}
+                      placeholder={planAllows("youtube") ? t("paste key (AIza…)") : `${t("needs")} ${planFor("youtube")}`}
                       style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 10px", opacity: planAllows("youtube") ? 1 : 0.5 }}
                     />
                     <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
-                      Without a key, "show videos of …" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.{" "}
-                      <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>enable API ↗</a>{" · "}
-                      <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>get a key ↗</a>
+                      {t("Without a key, \"show videos of …\" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.")}{" "}
+                      <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("enable API")} ↗</a>{" · "}
+                      <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("get a key")} ↗</a>
                     </div>
                     <TestBtn kind="youtube" />
                   </div>
 
                   <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.panelEdge}` }}>
                     <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
-                      TMDB API KEY <span style={{ color: C.faint }}>(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)</span>
+                      {t("TMDB API KEY")} <span style={{ color: C.faint }}>{t("(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)")}</span>
                       {lockChip("tmdb")}
                     </label>
                     <input
                       value={tmdbKey} disabled={!planAllows("tmdb")} onChange={e => setTmdbKey(e.target.value.trim())} type="password"
-                      placeholder={planAllows("tmdb") ? "paste TMDB API key (v3 auth)" : `needs ${planFor("tmdb")}`}
+                      placeholder={planAllows("tmdb") ? t("paste TMDB API key (v3 auth)") : `${t("needs")} ${planFor("tmdb")}`}
                       style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 10px", opacity: planAllows("tmdb") ? 1 : 0.5 }}
                     />
                     <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
-                      Powers "what's on netflix", "browse hulu shows", "what's on disney+" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via "free movies …" (no key needed).{" "}
-                      <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>get a free key ↗</a>
+                      {t("Powers \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via \"free movies …\" (no key needed).")}{" "}
+                      <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("get a free key")} ↗</a>
                     </div>
                   </div>
 
                   <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.panelEdge}` }}>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>DAILY BRIEF <span style={{ color: C.faint }}>(auto-download while the app is open)</span></label>
+                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("DAILY BRIEF")} <span style={{ color: C.faint }}>{t("(auto-download while the app is open)")}</span></label>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontFamily: MONO, fontSize: 11, color: C.muted }}>at</span>
+                      <span style={{ fontFamily: MONO, fontSize: 11, color: C.muted }}>{t("at")}</span>
                       <input type="time" value={briefTime} onChange={e => setBriefTime(e.target.value)}
                         style={{ background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px" }} />
                       <select value={briefFormat} onChange={e => setBriefFormat(e.target.value)}
@@ -7347,13 +7452,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         <option value="docx">Word</option>
                         <option value="xlsx">Excel</option>
                       </select>
-                      {briefTime && <button onClick={() => setBriefTime("")} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 10px", cursor: "pointer" }}>off</button>}
-                      <button onClick={runDailyBrief} style={{ background: "transparent", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 10px", cursor: "pointer" }}>run now</button>
+                      {briefTime && <button onClick={() => setBriefTime("")} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 10px", cursor: "pointer" }}>{t("off")}</button>}
+                      <button onClick={runDailyBrief} style={{ background: "transparent", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 10px", cursor: "pointer" }}>{t("run now")}</button>
                     </div>
                     <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
                       {briefTime
-                        ? `Each day at ${briefTime}, the desk writes an analyst report on ${selected} and downloads a ${briefFormat.toUpperCase()} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.`
-                        : "Set a time to auto-generate and download a branded report each day. Leave blank to disable."}
+                        ? t("Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.").replace("{time}", to12h(briefTime)).replace("{sym}", selected).replace("{fmt}", briefFormat.toUpperCase())
+                        : t("Set a time to auto-generate and download a branded report each day. Leave blank to disable.")}
                     </div>
                   </div>
                 </>
