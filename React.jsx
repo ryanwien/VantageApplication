@@ -936,6 +936,11 @@ const CHARACTERS = [
   { id: "marina", name: "Marina", skin: "#E8C39E", hairColor: "#1FA9A0", hair: "long", suit: "#186A72", shirt: "#2FD3C6", tieBase: false, earrings: true, hat: "mermaid" },
   { id: "aurora", name: "Aurora", skin: "#E8C6A8", hairColor: "#6B3B1F", hair: "long", suit: "#7A2E5A", shirt: "#E9A8C8", tieBase: false, earrings: true, hat: "crown" },
   { id: "diana", name: "Diana", skin: "#C68863", hairColor: "#1A1512", hair: "long", suit: "#2E5A3A", shirt: "#C9A24B", tieBase: false, earrings: true, hat: "amazon" },
+  { id: "blaze", name: "Blaze", skin: "#C68863", hairColor: "#1A1A1A", hair: "short", suit: "#3B4A2F", shirt: "#5A6B3F", tieBase: false, hat: "action" },
+  { id: "kit", name: "Kit", skin: "#D9A57E", hairColor: "#4A3421", hair: "short", suit: "#6B5334", shirt: "#8A6F45", tieBase: false, hat: "explorer" },
+  { id: "vesper", name: "Vesper", skin: "#CFC9CE", hairColor: "#0A0A0A", hair: "short", suit: "#14121A", shirt: "#3A0E14", tieBase: false, hat: "horror" },
+  { id: "colt", name: "Colt", skin: "#C68863", hairColor: "#3B2417", hair: "short", beard: true, suit: "#5A3A24", shirt: "#8A5A34", tieBase: false, hat: "cowboy" },
+  { id: "marlowe", name: "Marlowe", skin: "#B9A9A0", hairColor: "#20201F", hair: "short", suit: "#2E2E30", shirt: "#D8D8D8", tieBase: true, hat: "noir" },
 ];
 
 // all-caps words that look like tickers but aren't, for intent parsing
@@ -1005,6 +1010,11 @@ const ENVIRONMENTS = [
   { id: "reef", name: "Coral Reef" },
   { id: "palace", name: "Royal Palace" },
   { id: "jungle", name: "Jungle" },
+  { id: "action", name: "Action Set" },
+  { id: "temple", name: "Lost Temple" },
+  { id: "horror", name: "Haunted Manor" },
+  { id: "western", name: "Wild West" },
+  { id: "noir", name: "Film Noir" },
 ];
 
 // Clock timezones the user can pick in settings. The header clock shows the chosen zone; the
@@ -1560,6 +1570,71 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         leaf(-6, 20, 0.5, 1.2); leaf(W + 6, 30, Math.PI - 0.5, 1.2); leaf(10, H - 8, -0.4, 1); leaf(W - 10, H - 12, Math.PI + 0.4, 1);
         ctx.strokeStyle = "#245E33"; ctx.lineWidth = 2; // hanging vines
         for (const vx of [40, 100, 150]) { ctx.beginPath(); ctx.moveTo(vx, 0); for (let y = 0; y < 70; y += 10) ctx.lineTo(vx + Math.sin(y / 12 + vx) * 4, y); ctx.stroke(); }
+      } else if (env === "action") {
+        const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#160B08"); g.addColorStop(1, "#2A1206"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        // pulsing explosion glow, lower right
+        const pulse = reduced ? 0.6 : 0.5 + Math.abs(Math.sin(t / 260)) * 0.5;
+        const eg = ctx.createRadialGradient(W - 40, H - 30, 4, W - 40, H - 30, 90);
+        eg.addColorStop(0, `rgba(255,180,60,${0.55 * pulse})`); eg.addColorStop(0.5, `rgba(240,90,30,${0.3 * pulse})`); eg.addColorStop(1, "rgba(240,90,30,0)");
+        ctx.fillStyle = eg; ctx.fillRect(0, 0, W, H);
+        // helicopter drifting across
+        const hx = (t / 40) % (W + 60) - 30, hy2 = 30 + Math.sin(t / 500) * 4;
+        ctx.fillStyle = "#0A0A0C"; ctx.fillRect(hx - 8, hy2, 16, 6); ctx.beginPath(); ctx.arc(hx + 8, hy2 + 3, 3, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(hx - 18, hy2 + 2, 12, 2);
+        ctx.strokeStyle = "rgba(200,200,210,0.5)"; ctx.lineWidth = 1.4;
+        const rot = reduced ? 10 : Math.sin(t / 40) * 14;
+        ctx.beginPath(); ctx.moveTo(hx - rot, hy2 - 3); ctx.lineTo(hx + rot, hy2 - 3); ctx.stroke(); ctx.beginPath(); ctx.moveTo(hx, hy2 - 4); ctx.lineTo(hx, hy2); ctx.stroke();
+        // rising embers
+        if (!reduced) for (let i = 0; i < 12; i++) { const ex = (i * 53 + t / 10) % W; const ey = H - ((t / 12 + i * 30) % (H + 20)); ctx.fillStyle = `rgba(255,${140 + (i % 3) * 40},50,${0.5 + 0.3 * Math.sin(i + t / 300)})`; ctx.fillRect(ex, ey, 2, 2); }
+      } else if (env === "temple") {
+        const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#1E1710"); g.addColorStop(1, "#0F0B07"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        ctx.strokeStyle = "rgba(120,100,70,0.25)"; ctx.lineWidth = 1; // stone block wall
+        for (let ry = 8; ry < H; ry += 22) for (let rx = ((ry / 22) % 2 ? 0 : -18); rx < W; rx += 36) ctx.strokeRect(rx, ry, 36, 22);
+        for (const px of [18, W - 30]) { ctx.fillStyle = "#2A2114"; ctx.fillRect(px, 20, 18, H - 20); ctx.fillStyle = "#33281A"; ctx.fillRect(px - 3, 16, 24, 8); } // pillars
+        // glowing golden idol, center
+        const ig = 0.6 + (reduced ? 0 : Math.sin(t / 600) * 0.3);
+        const rg = ctx.createRadialGradient(W / 2, 40, 2, W / 2, 40, 24); rg.addColorStop(0, `rgba(245,200,90,${0.5 * (ig + 0.4)})`); rg.addColorStop(1, "rgba(245,200,90,0)");
+        ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(W / 2, 40, 24, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#C9A24B"; ctx.beginPath(); ctx.arc(W / 2, 40, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#8A6A2A"; ctx.beginPath(); ctx.arc(W / 2, 40, 7, Math.PI * 0.2, Math.PI * 0.8); ctx.fill();
+        for (const tx of [27, W - 21]) { // pillar torches
+          const fl = reduced ? 1 : 0.6 + Math.abs(Math.sin(t / 120 + tx)) * 0.4;
+          ctx.fillStyle = `rgba(255,150,40,${fl})`; ctx.beginPath(); ctx.ellipse(tx, 60, 4, 8 * fl, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = `rgba(255,220,120,${fl})`; ctx.beginPath(); ctx.ellipse(tx, 62, 2, 4 * fl, 0, 0, Math.PI * 2); ctx.fill();
+        }
+        if (!reduced) for (let i = 0; i < 10; i++) { const dx = (i * 41 + t / 30) % W; const dy = (i * 53 + t / 60) % H; ctx.fillStyle = `rgba(220,200,150,${0.05 + 0.05 * Math.sin(i + t / 400)})`; ctx.fillRect(dx, dy, 1.4, 1.4); } // dust motes
+      } else if (env === "horror") {
+        const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#0C0A16"); g.addColorStop(1, "#08060E"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        const mg = ctx.createRadialGradient(146, 32, 6, 146, 32, 20); mg.addColorStop(0, "#D8D8E0"); mg.addColorStop(1, "#3A3A4A"); // full moon
+        ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(146, 32, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "rgba(120,120,140,0.4)"; for (const [mx, my, mr] of [[142, 28, 3], [150, 36, 2], [148, 26, 1.5]]) { ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.fill(); }
+        ctx.strokeStyle = "#050409"; ctx.lineWidth = 3; ctx.lineCap = "round"; // bare tree
+        ctx.beginPath(); ctx.moveTo(12, H); ctx.lineTo(16, 60); ctx.moveTo(16, 74); ctx.lineTo(4, 58); ctx.moveTo(16, 66); ctx.lineTo(30, 50); ctx.moveTo(16, 60); ctx.lineTo(10, 44); ctx.stroke();
+        if (!reduced) for (let i = 0; i < 3; i++) { const bx = (t / 24 + i * 60) % (W + 20) - 10, by = 40 + Math.sin(t / 300 + i * 2) * 16, w = 4 + Math.abs(Math.sin(t / 90 + i)) * 3; ctx.strokeStyle = "#060510"; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(bx - w, by); ctx.quadraticCurveTo(bx - 2, by - 3, bx, by); ctx.quadraticCurveTo(bx + 2, by - 3, bx + w, by); ctx.stroke(); } // bats
+        ctx.fillStyle = `rgba(120,130,150,${0.06 + (reduced ? 0 : Math.sin(t / 800) * 0.03)})`; ctx.fillRect(0, H - 30, W, 30); // ground fog
+        const cf = reduced ? 0.6 : 0.4 + Math.abs(Math.sin(t / 90)) * 0.5; // flickering candle
+        const cg = ctx.createRadialGradient(W - 26, H - 24, 1, W - 26, H - 24, 20); cg.addColorStop(0, `rgba(255,170,70,${0.5 * cf})`); cg.addColorStop(1, "rgba(255,170,70,0)");
+        ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(W - 26, H - 24, 20, 0, Math.PI * 2); ctx.fill();
+      } else if (env === "western") {
+        const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#3A2A4A"); g.addColorStop(0.45, "#8A4A2E"); g.addColorStop(0.75, "#C87A3A"); g.addColorStop(1, "#5A2E1E"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "rgba(255,210,120,0.9)"; ctx.beginPath(); ctx.arc(W / 2, 88, 22, 0, Math.PI * 2); ctx.fill(); // sun
+        ctx.fillStyle = "rgba(255,180,90,0.25)"; ctx.beginPath(); ctx.arc(W / 2, 88, 34, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#3A1E14"; // mesas
+        ctx.beginPath(); ctx.moveTo(0, 96); ctx.lineTo(0, 78); ctx.lineTo(30, 78); ctx.lineTo(34, 84); ctx.lineTo(60, 84); ctx.lineTo(64, 96); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(W, 98); ctx.lineTo(W, 72); ctx.lineTo(W - 40, 72); ctx.lineTo(W - 44, 80); ctx.lineTo(W - 70, 80); ctx.lineTo(W - 74, 98); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#2A160E"; ctx.fillRect(0, 96, W, H - 96); // ground
+        ctx.strokeStyle = "#14100A"; ctx.lineWidth = 6; ctx.lineCap = "round"; // saguaro
+        ctx.beginPath(); ctx.moveTo(30, H); ctx.lineTo(30, 108); ctx.moveTo(30, 120); ctx.lineTo(22, 120); ctx.lineTo(22, 112); ctx.moveTo(30, 116); ctx.lineTo(38, 116); ctx.lineTo(38, 106); ctx.stroke();
+        const tw = (t / 30) % (W + 30) - 15; // tumbleweed
+        ctx.strokeStyle = "rgba(150,120,70,0.7)"; ctx.lineWidth = 1.4; ctx.save(); ctx.translate(tw, H - 14); ctx.rotate(t / 200);
+        for (let a = 0; a < 5; a++) { ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(7, 0); ctx.stroke(); ctx.rotate(Math.PI / 5); } ctx.restore();
+      } else if (env === "noir") {
+        const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#16161A"); g.addColorStop(1, "#0A0A0C"); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        ctx.save(); ctx.translate(0, -20); ctx.rotate(0.18); // venetian-blind bars
+        for (let y = -10; y < H + 60; y += 16) { ctx.fillStyle = "rgba(220,225,235,0.07)"; ctx.fillRect(-20, y, W + 60, 7); }
+        ctx.restore();
+        if (!reduced) for (let i = 0; i < 24; i++) { const rx = (i * 37 + t / 3) % W, ry = ((i * 53 + t / 2) % (H + 20)) - 10; ctx.strokeStyle = "rgba(180,190,205,0.18)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx - 2, ry + 8); ctx.stroke(); } // rain
+        const lg = ctx.createRadialGradient(24, H - 10, 2, 24, H - 10, 60); lg.addColorStop(0, "rgba(230,220,190,0.14)"); lg.addColorStop(1, "rgba(230,220,190,0)"); // desk-lamp cone
+        ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(24, H - 10, 60, 0, Math.PI * 2); ctx.fill();
       }
       // dim the whole set so the anchor stays the subject
       ctx.fillStyle = "rgba(11,14,20,0.38)";
@@ -2147,7 +2222,7 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         ctx.beginPath(); ctx.ellipse(cx, hy, 34, 38, 0, 0, Math.PI * 2); ctx.fill();
 
         // a full helmet (knight/astronaut) or wizard hat covers the hair, so skip drawing it
-        const hideHair = ch.hat === "knight" || ch.hat === "astronaut" || ch.hat === "wizard";
+        const hideHair = ch.hat === "knight" || ch.hat === "astronaut" || ch.hat === "wizard" || ch.hat === "explorer" || ch.hat === "cowboy" || ch.hat === "noir" || ch.hat === "horror";
         ctx.fillStyle = ch.hairColor || "#2A2118";
         if (hideHair) {
           /* hair hidden under headgear */
@@ -2346,6 +2421,59 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
           ctx.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * (Math.PI * 4 / 5); const R = i % 2 ? 0 : 4.2; ctx.lineTo(cx + Math.cos(a) * 4.2, hy - 26 + Math.sin(a) * 4.2); }
           ctx.arc(cx, hy - 26, 3.2, 0, Math.PI * 2); ctx.fill();
           ctx.save(); ctx.translate(cx + 23, hy - 18); ctx.rotate(-0.5); ctx.fillStyle = "#C0392B"; ctx.beginPath(); ctx.ellipse(0, 0, 3, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); // feather
+        } else if (ch.hat === "action") {
+          // red headband with trailing tails + aviator shades (action hero)
+          const fw = reduced ? 0 : Math.sin(t / 200) * 4;
+          ctx.fillStyle = "#C0392B"; ctx.fillRect(cx - 33, hy - 16, 66, 8);
+          ctx.fillStyle = "#8E2A1E"; ctx.fillRect(cx - 33, hy - 10, 66, 2);
+          ctx.fillStyle = "#C0392B"; // knotted tails flapping on the left
+          ctx.beginPath(); ctx.moveTo(cx - 33, hy - 14); ctx.lineTo(cx - 48, hy - 8 + fw); ctx.lineTo(cx - 45, hy - 2 + fw); ctx.lineTo(cx - 33, hy - 6); ctx.closePath(); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(cx - 33, hy - 9); ctx.lineTo(cx - 50, hy + 3 + fw * 0.6); ctx.lineTo(cx - 46, hy + 8 + fw * 0.6); ctx.lineTo(cx - 33, hy - 1); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#0E0E10"; // aviator shades over the eyes
+          for (const side of [-1, 1]) { ctx.beginPath(); ctx.ellipse(cx + side * 13, eyeY + 1, 9, 7, 0, 0, Math.PI * 2); ctx.fill(); }
+          ctx.fillRect(cx - 5, eyeY - 1, 10, 3); // bridge
+          ctx.strokeStyle = "rgba(255,255,255,0.35)"; ctx.lineWidth = 1.4; // glare
+          for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + side * 13 - 4, eyeY - 2); ctx.lineTo(cx + side * 13 + 1, eyeY + 3); ctx.stroke(); }
+        } else if (ch.hat === "explorer") {
+          // adventurer's tan fedora
+          const tan = "#8A6A3E", tanD = "#5E4626";
+          ctx.fillStyle = tanD; ctx.beginPath(); ctx.ellipse(cx, hy - 12, 44, 11, 0, 0, Math.PI * 2); ctx.fill(); // brim
+          ctx.fillStyle = tan; ctx.beginPath(); ctx.moveTo(cx - 26, hy - 12); ctx.quadraticCurveTo(cx - 24, hy - 40, cx, hy - 42); ctx.quadraticCurveTo(cx + 24, hy - 40, cx + 26, hy - 12); ctx.closePath(); ctx.fill(); // crown
+          ctx.strokeStyle = tanD; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, hy - 40); ctx.lineTo(cx, hy - 22); ctx.stroke(); // dent
+          ctx.fillStyle = "#3A2A18"; ctx.fillRect(cx - 26, hy - 18, 52, 5); // band
+        } else if (ch.hat === "horror") {
+          // vampire: slicked hair + widow's peak + a tall standing collar behind the head
+          ctx.fillStyle = ch.hairColor || "#0A0A0A";
+          ctx.beginPath(); ctx.ellipse(cx, hy - 12, 33, 26, 0, Math.PI, 0); ctx.fill(); // slicked dome
+          ctx.beginPath(); ctx.moveTo(cx - 16, hy - 18); ctx.lineTo(cx, hy - 4); ctx.lineTo(cx + 16, hy - 18); ctx.quadraticCurveTo(cx, hy - 24, cx - 16, hy - 18); ctx.closePath(); ctx.fill(); // widow's peak
+          ctx.fillStyle = "#160910"; // collar wings
+          for (const side of [-1, 1]) {
+            ctx.beginPath(); ctx.moveTo(cx + side * 20, hy + 36);
+            ctx.quadraticCurveTo(cx + side * 52, hy + 6, cx + side * 40, hy - 34);
+            ctx.lineTo(cx + side * 24, hy - 22);
+            ctx.quadraticCurveTo(cx + side * 30, hy + 8, cx + side * 12, hy + 34);
+            ctx.closePath(); ctx.fill();
+          }
+          ctx.strokeStyle = "#6E1420"; ctx.lineWidth = 2; // red inner lining
+          for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + side * 24, hy - 22); ctx.quadraticCurveTo(cx + side * 30, hy + 8, cx + side * 12, hy + 32); ctx.stroke(); }
+        } else if (ch.hat === "cowboy") {
+          // wide-brim western hat with a pinched crown + star pin
+          const tan = "#9A7B4A", tanD = "#6B5230";
+          ctx.fillStyle = tanD; ctx.beginPath(); ctx.moveTo(cx - 50, hy - 10); ctx.quadraticCurveTo(cx, hy - 2, cx + 50, hy - 10); ctx.quadraticCurveTo(cx, hy - 20, cx - 50, hy - 10); ctx.closePath(); ctx.fill(); // brim
+          ctx.fillStyle = tan; ctx.beginPath(); ctx.moveTo(cx - 22, hy - 12); ctx.quadraticCurveTo(cx - 20, hy - 44, cx, hy - 44); ctx.quadraticCurveTo(cx + 20, hy - 44, cx + 22, hy - 12); ctx.closePath(); ctx.fill(); // crown
+          ctx.strokeStyle = tanD; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx - 9, hy - 42); ctx.lineTo(cx - 8, hy - 22); ctx.moveTo(cx + 9, hy - 42); ctx.lineTo(cx + 8, hy - 22); ctx.stroke(); // side pinches
+          ctx.fillStyle = "#3A2A18"; ctx.fillRect(cx - 22, hy - 18, 44, 5); // band
+          ctx.fillStyle = "#C9A24B"; ctx.beginPath(); ctx.arc(cx, hy - 15, 2, 0, Math.PI * 2); ctx.fill(); // star pin
+        } else if (ch.hat === "noir") {
+          // rakishly tilted detective fedora + brim shadow across the eyes
+          ctx.save(); ctx.translate(cx, hy - 6); ctx.rotate(-0.14);
+          const dk = "#26262A", dkD = "#141416";
+          ctx.fillStyle = dkD; ctx.beginPath(); ctx.ellipse(0, -8, 44, 10, 0, 0, Math.PI * 2); ctx.fill(); // brim
+          ctx.fillStyle = dk; ctx.beginPath(); ctx.moveTo(-24, -8); ctx.quadraticCurveTo(-22, -38, 0, -40); ctx.quadraticCurveTo(22, -38, 24, -8); ctx.closePath(); ctx.fill(); // crown
+          ctx.strokeStyle = dkD; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -38); ctx.lineTo(0, -20); ctx.stroke(); // dent
+          ctx.fillStyle = "#0C0C0E"; ctx.fillRect(-24, -14, 48, 5); // band
+          ctx.restore();
+          ctx.fillStyle = "rgba(0,0,0,0.30)"; ctx.beginPath(); ctx.ellipse(cx, eyeY, 22, 8, 0, 0, Math.PI * 2); ctx.fill(); // brim shadow
         }
       }
       ctx.restore(); // end head transform
@@ -4205,6 +4333,23 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const air = noise("highpass", 5200, 0.7, 0.05); lfo(air.g, "gain", 0.15, 0.02, 0.05); // mic "air" hiss
       drone(110, 0.04); noise("lowpass", 300, 0.6, 0.12); // warm booth tone
       every(6000, () => { if (Math.random() < 0.4) blip(660, 990, 0.12, 0.03, "sine"); }); // soft desk blip
+    } else if (env === "action") {
+      drone(48, 0.14); const rmb = noise("bandpass", 90, 1.2, 0.18); lfo(rmb.g, "gain", 6, 0.08, 0.2); // helicopter rotor thrum
+      every(4200, () => { if (Math.random() < 0.7) blip(70, 40, 0.6, 0.16, "sine"); }); // distant explosion booms
+    } else if (env === "temple") {
+      drone(90, 0.06); const wind = noise("lowpass", 500, 0.6, 0.28); lfo(wind.f, "frequency", 0.05, 120, 400); // low wind
+      every(3000, () => { if (Math.random() < 0.5) blip(1400, 900, 0.18, 0.04, "sine"); }); // water drips
+    } else if (env === "horror") {
+      drone(58, 0.12); drone(61.5, 0.08); // dissonant low pad
+      const wind = noise("lowpass", 400, 0.6, 0.3); lfo(wind.f, "frequency", 0.04, 130, 330); lfo(wind.g, "gain", 0.1, 0.1, 0.24);
+      every(6500, () => { if (Math.random() < 0.5) blip(320, 120, 1.4, 0.06, "sine"); }); // distant howl / creak
+    } else if (env === "western") {
+      const wind = noise("lowpass", 550, 0.6, 0.32); lfo(wind.f, "frequency", 0.05, 120, 400); lfo(wind.g, "gain", 0.1, 0.1, 0.24); // desert wind
+      every(5200, () => { if (Math.random() < 0.4) { blip(300, 300, 0.5, 0.05, "triangle"); setTimeout(() => blip(240, 200, 0.7, 0.05, "triangle"), 260); } }); // lonesome coyote / guitar
+    } else if (env === "noir") {
+      const rain = noise("highpass", 3200, 0.7, 0.14); lfo(rain.g, "gain", 0.3, 0.04, 0.14); noise("lowpass", 300, 0.6, 0.12); // rain + room floor
+      drone(146.8, 0.03); drone(220, 0.02); // muted sax-ish drone
+      every(5000, () => { if (Math.random() < 0.4) blip(330, 262, 0.5, 0.04, "sine"); }); // soft jazz note
     } else { // studio — soft room tone
       const rt = noise("lowpass", 350, 0.5, 0.18); lfo(rt.g, "gain", 0.1, 0.05, 0.16);
     }
