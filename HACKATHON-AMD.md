@@ -40,6 +40,10 @@ Vantage already supports local models (`Ollama` and `LM Studio`) and can run the
 4. Point Vantage at it — **one click** (built in): open **Settings → AI → "⚡ Run local‑only (AMD / ROCm)"** and hit **"Switch the desk to local"**, or just open the app at **`http://127.0.0.1:5173/?local=1`**. Either one enables *only* the Ollama model and lifts the plan gate — no cloud keys, no manual config. (You can still set a different model id / base URL on the Ollama card.)
 5. Now every desk answer, report, and command runs on **AMD inference** — demonstrably offline.
 
+**Troubleshooting**
+- `model "llama3.1" not found, try pulling it first` → the model isn't downloaded. Run `ollama pull llama3.1` (or whatever id you set on the Ollama card), or change the **MODEL** field to one you already have (`ollama list`).
+- `can't reach Ollama (OLLAMA_ORIGINS)` → Ollama isn't running, or it's blocking the browser origin. Start it with `OLLAMA_ORIGINS=http://127.0.0.1:5173 ollama serve`.
+
 *(Client wiring: `askOllama()` in `React.jsx`; the one‑click path is `soloModel("ollama")` + the `?local=1` mount effect; local‑model picker is `isLocalModel`.)*
 
 ## 3‑minute demo script (Agentic AI, all local on AMD)

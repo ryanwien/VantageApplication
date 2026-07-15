@@ -5537,7 +5537,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ model: m.model, stream: true, messages: [{ role: "user", content: prompt }] }),
     });
-    if (!r.ok) throw new Error(`HTTP ${r.status} — is Ollama running with OLLAMA_ORIGINS set?`);
+    if (!r.ok) {
+      // Ollama puts the real reason in the body — a 404 almost always means the model isn't pulled yet.
+      let detail = ""; try { const j = await r.json(); detail = j?.error || ""; } catch { /* no JSON body */ }
+      if (r.status === 404) throw new Error(detail || `model "${m.model}" not found — run: ollama pull ${m.model}`);
+      throw new Error(detail ? `Ollama HTTP ${r.status} — ${detail}` : `Ollama HTTP ${r.status} — running with OLLAMA_ORIGINS=${(typeof window !== "undefined" && window.location?.origin) || "your app origin"} ?`);
+    }
     const reader = r.body.getReader();
     const dec = new TextDecoder();
     let buf = "";
@@ -6125,7 +6130,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     const prompt = buildPrompt(q);
     // plan-gated: the AI desk needs Pro Desk. Treat all models as disabled below the required plan.
     if (!planAllows("ai")) { setCmdMsg(`AI desk answers are a ${planFor("ai")} feature — upgrade in settings → ACCOUNT.`); return; }
-    const hostedAi = !!(account?.backend && account?.token);
+    const enabled = aiModels.filter(m => m.enabled);
+    // The user's own configured models take precedence. Only fall back to Vantage's hosted Gemini
+    // when a signed-in (backend) user hasn't enabled a usable model of their own — otherwise a local
+    // Ollama / LM Studio model (or a keyed cloud model) would be silently bypassed by the hosted desk.
+    const hasOwnModel = enabled.some(m => isLocalModel(m) || (m.apiKey || "").trim() || (m.kind === "claude" && anthropicApiKey.trim()));
+    const hostedAi = !!(account?.backend && account?.token) && !hasOwnModel;
     if (hostedAi) {
       completeMission("ask");
       setAiResponses(p => (p.nav ? { nav: p.nav } : {}));
@@ -6141,7 +6151,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       }).catch(e => setResp("desk", { status: "error", text: String(e.message || e), ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", tried: [] }));
       return;
     }
-    const enabled = aiModels.filter(m => m.enabled);
     if (enabled.length === 0) { setCmdMsg("Enable at least one model in the AI desk config"); return; }
     completeMission("ask");
 
