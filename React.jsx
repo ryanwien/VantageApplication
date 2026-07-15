@@ -153,6 +153,19 @@ const I18N = {
     "Sign in to connect": "Inicia sesión para conectar", "Connect": "Conectar",
     "creating…": "creando…", "New meeting": "Nueva reunión", "disconnect": "desconectar",
     "RECENT MEETINGS": "REUNIONES RECIENTES",
+    // START tab
+    "AI desk": "Mesa de IA", "ready": "listo", "add key ↑": "añadir clave ↑", "Voice": "Voz", "browser": "navegador",
+    "Live quotes": "Cotizaciones en directo", "live": "en directo", "demo": "demo", "Real videos": "Vídeos reales",
+    "on": "activado", "optional": "opcional", "Streaming": "Streaming", "Calendar": "Calendario", "built-in": "integrado", "Meetings": "Reuniones",
+    "You're already set up.": "Ya está todo listo.",
+    "Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:": "Vantage funciona ahora mismo en modo demo — sin claves. Lo único que vale la pena añadir es una clave de IA para que la mesa pueda responderte:",
+    "AI DESK IS ON": "LA MESA DE IA ESTÁ ACTIVA", "TURN ON THE AI DESK — paste one key": "ACTIVA LA MESA DE IA — pega una clave",
+    "One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.": "Una sola clave desbloquea toda la mesa — OpenRouter te da docenas de modelos (GPT, Llama y más) tras una única clave, y es el modelo principal.",
+    "get a key": "obtener una clave",
+    "No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.": "¿Sin clave de IA? La mesa aún no puede responder, pero todo lo demás — gráficos, noticias, juegos, streaming, calendario — funciona sin ella.",
+    "WHAT'S SET UP": "QUÉ ESTÁ CONFIGURADO", "tap to configure": "toca para configurar",
+    "tour · demo · missions": "recorrido · demo · misiones", "pick your anchor": "elige tu presentador",
+    "skip — I'll explore on my own": "omitir — exploraré por mi cuenta",
   },
   fr: {
     "Export": "Exporter", "More": "Plus", "Settings": "Réglages", "sign in": "se connecter",
@@ -208,6 +221,19 @@ const I18N = {
     "Sign in to connect": "Connectez-vous pour relier", "Connect": "Relier",
     "creating…": "création…", "New meeting": "Nouvelle réunion", "disconnect": "déconnecter",
     "RECENT MEETINGS": "RÉUNIONS RÉCENTES",
+    // START tab
+    "AI desk": "Plateau IA", "ready": "prêt", "add key ↑": "ajouter une clé ↑", "Voice": "Voix", "browser": "navigateur",
+    "Live quotes": "Cotations en direct", "live": "en direct", "demo": "démo", "Real videos": "Vraies vidéos",
+    "on": "activé", "optional": "optionnel", "Streaming": "Streaming", "Calendar": "Calendrier", "built-in": "intégré", "Meetings": "Réunions",
+    "You're already set up.": "Tout est déjà prêt.",
+    "Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:": "Vantage fonctionne dès maintenant en mode démo — aucune clé requise. La seule chose à ajouter est une clé IA pour que le plateau puisse vraiment vous répondre :",
+    "AI DESK IS ON": "LE PLATEAU IA EST ACTIF", "TURN ON THE AI DESK — paste one key": "ACTIVEZ LE PLATEAU IA — collez une clé",
+    "One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.": "Une seule clé débloque tout le plateau — OpenRouter vous donne des dizaines de modèles (GPT, Llama, et plus) derrière une seule clé, et c'est le modèle principal.",
+    "get a key": "obtenir une clé",
+    "No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.": "Pas de clé IA ? Le plateau ne peut pas encore répondre, mais tout le reste — graphiques, actualités, jeux, streaming, calendrier — fonctionne sans elle.",
+    "WHAT'S SET UP": "CE QUI EST CONFIGURÉ", "tap to configure": "touchez pour configurer",
+    "tour · demo · missions": "visite · démo · missions", "pick your anchor": "choisissez votre présentateur",
+    "skip — I'll explore on my own": "passer — je vais explorer par moi-même",
   },
   de: {
     "Export": "Exportieren", "More": "Mehr", "Settings": "Einstellungen", "sign in": "anmelden",
@@ -263,6 +289,19 @@ const I18N = {
     "Sign in to connect": "Zum Verbinden anmelden", "Connect": "Verbinden",
     "creating…": "wird erstellt…", "New meeting": "Neues Meeting", "disconnect": "trennen",
     "RECENT MEETINGS": "LETZTE MEETINGS",
+    // START tab
+    "AI desk": "KI-Pult", "ready": "bereit", "add key ↑": "Schlüssel hinzufügen ↑", "Voice": "Stimme", "browser": "Browser",
+    "Live quotes": "Live-Kurse", "live": "live", "demo": "Demo", "Real videos": "Echte Videos",
+    "on": "an", "optional": "optional", "Streaming": "Streaming", "Calendar": "Kalender", "built-in": "integriert", "Meetings": "Meetings",
+    "You're already set up.": "Sie sind bereits startklar.",
+    "Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:": "Vantage läuft gerade jetzt im Demo-Modus — keine Schlüssel nötig. Das Einzige, was sich lohnt, ist ein KI-Schlüssel, damit das Pult Ihnen tatsächlich antworten kann:",
+    "AI DESK IS ON": "DAS KI-PULT IST AN", "TURN ON THE AI DESK — paste one key": "KI-PULT EINSCHALTEN — einen Schlüssel einfügen",
+    "One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.": "Ein Schlüssel schaltet das ganze Pult frei — OpenRouter gibt Ihnen Dutzende Modelle (GPT, Llama und mehr) hinter einem einzigen Schlüssel, und es ist das Hauptmodell.",
+    "get a key": "Schlüssel holen",
+    "No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.": "Kein KI-Schlüssel? Das Pult kann noch nicht antworten, aber alles andere — Charts, Nachrichten, Spiele, Streaming, Kalender — funktioniert auch ohne ihn.",
+    "WHAT'S SET UP": "WAS EINGERICHTET IST", "tap to configure": "zum Konfigurieren tippen",
+    "tour · demo · missions": "Tour · Demo · Missionen", "pick your anchor": "Moderator wählen",
+    "skip — I'll explore on my own": "überspringen — ich erkunde selbst",
   },
   pt: {
     "Export": "Exportar", "More": "Mais", "Settings": "Definições", "sign in": "iniciar sessão",
@@ -317,6 +356,19 @@ const I18N = {
     "Sign in to connect": "Inicie sessão para ligar", "Connect": "Ligar",
     "creating…": "a criar…", "New meeting": "Nova reunião", "disconnect": "desligar",
     "RECENT MEETINGS": "REUNIÕES RECENTES",
+    // START tab
+    "AI desk": "Mesa de IA", "ready": "pronto", "add key ↑": "adicionar chave ↑", "Voice": "Voz", "browser": "navegador",
+    "Live quotes": "Cotações ao vivo", "live": "ao vivo", "demo": "demo", "Real videos": "Vídeos reais",
+    "on": "ligado", "optional": "opcional", "Streaming": "Streaming", "Calendar": "Calendário", "built-in": "integrado", "Meetings": "Reuniões",
+    "You're already set up.": "Já está tudo pronto.",
+    "Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:": "O Vantage funciona agora mesmo em modo demo — sem chaves. A única coisa que vale a pena adicionar é uma chave de IA para que a mesa possa responder-lhe:",
+    "AI DESK IS ON": "A MESA DE IA ESTÁ ATIVA", "TURN ON THE AI DESK — paste one key": "ATIVE A MESA DE IA — cole uma chave",
+    "One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.": "Uma só chave desbloqueia toda a mesa — o OpenRouter dá-lhe dezenas de modelos (GPT, Llama e mais) por trás de uma única chave, e é o modelo principal.",
+    "get a key": "obter uma chave",
+    "No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.": "Sem chave de IA? A mesa ainda não pode responder, mas tudo o resto — gráficos, notícias, jogos, streaming, calendário — funciona sem ela.",
+    "WHAT'S SET UP": "O QUE ESTÁ CONFIGURADO", "tap to configure": "toque para configurar",
+    "tour · demo · missions": "visita · demo · missões", "pick your anchor": "escolha o seu apresentador",
+    "skip — I'll explore on my own": "ignorar — vou explorar sozinho",
   },
   it: {
     "Export": "Esporta", "More": "Altro", "Settings": "Impostazioni", "sign in": "accedi",
@@ -371,6 +423,19 @@ const I18N = {
     "Sign in to connect": "Accedi per collegare", "Connect": "Collega",
     "creating…": "creazione…", "New meeting": "Nuova riunione", "disconnect": "disconnetti",
     "RECENT MEETINGS": "RIUNIONI RECENTI",
+    // START tab
+    "AI desk": "Postazione IA", "ready": "pronto", "add key ↑": "aggiungi chiave ↑", "Voice": "Voce", "browser": "browser",
+    "Live quotes": "Quotazioni in diretta", "live": "in diretta", "demo": "demo", "Real videos": "Video reali",
+    "on": "attivo", "optional": "opzionale", "Streaming": "Streaming", "Calendar": "Calendario", "built-in": "integrato", "Meetings": "Riunioni",
+    "You're already set up.": "Sei già pronto.",
+    "Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:": "Vantage funziona già adesso in modalità demo — nessuna chiave necessaria. L'unica cosa che vale la pena aggiungere è una chiave IA perché la postazione possa risponderti davvero:",
+    "AI DESK IS ON": "LA POSTAZIONE IA È ATTIVA", "TURN ON THE AI DESK — paste one key": "ATTIVA LA POSTAZIONE IA — incolla una chiave",
+    "One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.": "Una sola chiave sblocca l'intera postazione — OpenRouter ti offre decine di modelli (GPT, Llama e altri) dietro un'unica chiave, ed è il modello principale.",
+    "get a key": "ottieni una chiave",
+    "No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.": "Nessuna chiave IA? La postazione non può ancora rispondere, ma tutto il resto — grafici, notizie, giochi, streaming, calendario — funziona senza.",
+    "WHAT'S SET UP": "COSA È CONFIGURATO", "tap to configure": "tocca per configurare",
+    "tour · demo · missions": "tour · demo · missioni", "pick your anchor": "scegli il tuo conduttore",
+    "skip — I'll explore on my own": "salta — esplorerò da solo",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -2423,6 +2488,13 @@ const CAL_DOW = ["S", "M", "T", "W", "T", "F", "S"];
 const CAL_MON = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const calPad = (n) => String(n).padStart(2, "0");
 const calKey = (y, m, d) => `${y}-${calPad(m + 1)}-${calPad(d)}`;
+// format a stored 24h "HH:MM" event time as American 12-hour "H:MM AM/PM"
+const to12h = (t) => {
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(t || ""));
+  if (!m) return t || "";
+  const h = +m[1], ap = h < 12 ? "AM" : "PM", h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${m[2]} ${ap}`;
+};
 const calPretty = (key) => { const [y, m, d] = String(key).split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }); };
 // month-grid calendar component: user events persist in localStorage; read-only `extra` events
 // (e.g. earnings dates from the market feed) are merged in and shown but can't be edited/deleted.
@@ -2494,7 +2566,7 @@ function AppCalendar({ extra = [] }) {
         {dayEvents.length === 0 && <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginBottom: 4 }}>No events yet.</div>}
         {dayEvents.map((e, i) => (
           <div key={e.id || `m${i}`} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0" }}>
-            <span style={{ fontFamily: MONO, fontSize: 9, color: C.amber, minWidth: 40 }}>{e.time || (e.kind === "market" ? "📊" : "—")}</span>
+            <span style={{ fontFamily: MONO, fontSize: 9, color: C.amber, minWidth: 56 }}>{e.time ? to12h(e.time) : (e.kind === "market" ? "📊" : "—")}</span>
             <span style={{ fontFamily: MONO, fontSize: 11, color: e.kind === "market" ? C.amber : C.text, flex: 1, lineHeight: 1.3 }}>{e.title}</span>
             {e.kind === "user"
               ? <button onClick={() => del(e.id)} aria-label="Delete event" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 11 }}>✕</button>
@@ -4247,6 +4319,27 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     return () => { clearTimeout(first); clearInterval(iv); clearTimeout(breakingTimerRef.current); };
   }, [breakingOn, runBreakingCheck]);
 
+  // ---- calendar reminders: when a scheduled event's time arrives, break in like breaking news ----
+  const calRemindedRef = useRef(new Set());
+  useEffect(() => {
+    const check = () => {
+      let evs = [];
+      try { evs = JSON.parse(window.localStorage.getItem("tape-calendar") || "[]"); } catch { return; }
+      const now = new Date();
+      const todayKey = calKey(now.getFullYear(), now.getMonth(), now.getDate());
+      const hhmm = `${calPad(now.getHours())}:${calPad(now.getMinutes())}`;
+      for (const e of evs) {
+        if (e && e.date === todayKey && e.time === hhmm && !calRemindedRef.current.has(e.id)) {
+          calRemindedRef.current.add(e.id);
+          pushBreaking(`Calendar reminder — ${e.title}${e.time ? ` at ${to12h(e.time)}` : ""}`, "calendar");
+        }
+      }
+    };
+    const iv = setInterval(check, 20000); // catch the target minute regardless of when it started
+    check();
+    return () => clearInterval(iv);
+  }, [pushBreaking]);
+
   // ---- price alerts: "alert me when NVDA hits 150" → the anchor breaks in when the target is crossed ----
   const [priceAlerts, setPriceAlerts] = useState(() => { try { return JSON.parse(window.localStorage.getItem("tape-alerts") || "[]"); } catch { return []; } });
   useEffect(() => { try { window.localStorage.setItem("tape-alerts", JSON.stringify(priceAlerts)); } catch { /* private */ } }, [priceAlerts]);
@@ -4391,7 +4484,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       .sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")))
       .slice(0, 5);
     if (upcoming.length) {
-      speak("nav", `Here's your calendar. ${upcoming.length === 1 ? "You have one upcoming event" : `Your next ${upcoming.length} events`}: ` + upcoming.map(e => `${e.title}${e.time ? " at " + e.time : ""}, ${e.date === todayKey ? "today" : "on " + calPretty(e.date)}`).join("; ") + ".");
+      speak("nav", `Here's your calendar. ${upcoming.length === 1 ? "You have one upcoming event" : `Your next ${upcoming.length} events`}: ` + upcoming.map(e => `${e.title}${e.time ? " at " + to12h(e.time) : ""}, ${e.date === todayKey ? "today" : "on " + calPretty(e.date)}`).join("; ") + ".");
     } else {
       speak("nav", "Here's your calendar. It's clear — no upcoming events. You can add one right here.");
     }
@@ -7022,8 +7115,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, gap: 12, flexWrap: "wrap" }}>
               <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>Replay anytime from Settings → DATA SOURCE</span>
               <button onClick={() => setShowTutorial(false)}
-                style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 11, cursor: "pointer", padding: "8px 0" }}>
-                skip — I'll explore on my own
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.muted; e.currentTarget.style.color = C.text; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.panelEdge; e.currentTarget.style.color = C.muted; }}
+                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: MONO, fontSize: 11, fontWeight: 600, cursor: "pointer", padding: "8px 16px", whiteSpace: "nowrap", transition: "border-color .12s, color .12s" }}>
+                {t("skip — I'll explore on my own")}
               </button>
             </div>
           </div>
@@ -7058,38 +7153,38 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 const aiReady = planAllows("ai") && aiModels.some(m => m.enabled && (isLocalModel(m) || (m.kind === "claude" ? anthropicApiKey.trim() : (m.apiKey || "").trim())));
                 const meetOn = !!(meetStatus?.zoom?.connected || meetStatus?.google?.connected);
                 const chips = [
-                  { label: "AI desk", ready: aiReady, note: aiReady ? "ready" : "add key ↑", tab: "models" },
-                  { label: "Voice", ready: true, note: elevenKey ? "ElevenLabs" : "browser", tab: "anchor" },
-                  { label: "Live quotes", ready: mode === "live" && !!apiKey, note: (mode === "live" && apiKey) ? "live" : "demo", tab: "data" },
-                  { label: "Real videos", ready: !!youtubeKey, note: youtubeKey ? "on" : "optional", tab: "data" },
-                  { label: "Streaming", ready: !!tmdbKey, note: tmdbKey ? "on" : "optional", tab: "data" },
-                  { label: "Calendar", ready: true, note: "built-in", tab: "data" },
-                  { label: "Meetings", ready: meetOn, note: meetOn ? "connected" : "optional", tab: "meetings" },
+                  { label: t("AI desk"), ready: aiReady, note: aiReady ? t("ready") : t("add key ↑"), tab: "models" },
+                  { label: t("Voice"), ready: true, note: elevenKey ? "ElevenLabs" : t("browser"), tab: "anchor" },
+                  { label: t("Live quotes"), ready: mode === "live" && !!apiKey, note: (mode === "live" && apiKey) ? t("live") : t("demo"), tab: "data" },
+                  { label: t("Real videos"), ready: !!youtubeKey, note: youtubeKey ? t("on") : t("optional"), tab: "data" },
+                  { label: t("Streaming"), ready: !!tmdbKey, note: tmdbKey ? t("on") : t("optional"), tab: "data" },
+                  { label: t("Calendar"), ready: true, note: t("built-in"), tab: "data" },
+                  { label: t("Meetings"), ready: meetOn, note: meetOn ? t("connected") : t("optional"), tab: "meetings" },
                 ];
                 return (
                   <div style={{ display: "grid", gap: 16 }}>
                     <div style={{ fontFamily: MONO, fontSize: 11.5, lineHeight: 1.7, color: C.text, background: "rgba(255,179,0,0.06)", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "10px 12px" }}>
-                      👋 <b style={{ color: C.amber }}>You're already set up.</b> Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:
+                      👋 <b style={{ color: C.amber }}>{t("You're already set up.")}</b> {t("Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:")}
                     </div>
 
                     {/* the ONE essential */}
                     <div>
                       <label style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.1em", color: aiReady ? C.up : C.amber }}>
-                        {aiReady ? "● AI DESK IS ON" : "⚡ TURN ON THE AI DESK — paste one key"}
+                        {aiReady ? `● ${t("AI DESK IS ON")}` : `⚡ ${t("TURN ON THE AI DESK — paste one key")}`}
                       </label>
                       <input value={or.apiKey || ""} onChange={e => updateModel("openrouter", { apiKey: e.target.value.trim() })} type="password"
                         placeholder="OpenRouter API key (sk-or-…)"
                         style={{ width: "100%", boxSizing: "border-box", marginTop: 8, background: "#0D121C", border: `1px solid ${aiReady ? C.up : C.amber}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "10px" }} />
                       <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
-                        One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.{" "}
-                        <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>get a key ↗</a>
-                        <br />No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.
+                        {t("One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.")}{" "}
+                        <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("get a key")} ↗</a>
+                        <br />{t("No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.")}
                       </div>
                     </div>
 
                     {/* status board */}
                     <div>
-                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>WHAT'S SET UP <span style={{ color: C.faint }}>· tap to configure</span></label>
+                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("WHAT'S SET UP")} <span style={{ color: C.faint }}>· {t("tap to configure")}</span></label>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 8 }}>
                         {chips.map(c => (
                           <button key={c.label} onClick={() => setSettingsTab(c.tab)}
@@ -7106,11 +7201,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <button onClick={() => { setShowSettings(false); setTutStep(0); setShowTutorial(true); }}
                         style={{ flex: 1, minWidth: 140, background: "transparent", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 600, padding: "9px 0", cursor: "pointer" }}>
-                        ↺ tour · demo · missions
+                        ↺ {t("tour · demo · missions")}
                       </button>
                       <button onClick={() => setSettingsTab("anchor")}
                         style={{ flex: 1, minWidth: 140, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "9px 0", cursor: "pointer" }}>
-                        🎙️ pick your anchor
+                        🎙️ {t("pick your anchor")}
                       </button>
                     </div>
                   </div>
