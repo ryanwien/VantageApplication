@@ -4433,7 +4433,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       analysis: overrides.analysis ?? analysis,
       question: lastAsked,
       news: overrides.news ?? (news?.news || []),
-      chartImage: chartToDataUrl(),
+      chartImage: overrides.chartImage !== undefined ? overrides.chartImage : chartToDataUrl(),
       writtenReport: overrides.writtenReport ?? writtenReport,
       title: overrides.title || `Vantage Market Report — ${sel?.sym || selected}`,
       logo: makeLogoDataUrl(),
@@ -4457,8 +4457,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       body: starter,
       selected: { ...sel, price: r2(sel.price), chg: r2(sel.chg), chgPct: r2(sel.chgPct), open: r2(sel.open), high: r2(sel.high), low: r2(sel.low), prevClose: r2(sel.prevClose) }, // editable snapshot (Summary sheet / title slide)
       watchlist: rep.watchlist.map(w => ({ sym: w.sym, price: r2(w.price), chg: r2(w.chg), chgPct: r2(w.chgPct) })), // editable per-cell grid
-      analysis: rep.analysis.map(a => ({ ...a })),    // carried through (still exported)
-      news: rep.news.map(n => ({ ...n })),
+      analysis: rep.analysis.map(a => ({ ...a })),    // editable AI-analysis blocks
+      news: rep.news.map(n => ({ ...n })),            // editable news list
+      include: { chart: (rep.chartImage != null), analysis: rep.analysis.length > 0, news: rep.news.length > 0 }, // section toggles
     });
   }, [buildReport, writtenReport, selected]);
 
@@ -5421,17 +5422,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       {/* ===== export preview/editor: review & edit before the file downloads ===== */}
       {exportDraft && (() => {
         const FMT = { xlsx: "Excel", docx: "Word", pptx: "PowerPoint" };
-        const included = [
-          chartData.length > 1 && "chart image",
-          (exportDraft.analysis?.length || aiResponses.desk?.text) && "AI desk answer",
-          (exportDraft.news?.length || news?.news?.length) > 0 && `news (${exportDraft.news?.length || news?.news?.length})`,
-        ].filter(Boolean);
         // per-cell edit helpers for the structured draft (watchlist grid + snapshot fields)
         const setSel = (k, v) => setExportDraft(d => ({ ...d, selected: { ...d.selected, [k]: v } }));
         const setWl = (i, k, v) => setExportDraft(d => { const wl = d.watchlist.slice(); wl[i] = { ...wl[i], [k]: v }; return { ...d, watchlist: wl }; });
         const delWl = (i) => setExportDraft(d => ({ ...d, watchlist: d.watchlist.filter((_, j) => j !== i) }));
         const addWl = () => setExportDraft(d => ({ ...d, watchlist: [...d.watchlist, { sym: "", price: "", chg: "", chgPct: "" }] }));
         const wlCols = "1.4fr 1fr 1fr 1fr 28px";
+        const setInc = (k, v) => setExportDraft(d => ({ ...d, include: { ...(d.include || {}), [k]: v } }));
+        const setAn = (i, v) => setExportDraft(d => { const a = d.analysis.slice(); a[i] = { ...a[i], text: v }; return { ...d, analysis: a }; });
+        const delAn = (i) => setExportDraft(d => ({ ...d, analysis: d.analysis.filter((_, j) => j !== i) }));
+        const setNews = (i, k, v) => setExportDraft(d => { const n = d.news.slice(); n[i] = { ...n[i], [k]: v }; return { ...d, news: n }; });
+        const delNews = (i) => setExportDraft(d => ({ ...d, news: d.news.filter((_, j) => j !== i) }));
+        const addNews = () => setExportDraft(d => ({ ...d, news: [...d.news, { title: "", source: "", url: "" }] }));
+        const inc = exportDraft.include || {};
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.8)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setExportDraft(null)}>
             <div id="export-modal" onClick={e => e.stopPropagation()} style={{ width: 620, maxWidth: "94vw", maxHeight: "88vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 8, boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
@@ -5490,8 +5493,51 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   <button onClick={addWl} style={{ marginTop: 6, background: "transparent", border: `1px dashed ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>+ add row</button>
                 </div>
 
-                <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, lineHeight: 1.6 }}>
-                  Also included automatically: {included.length ? included.join(" · ") : "snapshot + logo"}. {exportMsg && <span style={{ color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted }}>· {exportMsg}</span>}
+                {/* editable AI-analysis blocks */}
+                {exportDraft.analysis.length > 0 && (
+                  <div>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint, cursor: "pointer" }}>
+                      <input type="checkbox" checked={inc.analysis !== false} onChange={e => setInc("analysis", e.target.checked)} /> AI ANALYSIS · edit or remove
+                    </label>
+                    {inc.analysis !== false && exportDraft.analysis.map((a, i) => (
+                      <div key={i} style={{ marginTop: 6, border: `1px solid ${C.panelEdge}`, borderRadius: 4, padding: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                          <span style={{ fontFamily: MONO, fontSize: 10, color: C.amber }}>{a.model}</span>
+                          <button onClick={() => delAn(i)} title="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
+                        </div>
+                        <textarea value={a.text ?? ""} onChange={e => setAn(i, e.target.value)} rows={3}
+                          style={{ width: "100%", boxSizing: "border-box", background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, lineHeight: 1.5, padding: "6px 8px", resize: "vertical" }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* editable news list */}
+                <div>
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint, cursor: "pointer" }}>
+                    <input type="checkbox" checked={inc.news !== false} onChange={e => setInc("news", e.target.checked)} /> NEWS · edit, add or remove
+                  </label>
+                  {inc.news !== false && (<>
+                    {exportDraft.news.map((n, i) => (
+                      <div key={i} style={{ marginTop: 6, display: "grid", gridTemplateColumns: "2.4fr 1fr 28px", gap: 6, alignItems: "center" }}>
+                        <input value={n.title ?? ""} onChange={e => setNews(i, "title", e.target.value)} placeholder="Headline" aria-label={`news title ${i + 1}`}
+                          style={{ boxSizing: "border-box", background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px", minWidth: 0 }} />
+                        <input value={n.source ?? ""} onChange={e => setNews(i, "source", e.target.value)} placeholder="Source" aria-label={`news source ${i + 1}`}
+                          style={{ boxSizing: "border-box", background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px", minWidth: 0 }} />
+                        <button onClick={() => delNews(i)} title="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
+                      </div>
+                    ))}
+                    {!exportDraft.news.length && <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6 }}>No headlines — add one below.</div>}
+                    <button onClick={addNews} style={{ marginTop: 6, background: "transparent", border: `1px dashed ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>+ add headline</button>
+                  </>)}
+                </div>
+
+                <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, lineHeight: 1.6, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                    <input type="checkbox" checked={inc.chart !== false} onChange={e => setInc("chart", e.target.checked)} /> include session chart
+                  </label>
+                  <span>· logo + snapshot always included.</span>
+                  {exportMsg && <span style={{ color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted }}>· {exportMsg}</span>}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                   <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>FORMAT</span>
@@ -5507,8 +5553,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       writtenReport: exportDraft.body,
                       selected: { ...sel, price: toNum(sel.price), chg: toNum(sel.chg), chgPct: toNum(sel.chgPct), open: toNum(sel.open), high: toNum(sel.high), low: toNum(sel.low), prevClose: toNum(sel.prevClose) },
                       watchlist: exportDraft.watchlist.map(w => ({ sym: w.sym, price: toNum(w.price), chg: toNum(w.chg), chgPct: toNum(w.chgPct) })),
-                      analysis: exportDraft.analysis,
-                      news: exportDraft.news,
+                      analysis: inc.analysis === false ? [] : exportDraft.analysis,
+                      news: inc.news === false ? [] : exportDraft.news,
+                      chartImage: inc.chart === false ? null : undefined,
                     });
                     setExportDraft(null);
                   }}
