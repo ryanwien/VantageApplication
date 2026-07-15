@@ -111,6 +111,7 @@ const I18N = {
     "voice & anchor settings": "ajustes de voz y presentador", "SET": "SET", "stop reading": "detener lectura", "free": "gratis",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Haz una pregunta abajo — las respuestas aparecen aquí, y el presentador puede leerlas en directo.",
     "ASK ALL": "PREGUNTAR A TODOS",
+    "Ask the desk anything": "Pregúntale lo que quieras a la mesa", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Las respuestas aparecen aquí y el presentador las lee en directo. Toca una sugerencia — o escribe la tuya abajo.", "Summarize {sym} today": "Resume {sym} hoy", "What's moving today?": "¿Qué se mueve hoy?", "Take me to Robinhood": "Llévame a Robinhood", "What's on Netflix?": "¿Qué hay en Netflix?", "Write a report → PPT": "Escribe un informe → PPT",
     "WATCHLIST": "LISTA DE SEGUIMIENTO", "TOP MOVERS": "MAYORES MOVIMIENTOS", "full chart": "gráfico completo",
     "Language": "Idioma",
     "The AI broadcast desk for the markets.": "La mesa de retransmisión con IA para los mercados.",
@@ -241,6 +242,7 @@ const I18N = {
     "voice & anchor settings": "réglages voix et présentateur", "SET": "DÉCOR", "stop reading": "arrêter la lecture", "free": "gratuites",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Posez une question ci-dessous — les réponses apparaissent ici, et le présentateur peut les lire à l'antenne.",
     "ASK ALL": "TOUT DEMANDER",
+    "Ask the desk anything": "Demandez ce que vous voulez au plateau", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Les réponses apparaissent ici et le présentateur les lit à l'antenne. Touchez une suggestion — ou saisissez la vôtre ci-dessous.", "Summarize {sym} today": "Résumez {sym} aujourd'hui", "What's moving today?": "Qu'est-ce qui bouge aujourd'hui ?", "Take me to Robinhood": "Emmène-moi sur Robinhood", "What's on Netflix?": "Qu'y a-t-il sur Netflix ?", "Write a report → PPT": "Rédiger un rapport → PPT",
     "WATCHLIST": "LISTE DE SUIVI", "TOP MOVERS": "PLUS FORTES VARIATIONS", "full chart": "graphique complet",
     "Language": "Langue",
     "The AI broadcast desk for the markets.": "Le plateau de diffusion IA pour les marchés.",
@@ -371,6 +373,7 @@ const I18N = {
     "voice & anchor settings": "Stimme & Moderator-Einstellungen", "SET": "KULISSE", "stop reading": "Vorlesen stoppen", "free": "kostenlos",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Stellen Sie unten eine Frage — Antworten erscheinen hier, und der Moderator kann jede davon vorlesen.",
     "ASK ALL": "ALLE FRAGEN",
+    "Ask the desk anything": "Frag das Pult alles", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Antworten erscheinen hier und der Moderator liest sie auf Sendung vor. Tippe einen Vorschlag an — oder schreibe unten deinen eigenen.", "Summarize {sym} today": "Fasse {sym} heute zusammen", "What's moving today?": "Was bewegt sich heute?", "Take me to Robinhood": "Bring mich zu Robinhood", "What's on Netflix?": "Was läuft auf Netflix?", "Write a report → PPT": "Bericht schreiben → PPT",
     "WATCHLIST": "BEOBACHTUNGSLISTE", "TOP MOVERS": "GRÖSSTE BEWEGUNGEN", "full chart": "vollständiges Diagramm",
     "Language": "Sprache",
     "The AI broadcast desk for the markets.": "Das KI-Broadcast-Pult für die Märkte.",
@@ -501,6 +504,7 @@ const I18N = {
     "voice & anchor settings": "definições de voz e apresentador", "SET": "CENÁRIO", "stop reading": "parar leitura", "free": "grátis",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Faça uma pergunta abaixo — as respostas aparecem aqui, e o apresentador pode lê-las ao vivo.",
     "ASK ALL": "PERGUNTAR A TODOS",
+    "Ask the desk anything": "Pergunte à mesa o que quiser", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "As respostas aparecem aqui e o apresentador lê-as ao vivo. Toque numa sugestão — ou escreva a sua abaixo.", "Summarize {sym} today": "Resumir {sym} hoje", "What's moving today?": "O que está a mover-se hoje?", "Take me to Robinhood": "Leva-me ao Robinhood", "What's on Netflix?": "O que há na Netflix?", "Write a report → PPT": "Escrever um relatório → PPT",
     "WATCHLIST": "LISTA DE ACOMPANHAMENTO", "TOP MOVERS": "MAIORES VARIAÇÕES", "full chart": "gráfico completo",
     "Language": "Idioma",
     "The AI broadcast desk for the markets.": "A mesa de transmissão com IA para os mercados.",
@@ -630,6 +634,7 @@ const I18N = {
     "voice & anchor settings": "impostazioni voce e conduttore", "SET": "SET", "stop reading": "ferma lettura", "free": "gratis",
     "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Fai una domanda qui sotto — le risposte appaiono qui, e il conduttore può leggerle in diretta.",
     "ASK ALL": "CHIEDI A TUTTI",
+    "Ask the desk anything": "Chiedi qualsiasi cosa alla postazione", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Le risposte appaiono qui e il conduttore le legge in diretta. Tocca uno spunto — o scrivi il tuo qui sotto.", "Summarize {sym} today": "Riassumi {sym} oggi", "What's moving today?": "Cosa si muove oggi?", "Take me to Robinhood": "Portami su Robinhood", "What's on Netflix?": "Cosa c'è su Netflix?", "Write a report → PPT": "Scrivi un report → PPT",
     "WATCHLIST": "LISTA DI OSSERVAZIONE", "TOP MOVERS": "MAGGIORI VARIAZIONI", "full chart": "grafico completo",
     "Language": "Lingua",
     "The AI broadcast desk for the markets.": "La postazione di trasmissione IA per i mercati.",
@@ -6777,8 +6782,29 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               {/* response area — ONE box; navigator / desk answer / report / news are sections within it */}
               <div id="tour-response" style={{ flex: 1, minWidth: 260, display: gameOn ? "none" : "flex", flexDirection: "column", background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
                 {Object.keys(aiResponses).length === 0 && !writtenReport && !news && !catalog && !deskCalendar && !deskPortfolio && (
-                  <div style={{ fontFamily: MONO, fontSize: 11, color: C.faint, padding: 12 }}>
-                    {t("Ask a question below — answers appear here, and the anchor can read any of them on air.")}
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 14, padding: "22px 20px", minHeight: 220 }}>
+                    <div>
+                      <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 16, color: C.text }}>{t("Ask the desk anything")}</div>
+                      <div style={{ fontFamily: MONO, fontSize: 11.5, color: C.muted, lineHeight: 1.6, marginTop: 6, maxWidth: 480 }}>
+                        {t("Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.")}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {[
+                        { label: t("Summarize {sym} today").replace("{sym}", selected), q: `Summarize ${selected} today — price action and why` },
+                        { label: t("What's moving today?"), q: "What's moving in the market today and why?" },
+                        { label: t("Take me to Robinhood"), q: "take me to Robinhood" },
+                        { label: t("What's on Netflix?"), q: "what's on netflix" },
+                        { label: t("Write a report → PPT"), q: "write a report and export ppt" },
+                      ].map((s, i) => (
+                        <button key={i} onClick={() => askDesk(s.q)}
+                          style={{ background: "rgba(255,179,0,0.07)", border: `1px solid ${C.panelEdge}`, color: C.text, borderRadius: 999, fontFamily: MONO, fontSize: 11, padding: "7px 13px", cursor: "pointer", transition: "border-color .12s, background .12s" }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = C.amber; e.currentTarget.style.background = "rgba(255,179,0,0.14)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = C.panelEdge; e.currentTarget.style.background = "rgba(255,179,0,0.07)"; }}>
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {aiResponses.nav && (
