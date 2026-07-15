@@ -4168,6 +4168,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   };
 
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false); // AI-desk header "⋯ More" dropdown (games / ambient / music)
+  // shared style for the AI-desk header toolbar buttons — one consistent look, amber when active
+  const deskBtn = (active) => ({
+    display: "flex", alignItems: "center", gap: 6,
+    background: active ? "rgba(255,179,0,0.14)" : "transparent",
+    border: `1px solid ${active ? C.amber : C.panelEdge}`,
+    color: active ? C.amber : C.muted,
+    borderRadius: 5, fontFamily: MONO, fontSize: 10, letterSpacing: "0.04em",
+    padding: "5px 11px", cursor: "pointer", whiteSpace: "nowrap",
+    transition: "border-color .12s, color .12s, background .12s",
+  });
+  const deskBtnHover = (active) => ({
+    onMouseEnter: (e) => { if (!active) { e.currentTarget.style.borderColor = C.faint; e.currentTarget.style.color = C.text; } },
+    onMouseLeave: (e) => { if (!active) { e.currentTarget.style.borderColor = C.panelEdge; e.currentTarget.style.color = C.muted; } },
+  });
   const refreshMeetStatus = useCallback(async () => {
     try { const r = await fetch("/api/status", { headers: authHdr }); setMeetStatus(r.ok ? await r.json() : null); }
     catch { setMeetStatus(null); } // backend not running
@@ -5468,10 +5483,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <span style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
               {/* visible export menu (Excel / Word / PowerPoint / report), all generated inside Vantage */}
               <span style={{ position: "relative" }}>
-                <button onClick={() => setShowExportMenu(v => !v)} aria-label="Export a document"
+                <button onClick={() => { setShowExportMenu(v => !v); setShowMoreMenu(false); }} aria-label="Export a document"
                   title="Export the current view as Excel, Word, or PowerPoint — built inside Vantage"
-                  style={{ background: showExportMenu ? "rgba(255,179,0,0.16)" : "transparent", border: `1px solid ${showExportMenu ? C.amber : C.panelEdge}`, color: showExportMenu ? C.amber : C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "4px 10px", cursor: "pointer" }}>
-                  ⬇ export ▾
+                  style={deskBtn(showExportMenu)} {...deskBtnHover(showExportMenu)}>
+                  ⬇ Export ▾
                 </button>
                 {showExportMenu && (
                   <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", minWidth: 150, overflow: "hidden" }}>
@@ -5487,29 +5502,43 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   </div>
                 )}
               </span>
-              <button onClick={() => gameOn ? closeGame() : openGames()} aria-label="Games — learn how stocks work"
-                title="Play beginner stock games — the anchor hosts, no account needed"
-                style={{ background: gameOn ? "rgba(255,179,0,0.16)" : "transparent", border: `1px solid ${gameOn ? C.amber : C.panelEdge}`, color: gameOn ? C.amber : C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "4px 10px", cursor: "pointer" }}>
-                🎮 {gameOn ? "exit" : "games"}
-              </button>
-              <button onClick={() => setAmbienceOn(v => !v)} aria-label="Toggle environment ambience"
-                title="Ambient sound for the current set (waves, jungle, space hum…)"
-                style={{ background: ambienceOn ? "rgba(255,179,0,0.12)" : "transparent", border: `1px solid ${ambienceOn ? C.amber : C.panelEdge}`, color: ambienceOn ? C.amber : C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "4px 10px", cursor: "pointer" }}>
-                🌊 {ambienceOn ? "on" : "ambient"}
-              </button>
-              <button onClick={() => toggleMusic(!musicOn)} aria-label="Toggle ambient music"
-                style={{ background: musicOn ? "rgba(255,179,0,0.12)" : "transparent", border: `1px solid ${musicOn ? C.amber : C.panelEdge}`, color: musicOn ? C.amber : C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "4px 10px", cursor: "pointer" }}>
-                ♪ {musicOn ? "on" : "music"}
-              </button>
+              {/* consolidated "More" menu: games + ambient + music, so the row stays uncluttered */}
+              <span style={{ position: "relative" }}>
+                <button onClick={() => { setShowMoreMenu(v => !v); setShowExportMenu(false); }} aria-label="More — games, ambient sound and music"
+                  title="Games, ambient sound and music"
+                  style={deskBtn(showMoreMenu || gameOn || ambienceOn || musicOn)} {...deskBtnHover(showMoreMenu || gameOn || ambienceOn || musicOn)}>
+                  ⋯ More ▾
+                </button>
+                {showMoreMenu && (
+                  <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", minWidth: 210, overflow: "hidden" }}>
+                    {[
+                      { key: "games", icon: "🎮", label: "Games", sub: "learn how stocks work", active: gameOn, onClick: () => { setShowMoreMenu(false); gameOn ? closeGame() : openGames(); } },
+                      { key: "ambient", icon: "🌊", label: "Ambient sound", sub: "waves, jungle, space hum…", active: ambienceOn, onClick: () => setAmbienceOn(v => !v) },
+                      { key: "music", icon: "♪", label: "Music", sub: "background score", active: musicOn, onClick: () => toggleMusic(!musicOn) },
+                    ].map((it, idx) => (
+                      <button key={it.key} onClick={it.onClick} aria-pressed={it.active}
+                        style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", background: "transparent", border: "none", borderBottom: idx < 2 ? `1px solid ${C.panelEdge}` : "none", color: C.text, fontFamily: MONO, fontSize: 11, padding: "9px 12px", cursor: "pointer" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#171E2C"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <span style={{ fontSize: 13, width: 16, textAlign: "center" }}>{it.icon}</span>
+                        <span style={{ flex: 1 }}>
+                          <span style={{ display: "block", color: it.active ? C.amber : C.text }}>{it.label}</span>
+                          <span style={{ display: "block", fontSize: 9, color: C.faint }}>{it.sub}</span>
+                        </span>
+                        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", color: it.active ? C.amber : C.faint }}>{it.active ? "● ON" : "○ off"}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </span>
               <button id="tour-settings" onClick={() => { setKeyDraft(apiKey); setSettingsTab("quick"); setShowSettings(true); }}
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "4px 10px", cursor: "pointer" }}>
-                settings
+                style={deskBtn(false)} {...deskBtnHover(false)}>
+                ⚙ Settings
               </button>
               {/* account chip: signed-in users see their plan + a menu; guests get a Sign in shortcut */}
               <div style={{ position: "relative" }}>
-                <button onClick={() => (account ? setAccountMenu(o => !o) : onSignOut?.())}
+                <button onClick={() => { setShowExportMenu(false); setShowMoreMenu(false); account ? setAccountMenu(o => !o) : onSignOut?.(); }}
                   title={account ? `Signed in as ${account.email}` : "Sign in / create account"}
-                  style={{ display: "flex", alignItems: "center", gap: 6, background: account ? "rgba(255,179,0,0.10)" : "transparent", border: `1px solid ${account ? C.amber : C.panelEdge}`, color: account ? C.amber : C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "4px 10px", cursor: "pointer" }}>
+                  style={deskBtn(!!account)} {...deskBtnHover(!!account)}>
                   <span style={{ width: 16, height: 16, borderRadius: "50%", background: account ? C.amber : C.panelEdge, color: "#0B0E14", display: "grid", placeItems: "center", fontWeight: 800, fontSize: 9 }}>
                     {account ? (account.name || account.email || "?").trim().charAt(0).toUpperCase() : "?"}
                   </span>
@@ -6593,7 +6622,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
             {/* tab bar */}
             <div style={{ display: "flex", borderBottom: `1px solid ${C.panelEdge}`, position: "sticky", top: 0, background: C.panel }}>
-              {[["quick", "START"], ["data", "DATA"], ["models", "AI"], ["anchor", "VOICE"], ["meetings", "MEET"], ["account", "ACCOUNT"]].map(([id, label]) => (
+              {[["account", "ACCOUNT"], ["quick", "START"], ["data", "DATA"], ["models", "AI"], ["anchor", "VOICE"], ["meetings", "MEET"]].map(([id, label]) => (
                 <button key={id} onClick={() => setSettingsTab(id)}
                   style={{
                     flex: 1, padding: "12px 0", background: "transparent", cursor: "pointer",
