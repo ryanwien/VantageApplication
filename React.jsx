@@ -138,6 +138,21 @@ const I18N = {
     "Why setup? (mostly optional)": "¿Por qué configurar? (casi todo opcional)",
     "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "Vantage funciona por completo en DEMO sin configuración. Lo único que vale la pena añadir es una clave de IA — las respuestas de la mesa vienen de modelos externos (OpenRouter, Claude…) facturados a tu propia cuenta, así que necesitan tu clave. Todo lo demás es opcional: gráficos, calendario, juegos y noticias no necesitan nada. Abre Inicio para pegar esa clave.",
     "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Aquí tienes por qué existe la configuración. Vantage funciona en demo sin configuración. La única clave que vale la pena añadir es la de la IA — mis respuestas vienen de modelos externos que se facturan a tu propia cuenta, así que necesitan tu clave. Todo lo demás es opcional. Abre Inicio para pegar esa clave. ¡Ese es el recorrido!",
+    // settings footer + MEET tab
+    "Close": "Cerrar", "Applied": "Aplicado", "Apply": "Aplicar",
+    "Go Live — no setup": "En directo — sin configuración",
+    "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Inicia al instante una nueva reunión en una pestaña del navegador (usa la sesión que ya tengas iniciada) y comparte la pantalla de Vantage. Sin claves, sin OAuth.",
+    "New Google Meet": "Nueva Google Meet", "New Zoom meeting": "Nueva reunión de Zoom",
+    "Join": "Unirse", "copy link": "copiar enlace", "end": "finalizar",
+    "paste your meeting link to pin it as LIVE…": "pega el enlace de tu reunión para fijarla como EN DIRECTO…",
+    "Pin": "Fijar",
+    "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "O, para reuniones creadas y gestionadas dentro de Vantage (con enlaces de acceso aquí), conecta tus propias apps OAuth abajo — consulta MEETINGS_SETUP.md. Esta es la parte que necesita credenciales .env.",
+    "Backend not reachable. Start it in the project folder:": "No se puede acceder al backend. Inícialo en la carpeta del proyecto:",
+    "retry": "reintentar", "create app": "crear app",
+    "connected": "conectado", "not connected": "no conectado", "not configured (.env)": "no configurado (.env)",
+    "Sign in to connect": "Inicia sesión para conectar", "Connect": "Conectar",
+    "creating…": "creando…", "New meeting": "Nueva reunión", "disconnect": "desconectar",
+    "RECENT MEETINGS": "REUNIONES RECIENTES",
   },
   fr: {
     "Export": "Exporter", "More": "Plus", "Settings": "Réglages", "sign in": "se connecter",
@@ -178,6 +193,21 @@ const I18N = {
     "Why setup? (mostly optional)": "Pourquoi la configuration ? (presque tout est optionnel)",
     "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "Vantage fonctionne entièrement en DÉMO sans configuration. La seule chose à ajouter est une clé IA — les réponses du plateau proviennent de modèles externes (OpenRouter, Claude…) facturés sur votre propre compte, ils ont donc besoin de votre clé. Tout le reste est optionnel : graphiques, calendrier, jeux et actualités n'ont besoin de rien. Ouvrez Démarrer pour coller cette clé.",
     "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Voici pourquoi la configuration existe. Vantage fonctionne en démo sans configuration. La seule clé à ajouter est celle de l'IA — mes réponses proviennent de modèles externes facturés sur votre propre compte, ils ont donc besoin de votre clé. Tout le reste est optionnel. Ouvrez Démarrer pour coller cette clé. Et voilà la visite !",
+    // settings footer + MEET tab
+    "Close": "Fermer", "Applied": "Appliqué", "Apply": "Appliquer",
+    "Go Live — no setup": "En direct — sans configuration",
+    "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Démarrez instantanément une nouvelle réunion dans un onglet du navigateur (utilise la session déjà ouverte), puis partagez l'écran de Vantage. Aucune clé, aucun OAuth.",
+    "New Google Meet": "Nouveau Google Meet", "New Zoom meeting": "Nouvelle réunion Zoom",
+    "Join": "Rejoindre", "copy link": "copier le lien", "end": "terminer",
+    "paste your meeting link to pin it as LIVE…": "collez le lien de votre réunion pour l'épingler comme EN DIRECT…",
+    "Pin": "Épingler",
+    "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "Ou, pour des réunions créées et suivies dans Vantage (avec les liens de connexion ici), connectez vos propres applis OAuth ci-dessous — voir MEETINGS_SETUP.md. C'est la partie qui nécessite des identifiants .env.",
+    "Backend not reachable. Start it in the project folder:": "Backend inaccessible. Démarrez-le dans le dossier du projet :",
+    "retry": "réessayer", "create app": "créer une appli",
+    "connected": "connecté", "not connected": "non connecté", "not configured (.env)": "non configuré (.env)",
+    "Sign in to connect": "Connectez-vous pour relier", "Connect": "Relier",
+    "creating…": "création…", "New meeting": "Nouvelle réunion", "disconnect": "déconnecter",
+    "RECENT MEETINGS": "RÉUNIONS RÉCENTES",
   },
   de: {
     "Export": "Exportieren", "More": "Mehr", "Settings": "Einstellungen", "sign in": "anmelden",
@@ -218,6 +248,21 @@ const I18N = {
     "Why setup? (mostly optional)": "Warum einrichten? (meist optional)",
     "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "Vantage läuft vollständig in der DEMO ohne Einrichtung. Das Einzige, was sich lohnt, ist ein KI-Schlüssel — die Antworten des Pults stammen von externen Modellen (OpenRouter, Claude…), die Ihrem eigenen Konto berechnet werden, sie brauchen also Ihren Schlüssel. Alles andere ist optional: Charts, Kalender, Spiele und Nachrichten brauchen nichts. Öffnen Sie Start, um diesen einen Schlüssel einzufügen.",
     "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Hier ist, warum es die Einrichtung gibt. Vantage funktioniert in der Demo ohne Einrichtung. Der einzige Schlüssel, der sich lohnt, ist der für die KI — meine Antworten stammen von externen Modellen, die Ihrem eigenen Konto berechnet werden, sie brauchen also Ihren Schlüssel. Alles andere ist optional. Öffnen Sie Start, um diesen einen Schlüssel einzufügen. Das war die Tour!",
+    // settings footer + MEET tab
+    "Close": "Schließen", "Applied": "Übernommen", "Apply": "Übernehmen",
+    "Go Live — no setup": "Live gehen — ohne Einrichtung",
+    "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Starten Sie sofort ein neues Meeting in einem Browser-Tab (nutzt Ihre bestehende Anmeldung) und teilen Sie dann den Vantage-Bildschirm. Keine Schlüssel, kein OAuth.",
+    "New Google Meet": "Neues Google Meet", "New Zoom meeting": "Neues Zoom-Meeting",
+    "Join": "Beitreten", "copy link": "Link kopieren", "end": "beenden",
+    "paste your meeting link to pin it as LIVE…": "Meeting-Link einfügen, um ihn als LIVE anzuheften…",
+    "Pin": "Anheften",
+    "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "Oder verbinden Sie für innerhalb von Vantage erstellte und verfolgte Meetings (mit Beitrittslinks hier) unten Ihre eigenen OAuth-Apps — siehe MEETINGS_SETUP.md. Das ist der Teil, der .env-Anmeldedaten benötigt.",
+    "Backend not reachable. Start it in the project folder:": "Backend nicht erreichbar. Starten Sie es im Projektordner:",
+    "retry": "erneut versuchen", "create app": "App erstellen",
+    "connected": "verbunden", "not connected": "nicht verbunden", "not configured (.env)": "nicht konfiguriert (.env)",
+    "Sign in to connect": "Zum Verbinden anmelden", "Connect": "Verbinden",
+    "creating…": "wird erstellt…", "New meeting": "Neues Meeting", "disconnect": "trennen",
+    "RECENT MEETINGS": "LETZTE MEETINGS",
   },
   pt: {
     "Export": "Exportar", "More": "Mais", "Settings": "Definições", "sign in": "iniciar sessão",
@@ -257,6 +302,21 @@ const I18N = {
     "Why setup? (mostly optional)": "Porquê configurar? (quase tudo opcional)",
     "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "O Vantage funciona totalmente em DEMO sem configuração. A única coisa que vale a pena adicionar é uma chave de IA — as respostas da mesa vêm de modelos externos (OpenRouter, Claude…) faturados à sua própria conta, por isso precisam da sua chave. Tudo o resto é opcional: gráficos, calendário, jogos e notícias não precisam de nada. Abra Início para colar essa chave.",
     "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Eis porque existe a configuração. O Vantage funciona em demo sem configuração. A única chave que vale a pena adicionar é a da IA — as minhas respostas vêm de modelos externos faturados à sua própria conta, por isso precisam da sua chave. Tudo o resto é opcional. Abra Início para colar essa chave. E esta foi a visita!",
+    // settings footer + MEET tab
+    "Close": "Fechar", "Applied": "Aplicado", "Apply": "Aplicar",
+    "Go Live — no setup": "Ao vivo — sem configuração",
+    "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Inicie instantaneamente uma nova reunião num separador do navegador (usa a sessão que já tem iniciada) e depois partilhe o ecrã do Vantage. Sem chaves, sem OAuth.",
+    "New Google Meet": "Novo Google Meet", "New Zoom meeting": "Nova reunião Zoom",
+    "Join": "Entrar", "copy link": "copiar ligação", "end": "terminar",
+    "paste your meeting link to pin it as LIVE…": "cole a ligação da sua reunião para a fixar como AO VIVO…",
+    "Pin": "Fixar",
+    "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "Ou, para reuniões criadas e geridas dentro do Vantage (com ligações de acesso aqui), ligue as suas próprias apps OAuth abaixo — consulte MEETINGS_SETUP.md. Esta é a parte que precisa de credenciais .env.",
+    "Backend not reachable. Start it in the project folder:": "Backend inacessível. Inicie-o na pasta do projeto:",
+    "retry": "tentar novamente", "create app": "criar app",
+    "connected": "ligado", "not connected": "não ligado", "not configured (.env)": "não configurado (.env)",
+    "Sign in to connect": "Inicie sessão para ligar", "Connect": "Ligar",
+    "creating…": "a criar…", "New meeting": "Nova reunião", "disconnect": "desligar",
+    "RECENT MEETINGS": "REUNIÕES RECENTES",
   },
   it: {
     "Export": "Esporta", "More": "Altro", "Settings": "Impostazioni", "sign in": "accedi",
@@ -296,6 +356,21 @@ const I18N = {
     "Why setup? (mostly optional)": "Perché configurare? (quasi tutto opzionale)",
     "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "Vantage funziona completamente in DEMO senza configurazione. L'unica cosa che vale la pena aggiungere è una chiave IA — le risposte della postazione provengono da modelli esterni (OpenRouter, Claude…) addebitati sul tuo account, quindi serve la tua chiave. Tutto il resto è opzionale: grafici, calendario, giochi e notizie non richiedono nulla. Apri Inizio per incollare quella chiave.",
     "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Ecco perché esiste la configurazione. Vantage funziona in demo senza configurazione. L'unica chiave che vale la pena aggiungere è quella dell'IA — le mie risposte provengono da modelli esterni addebitati sul tuo account, quindi serve la tua chiave. Tutto il resto è opzionale. Apri Inizio per incollare quella chiave. E questo era il tour!",
+    // settings footer + MEET tab
+    "Close": "Chiudi", "Applied": "Applicato", "Apply": "Applica",
+    "Go Live — no setup": "Vai in diretta — nessuna configurazione",
+    "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Avvia all'istante una nuova riunione in una scheda del browser (usa la sessione con cui hai già effettuato l'accesso), poi condividi lo schermo di Vantage. Nessuna chiave, nessun OAuth.",
+    "New Google Meet": "Nuovo Google Meet", "New Zoom meeting": "Nuova riunione Zoom",
+    "Join": "Partecipa", "copy link": "copia link", "end": "termina",
+    "paste your meeting link to pin it as LIVE…": "incolla il link della tua riunione per fissarlo come IN DIRETTA…",
+    "Pin": "Fissa",
+    "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "Oppure, per riunioni create e gestite dentro Vantage (con i link di partecipazione qui), collega le tue app OAuth qui sotto — vedi MEETINGS_SETUP.md. Questa è la parte che richiede le credenziali .env.",
+    "Backend not reachable. Start it in the project folder:": "Backend non raggiungibile. Avvialo nella cartella del progetto:",
+    "retry": "riprova", "create app": "crea app",
+    "connected": "connesso", "not connected": "non connesso", "not configured (.env)": "non configurato (.env)",
+    "Sign in to connect": "Accedi per collegare", "Connect": "Collega",
+    "creating…": "creazione…", "New meeting": "Nuova riunione", "disconnect": "disconnetti",
+    "RECENT MEETINGS": "RIUNIONI RECENTI",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -7514,13 +7589,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 <div style={{ display: "grid", gap: 12 }}>
                   {/* zero-setup: just open a new meeting in a tab (uses your existing Zoom/Google login, no OAuth app) */}
                   <div style={{ border: `1px solid ${C.amber}`, borderRadius: 6, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: C.amber }}>⚡ Go Live — no setup</span>
-                    <span style={{ fontFamily: MONO, fontSize: 11, color: C.muted, lineHeight: 1.6 }}>Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.</span>
+                    <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: C.amber }}>⚡ {t("Go Live — no setup")}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 11, color: C.muted, lineHeight: 1.6 }}>{t("Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.")}</span>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <button onClick={() => window.open("https://meet.new", "_blank", "noopener")}
-                        style={{ background: "#00897B", color: "#fff", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 16px", cursor: "pointer" }}>New Google Meet ↗</button>
+                        style={{ background: "#00897B", color: "#fff", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 16px", cursor: "pointer" }}>{t("New Google Meet")} ↗</button>
                       <button onClick={() => window.open("https://zoom.us/start/videomeeting", "_blank", "noopener")}
-                        style={{ background: "#2D8CFF", color: "#fff", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 16px", cursor: "pointer" }}>New Zoom meeting ↗</button>
+                        style={{ background: "#2D8CFF", color: "#fff", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 16px", cursor: "pointer" }}>{t("New Zoom meeting")} ↗</button>
                     </div>
                     {/* pin the link the tab created, so Vantage shows a live badge you can rejoin/share */}
                     <div style={{ borderTop: `1px solid ${C.panelEdge}`, paddingTop: 8, marginTop: 2 }}>
@@ -7532,66 +7607,68 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{meetingLabel(liveMeeting)} ↗</span>
                           </a>
                           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                            <a href={liveMeeting} target="_blank" rel="noopener noreferrer" style={{ background: C.down, color: "#fff", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "6px 16px", cursor: "pointer", textDecoration: "none" }}>Join ↗</a>
-                            <button onClick={() => navigator.clipboard?.writeText(liveMeeting)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 12px", cursor: "pointer" }}>copy link</button>
-                            <button onClick={() => setLiveMeeting("")} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 12px", cursor: "pointer" }}>end</button>
+                            <a href={liveMeeting} target="_blank" rel="noopener noreferrer" style={{ background: C.down, color: "#fff", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "6px 16px", cursor: "pointer", textDecoration: "none" }}>{t("Join")} ↗</a>
+                            <button onClick={() => navigator.clipboard?.writeText(liveMeeting)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 12px", cursor: "pointer" }}>{t("copy link")}</button>
+                            <button onClick={() => setLiveMeeting("")} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 12px", cursor: "pointer" }}>{t("end")}</button>
                           </div>
                         </div>
                       ) : (
                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                           <input value={liveMeetDraft} onChange={e => setLiveMeetDraft(e.target.value)}
-                            placeholder="paste your meeting link to pin it as LIVE…"
+                            placeholder={t("paste your meeting link to pin it as LIVE…")}
                             style={{ flex: 1, minWidth: 160, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, padding: "7px 9px" }} />
                           <button onClick={() => { const u = liveMeetDraft.trim(); if (/^https?:\/\//.test(u)) { setLiveMeeting(u); setLiveMeetDraft(""); } }}
-                            style={{ background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "7px 14px", cursor: "pointer" }}>Pin</button>
+                            style={{ background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "7px 14px", cursor: "pointer" }}>{t("Pin")}</button>
                         </div>
                       )}
                     </div>
                   </div>
 
                   <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.muted, background: "rgba(255,179,0,0.06)", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "8px 10px" }}>
-                    <b style={{ color: C.text }}>Or</b>, for meetings created & tracked <b style={{ color: C.text }}>inside</b> Vantage (with join links here), connect your own OAuth apps below — see <code style={{ color: C.amber }}>MEETINGS_SETUP.md</code>. This is the part that needs <code style={{ color: C.amber }}>.env</code> credentials.
+                    {lang === "en"
+                      ? <><b style={{ color: C.text }}>Or</b>, for meetings created & tracked <b style={{ color: C.text }}>inside</b> Vantage (with join links here), connect your own OAuth apps below — see <code style={{ color: C.amber }}>MEETINGS_SETUP.md</code>. This is the part that needs <code style={{ color: C.amber }}>.env</code> credentials.</>
+                      : t("Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.")}
                   </div>
 
                   {meetStatus === null ? (
                     <div style={{ fontFamily: MONO, fontSize: 11, color: C.down, border: `1px solid ${C.down}`, borderRadius: 6, padding: "10px 12px", lineHeight: 1.7 }}>
-                      ⚠ Backend not reachable. Start it in the project folder:
+                      ⚠ {t("Backend not reachable. Start it in the project folder:")}
                       <div style={{ color: C.amber, marginTop: 6, wordBreak: "break-all" }}>node --env-file=.env server/index.js</div>
-                      <button onClick={refreshMeetStatus} style={{ marginTop: 8, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 12px", cursor: "pointer" }}>retry</button>
+                      <button onClick={refreshMeetStatus} style={{ marginTop: 8, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 12px", cursor: "pointer" }}>{t("retry")}</button>
                     </div>
                   ) : (
-                    [["zoom", "Zoom", "#2D8CFF", "https://marketplace.zoom.us/develop/create"], ["google", "Google Meet", "#00897B", "https://console.cloud.google.com/apis/credentials"]].map(([id, name, col, setupUrl]) => {
+                    [["zoom", "Zoom", "#2D8CFF", "https://marketplace.zoom.us/develop/create", "Z"], ["google", "Google Meet", "#00897B", "https://console.cloud.google.com/apis/credentials", "M"]].map(([id, name, col, setupUrl, letter]) => {
                       const st = meetStatus[id] || {};
+                      const pill = st.connected ? { fg: C.up, label: t("connected") } : st.configured ? { fg: C.muted, label: t("not connected") } : { fg: C.down, label: t("not configured (.env)") };
                       return (
-                        <div key={id} style={{ border: `1px solid ${st.connected ? C.amber : C.panelEdge}`, borderRadius: 6, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                            <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: C.text }}>
-                              <span style={{ color: col }}>●</span> {name}
-                            </span>
-                            <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10 }}>
-                              {!st.configured && <a href={setupUrl} target="_blank" rel="noopener noreferrer" style={{ color: C.amber, textDecoration: "none" }}>create app ↗</a>}
-                              <span style={{ color: st.connected ? C.up : st.configured ? C.muted : C.down }}>
-                                {st.connected ? "connected" : st.configured ? "not connected" : "not configured (.env)"}
-                              </span>
+                        <div key={id} style={{ border: `1px solid ${st.connected ? C.amber : C.panelEdge}`, borderRadius: 8, padding: 14, display: "flex", flexDirection: "column", gap: 12, background: `linear-gradient(160deg, ${col}14, transparent 55%)` }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <span style={{ width: 30, height: 30, borderRadius: 8, background: col, display: "grid", placeItems: "center", fontFamily: SANS, fontSize: 15, fontWeight: 800, color: "#fff", flexShrink: 0 }}>{letter}</span>
+                            <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: C.text, flex: 1 }}>{name}</span>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: MONO, fontSize: 9, letterSpacing: "0.04em", color: pill.fg, background: `${pill.fg}1A`, border: `1px solid ${pill.fg}44`, borderRadius: 999, padding: "3px 9px", whiteSpace: "nowrap" }}>
+                              <span style={{ width: 5, height: 5, borderRadius: "50%", background: pill.fg }} />{pill.label}
                             </span>
                           </div>
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                             {!st.connected ? (
                               // connecting stores tokens under your account, so a backend session is required.
                               // no token (guest / local-only account) → bounce to the ACCOUNT tab to sign in.
-                              <button onClick={() => { if (!account?.token) { setSettingsTab("account"); return; } window.location.href = `/api/${id}/login?token=${encodeURIComponent(account.token)}`; }} disabled={!st.configured}
-                                title={!account?.token ? "Sign in with an account (backend running) to connect your own Zoom/Google" : undefined}
-                                style={{ background: st.configured ? C.amber : C.panelEdge, color: st.configured ? "#141414" : C.faint, border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 16px", cursor: st.configured ? "pointer" : "default" }}>
-                                {!account?.token ? "Sign in to connect" : `Connect ${name} ↗`}
-                              </button>
+                              <>
+                                <button onClick={() => { if (!account?.token) { setSettingsTab("account"); return; } window.location.href = `/api/${id}/login?token=${encodeURIComponent(account.token)}`; }} disabled={!st.configured}
+                                  title={!account?.token ? "Sign in with an account (backend running) to connect your own Zoom/Google" : undefined}
+                                  style={{ flex: "1 1 auto", background: st.configured ? C.amber : "transparent", color: st.configured ? "#141414" : C.faint, border: st.configured ? "none" : `1px solid ${C.panelEdge}`, borderRadius: 5, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "9px 16px", cursor: st.configured ? "pointer" : "not-allowed" }}>
+                                  {!account?.token ? t("Sign in to connect") : `${t("Connect")} ${name} ↗`}
+                                </button>
+                                {!st.configured && <a href={setupUrl} target="_blank" rel="noopener noreferrer" style={{ fontFamily: MONO, fontSize: 10, color: C.amber, textDecoration: "none", border: `1px solid ${C.amber}55`, borderRadius: 5, padding: "8px 12px", whiteSpace: "nowrap" }}>{t("create app")} ↗</a>}
+                              </>
                             ) : (
                               <>
                                 <button onClick={() => createMeeting(id)} disabled={meetBusy === id}
-                                  style={{ background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 16px", cursor: meetBusy === id ? "default" : "pointer", opacity: meetBusy === id ? 0.6 : 1 }}>
-                                  {meetBusy === id ? "creating…" : "＋ New meeting"}
+                                  style={{ background: C.amber, color: "#141414", border: "none", borderRadius: 5, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "9px 16px", cursor: meetBusy === id ? "default" : "pointer", opacity: meetBusy === id ? 0.6 : 1 }}>
+                                  {meetBusy === id ? t("creating…") : `＋ ${t("New meeting")}`}
                                 </button>
                                 <button onClick={() => disconnectMeet(id)}
-                                  style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "8px 12px", cursor: "pointer" }}>disconnect</button>
+                                  style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: MONO, fontSize: 11, padding: "9px 12px", cursor: "pointer" }}>{t("disconnect")}</button>
                               </>
                             )}
                           </div>
@@ -7604,7 +7681,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
                   {meetings.length > 0 && (
                     <div style={{ borderTop: `1px solid ${C.panelEdge}`, paddingTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
-                      <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>RECENT MEETINGS</label>
+                      <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>{t("RECENT MEETINGS")}</label>
                       {meetings.map((mt, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontFamily: MONO, fontSize: 11 }}>
                           <span style={{ color: C.muted }}>{mt.provider === "zoom" ? "Zoom" : "Meet"} · {mt.at}</span>
@@ -7696,7 +7773,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             {/* footer */}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "0 18px 18px" }}>
               <button onClick={() => setShowSettings(false)}
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 12, padding: "8px 14px", cursor: "pointer" }}>Close</button>
+                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 12, padding: "8px 14px", cursor: "pointer" }}>{t("Close")}</button>
               <button onClick={() => {
                 setApiKey(keyDraft.trim());
                 const ek = elevenKeyDraft.trim();
@@ -7706,7 +7783,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 setTimeout(() => setJustApplied(false), 1500);
               }}
                 style={{ background: justApplied ? C.up : C.amber, border: "none", color: "#141414", borderRadius: 4, fontFamily: MONO, fontSize: 12, fontWeight: 600, padding: "8px 14px", cursor: "pointer" }}>
-                {justApplied ? "✓ Applied" : "Apply"}
+                {justApplied ? `✓ ${t("Applied")}` : t("Apply")}
               </button>
             </div>
           </div>
