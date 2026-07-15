@@ -200,6 +200,34 @@ const I18N = {
     "Local endpoints need CORS enabled to accept requests from this page:": "Los endpoints locales necesitan CORS activado para aceptar solicitudes desde esta página:",
     "start with": "inicia con", "or": "o", "Developer tab → enable server + turn on CORS": "pestaña Developer → activa el servidor + activa CORS",
     "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "La ranura de LM Studio funciona con cualquier cosa que hable el formato de chat de OpenAI (llama.cpp, vLLM…).",
+    "ANCHOR": "PRESENTADOR", "ENVIRONMENT": "ENTORNO", "BACKGROUND CREW": "EQUIPO DE FONDO",
+    "Auto — whoever isn't anchoring": "Auto — quien no esté presentando", "Off — solo broadcast": "Desactivado — transmisión en solitario",
+    "VOICE ENGINE": "MOTOR DE VOZ", "BROWSER · free": "NAVEGADOR · gratis",
+    "ELEVENLABS API KEY": "CLAVE API DE ELEVENLABS", "get a key ↗": "obtener una clave ↗",
+    "Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.": "Se guarda solo en memoria, se envía solo a api.elevenlabs.io. Usa eleven_flash_v2_5 para baja latencia — cada lectura consume caracteres de tu cuota.",
+    "ELEVENLABS VOICE": "VOZ DE ELEVENLABS", "Paste a key and hit Apply — voices load automatically.": "Pega una clave y pulsa Aplicar — las voces se cargan automáticamente.",
+    "READING SPEED": "VELOCIDAD DE LECTURA", "auto-read the first answer that finishes": "leer automáticamente la primera respuesta que termine",
+    "UI click sounds — terminal blips on every button": "sonidos de clic de la interfaz — pitidos de terminal en cada botón", "SOUND VOLUME": "VOLUMEN DEL SONIDO",
+    "ambient music": "música ambiental", "your Spotify playlist, docked bottom-right": "tu lista de Spotify, anclada abajo a la derecha",
+    "generative synth, ducks under the anchor's voice": "sintetizador generativo, baja bajo la voz del presentador", "MUSIC SOURCE": "FUENTE DE MÚSICA",
+    "SPOTIFY PLAYLIST / ALBUM / TRACK LINK": "ENLACE DE LISTA / ÁLBUM / CANCIÓN DE SPOTIFY",
+    "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Sin necesidad de iniciar sesión — activa ♪ y el reproductor se ancla abajo a la derecha. (El reproductor incrustado de Spotify reproduce vistas previas de 30 segundos sin cuenta; las canciones completas suenan automáticamente si ya has iniciado sesión en Spotify en este navegador.)",
+    "Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link.": "Pega un enlace para compartir de Spotify — abre Spotify → cualquier lista/álbum/canción → Compartir → Copiar enlace.",
+    "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "OPCIONAL · CONECTA UNA CUENTA PREMIUM PARA CANCIONES COMPLETAS", "FULL PLAYBACK · SPOTIFY PREMIUM": "REPRODUCCIÓN COMPLETA · SPOTIFY PREMIUM",
+    "create an app ↗": "crear una app ↗", "● connected — full tracks enabled": "● conectado — canciones completas activadas",
+    "Spotify app Client ID": "Client ID de la app de Spotify", "In your Spotify app settings, add this exact Redirect URI:": "En la configuración de tu app de Spotify, añade esta Redirect URI exacta:",
+    "Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.": "Spotify requiere https o 127.0.0.1 — abre esta app en http://127.0.0.1:5173 (no localhost) y registra esa dirección.",
+    "Connect Spotify": "Conectar Spotify", "connecting…": "conectando…", "MUSIC VOLUME": "VOLUMEN DE MÚSICA", "preview voice": "escuchar voz",
+    "You're exploring as a guest": "Estás explorando como invitado",
+    "Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.": "Crea una cuenta gratuita para guardar tu plan entre visitas. Tu lista de seguimiento, cartera y ajustes ya se conservan en este dispositivo de todos modos.",
+    "Sign in / create account": "Iniciar sesión / crear cuenta", "secured on server": "protegido en el servidor", "stored on this device": "guardado en este dispositivo",
+    "YOUR PLAN": "TU PLAN", "CURRENT": "ACTUAL", "Upgrade": "Mejorar", "Switch": "Cambiar",
+    "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "Las mejoras de pago abren el pago seguro de Stripe (modo prueba). Los datos de la tarjeta se introducen en Stripe, nunca aquí.",
+    "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "No hay ningún procesador de pagos conectado, así que los planes de pago se desbloquean como simulación — no se pide ninguna tarjeta y no se cobra nada.",
+    "Sign out": "Cerrar sesión", "Terms & Privacy accepted": "Términos y Privacidad aceptados", "This account UI is a prototype; see the security note in the code.": "Esta interfaz de cuenta es un prototipo; consulta la nota de seguridad en el código.",
+    "Developer mode (testing).": "Modo desarrollador (pruebas).",
+    "Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production.": "Desbloquea todas las funciones premium sin importar el plan — mesa de IA, datos en vivo, YouTube, TMDB, Spotify y la voz de ElevenLabs. Aún necesitas la clave API de cada función para usarla. No apto para producción.",
+    "also toggles with ?dev=1 in the URL": "también se activa con ?dev=1 en la URL", "DEV MODE ON — all plan gates bypassed": "MODO DEV ACTIVADO — todas las restricciones de plan omitidas",
   },
   fr: {
     "Export": "Exporter", "More": "Plus", "Settings": "Réglages", "sign in": "se connecter",
@@ -302,6 +330,34 @@ const I18N = {
     "Local endpoints need CORS enabled to accept requests from this page:": "Les points de terminaison locaux ont besoin de CORS activé pour accepter les requêtes de cette page :",
     "start with": "démarrez avec", "or": "ou", "Developer tab → enable server + turn on CORS": "onglet Developer → activez le serveur + activez CORS",
     "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "L'emplacement LM Studio fonctionne avec tout ce qui parle le format de chat OpenAI (llama.cpp, vLLM…).",
+    "ANCHOR": "PRÉSENTATEUR", "ENVIRONMENT": "ENVIRONNEMENT", "BACKGROUND CREW": "ÉQUIPE EN FOND",
+    "Auto — whoever isn't anchoring": "Auto — celui qui ne présente pas", "Off — solo broadcast": "Désactivé — diffusion en solo",
+    "VOICE ENGINE": "MOTEUR VOCAL", "BROWSER · free": "NAVIGATEUR · gratuit",
+    "ELEVENLABS API KEY": "CLÉ API ELEVENLABS", "get a key ↗": "obtenir une clé ↗",
+    "Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.": "Conservée uniquement en mémoire, envoyée seulement à api.elevenlabs.io. Utilise eleven_flash_v2_5 pour une faible latence — chaque lecture consomme des caractères de votre quota.",
+    "ELEVENLABS VOICE": "VOIX ELEVENLABS", "Paste a key and hit Apply — voices load automatically.": "Collez une clé et cliquez sur Appliquer — les voix se chargent automatiquement.",
+    "READING SPEED": "VITESSE DE LECTURE", "auto-read the first answer that finishes": "lire automatiquement la première réponse terminée",
+    "UI click sounds — terminal blips on every button": "sons de clic de l'interface — bips de terminal sur chaque bouton", "SOUND VOLUME": "VOLUME DU SON",
+    "ambient music": "musique d'ambiance", "your Spotify playlist, docked bottom-right": "votre playlist Spotify, ancrée en bas à droite",
+    "generative synth, ducks under the anchor's voice": "synthé génératif, s'atténue sous la voix du présentateur", "MUSIC SOURCE": "SOURCE MUSICALE",
+    "SPOTIFY PLAYLIST / ALBUM / TRACK LINK": "LIEN PLAYLIST / ALBUM / TITRE SPOTIFY",
+    "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Aucune connexion requise — activez ♪ et le lecteur s'ancre en bas à droite. (Le lecteur intégré de Spotify diffuse des extraits de 30 secondes sans compte ; les titres complets se lisent automatiquement si vous êtes déjà connecté à Spotify dans ce navigateur.)",
+    "Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link.": "Collez un lien de partage Spotify — ouvrez Spotify → n'importe quelle playlist/album/titre → Partager → Copier le lien.",
+    "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "FACULTATIF · CONNECTEZ UN COMPTE PREMIUM POUR LES TITRES COMPLETS", "FULL PLAYBACK · SPOTIFY PREMIUM": "LECTURE COMPLÈTE · SPOTIFY PREMIUM",
+    "create an app ↗": "créer une app ↗", "● connected — full tracks enabled": "● connecté — titres complets activés",
+    "Spotify app Client ID": "Client ID de l'app Spotify", "In your Spotify app settings, add this exact Redirect URI:": "Dans les paramètres de votre app Spotify, ajoutez cette Redirect URI exacte :",
+    "Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.": "Spotify exige https ou 127.0.0.1 — ouvrez cette app sur http://127.0.0.1:5173 (pas localhost) et enregistrez cette adresse.",
+    "Connect Spotify": "Connecter Spotify", "connecting…": "connexion…", "MUSIC VOLUME": "VOLUME MUSIQUE", "preview voice": "écouter la voix",
+    "You're exploring as a guest": "Vous explorez en tant qu'invité",
+    "Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.": "Créez un compte gratuit pour conserver votre offre d'une visite à l'autre. Votre liste de suivi, votre portefeuille et vos réglages persistent déjà sur cet appareil de toute façon.",
+    "Sign in / create account": "Se connecter / créer un compte", "secured on server": "sécurisé sur le serveur", "stored on this device": "stocké sur cet appareil",
+    "YOUR PLAN": "VOTRE OFFRE", "CURRENT": "ACTUELLE", "Upgrade": "Passer à supérieur", "Switch": "Changer",
+    "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "Les mises à niveau payantes ouvrent le paiement sécurisé de Stripe (mode test). Les informations de carte sont saisies sur Stripe, jamais ici.",
+    "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "Aucun processeur de paiement n'est connecté, donc les offres payantes sont débloquées en simulation — aucune carte n'est demandée et rien n'est facturé.",
+    "Sign out": "Se déconnecter", "Terms & Privacy accepted": "Conditions et confidentialité acceptées", "This account UI is a prototype; see the security note in the code.": "Cette interface de compte est un prototype ; voir la note de sécurité dans le code.",
+    "Developer mode (testing).": "Mode développeur (test).",
+    "Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production.": "Débloque toutes les fonctionnalités premium quel que soit le forfait — bureau IA, données en direct, YouTube, TMDB, Spotify et la voix ElevenLabs. Vous avez toujours besoin de la clé API propre à chaque fonctionnalité pour l'utiliser. Pas pour la production.",
+    "also toggles with ?dev=1 in the URL": "s'active aussi avec ?dev=1 dans l'URL", "DEV MODE ON — all plan gates bypassed": "MODE DEV ACTIVÉ — toutes les restrictions d'offre contournées",
   },
   de: {
     "Export": "Exportieren", "More": "Mehr", "Settings": "Einstellungen", "sign in": "anmelden",
@@ -404,6 +460,34 @@ const I18N = {
     "Local endpoints need CORS enabled to accept requests from this page:": "Lokale Endpunkte benötigen aktiviertes CORS, um Anfragen von dieser Seite zu akzeptieren:",
     "start with": "starten mit", "or": "oder", "Developer tab → enable server + turn on CORS": "Developer-Tab → Server aktivieren + CORS einschalten",
     "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "Der LM-Studio-Slot funktioniert mit allem, das das OpenAI-Chat-Format spricht (llama.cpp, vLLM…).",
+    "ANCHOR": "MODERATOR", "ENVIRONMENT": "UMGEBUNG", "BACKGROUND CREW": "HINTERGRUND-TEAM",
+    "Auto — whoever isn't anchoring": "Auto — wer gerade nicht moderiert", "Off — solo broadcast": "Aus — Solo-Sendung",
+    "VOICE ENGINE": "SPRACH-ENGINE", "BROWSER · free": "BROWSER · kostenlos",
+    "ELEVENLABS API KEY": "ELEVENLABS-API-SCHLÜSSEL", "get a key ↗": "Schlüssel holen ↗",
+    "Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.": "Nur im Speicher gehalten, nur an api.elevenlabs.io gesendet. Nutzt eleven_flash_v2_5 für geringe Latenz — jede Vorlesung verbraucht Kontingent-Zeichen.",
+    "ELEVENLABS VOICE": "ELEVENLABS-STIMME", "Paste a key and hit Apply — voices load automatically.": "Schlüssel einfügen und Anwenden drücken — Stimmen laden automatisch.",
+    "READING SPEED": "LESEGESCHWINDIGKEIT", "auto-read the first answer that finishes": "die erste fertige Antwort automatisch vorlesen",
+    "UI click sounds — terminal blips on every button": "UI-Klickgeräusche — Terminal-Pieptöne bei jedem Button", "SOUND VOLUME": "TON-LAUTSTÄRKE",
+    "ambient music": "Hintergrundmusik", "your Spotify playlist, docked bottom-right": "deine Spotify-Playlist, angedockt unten rechts",
+    "generative synth, ducks under the anchor's voice": "generativer Synth, senkt sich unter die Stimme des Moderators", "MUSIC SOURCE": "MUSIKQUELLE",
+    "SPOTIFY PLAYLIST / ALBUM / TRACK LINK": "SPOTIFY-PLAYLIST- / ALBUM- / TITEL-LINK",
+    "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Keine Anmeldung nötig — schalte ♪ ein und der Player dockt unten rechts an. (Spotifys Embed spielt 30-Sekunden-Vorschauen ohne Konto; vollständige Titel laufen automatisch, wenn du in diesem Browser bereits bei Spotify angemeldet bist.)",
+    "Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link.": "Füge einen Spotify-Freigabelink ein — öffne Spotify → beliebige Playlist/Album/Titel → Teilen → Link kopieren.",
+    "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "OPTIONAL · PREMIUM-KONTO FÜR VOLLSTÄNDIGE TITEL VERBINDEN", "FULL PLAYBACK · SPOTIFY PREMIUM": "VOLLSTÄNDIGE WIEDERGABE · SPOTIFY PREMIUM",
+    "create an app ↗": "App erstellen ↗", "● connected — full tracks enabled": "● verbunden — vollständige Titel aktiviert",
+    "Spotify app Client ID": "Client-ID der Spotify-App", "In your Spotify app settings, add this exact Redirect URI:": "Füge in den Einstellungen deiner Spotify-App genau diese Redirect-URI hinzu:",
+    "Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.": "Spotify verlangt https oder 127.0.0.1 — öffne diese App unter http://127.0.0.1:5173 (nicht localhost) und registriere das.",
+    "Connect Spotify": "Spotify verbinden", "connecting…": "verbinde…", "MUSIC VOLUME": "MUSIK-LAUTSTÄRKE", "preview voice": "Stimme anhören",
+    "You're exploring as a guest": "Du erkundest als Gast",
+    "Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.": "Erstelle ein kostenloses Konto, um deinen Tarif über Besuche hinweg zu speichern. Deine Watchlist, dein Portfolio und deine Einstellungen bleiben ohnehin auf diesem Gerät erhalten.",
+    "Sign in / create account": "Anmelden / Konto erstellen", "secured on server": "auf dem Server gesichert", "stored on this device": "auf diesem Gerät gespeichert",
+    "YOUR PLAN": "DEIN TARIF", "CURRENT": "AKTUELL", "Upgrade": "Upgrade", "Switch": "Wechseln",
+    "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "Kostenpflichtige Upgrades öffnen den sicheren Checkout von Stripe (Testmodus). Kartendaten werden bei Stripe eingegeben, niemals hier.",
+    "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "Es ist kein Zahlungsdienstleister verbunden, daher werden kostenpflichtige Tarife als Simulation freigeschaltet — es wird keine Karte verlangt und nichts berechnet.",
+    "Sign out": "Abmelden", "Terms & Privacy accepted": "AGB & Datenschutz akzeptiert", "This account UI is a prototype; see the security note in the code.": "Diese Konto-Oberfläche ist ein Prototyp; siehe den Sicherheitshinweis im Code.",
+    "Developer mode (testing).": "Entwicklermodus (Test).",
+    "Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production.": "Schaltet alle Premium-Funktionen unabhängig vom Tarif frei — KI-Desk, Live-Daten, YouTube, TMDB, Spotify und die ElevenLabs-Stimme. Du brauchst weiterhin den eigenen API-Schlüssel jeder Funktion, um sie tatsächlich zu nutzen. Nicht für den Produktivbetrieb.",
+    "also toggles with ?dev=1 in the URL": "lässt sich auch mit ?dev=1 in der URL umschalten", "DEV MODE ON — all plan gates bypassed": "DEV-MODUS AN — alle Tarifsperren umgangen",
   },
   pt: {
     "Export": "Exportar", "More": "Mais", "Settings": "Definições", "sign in": "iniciar sessão",
@@ -505,6 +589,34 @@ const I18N = {
     "Local endpoints need CORS enabled to accept requests from this page:": "Os endpoints locais precisam de CORS ativado para aceitar pedidos desta página:",
     "start with": "inicie com", "or": "ou", "Developer tab → enable server + turn on CORS": "separador Developer → ative o servidor + ative CORS",
     "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "A ranhura do LM Studio funciona com qualquer coisa que fale o formato de chat da OpenAI (llama.cpp, vLLM…).",
+    "ANCHOR": "APRESENTADOR", "ENVIRONMENT": "AMBIENTE", "BACKGROUND CREW": "EQUIPA DE FUNDO",
+    "Auto — whoever isn't anchoring": "Auto — quem não estiver a apresentar", "Off — solo broadcast": "Desligado — transmissão a solo",
+    "VOICE ENGINE": "MOTOR DE VOZ", "BROWSER · free": "NAVEGADOR · grátis",
+    "ELEVENLABS API KEY": "CHAVE API DA ELEVENLABS", "get a key ↗": "obter uma chave ↗",
+    "Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.": "Guardada apenas em memória, enviada só para api.elevenlabs.io. Usa eleven_flash_v2_5 para baixa latência — cada leitura consome caracteres da tua quota.",
+    "ELEVENLABS VOICE": "VOZ DA ELEVENLABS", "Paste a key and hit Apply — voices load automatically.": "Cola uma chave e clica em Aplicar — as vozes carregam automaticamente.",
+    "READING SPEED": "VELOCIDADE DE LEITURA", "auto-read the first answer that finishes": "ler automaticamente a primeira resposta que terminar",
+    "UI click sounds — terminal blips on every button": "sons de clique da interface — bips de terminal em cada botão", "SOUND VOLUME": "VOLUME DO SOM",
+    "ambient music": "música ambiente", "your Spotify playlist, docked bottom-right": "a tua playlist do Spotify, ancorada em baixo à direita",
+    "generative synth, ducks under the anchor's voice": "sintetizador generativo, baixa sob a voz do apresentador", "MUSIC SOURCE": "FONTE DE MÚSICA",
+    "SPOTIFY PLAYLIST / ALBUM / TRACK LINK": "LIGAÇÃO DE PLAYLIST / ÁLBUM / FAIXA DO SPOTIFY",
+    "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Sem necessidade de iniciar sessão — ativa ♪ e o leitor ancora em baixo à direita. (O leitor incorporado do Spotify reproduz pré-visualizações de 30 segundos sem conta; as faixas completas tocam automaticamente se já tiveres sessão iniciada no Spotify neste navegador.)",
+    "Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link.": "Cola uma ligação de partilha do Spotify — abre o Spotify → qualquer playlist/álbum/faixa → Partilhar → Copiar ligação.",
+    "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "OPCIONAL · LIGA UMA CONTA PREMIUM PARA FAIXAS COMPLETAS", "FULL PLAYBACK · SPOTIFY PREMIUM": "REPRODUÇÃO COMPLETA · SPOTIFY PREMIUM",
+    "create an app ↗": "criar uma app ↗", "● connected — full tracks enabled": "● ligado — faixas completas ativadas",
+    "Spotify app Client ID": "Client ID da app do Spotify", "In your Spotify app settings, add this exact Redirect URI:": "Nas definições da tua app do Spotify, adiciona esta Redirect URI exata:",
+    "Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.": "O Spotify exige https ou 127.0.0.1 — abre esta app em http://127.0.0.1:5173 (não localhost) e regista esse endereço.",
+    "Connect Spotify": "Ligar o Spotify", "connecting…": "a ligar…", "MUSIC VOLUME": "VOLUME DA MÚSICA", "preview voice": "ouvir a voz",
+    "You're exploring as a guest": "Estás a explorar como convidado",
+    "Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.": "Cria uma conta gratuita para guardar o teu plano entre visitas. A tua lista de acompanhamento, carteira e definições já persistem neste dispositivo de qualquer forma.",
+    "Sign in / create account": "Iniciar sessão / criar conta", "secured on server": "protegido no servidor", "stored on this device": "guardado neste dispositivo",
+    "YOUR PLAN": "O TEU PLANO", "CURRENT": "ATUAL", "Upgrade": "Melhorar", "Switch": "Mudar",
+    "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "As melhorias pagas abrem o checkout seguro do Stripe (modo de teste). Os dados do cartão são introduzidos no Stripe, nunca aqui.",
+    "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "Não há nenhum processador de pagamentos ligado, por isso os planos pagos são desbloqueados como simulação — não é pedido nenhum cartão e nada é cobrado.",
+    "Sign out": "Terminar sessão", "Terms & Privacy accepted": "Termos e Privacidade aceites", "This account UI is a prototype; see the security note in the code.": "Esta interface de conta é um protótipo; consulta a nota de segurança no código.",
+    "Developer mode (testing).": "Modo de programador (teste).",
+    "Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production.": "Desbloqueia todas as funcionalidades premium independentemente do plano — mesa de IA, dados em direto, YouTube, TMDB, Spotify e a voz da ElevenLabs. Continuas a precisar da chave API de cada funcionalidade para a usar. Não é para produção.",
+    "also toggles with ?dev=1 in the URL": "também alterna com ?dev=1 no URL", "DEV MODE ON — all plan gates bypassed": "MODO DEV LIGADO — todas as restrições de plano ignoradas",
   },
   it: {
     "Export": "Esporta", "More": "Altro", "Settings": "Impostazioni", "sign in": "accedi",
@@ -606,6 +718,34 @@ const I18N = {
     "Local endpoints need CORS enabled to accept requests from this page:": "Gli endpoint locali necessitano di CORS abilitato per accettare richieste da questa pagina:",
     "start with": "avvia con", "or": "o", "Developer tab → enable server + turn on CORS": "scheda Developer → abilita il server + attiva CORS",
     "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "Lo slot LM Studio funziona con qualsiasi cosa parli il formato chat di OpenAI (llama.cpp, vLLM…).",
+    "ANCHOR": "CONDUTTORE", "ENVIRONMENT": "AMBIENTE", "BACKGROUND CREW": "TROUPE DI SOTTOFONDO",
+    "Auto — whoever isn't anchoring": "Auto — chi non sta conducendo", "Off — solo broadcast": "Off — trasmissione in solitaria",
+    "VOICE ENGINE": "MOTORE VOCALE", "BROWSER · free": "BROWSER · gratis",
+    "ELEVENLABS API KEY": "CHIAVE API ELEVENLABS", "get a key ↗": "ottieni una chiave ↗",
+    "Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.": "Conservata solo in memoria, inviata solo a api.elevenlabs.io. Usa eleven_flash_v2_5 per bassa latenza — ogni lettura consuma caratteri della tua quota.",
+    "ELEVENLABS VOICE": "VOCE ELEVENLABS", "Paste a key and hit Apply — voices load automatically.": "Incolla una chiave e premi Applica — le voci si caricano automaticamente.",
+    "READING SPEED": "VELOCITÀ DI LETTURA", "auto-read the first answer that finishes": "leggi automaticamente la prima risposta completata",
+    "UI click sounds — terminal blips on every button": "suoni di clic dell'interfaccia — bip da terminale su ogni pulsante", "SOUND VOLUME": "VOLUME AUDIO",
+    "ambient music": "musica d'ambiente", "your Spotify playlist, docked bottom-right": "la tua playlist Spotify, ancorata in basso a destra",
+    "generative synth, ducks under the anchor's voice": "synth generativo, si abbassa sotto la voce del conduttore", "MUSIC SOURCE": "SORGENTE MUSICALE",
+    "SPOTIFY PLAYLIST / ALBUM / TRACK LINK": "LINK PLAYLIST / ALBUM / BRANO SPOTIFY",
+    "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Nessun accesso necessario — attiva ♪ e il player si ancora in basso a destra. (L'embed di Spotify riproduce anteprime di 30 secondi senza account; i brani completi partono automaticamente se hai già effettuato l'accesso a Spotify in questo browser.)",
+    "Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link.": "Incolla un link di condivisione Spotify — apri Spotify → qualsiasi playlist/album/brano → Condividi → Copia link.",
+    "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "OPZIONALE · COLLEGA UN ACCOUNT PREMIUM PER I BRANI COMPLETI", "FULL PLAYBACK · SPOTIFY PREMIUM": "RIPRODUZIONE COMPLETA · SPOTIFY PREMIUM",
+    "create an app ↗": "crea un'app ↗", "● connected — full tracks enabled": "● collegato — brani completi attivati",
+    "Spotify app Client ID": "Client ID dell'app Spotify", "In your Spotify app settings, add this exact Redirect URI:": "Nelle impostazioni della tua app Spotify, aggiungi esattamente questa Redirect URI:",
+    "Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.": "Spotify richiede https o 127.0.0.1 — apri questa app su http://127.0.0.1:5173 (non localhost) e registra quell'indirizzo.",
+    "Connect Spotify": "Collega Spotify", "connecting…": "connessione…", "MUSIC VOLUME": "VOLUME MUSICA", "preview voice": "ascolta la voce",
+    "You're exploring as a guest": "Stai esplorando come ospite",
+    "Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.": "Crea un account gratuito per conservare il tuo piano tra una visita e l'altra. La tua watchlist, il portafoglio e le impostazioni restano comunque su questo dispositivo.",
+    "Sign in / create account": "Accedi / crea un account", "secured on server": "protetto sul server", "stored on this device": "salvato su questo dispositivo",
+    "YOUR PLAN": "IL TUO PIANO", "CURRENT": "ATTUALE", "Upgrade": "Passa a superiore", "Switch": "Cambia",
+    "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "Gli upgrade a pagamento aprono il checkout sicuro di Stripe (modalità test). I dati della carta si inseriscono su Stripe, mai qui.",
+    "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "Nessun elaboratore di pagamenti è collegato, quindi i piani a pagamento vengono sbloccati come simulazione — non viene chiesta alcuna carta e non viene addebitato nulla.",
+    "Sign out": "Esci", "Terms & Privacy accepted": "Termini e Privacy accettati", "This account UI is a prototype; see the security note in the code.": "Questa interfaccia dell'account è un prototipo; vedi la nota di sicurezza nel codice.",
+    "Developer mode (testing).": "Modalità sviluppatore (test).",
+    "Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production.": "Sblocca ogni funzione premium indipendentemente dal piano — desk IA, dati in tempo reale, YouTube, TMDB, Spotify e la voce ElevenLabs. Serve comunque la chiave API di ciascuna funzione per usarla davvero. Non per la produzione.",
+    "also toggles with ?dev=1 in the URL": "si attiva anche con ?dev=1 nell'URL", "DEV MODE ON — all plan gates bypassed": "MODALITÀ DEV ATTIVA — tutti i blocchi di piano ignorati",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -7627,7 +7767,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               {settingsTab === "anchor" && (
                 <div style={{ display: "grid", gap: 16 }}>
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>ANCHOR</label>
+                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("ANCHOR")}</label>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(84px, 1fr))", gap: 8, marginTop: 8 }}>
                       {CHARACTERS.map(c => (
                         <button key={c.id} onClick={() => setCharacterId(c.id)}
@@ -7642,7 +7782,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>ENVIRONMENT</label>
+                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("ENVIRONMENT")}</label>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(84px, 1fr))", gap: 8, marginTop: 8 }}>
                       {ENVIRONMENTS.map(ev => (
                         <button key={ev.id} onClick={() => setEnvId(ev.id)}
@@ -7657,19 +7797,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>BACKGROUND CREW</label>
+                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("BACKGROUND CREW")}</label>
                     <select
                       value={crewId} onChange={e => setCrewId(e.target.value)}
                       style={{ width: "100%", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px" }}>
-                      <option value="auto">Auto — whoever isn't anchoring</option>
-                      <option value="off">Off — solo broadcast</option>
+                      <option value="auto">{t("Auto — whoever isn't anchoring")}</option>
+                      <option value="off">{t("Off — solo broadcast")}</option>
                       {CHARACTERS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>VOICE ENGINE {lockChip("elevenlabs")}</label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("VOICE ENGINE")} {lockChip("elevenlabs")}</label>
                     <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-                      {[["browser", "BROWSER · free"], ["elevenlabs", "ELEVENLABS"]].map(([id, label]) => {
+                      {[["browser", t("BROWSER · free")], ["elevenlabs", "ELEVENLABS"]].map(([id, label]) => {
                         const locked = id === "elevenlabs" && !planAllows("elevenlabs"); // studio voice needs Trading Floor
                         return (
                         <button key={id} disabled={locked} onClick={() => { if (locked) { setSettingsTab("account"); return; } setVoiceEngine(id); }}
@@ -7688,9 +7828,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <div style={{ display: "grid", gap: 10 }}>
                       <div>
                         <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
-                          ELEVENLABS API KEY
+                          {t("ELEVENLABS API KEY")}
                           <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" style={{ color: C.amber, letterSpacing: "0.04em" }}>
-                            get a key ↗
+                            {t("get a key ↗")}
                           </a>
                         </label>
                         <input
@@ -7705,17 +7845,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                             }
                             if (cleaned) loadElevenVoices(cleaned);
                           }} type="password"
-                          placeholder="paste key"
+                          placeholder={t("paste key")}
                           style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 10px" }}
                         />
                         <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6, lineHeight: 1.6 }}>
-                          Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.
+                          {t("Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.")}
                         </div>
                         <TestBtn kind="eleven" />
                       </div>
                       {elevenVoices.length > 0 && (
                         <div>
-                          <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>ELEVENLABS VOICE</label>
+                          <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("ELEVENLABS VOICE")}</label>
                           <select
                             value={elevenVoiceId} onChange={e => setElevenVoiceId(e.target.value)}
                             style={{ width: "100%", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px" }}>
@@ -7725,13 +7865,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       )}
                       {elevenErr && <div style={{ fontFamily: MONO, fontSize: 10, color: C.down }}>{elevenErr}</div>}
                       {elevenVoices.length === 0 && !elevenErr && (
-                        <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>Paste a key and hit Apply — voices load automatically.</div>
+                        <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>{t("Paste a key and hit Apply — voices load automatically.")}</div>
                       )}
                     </div>
                   )}
                   {voiceEngine === "browser" && (
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>VOICE</label>
+                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("VOICE")}</label>
                     <select
                       value={voiceName} onChange={e => setVoiceName(e.target.value)}
                       style={{ width: "100%", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px" }}>
@@ -7743,7 +7883,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   )}
                   <div>
                     <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
-                      READING SPEED · {speechRate.toFixed(2)}x
+                      {t("READING SPEED")} · {speechRate.toFixed(2)}x
                     </label>
                     <input type="range" min="0.7" max="1.5" step="0.02" value={speechRate}
                       onChange={e => setSpeechRate(+e.target.value)}
@@ -7751,15 +7891,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   </div>
                   <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 12, color: C.text, cursor: "pointer" }}>
                     <input type="checkbox" checked={autoSpeak} onChange={e => setAutoSpeak(e.target.checked)} />
-                    auto-read the first answer that finishes
+                    {t("auto-read the first answer that finishes")}
                   </label>
                   <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 12, color: C.text, cursor: "pointer" }}>
                     <input type="checkbox" checked={uiSounds} onChange={e => setUiSounds(e.target.checked)} />
-                    UI click sounds — terminal blips on every button
+                    {t("UI click sounds — terminal blips on every button")}
                   </label>
                   <div>
                     <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
-                      SOUND VOLUME · {(soundVolume * 100).toFixed(0)}%
+                      {t("SOUND VOLUME")} · {(soundVolume * 100).toFixed(0)}%
                     </label>
                     <input type="range" min="0" max="1" step="0.01" value={soundVolume}
                       onChange={e => setSoundVolume(+e.target.value)}
@@ -7767,10 +7907,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   </div>
                   <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 12, color: C.text, cursor: "pointer" }}>
                     <input type="checkbox" checked={musicOn} onChange={e => toggleMusic(e.target.checked)} />
-                    ♪ ambient music — {musicSource === "spotify" ? "your Spotify playlist, docked bottom-right" : "generative synth, ducks under the anchor's voice"}
+                    ♪ {t("ambient music")} — {musicSource === "spotify" ? t("your Spotify playlist, docked bottom-right") : t("generative synth, ducks under the anchor's voice")}
                   </label>
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>MUSIC SOURCE</label>
+                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("MUSIC SOURCE")}</label>
                     <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
                       {[["synth", "Synth"], ["spotify", "Spotify"]].map(([id, label]) => (
                         <button key={id} onClick={() => setMusicSource(id)}
@@ -7782,7 +7922,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   </div>
                   {musicSource === "spotify" ? (
                     <div>
-                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>SPOTIFY PLAYLIST / ALBUM / TRACK LINK</label>
+                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("SPOTIFY PLAYLIST / ALBUM / TRACK LINK")}</label>
                       <input
                         value={spotifyUri}
                         onChange={e => setSpotifyUri(e.target.value)}
@@ -7791,49 +7931,51 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       />
                       <div style={{ fontFamily: MONO, fontSize: 10, color: spotifyEmbedUrl(spotifyUri) ? C.faint : C.down, marginTop: 6, lineHeight: 1.6 }}>
                         {spotifyEmbedUrl(spotifyUri)
-                          ? "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)"
-                          : "Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link."}
+                          ? t("No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)")
+                          : t("Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link.")}
                       </div>
 
                       {/* Optional full playback via OAuth (Premium) — collapsed so it never demands a login */}
                       <details style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.panelEdge}` }}>
                         <summary style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted, cursor: "pointer" }}>
-                          OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS
+                          {t("OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS")}
                         </summary>
                         <label style={{ display: "block", marginTop: 10, fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
-                          FULL PLAYBACK · SPOTIFY PREMIUM{" "}
-                          <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ color: C.amber, letterSpacing: "0.04em" }}>create an app ↗</a>
+                          {t("FULL PLAYBACK · SPOTIFY PREMIUM")}{" "}
+                          <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ color: C.amber, letterSpacing: "0.04em" }}>{t("create an app ↗")}</a>
                           {" "}{lockChip("spotify")}
                         </label>
                         {spotifyReady ? (
                           <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-                            <span style={{ fontFamily: MONO, fontSize: 11, color: C.up }}>● connected — full tracks enabled</span>
+                            <span style={{ fontFamily: MONO, fontSize: 11, color: C.up }}>{t("● connected — full tracks enabled")}</span>
                             <button onClick={disconnectSpotify}
-                              style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>disconnect</button>
+                              style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>{t("disconnect")}</button>
                           </div>
                         ) : (
                           <>
                             <input
                               value={spotifyClientId}
                               onChange={e => setSpotifyClientId(e.target.value)}
-                              placeholder="Spotify app Client ID"
+                              placeholder={t("Spotify app Client ID")}
                               style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px 10px" }}
                             />
                             <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6, lineHeight: 1.6 }}>
-                              In your Spotify app settings, add this exact <b style={{ color: C.muted }}>Redirect URI</b>:<br />
+                              {lang === "en"
+                                ? <>In your Spotify app settings, add this exact <b style={{ color: C.muted }}>Redirect URI</b>:</>
+                                : <>{t("In your Spotify app settings, add this exact Redirect URI:")}</>}<br />
                               <code style={{ color: C.amber, wordBreak: "break-all" }}>{spotifyRedirect()}</code>
                               {!/^https:|127\.0\.0\.1/.test(spotifyRedirect()) && (
-                                <span style={{ color: C.down }}><br />⚠ Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.</span>
+                                <span style={{ color: C.down }}><br />⚠ {t("Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.")}</span>
                               )}
                             </div>
                             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
                               {(() => { const ok = planAllows("spotify") && spotifyClientId.trim(); return (
                               <button onClick={() => { if (!planAllows("spotify")) { setSettingsTab("account"); return; } connectSpotify(); }} disabled={!ok}
                                 style={{ background: ok ? "#1DB954" : C.panelEdge, color: ok ? "#0B0E14" : C.faint, border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 16px", cursor: ok ? "pointer" : "default" }}>
-                                {planAllows("spotify") ? "Connect Spotify" : `Connect Spotify 🔒`}
+                                {planAllows("spotify") ? t("Connect Spotify") : `${t("Connect Spotify")} 🔒`}
                               </button>
                               ); })()}
-                              {spotifyAuth && !spotifyReady && <span style={{ fontFamily: MONO, fontSize: 10, color: C.muted }}>connecting…</span>}
+                              {spotifyAuth && !spotifyReady && <span style={{ fontFamily: MONO, fontSize: 10, color: C.muted }}>{t("connecting…")}</span>}
                             </div>
                           </>
                         )}
@@ -7843,7 +7985,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   ) : (
                     <div>
                       <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
-                        MUSIC VOLUME · {(musicVolume * 100).toFixed(0)}%
+                        {t("MUSIC VOLUME")} · {(musicVolume * 100).toFixed(0)}%
                       </label>
                       <input type="range" min="0" max="1" step="0.01" value={musicVolume}
                         onChange={e => setMusicVolume(+e.target.value)}
@@ -7853,7 +7995,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   <button
                     onClick={() => speak("preview", `This is ${CHARACTERS.find(c => c.id === characterId)?.name} at the Vantage desk. ${selected} is currently trading at ${fmt(selectedRow?.price)}.`)}
                     style={{ background: "transparent", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 600, padding: "9px 0", cursor: "pointer" }}>
-                    ▶ preview voice
+                    ▶ {t("preview voice")}
                   </button>
                 </div>
               )}
@@ -7973,10 +8115,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   {!account ? (
                     // guest: no account yet — offer to sign out (which returns to the auth gate)
                     <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
-                      <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 15, color: C.text }}>You're exploring as a guest</div>
-                      <div style={{ fontFamily: MONO, fontSize: 11.5, color: C.muted, lineHeight: 1.6 }}>Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.</div>
+                      <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 15, color: C.text }}>{t("You're exploring as a guest")}</div>
+                      <div style={{ fontFamily: MONO, fontSize: 11.5, color: C.muted, lineHeight: 1.6 }}>{t("Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.")}</div>
                       <button onClick={() => { setShowSettings(false); onSignOut?.(); }}
-                        style={{ background: C.amber, color: "#0B0E14", border: "none", borderRadius: 6, fontFamily: SANS, fontWeight: 700, fontSize: 13, padding: "10px 18px", cursor: "pointer" }}>Sign in / create account</button>
+                        style={{ background: C.amber, color: "#0B0E14", border: "none", borderRadius: 6, fontFamily: SANS, fontWeight: 700, fontSize: 13, padding: "10px 18px", cursor: "pointer" }}>{t("Sign in / create account")}</button>
                     </div>
                   ) : (<>
                     {/* identity card */}
@@ -7987,13 +8129,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 15, color: C.text }}>{account.name || account.email.split("@")[0]}</div>
                         <div style={{ fontFamily: MONO, fontSize: 11, color: C.faint, wordBreak: "break-all" }}>{account.email}</div>
-                        <div style={{ fontFamily: MONO, fontSize: 10, color: C.up, marginTop: 3 }}>{account.backend ? "secured on server" : "stored on this device"}</div>
+                        <div style={{ fontFamily: MONO, fontSize: 10, color: C.up, marginTop: 3 }}>{account.backend ? t("secured on server") : t("stored on this device")}</div>
                       </div>
                     </div>
 
                     {/* plan chooser */}
                     <div>
-                      <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>YOUR PLAN</label>
+                      <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>{t("YOUR PLAN")}</label>
                       <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
                         {PLANS.map(p => {
                           const on = account.plan === p.id;
@@ -8005,11 +8147,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                                 <div style={{ fontFamily: MONO, fontSize: 10, color: C.muted, lineHeight: 1.5 }}>{p.tagline}</div>
                               </div>
                               {on ? (
-                                <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: C.amber, whiteSpace: "nowrap" }}>CURRENT</span>
+                                <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: C.amber, whiteSpace: "nowrap" }}>{t("CURRENT")}</span>
                               ) : (
                                 <button onClick={() => startPlanChange(p.id)} disabled={!!billingBusy}
                                   style={{ background: paid ? C.amber : "transparent", color: paid ? "#0B0E14" : C.amber, border: paid ? "none" : `1px solid ${C.amber}`, borderRadius: 5, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "7px 14px", cursor: billingBusy ? "default" : "pointer", opacity: billingBusy ? 0.6 : 1, whiteSpace: "nowrap" }}>
-                                  {billingBusy === p.id ? "…" : paid ? "Upgrade" : "Switch"}
+                                  {billingBusy === p.id ? "…" : paid ? t("Upgrade") : t("Switch")}
                                 </button>
                               )}
                             </div>
@@ -8019,14 +8161,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       {/* billing honesty: say plainly whether a real charge could happen */}
                       <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
                         {billingCfg?.enabled
-                          ? "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here."
-                          : "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged."}
+                          ? t("Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.")
+                          : t("No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.")}
                       </div>
                     </div>
 
                     <button onClick={() => { setShowSettings(false); onSignOut?.(); }}
-                      style={{ alignSelf: "flex-start", background: "transparent", border: `1px solid ${C.panelEdge}`, color: "#ff8a8a", borderRadius: 6, fontFamily: MONO, fontSize: 11, padding: "8px 14px", cursor: "pointer" }}>Sign out</button>
-                    <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, lineHeight: 1.6 }}>Terms & Privacy accepted {account.agreedAt ? "· v" + LEGAL_VERSION : ""}. This account UI is a prototype; see the security note in the code.</div>
+                      style={{ alignSelf: "flex-start", background: "transparent", border: `1px solid ${C.panelEdge}`, color: "#ff8a8a", borderRadius: 6, fontFamily: MONO, fontSize: 11, padding: "8px 14px", cursor: "pointer" }}>{t("Sign out")}</button>
+                    <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, lineHeight: 1.6 }}>{t("Terms & Privacy accepted")} {account.agreedAt ? "· v" + LEGAL_VERSION : ""}. {t("This account UI is a prototype; see the security note in the code.")}</div>
                   </>)}
 
                   {/* developer / testing mode — bypasses ALL plan gates so every premium feature is testable now */}
@@ -8034,11 +8176,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.text, cursor: "pointer" }}>
                       <input type="checkbox" checked={devMode} onChange={e => setDevMode(e.target.checked)} style={{ marginTop: 2 }} />
                       <span>
-                        <b style={{ color: devMode ? C.amber : C.text }}>Developer mode (testing).</b>{" "}
-                        Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production. <span style={{ color: C.faint }}>(also toggles with <code style={{ color: C.muted }}>?dev=1</code> in the URL)</span>
+                        <b style={{ color: devMode ? C.amber : C.text }}>{t("Developer mode (testing).")}</b>{" "}
+                        {t("Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production.")} <span style={{ color: C.faint }}>{lang === "en" ? <>(also toggles with <code style={{ color: C.muted }}>?dev=1</code> in the URL)</> : <>({t("also toggles with ?dev=1 in the URL")})</>}</span>
                       </span>
                     </label>
-                    {devMode && <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em", color: C.amber, marginTop: 6 }}>● DEV MODE ON — all plan gates bypassed</div>}
+                    {devMode && <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em", color: C.amber, marginTop: 6 }}>● {t("DEV MODE ON — all plan gates bypassed")}</div>}
                   </div>
                 </div>
               )}
