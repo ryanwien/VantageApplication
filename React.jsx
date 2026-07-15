@@ -115,6 +115,27 @@ const I18N = {
     "Create account": "Crear cuenta", "Log in": "Iniciar sesión", "Explore in demo mode →": "Explorar en modo demo →",
     "ranked by |Δ%| across your watchlist": "ordenado por |Δ%| en tu lista de seguimiento",
     'Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"': 'Pregunta sobre {sym}, "take me to Robinhood", o "download excel" / "make a powerpoint" / "write a report and export ppt"',
+    // settings tabs + guided tour
+    "ACCOUNT": "CUENTA", "START": "INICIO", "DATA": "DATOS", "VOICE": "VOZ", "MEET": "REUNIÓN",
+    "exit": "salir", "skip tour": "saltar recorrido", "Back": "Atrás", "Next": "Siguiente", "Done": "Listo",
+    "Command bar": "Barra de comandos",
+    "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Escribe cualquier símbolo aquí y pulsa Enter para graficarlo. “ADD TSLA” y “DEL TSLA” gestionan tu lista de seguimiento. Los nombres de empresa también funcionan.",
+    "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Esta es tu barra de comandos. Escribe un símbolo como Apple o Nvidia y pulsa Enter para graficarlo.",
+    "Your anchor — that's me": "Tu presentador — ese soy yo",
+    "I run a live trading day: opening bell, meals, breaks. I read any answer on air. Swap my character, environment, and sounds in settings.": "Dirijo una jornada bursátil en directo: campana de apertura, comidas, descansos. Leo cualquier respuesta en directo. Cambia mi personaje, entorno y sonidos en ajustes.",
+    "That's me, your anchor. I run a live trading day and I can read anything on air.": "Ese soy yo, tu presentador. Dirijo una jornada bursátil en directo y puedo leer cualquier cosa en directo.",
+    "The AI desk": "La mesa de IA",
+    "Ask a question here and I answer in one box, cascading across your models. I also take commands — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Haz una pregunta aquí y respondo en un solo cuadro, en cascada por tus modelos. También acepto comandos — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.",
+    "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Pregúntame lo que quieras aquí. También entiendo comandos sencillos, como, take me to Robinhood, o, what's on Netflix.",
+    "Answers, news & Watch": "Respuestas, noticias y Ver",
+    "Everything lands here in one box — desk answers, the navigator, news, and the streaming catalog. Trailers and public-domain films play right inside.": "Todo aparece aquí en un solo cuadro: respuestas de la mesa, el navegador, noticias y el catálogo de streaming. Los tráileres y las películas de dominio público se reproducen aquí mismo.",
+    "Answers, news, and the streaming catalog all appear here, in one place.": "Las respuestas, las noticias y el catálogo de streaming aparecen aquí, en un solo lugar.",
+    "Ticker tape": "Cinta de cotizaciones",
+    "Your whole watchlist scrolls across the top with live-style movement.": "Toda tu lista de seguimiento se desplaza por la parte superior con movimiento en tiempo real.",
+    "Your watchlist scrolls across the ticker tape, up top.": "Tu lista de seguimiento se desplaza por la cinta de cotizaciones, arriba.",
+    "Why setup? (mostly optional)": "¿Por qué configurar? (casi todo opcional)",
+    "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "Vantage funciona por completo en DEMO sin configuración. Lo único que vale la pena añadir es una clave de IA — las respuestas de la mesa vienen de modelos externos (OpenRouter, Claude…) facturados a tu propia cuenta, así que necesitan tu clave. Todo lo demás es opcional: gráficos, calendario, juegos y noticias no necesitan nada. Abre Inicio para pegar esa clave.",
+    "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Aquí tienes por qué existe la configuración. Vantage funciona en demo sin configuración. La única clave que vale la pena añadir es la de la IA — mis respuestas vienen de modelos externos que se facturan a tu propia cuenta, así que necesitan tu clave. Todo lo demás es opcional. Abre Inicio para pegar esa clave. ¡Ese es el recorrido!",
   },
   fr: {
     "Export": "Exporter", "More": "Plus", "Settings": "Réglages", "sign in": "se connecter",
@@ -134,6 +155,27 @@ const I18N = {
     "Create account": "Créer un compte", "Log in": "Se connecter", "Explore in demo mode →": "Explorer en mode démo →",
     "ranked by |Δ%| across your watchlist": "classé par |Δ%| dans votre liste de suivi",
     'Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"': 'Posez une question sur {sym}, "take me to Robinhood", ou "download excel" / "make a powerpoint" / "write a report and export ppt"',
+    // settings tabs + guided tour
+    "ACCOUNT": "COMPTE", "START": "DÉMARRER", "DATA": "DONNÉES", "VOICE": "VOIX", "MEET": "RÉUNION",
+    "exit": "quitter", "skip tour": "passer la visite", "Back": "Retour", "Next": "Suivant", "Done": "Terminé",
+    "Command bar": "Barre de commande",
+    "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Saisissez ici n'importe quel symbole et appuyez sur Entrée pour l'afficher. « ADD TSLA » et « DEL TSLA » gèrent votre liste de suivi. Les noms d'entreprise fonctionnent aussi.",
+    "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Voici votre barre de commande. Saisissez un symbole comme Apple ou Nvidia et appuyez sur Entrée pour l'afficher.",
+    "Your anchor — that's me": "Votre présentateur — c'est moi",
+    "I run a live trading day: opening bell, meals, breaks. I read any answer on air. Swap my character, environment, and sounds in settings.": "J'anime une journée de bourse en direct : cloche d'ouverture, repas, pauses. Je lis n'importe quelle réponse à l'antenne. Changez mon personnage, mon décor et mes sons dans les réglages.",
+    "That's me, your anchor. I run a live trading day and I can read anything on air.": "C'est moi, votre présentateur. J'anime une journée de bourse en direct et je peux tout lire à l'antenne.",
+    "The AI desk": "Le plateau IA",
+    "Ask a question here and I answer in one box, cascading across your models. I also take commands — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Posez une question ici et je réponds dans une seule fenêtre, en cascade sur vos modèles. J'accepte aussi des commandes — « take me to Robinhood », « what's on netflix », « write a report and export ppt ».",
+    "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Demandez-moi ce que vous voulez ici. Je comprends aussi les commandes simples, comme, take me to Robinhood, ou, what's on Netflix.",
+    "Answers, news & Watch": "Réponses, actualités et Visionnage",
+    "Everything lands here in one box — desk answers, the navigator, news, and the streaming catalog. Trailers and public-domain films play right inside.": "Tout arrive ici dans une seule fenêtre — réponses du plateau, navigateur, actualités et catalogue de streaming. Les bandes-annonces et films du domaine public se lisent directement à l'intérieur.",
+    "Answers, news, and the streaming catalog all appear here, in one place.": "Les réponses, les actualités et le catalogue de streaming apparaissent tous ici, au même endroit.",
+    "Ticker tape": "Bandeau de cotation",
+    "Your whole watchlist scrolls across the top with live-style movement.": "Toute votre liste de suivi défile en haut avec un mouvement en temps réel.",
+    "Your watchlist scrolls across the ticker tape, up top.": "Votre liste de suivi défile sur le bandeau de cotation, en haut.",
+    "Why setup? (mostly optional)": "Pourquoi la configuration ? (presque tout est optionnel)",
+    "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "Vantage fonctionne entièrement en DÉMO sans configuration. La seule chose à ajouter est une clé IA — les réponses du plateau proviennent de modèles externes (OpenRouter, Claude…) facturés sur votre propre compte, ils ont donc besoin de votre clé. Tout le reste est optionnel : graphiques, calendrier, jeux et actualités n'ont besoin de rien. Ouvrez Démarrer pour coller cette clé.",
+    "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Voici pourquoi la configuration existe. Vantage fonctionne en démo sans configuration. La seule clé à ajouter est celle de l'IA — mes réponses proviennent de modèles externes facturés sur votre propre compte, ils ont donc besoin de votre clé. Tout le reste est optionnel. Ouvrez Démarrer pour coller cette clé. Et voilà la visite !",
   },
   de: {
     "Export": "Exportieren", "More": "Mehr", "Settings": "Einstellungen", "sign in": "anmelden",
@@ -153,6 +195,27 @@ const I18N = {
     "Create account": "Konto erstellen", "Log in": "Anmelden", "Explore in demo mode →": "Im Demo-Modus erkunden →",
     "ranked by |Δ%| across your watchlist": "sortiert nach |Δ%| in Ihrer Beobachtungsliste",
     'Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"': 'Fragen zu {sym}, "take me to Robinhood", oder "download excel" / "make a powerpoint" / "write a report and export ppt"',
+    // settings tabs + guided tour
+    "ACCOUNT": "KONTO", "START": "START", "DATA": "DATEN", "VOICE": "STIMME", "MEET": "MEETING",
+    "exit": "beenden", "skip tour": "Tour überspringen", "Back": "Zurück", "Next": "Weiter", "Done": "Fertig",
+    "Command bar": "Befehlsleiste",
+    "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Geben Sie hier ein beliebiges Kürzel ein und drücken Sie Enter, um es zu charten. „ADD TSLA“ und „DEL TSLA“ verwalten Ihre Beobachtungsliste. Firmennamen funktionieren auch.",
+    "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Das ist Ihre Befehlsleiste. Geben Sie ein Kürzel wie Apple oder Nvidia ein und drücken Sie Enter, um es zu charten.",
+    "Your anchor — that's me": "Ihr Moderator — das bin ich",
+    "I run a live trading day: opening bell, meals, breaks. I read any answer on air. Swap my character, environment, and sounds in settings.": "Ich moderiere einen Live-Handelstag: Eröffnungsglocke, Mahlzeiten, Pausen. Ich lese jede Antwort auf Sendung vor. Ändern Sie meine Figur, Umgebung und Klänge in den Einstellungen.",
+    "That's me, your anchor. I run a live trading day and I can read anything on air.": "Das bin ich, Ihr Moderator. Ich moderiere einen Live-Handelstag und kann alles auf Sendung vorlesen.",
+    "The AI desk": "Das KI-Pult",
+    "Ask a question here and I answer in one box, cascading across your models. I also take commands — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Stellen Sie hier eine Frage und ich antworte in einem Feld, kaskadierend über Ihre Modelle. Ich nehme auch Befehle entgegen — „take me to Robinhood“, „what's on netflix“, „write a report and export ppt“.",
+    "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Fragen Sie mich hier alles. Ich verstehe auch einfache Befehle, wie, take me to Robinhood, oder, what's on Netflix.",
+    "Answers, news & Watch": "Antworten, Nachrichten & Ansehen",
+    "Everything lands here in one box — desk answers, the navigator, news, and the streaming catalog. Trailers and public-domain films play right inside.": "Alles landet hier in einem Feld — Pult-Antworten, der Navigator, Nachrichten und der Streaming-Katalog. Trailer und gemeinfreie Filme laufen direkt darin.",
+    "Answers, news, and the streaming catalog all appear here, in one place.": "Antworten, Nachrichten und der Streaming-Katalog erscheinen alle hier, an einem Ort.",
+    "Ticker tape": "Kursband",
+    "Your whole watchlist scrolls across the top with live-style movement.": "Ihre gesamte Beobachtungsliste läuft oben mit Live-Bewegung durch.",
+    "Your watchlist scrolls across the ticker tape, up top.": "Ihre Beobachtungsliste läuft oben über das Kursband.",
+    "Why setup? (mostly optional)": "Warum einrichten? (meist optional)",
+    "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "Vantage läuft vollständig in der DEMO ohne Einrichtung. Das Einzige, was sich lohnt, ist ein KI-Schlüssel — die Antworten des Pults stammen von externen Modellen (OpenRouter, Claude…), die Ihrem eigenen Konto berechnet werden, sie brauchen also Ihren Schlüssel. Alles andere ist optional: Charts, Kalender, Spiele und Nachrichten brauchen nichts. Öffnen Sie Start, um diesen einen Schlüssel einzufügen.",
+    "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Hier ist, warum es die Einrichtung gibt. Vantage funktioniert in der Demo ohne Einrichtung. Der einzige Schlüssel, der sich lohnt, ist der für die KI — meine Antworten stammen von externen Modellen, die Ihrem eigenen Konto berechnet werden, sie brauchen also Ihren Schlüssel. Alles andere ist optional. Öffnen Sie Start, um diesen einen Schlüssel einzufügen. Das war die Tour!",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -3260,12 +3323,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     measure();
     const el = document.getElementById(step.target);
     if (el) try { el.scrollIntoView({ block: "center", behavior: "smooth" }); } catch { /* older browsers */ }
-    if (step.say) speak("tour", step.say);
-    const t = setTimeout(measure, 320); // re-measure after any scroll settles
+    if (step.say) speak("tour", t(step.say));
+    const remeasure = setTimeout(measure, 320); // re-measure after any scroll settles
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
-    return () => { clearTimeout(t); window.removeEventListener("resize", measure); window.removeEventListener("scroll", measure, true); };
-  }, [tourMode, tourStep, speak]);
+    return () => { clearTimeout(remeasure); window.removeEventListener("resize", measure); window.removeEventListener("scroll", measure, true); };
+  }, [tourMode, tourStep, speak, t]);
 
   const playCueSfx = useCallback((type, meal) => {
     if (!uiSoundsRef.current) return;
@@ -6650,10 +6713,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <div style={{ position: "absolute", width: TIPW, left: tip.left, top: tip.top, maxHeight: maxH, overflowY: "auto", background: C.panel, border: `1px solid ${C.amber}`, borderRadius: 8, padding: 16, boxShadow: "0 16px 50px rgba(0,0,0,0.6)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", color: C.faint }}>TOUR · {tourStep + 1}/{TOUR_STEPS.length}</span>
-                <button onClick={endSpotlight} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 11, cursor: "pointer" }}>exit ✕</button>
+                <button onClick={endSpotlight} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 11, cursor: "pointer" }}>{t("exit")} ✕</button>
               </div>
-              <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: 15, letterSpacing: "0.04em", color: C.amber, marginTop: 6 }}>{step.title}</div>
-              <div style={{ fontFamily: MONO, fontSize: 12, lineHeight: 1.65, color: C.text, marginTop: 8 }}>{step.body}</div>
+              <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: 15, letterSpacing: "0.04em", color: C.amber, marginTop: 6 }}>{t(step.title)}</div>
+              <div style={{ fontFamily: MONO, fontSize: 12, lineHeight: 1.65, color: C.text, marginTop: 8 }}>{t(step.body)}</div>
               <div style={{ display: "flex", gap: 4, margin: "12px 0" }}>
                 {TOUR_STEPS.map((_, i) => (
                   <button key={i} onClick={() => setTourStep(i)} aria-label={`Step ${i + 1}`}
@@ -6661,12 +6724,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 ))}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <button onClick={endSpotlight} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 11, cursor: "pointer" }}>skip tour</button>
+                <button onClick={endSpotlight} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 11, cursor: "pointer" }}>{t("skip tour")}</button>
                 <div style={{ display: "flex", gap: 6 }}>
                   {tourStep > 0 && (
-                    <button onClick={() => setTourStep(s => s - 1)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>Back</button>
+                    <button onClick={() => setTourStep(s => s - 1)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>{t("Back")}</button>
                   )}
-                  <button onClick={() => (last ? endSpotlight() : setTourStep(s => s + 1))} style={{ background: C.amber, border: "none", color: "#141414", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "6px 16px", cursor: "pointer" }}>{last ? "Done" : "Next"}</button>
+                  <button onClick={() => (last ? endSpotlight() : setTourStep(s => s + 1))} style={{ background: C.amber, border: "none", color: "#141414", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "6px 16px", cursor: "pointer" }}>{last ? t("Done") : t("Next")}</button>
                 </div>
               </div>
             </div>
@@ -6829,7 +6892,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     border: "none", borderBottom: `2px solid ${settingsTab === id ? C.amber : "transparent"}`,
                     color: settingsTab === id ? C.amber : C.muted,
                     fontFamily: MONO, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em",
-                  }}>{label}</button>
+                  }}>{t(label)}</button>
               ))}
             </div>
 
