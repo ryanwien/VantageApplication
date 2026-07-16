@@ -3,18 +3,45 @@
 > Working plan for entering Vantage into the **AMD AI DevMaster Hackathon**.
 > Verify every rule against the official page before relying on it: https://luma.com/amd-4dhi
 
-## The facts (confirm on the official page)
-- **Format:** virtual, free, worldwide. Teams up to 3.
-- **Window:** ~July 14 – **Aug 6, 2026** (submission deadline). *Tightest of our deadlines.*
+## The facts (✅ verified against luma.com/amd-4dhi + the official repo, 2026‑07‑16)
+- **Format:** virtual, free, worldwide. **Teams: individuals or up to 3.**
+- **Window:** July 14 – **Aug 6, 2026**. Submission **opens Jul 15**, **closes Aug 6, 2026**.
 - **Prize:** $30,000 total across 3 tracks — $5,000 / $3,500 / $1,500 per track.
-- **Required tech:** **AMD Radeon GPUs + ROCm software stack** (free GPU access offered to eligible participants).
-- **Must register** with the **AMD AI Developer Program** to be prize‑eligible.
-- **Track we're entering:** **Agentic AI** (intelligent agents with reasoning + tool use).
+- **Tracks:** Multimodal AI · **Agentic AI** ← ours · Physical AI.
+- **Required tech:** **AMD Radeon GPUs + ROCm software stack.**
+- **Must register** as a member of the **AMD AI Developer Program** *before joining* — non‑members **"will not be eligible to receive prize money."**
+- **No specific AI model is mandated.** The tracks emphasise **local inference**; the model choice is ours.
+- **Submission = fork + PR** to `AMD-DEV-CONTEST/Radeon-hackathon-2026-07`, PR title formatted **`Track x, Team name, your application name`**. **All materials in English.**
+- **Support:** Discord `https://discord.gg/zt9caur5B3` · `ai_dev_contests@amd.com`
 
-## ⚠️ Open questions to resolve first
-1. **New‑project rule** — the page didn't state whether pre‑existing projects are allowed. If it's "built during the event only," note Vantage's first commit is **2026‑07‑14**, which lands inside this event's window — but confirm and be ready to disclose prior work.
-2. **Video length / required AMD evidence** — confirm max video length and exactly what proof of "AMD/ROCm was used" they want (logs, `rocm-smi`, screenshots).
-3. **Eligibility** — residency/age; register the AMD AI Developer Program account early.
+## 🎯 You do NOT need to own a Radeon — AMD gives you one (Radeon Cloud)
+This solves the hardware problem: **https://radeon-global.anruicloud.com/**
+Login with email → **Profile → Add Template** (title + container image; toggle **SSH Access** if you want SSH) → **Launch** → reach it via **JupyterLab terminal** or **SSH**. **Destroy the instance when done — a running instance burns credits.**
+
+### Two ways to get AMD inference (pick one)
+| | **Free shared Model APIs** | **Dedicated Model API** |
+|---|---|---|
+| Cost | **Free — no instance, no credits** | Uses your credits |
+| Models | **Qwen** and **DeepSeek** (e.g. `Qwen3.6-35B-A3B`, `DeepSeek-V4-Flash`) | Your choice |
+| Serving | Managed by AMD | **vLLM only** — `vllm serve <model> --host 0.0.0.0 --port 8000` |
+| Get it | **Token Factory** → https://developer.amd.com.cn/radeon/modelapis → copy Base URL + Model + API Key | Template with **Deploy Type = vLLM Model API**; endpoint at `.../spaces/<id>/8000/v1` |
+
+Both are **OpenAI‑compatible**:
+```bash
+curl https://developer.amd.com.cn/radeon/api/v1/chat/completions \
+  -H "Authorization: Bearer <API_KEY>" -H "Content-Type: application/json" \
+  -d '{"model":"Qwen3.6-35B-A3B","messages":[{"role":"user","content":"Hello"}]}'
+```
+
+### ⚠️ This breaks our Ollama assumption — read this
+AMD's managed serving is **vLLM, not Ollama** ("Radeon only supports vLLM"). This playbook assumed Ollama‑on‑ROCm. That's still viable if we install Ollama **inside** a Radeon Cloud instance ourselves, but it is **not** the paved path. **Vantage already speaks OpenAI‑compatible** (`askOpenAICompat`), so pointing the desk at an AMD Radeon endpoint is a **settings change, not a code change**: set an OpenAI‑kind model's **BASE URL** to AMD's, **MODEL** to `Qwen3.6-35B-A3B`, and paste the **API key**.
+- **Open risk — CORS:** Vantage calls models straight from the browser. If `developer.amd.com.cn` doesn't send permissive CORS headers, the browser blocks it and we'd route via `server/index.js` instead. **Test this early** — it's the difference between a settings tweak and a proxy build.
+- **Judging optics:** a *shared hosted API* is weaker evidence of "runs on AMD" than a **dedicated instance you control**. The dedicated vLLM instance (or Ollama inside your own Radeon instance) is the stronger demo.
+
+## ⚠️ Still unconfirmed
+1. **New‑project rule** — still not stated on the luma page or the repo. Vantage's first commit is **2026‑07‑14**, inside the window, but be ready to disclose prior work. **Ask on Discord.**
+2. **Video length / required AMD evidence** — the **Rules & Conditions** doc on the luma page is authoritative and we haven't read it. It also defines what the PR must contain.
+3. **Eligibility** — residency/age; register the AMD AI Developer Program account **early** (it gates prize money).
 
 ## Why Vantage fits "Agentic AI"
 Vantage's AI desk is already an **agent that reasons over natural language and executes tools**, not a chatbot. Given one instruction it decides *which* capability to invoke and runs it:
