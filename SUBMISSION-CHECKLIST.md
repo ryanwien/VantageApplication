@@ -28,8 +28,10 @@
 - [ ] **Run Vantage's inference on a Radeon Cloud GPU** — the core rule; NVIDIA proof doesn't count.
       vLLM is the paved path; ask on Discord whether the shared "Radeon cloud model API"
       counts as core inference (rules conflict — see playbook)
-- [ ] **Add multi‑turn memory to the desk** — one of the 5 minimum capabilities and ~40 of 120 pts.
-      Code‑verified missing today (every call sends a single user message)
+- [x] **Multi‑turn memory** — ✅ DONE (commit `e6fd5c7`): last 6 exchanges kept locally
+      (localStorage), threaded through all 4 model paths, "forget conversation" privacy control,
+      e2e‑verified on live llama3.1 (codeword recalled across turns, persists across reload).
+      Now 3 of the 5 minimum capabilities are solid (tools, memory, permission/privacy).
 - [ ] An **inference‑speed optimization story** with numbers (20 pts)
 - [ ] **Artifacts**: spec doc (w/ architecture diagram + local‑deployment plan + speed‑optimization
       description) · full repo README (env config, startup, deps) · **3–5 min video showing execution
@@ -58,12 +60,10 @@
 - Winners list appears in the **AMD Discord**; inquiries only honored within **14 days** of close.
 - Registration has been **open since Jul 10** — there is no reason to wait.
 
-## 📄 README gap (rule: "environment configuration, startup guide and dependency list")
-Current README ✅ covers quick start, Node 20+, env config. ❌ It has **no AMD/ROCm section** —
-a judge following it never reaches the Radeon path. Before submitting, add a **"Run on AMD
-Radeon / ROCm"** section: Radeon Cloud instance → serve the model (vLLM or Ollama) → open
-Vantage with `?local=1` (or Settings → AI → local‑only) → what you should see. Write it as
-**step‑by‑step reproduction** — judges follow instructions, they don't explore.
+## 📄 README (rule: "environment configuration, startup guide and dependency list")
+✅ DONE (commit `e6fd5c7`): quick start, Node 20+, env config, **plus a step‑by‑step
+"Run on AMD Radeon / ROCm" section** — serve via Ollama or vLLM (ROCm), open `?local=1`,
+verify with `ollama ps` (must read 100% GPU) + `rocm-smi`, expected result, troubleshooting.
 
 ## Rule‑compliance verdict today
 - **AMD**: *not yet compliant* — nothing you're doing breaks a rule, but the two platform
