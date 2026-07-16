@@ -33,11 +33,12 @@ inference can run **entirely on a local model** — on an AMD Radeon GPU through
      ```bash
      OLLAMA_ORIGINS=* ollama serve        # PowerShell: $env:OLLAMA_ORIGINS='*'; ollama serve
      ```
-   - **vLLM** (ROCm build, OpenAI-compatible): `vllm serve <model> --host 0.0.0.0 --port 8000`,
-     then in **settings → AI** point the *LM Studio / local* card's BASE URL to `http://<host>:8000/v1`.
-2. **Start Vantage**: `npm run dev`, then open **`http://127.0.0.1:5173/?local=1`**
-   (or click **settings → AI → "⚡ Run local-only (AMD / ROCm)"**). This enables *only* the local
-   model — every desk answer, report, and command now runs on local inference.
+   - **vLLM** (ROCm build, OpenAI-compatible): `vllm serve <model> --host 0.0.0.0 --port 8000`
+2. **Start Vantage**: `npm run dev`, then open the one-click URL for whichever server you started —
+   **`http://127.0.0.1:5173/?local=1`** for Ollama, or **`http://127.0.0.1:5173/?local=vllm`** for vLLM
+   (auto-detects the served model; optional `&base=<url>` / `&model=<id>` overrides). Either enables
+   *only* that local model — every desk answer, report, and command now runs on local inference.
+   The same switch lives at **settings → AI → "⚡ Run local-only (AMD / ROCm)"**.
 3. **Verify the GPU is actually doing the work** (Ollama silently falls back to CPU if ROCm
    isn't engaged):
    ```bash

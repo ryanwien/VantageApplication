@@ -84,6 +84,11 @@ We technically clear the bar with 2, but the scoring punishes the gaps.
 ### ⚠️ Rule tension to clarify on Discord
 The platform rule says *"remote APIs are not allowed for core functions"*, but the **bonus** awards points for *"core inference running using Radeon cloud model API."* So the free shared Qwen/DeepSeek endpoints may be blessed *or* disqualifying for core inference. **Ask before building on them.** Safest reading: run inference **on your own Radeon Cloud instance**.
 
+**Ready to paste in their Discord (https://discord.gg/zt9caur5B3):**
+> Track 2 rules question: the platform requirements say core inference must run *locally on the AMD Radeon GPU* and that *"remote APIs are not allowed for core functions"* — but the optional 20-pt bonus mentions *"core inference running using Radeon cloud model API."* Two clarifications, please: (1) does "local" mean a model we serve ourselves on our own Radeon Cloud instance (vLLM / Ollama)? (2) Do the shared Token Factory model APIs (Qwen/DeepSeek) qualify as compliant core inference for the bonus, or must the bonus also come from a dedicated instance we run? Want to be sure our architecture qualifies before we finalize. Thanks!
+
+**One‑click vLLM is now built in** (the paved path needs no manual card setup): open Vantage with **`?local=vllm`** — it enables only the local OpenAI‑compatible card at `http://localhost:8000/v1` and auto‑detects the served model id from `/models` (`&base=` / `&model=` to override). `?local=1` remains the Ollama route. Verified end‑to‑end against an OpenAI‑compatible stream.
+
 ### ⚠️ Framework note
 Optional frameworks are listed as **vLLM / llama.cpp** (+ Transformers/PyTorch‑ROCm). **Ollama is not named** — it wraps llama.cpp so it should qualify, but **vLLM is the paved path on Radeon Cloud**. Note also Finnhub is a remote **data** API, not inference — it shouldn't trip the "remote APIs" rule, but demo mode makes the local/private story cleaner.
 

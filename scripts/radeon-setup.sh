@@ -56,3 +56,4 @@ echo
 echo "Capture for the submission:  ollama ps   +   rocm-smi   (during a query)"
 echo "Then open:  http://127.0.0.1:5173/?local=1   (tunnel: ssh -L 5173:localhost:5173 <user>@<host> -p <port>)"
 echo "If PROCESSOR says CPU: ROCm is not engaged — see README 'Run on AMD Radeon / ROCm' troubleshooting."
+echo "vLLM instead of Ollama?  vllm serve <model> --host 0.0.0.0 --port 8000  then open ?local=vllm (auto-detects the model)."

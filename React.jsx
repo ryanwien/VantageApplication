@@ -3496,10 +3496,25 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }, [aiModels]);
   // AMD / ROCm demo shortcut: "?local=1" runs the desk on the local Ollama model only and lifts plan gates,
   // so the whole agent runs on local (AMD Radeon) inference with no cloud keys — one URL, no manual setup.
+  // "?local=vllm" does the same via a local vLLM server (the Radeon Cloud paved path; OpenAI-compatible,
+  // default http://localhost:8000/v1). Optional overrides: &base=<url> &model=<id>; without &model the
+  // served model id is auto-detected from GET /models.
   useEffect(() => {
     try {
-      if (new URLSearchParams(window.location.search).has("local")) {
-        setDevMode(true);
+      const q = new URLSearchParams(window.location.search);
+      if (!q.has("local")) return;
+      setDevMode(true);
+      if ((q.get("local") || "1").toLowerCase() === "vllm") {
+        const base = q.get("base") || "http://localhost:8000/v1";
+        const forced = q.get("model");
+        setAiModels(ms => ms.map(m => (m.id === "lmstudio"
+          ? { ...m, enabled: true, baseUrl: base, label: "vLLM (local)", ...(forced ? { model: forced } : {}) }
+          : { ...m, enabled: false })));
+        if (!forced) fetch(`${base.replace(/\/$/, "")}/models`).then(r => r.json()).then(j => {
+          const id = j?.data?.[0]?.id;
+          if (id) setAiModels(ms => ms.map(m => (m.id === "lmstudio" ? { ...m, model: id } : m)));
+        }).catch(() => { /* leave the card's model as-is */ });
+      } else {
         setAiModels(ms => ms.map(m => ({ ...m, enabled: m.id === "ollama" })));
       }
     } catch { /* ignore */ }
