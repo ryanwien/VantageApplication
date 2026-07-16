@@ -13,6 +13,32 @@ const num = (n) => (n == null || isNaN(n) ? "—" : Number(n).toLocaleString("en
 const pct = (n) => (n == null || isNaN(n) ? "—" : `${n >= 0 ? "+" : ""}${Number(n).toFixed(2)}%`);
 const fileName = (r, ext) => `Vantage-${r.selected?.sym || "report"}-${ext}`;
 
+// The desk writes markdown ("**Overview**", "- bullets", "## heads") — Office files need
+// real formatting, not the raw markers. Split a report into typed blocks.
+function reportBlocks(md) {
+  const out = [];
+  for (const para of String(md).replace(/\r/g, "").split(/\n{2,}/)) {
+    const t = para.trim();
+    if (!t) continue;
+    const h = t.match(/^#{1,4}\s+(.+)$/) || t.match(/^\*\*([^*\n]+)\*\*:?\s*$/);
+    if (h) { out.push({ h: true, text: h[1].trim() }); continue; }
+    const lines = t.split("\n").map(l => l.trim()).filter(Boolean);
+    if (lines.length > 1 && lines.every(l => /^[-*•]\s+/.test(l))) {
+      for (const l of lines) out.push({ bullet: true, text: l.replace(/^[-*•]\s+/, "") });
+      continue;
+    }
+    out.push({ text: lines.join(" ") });
+  }
+  return out;
+}
+// "a **b** c" → [{text:"a "},{text:"b",bold:true},{text:" c"}]; strips stray */`
+function boldRuns(text) {
+  return String(text).split(/\*\*([^*]+)\*\*/)
+    .map((p, i) => ({ text: p.replace(/\*(?!\*)/g, "").replace(/`/g, ""), bold: i % 2 === 1 }))
+    .filter(r => r.text);
+}
+const stripMd = (md) => reportBlocks(md).map(b => (b.bullet ? "• " : "") + boldRuns(b.text).map(r => r.text).join("")).join("\n\n");
+
 function dataUrlToUint8(dataUrl) {
   const bin = atob(String(dataUrl).split(",")[1] || "");
   const arr = new Uint8Array(bin.length);
@@ -46,7 +72,7 @@ export async function exportExcel(r) {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wl), "Watchlist");
 
   if (r.analysis?.length) {
-    const ws = XLSX.utils.aoa_to_sheet([["Analyst", "Response"], ...r.analysis.map(a => [a.model, a.text])]);
+    const ws = XLSX.utils.aoa_to_sheet([["Analyst", "Response"], ...r.analysis.map(a => [a.model, stripMd(a.text)])]);
     ws["!cols"] = [{ wch: 14 }, { wch: 100 }];
     XLSX.utils.book_append_sheet(wb, ws, "AI Analysis");
   }
@@ -56,7 +82,7 @@ export async function exportExcel(r) {
     XLSX.utils.book_append_sheet(wb, ws, "News");
   }
   if (r.writtenReport) {
-    const ws = XLSX.utils.aoa_to_sheet([["Analyst Report"], [], ...r.writtenReport.split("\n").map(l => [l])]);
+    const ws = XLSX.utils.aoa_to_sheet([["Analyst Report"], [], ...stripMd(r.writtenReport).split("\n").map(l => [l])]);
     ws["!cols"] = [{ wch: 110 }];
     XLSX.utils.book_append_sheet(wb, ws, "Report");
   }
@@ -84,7 +110,10 @@ export async function exportWord(r) {
   if (r.chartImage) children.push(new Paragraph({ children: [new ImageRun({ type: "png", data: dataUrlToUint8(r.chartImage), transformation: { width: 600, height: 240 } })] }));
   if (r.writtenReport) {
     children.push(new Paragraph({ text: "Analyst Report", heading: HeadingLevel.HEADING_1 }));
-    for (const para of r.writtenReport.split(/\n{2,}/)) children.push(new Paragraph(para.trim()));
+    for (const b of reportBlocks(r.writtenReport)) {
+      if (b.h) children.push(new Paragraph({ text: b.text, heading: HeadingLevel.HEADING_2 }));
+      else children.push(new Paragraph({ children: boldRuns(b.text).map(rn => new TextRun({ text: rn.text, bold: rn.bold })), bullet: b.bullet ? { level: 0 } : undefined }));
+    }
   }
   children.push(new Paragraph({ text: "Watchlist", heading: HeadingLevel.HEADING_1 }));
   children.push(new Table({ rows: wlRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
@@ -94,7 +123,7 @@ export async function exportWord(r) {
     if (r.question) children.push(new Paragraph({ children: [new TextRun({ text: `Q: ${r.question}`, italics: true })] }));
     for (const a of r.analysis) {
       children.push(new Paragraph({ children: [new TextRun({ text: a.model, bold: true })] }));
-      children.push(new Paragraph(a.text));
+      children.push(new Paragraph(stripMd(a.text)));
     }
   }
   if (r.news?.length) {
@@ -129,7 +158,31 @@ export async function exportPowerPoint(r) {
   s.addText(`${r.generatedAt}  ·  ${r.live ? "Live quotes" : "Simulated demo"}`, { x: 0.5, y: 4.6, w: 9, h: 0.4, fontSize: 11, color: MUTED, align: "center" });
 
   if (r.chartImage) { s = slide(); heading(s, `${sel.sym || ""} — Session Chart`); s.addImage({ data: r.chartImage, x: 0.5, y: 1.1, w: 9, h: 4.0 }); }
-  if (r.writtenReport) { s = slide(); heading(s, "Analyst Report"); s.addText(r.writtenReport, { x: 0.5, y: 1.1, w: 9, h: 4.0, fontSize: 12, color: TEXT, valign: "top", autoFit: true }); }
+  if (r.writtenReport) {
+    // paginate across slides so long reports never overflow into the footer:
+    // ~95 chars per wrapped line at 12pt over 9in, ~14 text lines fit in the 4in body
+    const pages = [];
+    let page = [], used = 0;
+    for (const b of reportBlocks(r.writtenReport)) {
+      const lines = Math.max(1, Math.ceil(b.text.length / 95)) + 1; // +1 = gap after block
+      if (used + lines > 14 && page.length) { pages.push(page); page = []; used = 0; }
+      page.push(b); used += lines;
+    }
+    if (page.length) pages.push(page);
+    for (let pi = 0; pi < pages.length; pi++) {
+      s = slide(); heading(s, pi === 0 ? "Analyst Report" : "Analyst Report (cont.)");
+      const runs = [];
+      for (const b of pages[pi]) {
+        if (b.h) runs.push({ text: b.text, options: { bold: true, color: AMBER, fontSize: 13, breakLine: true } });
+        else {
+          const rs = boldRuns(b.text);
+          rs.forEach((rn, i) => runs.push({ text: rn.text, options: { bold: rn.bold, color: TEXT, bullet: b.bullet && i === 0 ? true : undefined, breakLine: i === rs.length - 1 } }));
+        }
+        runs.push({ text: " ", options: { fontSize: 5, breakLine: true } }); // block gap
+      }
+      s.addText(runs, { x: 0.5, y: 1.1, w: 9, h: 3.9, fontSize: 12, valign: "top" });
+    }
+  }
 
   s = slide(); heading(s, "Watchlist");
   const head = ["Symbol", "Price", "Change %"].map(t => ({ text: t, options: { bold: true, color: BG, fill: { color: AMBER } } }));
@@ -139,7 +192,7 @@ export async function exportPowerPoint(r) {
   if (r.analysis?.length) {
     s = slide(); heading(s, "AI Desk Analysis");
     if (r.question) s.addText(`Q: ${r.question}`, { x: 0.5, y: 1.0, w: 9, h: 0.5, fontSize: 13, italic: true, color: MUTED });
-    s.addText(r.analysis.map(a => `${a.model}:  ${a.text}`).join("\n\n"), { x: 0.5, y: 1.5, w: 9, h: 3.4, fontSize: 13, color: TEXT, valign: "top" });
+    s.addText(r.analysis.map(a => `${a.model}:  ${stripMd(a.text)}`).join("\n\n"), { x: 0.5, y: 1.5, w: 9, h: 3.4, fontSize: 13, color: TEXT, valign: "top", fit: "shrink" });
   }
   if (r.news?.length) {
     s = slide(); heading(s, "News");
