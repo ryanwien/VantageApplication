@@ -21,7 +21,7 @@
 | 3 | **SFF SEA claim**: can you honestly say "intending to enter Southeast Asia"? | It's an eligibility requirement, verbatim. |
 | 4 | **SFF "open to external funding"** — true for you? | Also verbatim eligibility. |
 
-## AMD (deadline **Aug 6, 8:59 AM PDT**) — team: **Team Vantage** · PR title: **`Track 2, Team Vantage, Vantage`**
+## AMD (deadline **Aug 6, 8:59 AM PDT**) — individual entry: **Ryan Wien** · PR title: **`Track 2, Ryan Wien, Vantage`**
 
 ### ✅ Done (built, verified, pushed)
 - [x] **Multi‑turn memory** — last 6 exchanges kept locally (localStorage), threaded through all
@@ -31,7 +31,7 @@
       (vLLM, the Radeon Cloud paved path: auto‑detects the served model from `/models`,
       `&base=`/`&model=` overrides). Both e2e‑verified (commit `44d7ca0`).
 - [x] **Spec document** — `submission/AMD-SPEC.md`, sectioned to the rules, team info filled
-      (Team Vantage · Ryan Wien solo). Only the Radeon [TODO] latency cells remain → then PDF.
+      (individual entry — Ryan Wien). Only the Radeon [TODO] latency cells remain → then PDF.
 - [x] **Poster** — `submission/poster.html`, team filled, render‑verified. Only [TODO] ms cells
       remain → then Chrome → print → PDF (A2 landscape, margins none, background graphics ON).
 - [x] **Radeon setup script** — `scripts/radeon-setup.sh` (one‑shot: ROCm check → Ollama →
@@ -52,7 +52,7 @@
       export both to PDF
 - [ ] **3–5 min video on the instance** (`ollama ps` 100% GPU + `rocm-smi` on camera; script in playbook)
 - [ ] **Submit**: fork `AMD-DEV-CONTEST/Radeon-hackathon-2026-07`, PR titled
-      **`Track 2, Team Vantage, Vantage`**, all in English
+      **`Track 2, Ryan Wien, Vantage`**, all in English
 
 ## 🔴 SFF — required and NOT yet done (deadline **Aug 14, 23:59 SGT**)
 - [ ] **Register the team first** (max 10; one team per person; one proposal per team) at

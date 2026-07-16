@@ -105,7 +105,7 @@ Optional frameworks are listed as **vLLM / llama.cpp** (+ Transformers/PyTorch�
 2. **Project Source Code** — complete repo + **README with environment configuration, startup guide, dependency list**
 3. **Demo Video** — **3–5 minutes**, showing *"actual execution performance on an AMD Radeon GPU, from command line/GUI to the final result"*
 4. **Supplementary (choose one)** — PPT **or** Poster
-5. **Fork + PR** to `AMD-DEV-CONTEST/Radeon-hackathon-2026-07`, PR titled **`Track 2, <Team name>, <App name>`**, **in English**
+5. **Fork + PR** to `AMD-DEV-CONTEST/Radeon-hackathon-2026-07`, PR titled **`Track 2, Ryan Wien, Vantage`**, **in English**
 
 ## ⏰ Real deadline (mind the timezone)
 **Aug 6, 2026, 11:59 PM UTC+8** = **Aug 6, 8:59 AM US Pacific** — a *morning* deadline in the US, not end of day. **~3 weeks out.**
@@ -128,7 +128,7 @@ Remaining — all yours:
 3. **Fill the [TODO] latency numbers** (script's query set) into `submission/AMD-SPEC.md` and the poster; add team names; export both to PDF.
 4. **Record the 3–5 min video on the instance** — `rocm-smi` + `ollama ps` on camera, then the live agent (chart AMD → follow‑up question → voice → report export → offline test).
 5. **Ask Discord** the remote‑API/bonus question (before relying on shared endpoints for anything).
-6. **Fork + PR**: `Track 2, <Team name>, Vantage` — before **Aug 6, 8:59 AM Pacific**.
+6. **Fork + PR**: `Track 2, Ryan Wien, Vantage` — before **Aug 6, 8:59 AM Pacific**.
 
 ## Why Vantage fits "Agentic AI"
 Vantage's AI desk is already an **agent that reasons over natural language and executes tools**, not a chatbot. Given one instruction it decides *which* capability to invoke and runs it:
@@ -215,7 +215,7 @@ Be precise about this — it's the difference between a claim that holds up and 
 - [ ] Record demo video (**3–5 min**, script above) showing local‑on‑AMD agent + tools + multi‑turn memory
 - [x] README section "Run on AMD Radeon / ROCm" — **done** (step‑by‑step, with the CPU‑fallback check)
 - [x] Write‑up — **done**: `submission/AMD-SPEC.md` (Track 2, agent reasoning + tools, why AMD)
-- [ ] Fork `AMD-DEV-CONTEST/Radeon-hackathon-2026-07` + PR titled **`Track 2, <Team name>, Vantage`**
+- [ ] Fork `AMD-DEV-CONTEST/Radeon-hackathon-2026-07` + PR titled **`Track 2, Ryan Wien, Vantage`**
 
 ## ✅ Built: one‑click local mode
 A **"⚡ Run local‑only (AMD / ROCm)"** control now lives at the top of **Settings → AI**, and the same thing triggers from the **`?local=1`** URL param. It enables *only* the local Ollama model and lifts the plan gate, so the whole agent runs on local (AMD) inference with zero cloud keys. Verified in‑browser: it flips the desk from cloud (plan‑locked) to Ollama‑only with the gate lifted, via both the button and the URL param.

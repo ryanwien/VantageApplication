@@ -1,7 +1,7 @@
 # Vantage — Project Specification Document
 ### AMD AI DevMaster Hackathon · Track 2: Development & Local Deployment of Private AI Agents
 
-> Team: **Team Vantage** · Members: **Ryan Wien** (solo) · Contact: **ryanwien3d@gmail.com**
+> Entry: **Individual — Ryan Wien** (registered solo; team name N/A per the registration form) · Contact: **ryanwien3d@gmail.com** · Discord/GitHub: **ryanwien**
 > Repository: https://github.com/ryanwien/VantageApplication
 > Convert this document to PDF for submission (VS Code: print → Save as PDF, or any md→pdf tool).
 
