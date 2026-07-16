@@ -44,7 +44,7 @@ inference can run **entirely on a local model** — on an AMD Radeon GPU through
    ollama ps        # PROCESSOR column must read "100% GPU"
    rocm-smi         # GPU utilization + VRAM jump during a query
    ```
-4. **What you should see**: sign in, ask the desk *"chart NVDA and explain the move"* — the answer
+4. **What you should see**: sign in, ask the desk *"chart AMD and explain the move"* — the answer
    header reads `Ollama (local) (llama3.1)`, and it works with the network cable pulled.
 
 Troubleshooting: `model "llama3.1" not found` → `ollama pull llama3.1` (or set MODEL to one from

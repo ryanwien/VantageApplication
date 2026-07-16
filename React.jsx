@@ -842,6 +842,7 @@ const UNIVERSE = [
   { sym: "AAPL", name: "Apple Inc.", base: 228.4, vol: 0.012 },
   { sym: "MSFT", name: "Microsoft Corp.", base: 452.1, vol: 0.010 },
   { sym: "NVDA", name: "NVIDIA Corp.", base: 131.8, vol: 0.024 },
+  { sym: "AMD", name: "Advanced Micro Devices", base: 162.5, vol: 0.022 },
   { sym: "AMZN", name: "Amazon.com Inc.", base: 197.6, vol: 0.015 },
   { sym: "GOOGL", name: "Alphabet Inc.", base: 182.3, vol: 0.013 },
   { sym: "META", name: "Meta Platforms", base: 574.9, vol: 0.017 },
@@ -3430,7 +3431,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [settingsTab, setSettingsTab] = useState("quick");
   const [justApplied, setJustApplied] = useState(false);
   const [watchlist, setWatchlist] = useState(UNIVERSE.slice(0, 8).map(u => u.sym));
-  const [selected, setSelected] = useState("NVDA");
+  const [selected, setSelected] = useState("AMD");
   const [cmd, setCmd] = useState("");
   const [cmdMsg, setCmdMsg] = useState("");
   const [demoMkt, setDemoMkt] = useState(() => buildDemoMarket());

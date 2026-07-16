@@ -125,7 +125,7 @@ Vantage's AI desk is already an **agent that reasons over natural language and e
 
 | User says | Agent decides → tool it executes |
 |---|---|
-| "chart NVDA and tell me why it's moving" | reason → chart tool + market answer, read on air (TTS) |
+| "chart AMD and tell me why it's moving" | reason → chart tool + market answer, read on air (TTS) |
 | "add TSLA to my watchlist" | intent parse → watchlist mutation |
 | "take me to Robinhood" | navigation intent → in‑app embed/redirect |
 | "what's on Netflix?" | catalog tool → streaming results |
@@ -189,7 +189,7 @@ Be precise about this — it's the difference between a claim that holds up and 
 ## 3‑minute demo script (Agentic AI, all local on AMD)
 1. **0:00** — Show `rocm-smi` **and** `ollama ps` with **PROCESSOR = `100% GPU`** clearly visible: model loaded on the Radeon. State: "the agent's brain runs entirely on AMD ROCm, no cloud." *(If that column doesn't say GPU, stop and fix — don't record.)*
 2. **0:20** — Vantage → Settings → AI: only **Ollama (local)** is enabled. No API keys.
-3. **0:35** — Type *"chart NVDA and explain the move"* → agent charts + answers; the anchor reads it aloud.
+3. **0:35** — Type *"chart AMD and explain the move"* → agent charts + answers; the anchor reads it aloud.
 4. **1:10** — *"take me to Robinhood"* → agent navigates/embeds (tool use).
 5. **1:30** — *"write a report and export a PowerPoint"* → agent generates the deck locally.
 6. **2:10** — Pull the network cable / go offline; repeat a query → still works. "Fully local AMD inference."
