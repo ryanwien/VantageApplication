@@ -909,6 +909,24 @@ const fmt = (n, d = 2) =>
 const pct = (n) => (n == null || isNaN(n) ? "—" : `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`);
 const dirColor = (n) => (n > 0 ? C.up : n < 0 ? C.down : C.muted);
 
+// Turn a raw transport error ("HTTP 429", "Ollama HTTP 404 — model not found") into plain
+// language before it ever reaches the screen. Keeps any human detail after the em dash and
+// strips the bare status code, so users never see "HTTP 500" etc.
+const humanizeError = (input) => {
+  let s = String(input?.message ?? input ?? "").trim();
+  if (!s) return "something went wrong — try again";
+  const m = s.match(/HTTP\s+(\d{3})/i);
+  if (!m) return s; // already human (e.g. "model not found — run: ollama pull …")
+  const code = Number(m[1]);
+  const detail = s.split("—").slice(1).join("—").trim(); // text after the first em dash, if any
+  if (detail && !/^\d{3}$/.test(detail)) return detail; // a written reason beats the code
+  return code === 429 ? "the service is busy right now — give it a moment"
+    : code === 401 || code === 403 ? "access was refused — check the key in settings"
+    : code === 404 ? "not found"
+    : code >= 500 ? "the service is temporarily unavailable"
+    : "the request didn't go through — try again";
+};
+
 // ---------- Finnhub (live mode) ----------
 async function fetchQuote(sym, key) {
   const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${key}`);
@@ -3224,7 +3242,7 @@ function AuthScreen({ onAuthed, onGuest }) {
       const { hashHex } = await hashPassword(password, rec.saltHex);
       if (hashHex !== rec.hashHex) throw new Error("Incorrect password.");
       onAuthed({ email: rec.email, name: rec.name, plan: rec.plan, backend: false });
-    } catch (e) { setErr(String(e.message || e)); } finally { setBusy(false); }
+    } catch (e) { setErr(humanizeError(e)); } finally { setBusy(false); }
   }
 
   // ---- CREATE ACCOUNT (after plan + legal) ----
@@ -3246,7 +3264,7 @@ function AuthScreen({ onAuthed, onGuest }) {
       const rec = { email: em, name: name.trim() || em.split("@")[0], saltHex, hashHex, plan, agreedAt: Date.now(), legalVersion: LEGAL_VERSION };
       users[em] = rec; saveUsers(users);
       onAuthed({ email: rec.email, name: rec.name, plan: rec.plan, backend: false });
-    } catch (e) { setErr(String(e.message || e)); } finally { setBusy(false); }
+    } catch (e) { setErr(humanizeError(e)); } finally { setBusy(false); }
   }
 
   // shared field styling
@@ -3564,14 +3582,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         setLiveErr("");
         setLiveBad(p => { if (!p[s]) return p; const n = { ...p }; delete n[s]; return n; });
       } catch (e) {
-        setLiveErr(`${s}: ${e.message}`);
+        setLiveErr(`${s}: ${humanizeError(e)}`);
         if (/unknown symbol/i.test(e.message)) {
           // Finnhub says it's not a real ticker → drop it from the watchlist and move off it if selected
           setLiveBad(p => (p[s] ? p : { ...p, [s]: true }));
           setWatchlist(w => w.filter(x => x !== s));
           setSelected(sel => (sel === s ? (watchlist.find(x => x !== s) || "SPY") : sel));
         }
-        if (e.status === 429) { setLiveErr("live feed rate-limited (HTTP 429) — backing off. Use your own Finnhub key in settings → DATA for higher limits."); hit429 = true; break; } // stop hammering this cycle
+        if (e.status === 429) { setLiveErr("live feed is busy (free data tier) — easing off automatically. Add your own Finnhub key in settings → DATA for higher limits."); hit429 = true; break; } // stop hammering this cycle
       }
       await new Promise(r => setTimeout(r, 1100)); // ~1 req/sec keeps the free tier under its limit
     }
@@ -3762,7 +3780,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       setElevenVoiceId(prev => prev || vs[0]?.id || "");
       setElevenErr("");
     } catch (e) {
-      setElevenErr(String(e.message || e));
+      setElevenErr(humanizeError(e));
       setElevenVoices([]);
     }
   }, []);
@@ -3802,7 +3820,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           : await fetch(`${m.baseUrl.replace(/\/$/, "")}/models`, { headers: { Authorization: `Bearer ${m.apiKey}` } });
       }
       if (r.ok) return ok();
-      fail(r.status === 401 || r.status === 403 ? `✗ key rejected (HTTP ${r.status})` : `✗ HTTP ${r.status}`);
+      fail(r.status === 401 || r.status === 403 ? "✗ key rejected — double-check it" : r.status === 429 ? "✗ service busy — try again shortly" : "✗ couldn't verify the key");
     } catch {
       fail("✗ blocked — this preview can't reach external APIs; works when deployed (see tape-backend.js)");
     }
@@ -3885,8 +3903,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       audio.onerror = () => { analyserRef.current = null; setSpeakingId(cur => (cur === id ? null : cur)); };
       await audio.play();
     } catch (e) {
-      setElevenErr(String(e.message || e));
-      setCmdMsg(`Voice error: ${e.message}`);
+      setElevenErr(humanizeError(e));
+      setCmdMsg(`Voice error — ${humanizeError(e)}`);
       analyserRef.current = null;
       setSpeakingId(cur => (cur === id ? null : cur));
     }
@@ -4231,7 +4249,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       window.location.href = `https://accounts.spotify.com/authorize?client_id=${encodeURIComponent(cid)}` +
         `&response_type=code&redirect_uri=${encodeURIComponent(spotifyRedirect())}` +
         `&code_challenge_method=S256&code_challenge=${challenge}&scope=${encodeURIComponent(scope)}`;
-    } catch (e) { setSpotifyErr(String(e.message || e)); }
+    } catch (e) { setSpotifyErr(humanizeError(e)); }
   }, [spotifyClientId, planAllows]);
 
   const disconnectSpotify = useCallback(() => {
@@ -4267,7 +4285,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         const d = await r.json();
         if (d.access_token) setSpotifyAuth({ access_token: d.access_token, refresh_token: d.refresh_token, expires_at: Date.now() + d.expires_in * 1000 });
         else setSpotifyErr(d.error_description || "Token exchange failed");
-      } catch (e) { setSpotifyErr(String(e.message || e)); }
+      } catch (e) { setSpotifyErr(humanizeError(e)); }
       finally { window.localStorage.removeItem("tape-spotify-verifier"); window.history.replaceState({}, "", spotifyRedirect()); }
     })();
   }, []);
@@ -4322,7 +4340,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
           body: JSON.stringify(ctx ? (ctx.type === "track" ? { uris: [ctx.uri] } : { context_uri: ctx.uri }) : {}),
         });
-      } catch (e) { setSpotifyErr(String(e.message || e)); }
+      } catch (e) { setSpotifyErr(humanizeError(e)); }
     })();
   }, [musicOn, spotifyReady, musicSource, spotifyUri]);
 
@@ -4428,7 +4446,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       every(2600, () => blip(300, 260, 0.2, 0.05, "sine"));
     } else if (env === "skyline" || env === "castle") {
       const wind = noise("lowpass", 600, 0.6, 0.4); lfo(wind.f, "frequency", 0.06, 300, 550); lfo(wind.g, "gain", 0.12, 0.12, 0.34); // wind
-      if (env === "castle") every(5000, () => { if (Math.random() < 0.5) blip(220, 180, 0.5, 0.05, "sine"); });
+      if (env === "skyline") { drone(70, 0.045); const city = noise("bandpass", 900, 0.6, 0.05); lfo(city.g, "gain", 0.2, 0.02, 0.05); every(7000, () => { if (Math.random() < 0.4) blip(680, 520, 0.6, 0.03, "sawtooth"); }); } // faint city rumble + distant traffic
+      if (env === "castle") every(4200, () => { if (Math.random() < 0.55) { blip(220, 180, 0.5, 0.05, "sine"); setTimeout(() => blip(147, 130, 0.9, 0.04, "sine"), 300); } }); // low stone-hall bell/toll
     } else if (env === "tower") {
       drone(330, 0.05); drone(495, 0.035); const sh = noise("bandpass", 3000, 1.5, 0.06); lfo(sh.g, "gain", 0.2, 0.05, 0.06); // magical shimmer
       every(3200, () => blip(1200 + Math.random() * 800, 2400, 0.25, 0.05, "sine"));
@@ -4449,12 +4468,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       drone(90, 0.06); const wind = noise("lowpass", 500, 0.6, 0.28); lfo(wind.f, "frequency", 0.05, 120, 400); // low wind
       every(3000, () => { if (Math.random() < 0.5) blip(1400, 900, 0.18, 0.04, "sine"); }); // water drips
     } else if (env === "horror") {
-      drone(58, 0.12); drone(61.5, 0.08); // dissonant low pad
+      drone(58, 0.12); drone(61.5, 0.08); // dissonant low pad (the close pair "beats" — unsettling)
       const wind = noise("lowpass", 400, 0.6, 0.3); lfo(wind.f, "frequency", 0.04, 130, 330); lfo(wind.g, "gain", 0.1, 0.1, 0.24);
-      every(6500, () => { if (Math.random() < 0.5) blip(320, 120, 1.4, 0.06, "sine"); }); // distant howl / creak
+      every(4200, () => { const r = Math.random();
+        if (r < 0.4) blip(300, 90, 1.6, 0.06, "sine"); // distant howl
+        else if (r < 0.62) blip(150, 210, 0.5, 0.045, "sawtooth"); }); // door creak
     } else if (env === "western") {
       const wind = noise("lowpass", 550, 0.6, 0.32); lfo(wind.f, "frequency", 0.05, 120, 400); lfo(wind.g, "gain", 0.1, 0.1, 0.24); // desert wind
-      every(5200, () => { if (Math.random() < 0.4) { blip(300, 300, 0.5, 0.05, "triangle"); setTimeout(() => blip(240, 200, 0.7, 0.05, "triangle"), 260); } }); // lonesome coyote / guitar
+      every(3600, () => { const r = Math.random();
+        if (r < 0.5) { blip(196, 196, 0.5, 0.05, "triangle"); setTimeout(() => blip(147, 147, 0.8, 0.045, "triangle"), 240); } // lonesome guitar (G→D)
+        else if (r < 0.8) { blip(520, 300, 0.6, 0.045, "sine"); setTimeout(() => blip(300, 210, 0.9, 0.04, "sine"), 300); } }); // coyote howl
     } else if (env === "noir") {
       const rain = noise("highpass", 3200, 0.7, 0.14); lfo(rain.g, "gain", 0.3, 0.04, 0.14); noise("lowpass", 300, 0.6, 0.12); // rain + room floor
       drone(146.8, 0.03); drone(220, 0.02); // muted sax-ish drone
@@ -4792,7 +4815,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
       setCalEvents(j.events || []);
-    } catch (e) { setCalErr(String(e.message || e)); setCalEvents(null); }
+    } catch (e) { setCalErr(humanizeError(e)); setCalEvents(null); }
     finally { setCalBusy(false); }
   }, [authHdr]);
   // auto-load events once Google is connected
@@ -4992,7 +5015,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         setResp("nav", { status: "done", nav: true, text: "📊 No earnings on your watchlist in the next three weeks." });
         speak("nav", "No earnings on your watchlist in the next three weeks.");
       }
-    } catch (e) { setResp("nav", { status: "error", nav: true, text: `Market events failed: ${e.message}` }); }
+    } catch (e) { setResp("nav", { status: "error", nav: true, text: `Couldn't load market events — ${humanizeError(e)}` }); }
   }, [live, apiKey, selected, watchlist, speak]);
 
   // ---- portfolio: holdings with live P&L; the anchor can brief it ----
@@ -5157,7 +5180,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
       setMeetings(m => [{ ...j, at: new Date().toLocaleTimeString() }, ...m].slice(0, 6));
       if (j.start_url || j.join_url) window.open(j.start_url || j.join_url, "_blank", "noopener");
-    } catch (e) { setMeetErr(`${provider}: ${e.message}`); }
+    } catch (e) { setMeetErr(`${provider}: ${humanizeError(e)}`); }
     finally { setMeetBusy(""); }
   }, [selected, authHdr]);
   const disconnectMeet = useCallback(async (provider) => {
@@ -5208,7 +5231,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const r = await fetch("/api/agent/preferences", { method: "POST", headers: { "Content-Type": "application/json", ...authHdr }, body: JSON.stringify({ enabled, symbols: watchlist }) });
       const j = await r.json(); if (!r.ok) throw new Error(j.error || "Could not save agent settings");
       setAgentPrefs(j);
-    } catch (e) { setCmdMsg(`Market brief agent: ${e.message || e}`); }
+    } catch (e) { setCmdMsg(`Market brief agent — ${humanizeError(e)}`); }
     finally { setAgentBusy(false); }
   };
 
@@ -5226,7 +5249,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         const j = await r.json();
         if (r.ok && j.url) { window.location.href = j.url; return; } // hand off to Stripe's page
         throw new Error(j.error || "Checkout unavailable");
-      } catch (e) { setCmdMsg(`Checkout unavailable: ${e.message || e}`); return; }
+      } catch (e) { setCmdMsg(`Checkout unavailable — ${humanizeError(e)}`); return; }
       finally { setBillingBusy(""); }
     }
     onChangePlan?.(planId); // simulated / local plan switch
@@ -5375,7 +5398,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       completeMission("export");
       setTimeout(() => setExportMsg(""), 3000);
     } catch (e) {
-      setExportMsg(`✗ ${fmt.toUpperCase()} failed: ${e.message}`);
+      setExportMsg(`✗ ${fmt.toUpperCase()} failed — ${humanizeError(e)}`);
     } finally {
       // hold the pose a beat past a fast export so it's actually seen ("presenting the finished deck")
       clearTimeout(presentHoldRef.current);
@@ -5444,11 +5467,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           setExportMsg(`✓ Report ready (via ${m.label})`);
           setTimeout(() => setExportMsg(""), 5000);
           return text;
-        } catch (e) { errors.push(`${m.label}: ${e.message}`); }
+        } catch (e) { errors.push(`${m.label}: ${humanizeError(e)}`); }
       }
       throw new Error(errors.join(" · ") || "no model succeeded");
     } catch (e) {
-      setExportMsg(`✗ Report failed: ${e.message}`);
+      setExportMsg(`✗ Report failed — ${humanizeError(e)}`);
       return null;
     } finally {
       setReportBusy(false);
@@ -5504,7 +5527,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       else await exportPowerPoint(report);
       setExportMsg("✓ Daily brief downloaded");
       setTimeout(() => setExportMsg(""), 6000);
-    } catch (e) { setExportMsg(`✗ Daily brief failed: ${e.message}`); }
+    } catch (e) { setExportMsg(`✗ Daily brief failed — ${humanizeError(e)}`); }
   }, [generateWrittenReport, buildReport, briefFormat, writtenReport]);
 
   useEffect(() => {
@@ -5779,7 +5802,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         overview: m.overview,
       }));
       setCatalog({ service: svc, kind, loading: false, items });
-    } catch (e) { setCatalog({ service: svc, kind, loading: false, items: [], error: String(e.message || e) }); }
+    } catch (e) { setCatalog({ service: svc, kind, loading: false, items: [], error: humanizeError(e) }); }
   }, [tmdbKey, planAllows]);
   const browsePopular = useCallback(async (kind = "movie") => {
     setCatalogPick(null);
@@ -5799,7 +5822,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         overview: m.overview,
       }));
       setCatalog({ popular: true, kind, loading: false, items });
-    } catch (e) { setCatalog({ popular: true, kind, loading: false, items: [], error: String(e.message || e) }); }
+    } catch (e) { setCatalog({ popular: true, kind, loading: false, items: [], error: humanizeError(e) }); }
   }, [tmdbKey, planAllows]);
   const playTrailer = useCallback(async (item, svc) => {
     if (!planAllows("tmdb")) return; // plan-gated: TMDB trailers need Pro Desk
@@ -5827,7 +5850,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         poster: `https://archive.org/services/img/${doc.identifier}`,
       }));
       setCatalog({ archive: true, loading: false, items, query });
-    } catch (e) { setCatalog({ archive: true, loading: false, items: [], error: String(e.message || e), query }); }
+    } catch (e) { setCatalog({ archive: true, loading: false, items: [], error: humanizeError(e), query }); }
   }, []);
   const playArchive = useCallback((item) => {
     setPlayer({ archive: item.archiveId, title: item.title, channel: "Internet Archive" });
@@ -5970,7 +5993,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       }
       setNews(parsed); setNewsFor(selected);
     } catch (e) {
-      setNewsErr(String(e.message || e));
+      setNewsErr(humanizeError(e));
     } finally {
       setNewsBusy(false);
     }
@@ -6023,7 +6046,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       setPlayer(valid ? { id, ...first } : { id: null, ...first, brief: first.brief || "This exact video couldn't be embedded — use “Watch on YouTube” below to find it." });
       speak("nav", `Pulling up ${first.title} from ${first.channel}. ${first.brief || ""}`);
     } catch (e) {
-      setResp("nav", { status: "error", nav: true, links: [], videos: [], text: String(e.message || e) });
+      setResp("nav", { status: "error", nav: true, links: [], videos: [], text: humanizeError(e) });
     }
   }, [speak, youtubeKey, searchYouTube]);
 
@@ -6190,7 +6213,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         const j = await r.json(); if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
         setResp("desk", { status: "done", text: j.text, ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", model: j.model || "Gemini", tried: [] });
         if (autoSpeak && j.text) speak("desk", j.text);
-      }).catch(e => setResp("desk", { status: "error", text: String(e.message || e), ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", tried: [] }));
+      }).catch(e => setResp("desk", { status: "error", text: humanizeError(e), ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", tried: [] }));
       return;
     }
     if (enabled.length === 0) { setCmdMsg("Enable at least one model in the AI desk config"); return; }
@@ -6206,14 +6229,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       : askOpenAICompat(m, prompt, sig, onToken);
     const streamVoice = autoSpeak && voiceEngine === "browser" && !!window.speechSynthesis;
     const friendly = (m, e) => {
-      let msg = String(e.message || e);
+      let msg = humanizeError(e);
       if (e.name === "AbortError") return "timed out";
       if (e instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(msg)) {
         return m.kind === "ollama" ? "can't reach Ollama — run: OLLAMA_ORIGINS=* ollama serve"
           : (m.kind === "openai" && !m.needsKey) ? "local server unreachable (CORS?)"
           : "network error";
       }
-      return msg;
+      return humanizeError(msg);
     };
 
     (async () => {
