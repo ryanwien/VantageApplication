@@ -32,10 +32,14 @@
       (localStorage), threaded through all 4 model paths, "forget conversation" privacy control,
       e2e‑verified on live llama3.1 (codeword recalled across turns, persists across reload).
       Now 3 of the 5 minimum capabilities are solid (tools, memory, permission/privacy).
-- [ ] An **inference‑speed optimization story** with numbers (20 pts)
-- [ ] **Artifacts**: spec doc (w/ architecture diagram + local‑deployment plan + speed‑optimization
-      description) · full repo README (env config, startup, deps) · **3–5 min video showing execution
-      on the Radeon GPU** (`ollama ps`/vLLM logs + `rocm-smi` on camera) · **PPT or Poster**
+- [x] **Spec document** — ✅ drafted (`submission/AMD-SPEC.md`, sectioned to the rules; fill in
+      team info + Radeon [TODO] numbers, then export to PDF)
+- [x] **Poster** — ✅ drafted (`submission/poster.html`; fill [TEAM NAME], Chrome → print → PDF,
+      A2 landscape, background graphics ON)
+- [x] **Radeon setup script** — ✅ `scripts/radeon-setup.sh` (one-shot on the instance)
+- [ ] **Inference‑speed numbers from the Radeon box** (20 pts) — run the spec doc's query set,
+      fill the [TODO] tables in spec + poster
+- [ ] **3–5 min video showing execution on the Radeon GPU** (`ollama ps` 100% GPU + `rocm-smi` on camera)
 - [ ] **Submit**: fork `AMD-DEV-CONTEST/Radeon-hackathon-2026-07`, PR titled
       **`Track 2, <Team name>, Vantage`**, all in English
 
