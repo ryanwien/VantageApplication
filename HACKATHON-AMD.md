@@ -112,13 +112,18 @@ Searched the full rules — **there is no requirement to build during the event 
 1. **The "remote API" vs. "Radeon cloud model API bonus" tension** (above) — ask on Discord before relying on the shared endpoints for core inference.
 2. **Whether Ollama counts** as an accepted stack given only vLLM / llama.cpp are named. Low risk; confirm if you rely on it.
 
-## 🎯 What to do next, in order
-1. **Register**: Luma (needs approval — don't leave it late) + **AMD Developer Program**. Confirm you have a Discord ID and GitHub ID. *Prize‑gating, do it today.*
-2. **Get a Radeon Cloud instance** and stand up inference there (vLLM is the paved path).
-3. **Build multi‑turn memory into the desk** — biggest single scoring win (~40 pts) and closes a minimum‑requirement gap.
-4. **Ask Discord** the remote‑API/bonus question.
-5. **Capture evidence on the Radeon box**: `ollama ps`/vLLM logs showing GPU, `rocm-smi` during inference, before/after speed numbers.
-6. **Produce the artifacts**: spec doc (with architecture diagram), README, 3–5 min video, PPT/poster, then fork + PR.
+## 🎯 What to do next, in order (updated 2026‑07‑16)
+Already done ✅ — multi‑turn memory (built + e2e‑verified), README AMD/ROCm runbook, spec document
+(`submission/AMD-SPEC.md`), poster (`submission/poster.html`), Radeon one‑shot setup script
+(`scripts/radeon-setup.sh`), demo opens on AMD's own ticker.
+
+Remaining — all yours:
+1. **Register**: Luma (needs AMD approval — don't leave it late) + **AMD Developer Program**. Confirm you have a Discord ID and GitHub ID. *Prize‑gating, do it today.*
+2. **Launch a Radeon Cloud instance**, clone the repo, run `bash scripts/radeon-setup.sh` — the final line must show `ollama ps` → **100% GPU**.
+3. **Fill the [TODO] latency numbers** (script's query set) into `submission/AMD-SPEC.md` and the poster; add team names; export both to PDF.
+4. **Record the 3–5 min video on the instance** — `rocm-smi` + `ollama ps` on camera, then the live agent (chart AMD → follow‑up question → voice → report export → offline test).
+5. **Ask Discord** the remote‑API/bonus question (before relying on shared endpoints for anything).
+6. **Fork + PR**: `Track 2, <Team name>, Vantage` — before **Aug 6, 8:59 AM Pacific**.
 
 ## Why Vantage fits "Agentic AI"
 Vantage's AI desk is already an **agent that reasons over natural language and executes tools**, not a chatbot. Given one instruction it decides *which* capability to invoke and runs it:
@@ -186,24 +191,26 @@ Be precise about this — it's the difference between a claim that holds up and 
 
 *(Client wiring: `askOllama()` in `React.jsx`; the one‑click path is `soloModel("ollama")` + the `?local=1` mount effect; local‑model picker is `isLocalModel`.)*
 
-## 3‑minute demo script (Agentic AI, all local on AMD)
+## Demo video script (3–5 min per rules · Track 2, all local on AMD)
 1. **0:00** — Show `rocm-smi` **and** `ollama ps` with **PROCESSOR = `100% GPU`** clearly visible: model loaded on the Radeon. State: "the agent's brain runs entirely on AMD ROCm, no cloud." *(If that column doesn't say GPU, stop and fix — don't record.)*
-2. **0:20** — Vantage → Settings → AI: only **Ollama (local)** is enabled. No API keys.
+2. **0:20** — Vantage → Settings → AI: only **Ollama (local)** is enabled. No API keys anywhere.
 3. **0:35** — Type *"chart AMD and explain the move"* → agent charts + answers; the anchor reads it aloud.
-4. **1:10** — *"take me to Robinhood"* → agent navigates/embeds (tool use).
-5. **1:30** — *"write a report and export a PowerPoint"* → agent generates the deck locally.
-6. **2:10** — Pull the network cable / go offline; repeat a query → still works. "Fully local AMD inference."
-7. **2:40** — Close on the three tools exercised from plain language + the AMD/ROCm stack.
+4. **1:10** — **Multi‑turn memory (scored criterion — don't skip):** follow up with just *"what about its risks?"* → the desk resolves "its" from local memory. Then Settings → AI → point at **"forget conversation"**: "memory lives on this device, cleared in one click."
+5. **1:45** — 🎙 voice command: *"take me to Robinhood"* → agent navigates/embeds (tool use).
+6. **2:10** — *"write a report and export a PowerPoint"* → local model writes it; browser builds the deck. Open it.
+7. **2:50** — Go offline (disable networking on camera); repeat a query → still answers. "Fully local AMD inference — your questions never leave this machine."
+8. **3:20** — Close over `rocm-smi` under load: tools + memory + privacy from plain language, all on the AMD/ROCm stack.
 
 ## Submission checklist
-- [ ] Register the **AMD AI Developer Program** account (prize eligibility)
-- [ ] Confirm new‑project rule + disclose prior work if required
-- [ ] Configure Vantage local‑only on an AMD/ROCm box (steps above)
-- [ ] **Confirm `ollama ps` reads `100% GPU`** (not CPU) — the demo claim depends on it
-- [ ] Capture AMD evidence: `rocm-smi` during a query, `ollama ps` (PROCESSOR column), `api/ps` showing `size_vram` > 0, GPU‑utilization screenshots, agent logs
-- [ ] Record demo video (confirm max length) showing local‑on‑AMD agent + tool use
-- [ ] Public repo (or shared per their rules) + README section: "How ROCm/Radeon is used"
-- [ ] Write‑up: which track, the agent's reasoning + tools, why AMD
+- [ ] Register on **Luma** (needs AMD approval) + the **AMD AI Developer Program** (prize eligibility)
+- [x] ~~Confirm new‑project rule~~ — **resolved**: the governing rules have no build‑during‑event requirement; prior work is fine
+- [ ] Radeon Cloud instance → `bash scripts/radeon-setup.sh` → **`ollama ps` reads `100% GPU`** (the demo claim depends on it)
+- [ ] Capture AMD evidence: `rocm-smi` during a query, `ollama ps` (PROCESSOR column), `api/ps` showing `size_vram` > 0, GPU‑utilization screenshots
+- [ ] Fill [TODO] latency numbers + team info into `submission/AMD-SPEC.md` and `submission/poster.html`; export both to PDF
+- [ ] Record demo video (**3–5 min**, script above) showing local‑on‑AMD agent + tools + multi‑turn memory
+- [x] README section "Run on AMD Radeon / ROCm" — **done** (step‑by‑step, with the CPU‑fallback check)
+- [x] Write‑up — **done**: `submission/AMD-SPEC.md` (Track 2, agent reasoning + tools, why AMD)
+- [ ] Fork `AMD-DEV-CONTEST/Radeon-hackathon-2026-07` + PR titled **`Track 2, <Team name>, Vantage`**
 
 ## ✅ Built: one‑click local mode
 A **"⚡ Run local‑only (AMD / ROCm)"** control now lives at the top of **Settings → AI**, and the same thing triggers from the **`?local=1`** URL param. It enables *only* the local Ollama model and lifts the plan gate, so the whole agent runs on local (AMD) inference with zero cloud keys. Verified in‑browser: it flips the desk from cloud (plan‑locked) to Ollama‑only with the gate lifted, via both the button and the URL param.
