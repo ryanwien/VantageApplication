@@ -196,6 +196,7 @@ const I18N = {
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Si los modelos de pago fallan (sin créditos, clave incorrecta, sin conexión), la mesa y los informes reintentan automáticamente con tu modelo local (Ollama o LM Studio). Configura uno abajo — establece su BASE URL e inicia el servidor local.",
     "ACTIVE": "ACTIVO", "use only this": "usar solo este", "BASE URL": "BASE URL", "MODEL": "MODELO",
     "Run local-only (AMD / ROCm)": "Ejecutar solo en local (AMD / ROCm)", "Switch the desk to local": "Cambiar la mesa a local", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic apunta la mesa a tu modelo local de Ollama (localhost:11434) y desactiva todos los modelos en la nube — así todo el agente se ejecuta con inferencia local (p. ej. una GPU AMD Radeon con ROCm), sin claves. También se abre con ?local=1 en la URL.",
+    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "La mesa recuerda esta conversación localmente (solo en este dispositivo) para que funcionen las preguntas de seguimiento.", "forget conversation": "olvidar conversación", "Desk memory cleared — the conversation is forgotten.": "Memoria de la mesa borrada — la conversación queda olvidada.",
     "format:": "formato:", "e.g.": "p. ej.", "browse models": "explorar modelos",
     "detect installed models": "detectar modelos instalados", "Lists the models on your Ollama server — the same set as `ollama list`.": "Lista los modelos en tu servidor Ollama — el mismo conjunto que `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo aún no tiene una API alojada oficial — ejecuta un puente local compatible con OpenAI y apunta la BASE URL a él.", "Lumo bridge": "puente Lumo",
@@ -329,6 +330,7 @@ const I18N = {
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Si les modèles payants échouent (pas de crédits, mauvaise clé, hors ligne), le plateau et les rapports réessaient automatiquement avec votre modèle local (Ollama ou LM Studio). Configurez-en un ci-dessous — définissez sa BASE URL et démarrez le serveur local.",
     "ACTIVE": "ACTIF", "use only this": "utiliser seulement celui-ci", "BASE URL": "BASE URL", "MODEL": "MODÈLE",
     "Run local-only (AMD / ROCm)": "Exécuter en local uniquement (AMD / ROCm)", "Switch the desk to local": "Basculer le plateau en local", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic pointe le plateau vers votre modèle Ollama local (localhost:11434) et désactive tous les modèles cloud — tout l'agent tourne alors en inférence locale (par ex. un GPU AMD Radeon via ROCm), sans clés. S'ouvre aussi avec ?local=1 dans l'URL.",
+    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "Le plateau mémorise cette conversation localement (uniquement sur cet appareil) pour que les questions de suivi fonctionnent.", "forget conversation": "oublier la conversation", "Desk memory cleared — the conversation is forgotten.": "Mémoire du plateau effacée — la conversation est oubliée.",
     "format:": "format :", "e.g.": "par ex.", "browse models": "parcourir les modèles",
     "detect installed models": "détecter les modèles installés", "Lists the models on your Ollama server — the same set as `ollama list`.": "Liste les modèles sur votre serveur Ollama — le même ensemble que `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo n'a pas encore d'API hébergée officielle — exécutez un pont local compatible OpenAI et faites pointer la BASE URL dessus.", "Lumo bridge": "pont Lumo",
@@ -462,6 +464,7 @@ const I18N = {
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Wenn kostenpflichtige Modelle fehlschlagen (keine Credits, falscher Schlüssel, offline), versuchen das Pult und die Berichte es automatisch erneut mit Ihrem lokalen Modell (Ollama oder LM Studio). Konfigurieren Sie unten eines — legen Sie seine BASE URL fest und starten Sie den lokalen Server.",
     "ACTIVE": "AKTIV", "use only this": "nur dieses verwenden", "BASE URL": "BASE URL", "MODEL": "MODELL",
     "Run local-only (AMD / ROCm)": "Nur lokal ausführen (AMD / ROCm)", "Switch the desk to local": "Pult auf lokal umstellen", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Ein Klick richtet das Pult auf dein lokales Ollama-Modell (localhost:11434) und schaltet alle Cloud-Modelle ab — der gesamte Agent läuft dann mit lokaler Inferenz (z. B. einer AMD-Radeon-GPU über ROCm), ohne Schlüssel. Öffnet sich auch mit ?local=1 in der URL.",
+    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "Das Pult merkt sich dieses Gespräch lokal (nur auf diesem Gerät), damit Anschlussfragen funktionieren.", "forget conversation": "Gespräch vergessen", "Desk memory cleared — the conversation is forgotten.": "Pult-Gedächtnis gelöscht — das Gespräch ist vergessen.",
     "format:": "Format:", "e.g.": "z. B.", "browse models": "Modelle durchsuchen",
     "detect installed models": "installierte Modelle erkennen", "Lists the models on your Ollama server — the same set as `ollama list`.": "Listet die Modelle auf deinem Ollama-Server — dieselbe Menge wie `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo hat noch keine offizielle gehostete API — betreiben Sie eine lokale OpenAI-kompatible Brücke und richten Sie die BASE URL darauf aus.", "Lumo bridge": "Lumo-Brücke",
@@ -594,6 +597,7 @@ const I18N = {
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Se os modelos pagos falharem (sem créditos, chave errada, offline), a mesa e os relatórios tentam novamente com o seu modelo local (Ollama ou LM Studio) automaticamente. Configure um abaixo — defina a BASE URL e inicie o servidor local.",
     "ACTIVE": "ATIVO", "use only this": "usar apenas este", "BASE URL": "BASE URL", "MODEL": "MODELO",
     "Run local-only (AMD / ROCm)": "Executar apenas local (AMD / ROCm)", "Switch the desk to local": "Mudar a mesa para local", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Um clique aponta a mesa para o teu modelo local do Ollama (localhost:11434) e desliga todos os modelos na nuvem — assim todo o agente corre com inferência local (por ex. uma GPU AMD Radeon via ROCm), sem chaves. Também abre com ?local=1 no URL.",
+    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "A mesa lembra esta conversa localmente (apenas neste dispositivo) para que as perguntas de seguimento funcionem.", "forget conversation": "esquecer conversa", "Desk memory cleared — the conversation is forgotten.": "Memória da mesa limpa — a conversa foi esquecida.",
     "format:": "formato:", "e.g.": "por ex.", "browse models": "explorar modelos",
     "detect installed models": "detetar modelos instalados", "Lists the models on your Ollama server — the same set as `ollama list`.": "Lista os modelos no teu servidor Ollama — o mesmo conjunto que `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "O Proton Lumo ainda não tem uma API alojada oficial — execute uma ponte local compatível com OpenAI e aponte a BASE URL para ela.", "Lumo bridge": "ponte Lumo",
@@ -726,6 +730,7 @@ const I18N = {
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Se i modelli a pagamento falliscono (niente crediti, chiave errata, offline), la postazione e i rapporti riprovano automaticamente sul tuo modello locale (Ollama o LM Studio). Configurane uno qui sotto — imposta la sua BASE URL e avvia il server locale.",
     "ACTIVE": "ATTIVO", "use only this": "usa solo questo", "BASE URL": "BASE URL", "MODEL": "MODELLO",
     "Run local-only (AMD / ROCm)": "Esegui solo in locale (AMD / ROCm)", "Switch the desk to local": "Passa la postazione a locale", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic punta la postazione al tuo modello Ollama locale (localhost:11434) e disattiva tutti i modelli cloud — così l'intero agente gira con inferenza locale (es. una GPU AMD Radeon via ROCm), senza chiavi. Si apre anche con ?local=1 nell'URL.",
+    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "La postazione ricorda questa conversazione localmente (solo su questo dispositivo) così le domande di seguito funzionano.", "forget conversation": "dimentica conversazione", "Desk memory cleared — the conversation is forgotten.": "Memoria della postazione cancellata — la conversazione è dimenticata.",
     "format:": "formato:", "e.g.": "es.", "browse models": "sfoglia i modelli",
     "detect installed models": "rileva i modelli installati", "Lists the models on your Ollama server — the same set as `ollama list`.": "Elenca i modelli sul tuo server Ollama — lo stesso insieme di `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo non ha ancora un'API ospitata ufficiale — esegui un bridge locale compatibile con OpenAI e punta la BASE URL su di esso.", "Lumo bridge": "bridge Lumo",
@@ -3512,6 +3517,24 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // can pick one instead of typing an id that might not be pulled.
   const [ollamaTags, setOllamaTags] = useState([]);
   const [ollamaTagErr, setOllamaTagErr] = useState("");
+
+  // ---- local multi-turn memory: the desk remembers the conversation, on this device only ----
+  // Stored as [{role:"user"|"assistant", content}] so follow-ups like "what about its risks?"
+  // resolve against earlier turns. Never sent anywhere except to the model the user picked.
+  const DESK_MEMORY_MAX = 12; // last 6 exchanges
+  const deskMemoryRef = useRef(null);
+  if (deskMemoryRef.current === null) {
+    try { deskMemoryRef.current = JSON.parse(localStorage.getItem("tape-desk-memory") || "[]"); } catch { deskMemoryRef.current = []; }
+  }
+  const rememberTurn = useCallback((question, answer) => {
+    const mem = [...deskMemoryRef.current, { role: "user", content: question }, { role: "assistant", content: answer }].slice(-DESK_MEMORY_MAX);
+    deskMemoryRef.current = mem;
+    try { localStorage.setItem("tape-desk-memory", JSON.stringify(mem)); } catch { /* quota */ }
+  }, []);
+  const forgetConversation = useCallback(() => {
+    deskMemoryRef.current = [];
+    try { localStorage.removeItem("tape-desk-memory"); } catch { /* ok */ }
+  }, []);
   const detectOllama = useCallback(async () => {
     const om = aiModels.find(m => m.id === "ollama");
     const base = (om?.baseUrl || "http://localhost:11434").replace(/\/$/, "");
@@ -5407,7 +5430,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }, [buildReport]);
 
   const buildPrompt = (question) =>
-    `You are one of several analysts on a trading desk answering the same question side by side. Be concise: 2-4 sentences, no preamble. Never give personalized financial advice; frame observations analytically.${lang !== "en" ? ` Respond entirely in ${LANG_AI[lang]}.` : ""}\n\n` +
+    `You are one of several analysts on a trading desk answering the same question side by side. Be concise: 2-4 sentences, no preamble. Never give personalized financial advice; frame observations analytically.${lang !== "en" ? ` Respond entirely in ${LANG_AI[lang]}.` : ""}\n` +
+    `Earlier turns of this conversation may precede this message — use them to resolve follow-ups (pronouns, "what about its risks?").\n\n` +
     `The market snapshot below is this dashboard's own data — treat it as the live tape when it is real quotes, or as a hypothetical scenario (say so briefly) when it is simulated demo data.\n` +
     `For questions about current or recent real-world events — "this week in the market", latest news, a company's recent moves — use web search to ground your answer in up-to-date facts, and don't confuse the simulated snapshot with the real market.\n\n` +
     `Market snapshot (JSON):\n${JSON.stringify(buildMarketContext())}\n\nQuestion: ${question}`;
@@ -5543,7 +5567,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     return () => clearInterval(id);
   }, [briefTime, runDailyBrief]);
 
-  async function askClaude(m, prompt, signal, onToken) {
+  async function askClaude(m, prompt, signal, onToken, history = []) {
     if (!anthropicApiKey.trim()) throw new Error("Add an Anthropic API key in settings to enable Claude.");
     const baseUrl = getClaudeBaseUrl();
     const call = (stream) => fetch(`${baseUrl}/messages`, {
@@ -5555,7 +5579,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         // Anthropic runs this server-side; Claude searches only when a question needs current facts
         // (e.g. "this week in the market") and the answer still streams back as text. Bounded to keep cost down.
         tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 3 }],
-        messages: [{ role: "user", content: prompt }],
+        messages: [...history, { role: "user", content: prompt }],
       }),
     });
 
@@ -5596,11 +5620,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     onToken(text);
   }
 
-  async function askOllama(m, prompt, signal, onToken) {
+  async function askOllama(m, prompt, signal, onToken, history = []) {
     const r = await fetch(`${m.baseUrl.replace(/\/$/, "")}/api/chat`, {
       method: "POST", signal,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: m.model, stream: true, messages: [{ role: "user", content: prompt }] }),
+      body: JSON.stringify({ model: m.model, stream: true, messages: [...history, { role: "user", content: prompt }] }),
     });
     if (!r.ok) {
       // Ollama puts the real reason in the body — a 404 almost always means the model isn't pulled yet.
@@ -5627,14 +5651,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     }
   }
 
-  async function askOpenAICompat(m, prompt, signal, onToken) {
+  async function askOpenAICompat(m, prompt, signal, onToken, history = []) {
     const r = await fetch(`${m.baseUrl.replace(/\/$/, "")}/chat/completions`, {
       method: "POST", signal,
       headers: {
         "Content-Type": "application/json",
         ...(m.apiKey ? { Authorization: `Bearer ${m.apiKey}` } : {}),
       },
-      body: JSON.stringify({ model: m.model, stream: true, messages: [{ role: "user", content: prompt }] }),
+      body: JSON.stringify({ model: m.model, stream: true, messages: [...history, { role: "user", content: prompt }] }),
     });
     if (!r.ok) {
       // the provider (OpenRouter/OpenAI/LM Studio) puts the real reason in the JSON body — surface it
@@ -5747,14 +5771,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     return { brokers: hits, sym, navOnly, inApp: hits.length === 0 };
   };
 
-  async function askGemini(m, prompt, signal, onToken) {
+  async function askGemini(m, prompt, signal, onToken, history = []) {
     if (!m.apiKey) throw new Error("Add a Gemini API key in settings (aistudio.google.com/apikey)");
     const r = await fetch(
       `${m.baseUrl.replace(/\/$/, "")}/models/${m.model}:streamGenerateContent?alt=sse&key=${encodeURIComponent(m.apiKey)}`,
       {
         method: "POST", signal,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+        body: JSON.stringify({ contents: [
+          ...history.map(h => ({ role: h.role === "assistant" ? "model" : "user", parts: [{ text: h.content }] })),
+          { role: "user", parts: [{ text: prompt }] },
+        ] }),
       }
     );
     if (!r.ok) throw new Error(`HTTP ${r.status}${r.status === 400 || r.status === 403 ? " — check the API key" : r.status === 429 ? " — rate limited" : ""}`);
@@ -6212,6 +6239,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       }).then(async r => {
         const j = await r.json(); if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
         setResp("desk", { status: "done", text: j.text, ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", model: j.model || "Gemini", tried: [] });
+        if (j.text) rememberTurn(q, j.text);
         if (autoSpeak && j.text) speak("desk", j.text);
       }).catch(e => setResp("desk", { status: "error", text: humanizeError(e), ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", tried: [] }));
       return;
@@ -6222,11 +6250,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     // ONE answer box: try enabled models in order; the first that answers wins. If one errors
     // (Claude 401/credits, a dead local server…), it cascades to the next enabled model automatically.
     setAiResponses(p => (p.nav ? { nav: p.nav } : {})); // clear old answers; keep the navigator card
+    // multi-turn: pass the remembered conversation (plain questions/answers, not snapshot-wrapped
+    // prompts, so context stays small) — follow-ups like "and its risks?" resolve correctly
+    const history = deskMemoryRef.current.slice(-DESK_MEMORY_MAX);
     const dispatch = (m, sig, onToken) =>
-      m.kind === "claude" ? askClaude(m, prompt, sig, onToken)
-      : m.kind === "ollama" ? askOllama(m, prompt, sig, onToken)
-      : m.kind === "gemini" ? askGemini(m, prompt, sig, onToken)
-      : askOpenAICompat(m, prompt, sig, onToken);
+      m.kind === "claude" ? askClaude(m, prompt, sig, onToken, history)
+      : m.kind === "ollama" ? askOllama(m, prompt, sig, onToken, history)
+      : m.kind === "gemini" ? askGemini(m, prompt, sig, onToken, history)
+      : askOpenAICompat(m, prompt, sig, onToken, history);
     const streamVoice = autoSpeak && voiceEngine === "browser" && !!window.speechSynthesis;
     const friendly = (m, e) => {
       let msg = humanizeError(e);
@@ -6258,6 +6289,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           clearTimeout(timeout);
           if (!acc.trim()) throw new Error("empty response");
           setResp("desk", { status: "done", ms: Math.round(performance.now() - t0), via: m.label, model: m.model, tried: errors.slice() });
+          rememberTurn(q, acc); // local multi-turn memory — next question sees this exchange
           if (autoSpeak && acc) { if (voiceOn) endStreamSpeak(acc); else speak("desk", acc); }
           return; // first success wins — one box, done
         } catch (e) {
@@ -8006,6 +8038,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <button onClick={() => { setDevMode(true); soloModel("ollama"); }}
                       style={{ alignSelf: "flex-start", background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 14px", cursor: "pointer" }}>
                       {t("Switch the desk to local")}
+                    </button>
+                  </div>
+                  {/* local multi-turn memory: lives only in this browser; one click forgets it */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: MONO, fontSize: 10.5, color: C.muted, lineHeight: 1.6 }}>
+                    <span>🧠 {t("The desk remembers this conversation locally (this device only) so follow-up questions work.")}</span>
+                    <button onClick={() => { forgetConversation(); setCmdMsg(t("Desk memory cleared — the conversation is forgotten.")); }}
+                      style={{ flex: "0 0 auto", background: "transparent", color: C.muted, border: `1px solid ${C.panelEdge}`, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>
+                      {t("forget conversation")}
                     </button>
                   </div>
                   <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.muted, background: "rgba(255,179,0,0.06)", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "8px 10px" }}>

@@ -23,6 +23,35 @@ Requires **Node 20+** (the backend uses `--env-file`). Check with `node --versio
 
 ---
 
+## Run on AMD Radeon / ROCm (fully local agent — no cloud keys)
+
+The AI desk is an agent (tool use, multi-step commands, local multi-turn memory) whose core
+inference can run **entirely on a local model** — on an AMD Radeon GPU through ROCm. Step by step:
+
+1. **Serve a model locally** (either works):
+   - **Ollama** (uses ROCm on Radeon): `ollama pull llama3.1`, then allow the browser origin:
+     ```bash
+     OLLAMA_ORIGINS=* ollama serve        # PowerShell: $env:OLLAMA_ORIGINS='*'; ollama serve
+     ```
+   - **vLLM** (ROCm build, OpenAI-compatible): `vllm serve <model> --host 0.0.0.0 --port 8000`,
+     then in **settings → AI** point the *LM Studio / local* card's BASE URL to `http://<host>:8000/v1`.
+2. **Start Vantage**: `npm run dev`, then open **`http://127.0.0.1:5173/?local=1`**
+   (or click **settings → AI → "⚡ Run local-only (AMD / ROCm)"**). This enables *only* the local
+   model — every desk answer, report, and command now runs on local inference.
+3. **Verify the GPU is actually doing the work** (Ollama silently falls back to CPU if ROCm
+   isn't engaged):
+   ```bash
+   ollama ps        # PROCESSOR column must read "100% GPU"
+   rocm-smi         # GPU utilization + VRAM jump during a query
+   ```
+4. **What you should see**: sign in, ask the desk *"chart NVDA and explain the move"* — the answer
+   header reads `Ollama (local) (llama3.1)`, and it works with the network cable pulled.
+
+Troubleshooting: `model "llama3.1" not found` → `ollama pull llama3.1` (or set MODEL to one from
+`ollama list`). "Can't reach Ollama" → start it with `OLLAMA_ORIGINS=*` as above.
+
+---
+
 ## Optional API keys (each unlocks one extra)
 
 All keys live in your **browser's localStorage only** — they're sent only to their own provider's
