@@ -38,10 +38,87 @@ AMD's managed serving is **vLLM, not Ollama** ("Radeon only supports vLLM"). Thi
 - **Open risk — CORS:** Vantage calls models straight from the browser. If `developer.amd.com.cn` doesn't send permissive CORS headers, the browser blocks it and we'd route via `server/index.js` instead. **Test this early** — it's the difference between a settings tweak and a proxy build.
 - **Judging optics:** a *shared hosted API* is weaker evidence of "runs on AMD" than a **dedicated instance you control**. The dedicated vLLM instance (or Ollama inside your own Radeon instance) is the stronger demo.
 
+---
+
+# 📋 RULES COMPLIANCE AUDIT (read: the governing Rules & Conditions doc, 2026‑07‑16)
+Source of truth: [Rules & Conditions Google Doc](https://docs.google.com/document/d/1TwgwBNUAv8fRNQbkcTZmcRR0__Oi4WMsBfkW38ALZp4/edit) — *"the governing document for eligibility, judging methodology, submission requirements, code of conduct, intellectual property provisions, payments, and legal requirements."*
+
+**Our track is Track 2: "Development & Local Deployment of Private AI Agents."**
+
+## 🚨 Read this before you commit to entering: the IP terms
+Verbatim from the rules:
+> *"All Entries become the property of AMD, and none will be returned."*
+> Participant grants AMD *"a royalty‑free, irrevocable, non‑exclusive worldwide license to use, reproduce, modify, publish, create derivative works from, and display the entry and all elements embodied therein… including for advertising, promotional, marketing and other purposes, without further payment or consideration."*
+
+The license is **non‑exclusive**, so you keep the right to commercialise Vantage and to pitch it to SFF — but the *"become the property of AMD"* wording is aggressive, and you are handing AMD an **irrevocable** right to use and make derivatives of your submission. **You are commercialising this product (Stripe plans are already wired) and pitching the same product to SFF.** Make that trade knowingly. Everything below assumes you've accepted it.
+
+## Track 2 hard requirements vs. where Vantage actually stands
+
+| Rule (verbatim) | Vantage today | Verdict |
+|---|---|---|
+| *"Must run on AMD Radeon GPU of Radeon cloud + ROCm software stack"* | Runs on local Ollama; verified only on **NVIDIA/CUDA** | ❌ **must do on Radeon Cloud** |
+| *"Core inference processes shall be executed locally on AMD Radeon GPU; remote APIs are not allowed for core functions"* | `?local=1` runs the desk on a local model, no cloud keys — **verified working** | ✅ *satisfiable — demo local‑only* |
+| *"It is not allowed to depend entirely on closed‑source Agent platforms to implement core features"* | Our own code (`askDesk`, `askOllama`) | ✅ |
+| **≥2 of 5 capabilities required** | see below | ⚠️ **scrapes 2 — thin** |
+| Deliverable form | Web UI | ✅ |
+
+### The "≥2 of 5" minimum — we're thin here
+| Capability | Status |
+|---|---|
+| Tool invocation | ✅ charts, watchlist, navigation, exports, calendar |
+| Clear permission control & privacy protection | ✅ accounts/plans + local‑only (no data leaves the box) |
+| **Local multi‑turn memory** | ❌ **code‑verified missing** — every call sends `messages: [{role:"user", content: prompt}]`. One‑shot, no history. |
+| Multi‑step task planning | ⚠️ weak — intent routing, not real decomposition |
+| Local knowledge retrieval (RAG) | ❌ none |
+
+We technically clear the bar with 2, but the scoring punishes the gaps.
+
+### Where the points actually are (Track 2 = 120 pts)
+- **Functional completeness (60):** task positioning 20 · *"task decomposition, tool invocation, RAG and memory management"* 20 · **"Smooth multi‑turn interaction experience" 20**
+- **AMD adaptation (40):** *"Core inference running on AMD Radeon GPU"* 20 · **"Targeted optimization for inference speed" 20**
+- **Bonus (20):** *"Core inference running Using Radeon cloud model API with quantization or distillation or other optimization methods."*
+
+➡️ **Highest‑value fix: multi‑turn memory.** It's one of the 5 minimums *and* feeds two 20‑point criteria (~40 pts). It's a contained change to `askDesk` — keep a turn history and send prior messages.
+➡️ **Second: an inference‑speed story** (20 pts) — quantisation/distillation, with before/after numbers.
+
+### ⚠️ Rule tension to clarify on Discord
+The platform rule says *"remote APIs are not allowed for core functions"*, but the **bonus** awards points for *"core inference running using Radeon cloud model API."* So the free shared Qwen/DeepSeek endpoints may be blessed *or* disqualifying for core inference. **Ask before building on them.** Safest reading: run inference **on your own Radeon Cloud instance**.
+
+### ⚠️ Framework note
+Optional frameworks are listed as **vLLM / llama.cpp** (+ Transformers/PyTorch‑ROCm). **Ollama is not named** — it wraps llama.cpp so it should qualify, but **vLLM is the paved path on Radeon Cloud**. Note also Finnhub is a remote **data** API, not inference — it shouldn't trip the "remote APIs" rule, but demo mode makes the local/private story cleaner.
+
+## ✅ Eligibility & admin (all mandatory)
+- **Luma registration *and approval*** — *"mandatory for prize eligibility"*, subject to AMD verification
+- **AMD Developer Program membership** — a **pre‑requisite** for prizes: https://www.amd.com/en/developer/ai-dev-program.html
+- **18+** (or majority; under‑18 needs a guardian‑signed waiver)
+- **A valid Discord ID and a valid GitHub ID are required**
+- Individuals or teams **up to 3**; legal names, same team name
+- Ineligible: nationals of sanctioned countries/OFAC‑SDN/BIS lists; AMD employees + immediate family
+
+## 📦 Required submission artifacts (Track 2)
+1. **Project Specification Document** — application scenarios · **Agent architecture diagram** · core capabilities · **model introduction & local deployment plan** · **optimization description for inference speed on AMD Radeon GPU**
+2. **Project Source Code** — complete repo + **README with environment configuration, startup guide, dependency list**
+3. **Demo Video** — **3–5 minutes**, showing *"actual execution performance on an AMD Radeon GPU, from command line/GUI to the final result"*
+4. **Supplementary (choose one)** — PPT **or** Poster
+5. **Fork + PR** to `AMD-DEV-CONTEST/Radeon-hackathon-2026-07`, PR titled **`Track 2, <Team name>, <App name>`**, **in English**
+
+## ⏰ Real deadline (mind the timezone)
+**Aug 6, 2026, 11:59 PM UTC+8** = **Aug 6, 8:59 AM US Pacific** — a *morning* deadline in the US, not end of day. **~3 weeks out.**
+
+## ✅ Resolved: the pre‑existing project question
+Searched the full rules — **there is no requirement to build during the event and no ban on prior work.** "Originality" appears only as a *judging* criterion (*"novelty and originality of the proposed solution"*). Vantage's history is not a rule problem.
+
 ## ⚠️ Still unconfirmed
-1. **New‑project rule** — still not stated on the luma page or the repo. Vantage's first commit is **2026‑07‑14**, inside the window, but be ready to disclose prior work. **Ask on Discord.**
-2. **Video length / required AMD evidence** — the **Rules & Conditions** doc on the luma page is authoritative and we haven't read it. It also defines what the PR must contain.
-3. **Eligibility** — residency/age; register the AMD AI Developer Program account **early** (it gates prize money).
+1. **The "remote API" vs. "Radeon cloud model API bonus" tension** (above) — ask on Discord before relying on the shared endpoints for core inference.
+2. **Whether Ollama counts** as an accepted stack given only vLLM / llama.cpp are named. Low risk; confirm if you rely on it.
+
+## 🎯 What to do next, in order
+1. **Register**: Luma (needs approval — don't leave it late) + **AMD Developer Program**. Confirm you have a Discord ID and GitHub ID. *Prize‑gating, do it today.*
+2. **Get a Radeon Cloud instance** and stand up inference there (vLLM is the paved path).
+3. **Build multi‑turn memory into the desk** — biggest single scoring win (~40 pts) and closes a minimum‑requirement gap.
+4. **Ask Discord** the remote‑API/bonus question.
+5. **Capture evidence on the Radeon box**: `ollama ps`/vLLM logs showing GPU, `rocm-smi` during inference, before/after speed numbers.
+6. **Produce the artifacts**: spec doc (with architecture diagram), README, 3–5 min video, PPT/poster, then fork + PR.
 
 ## Why Vantage fits "Agentic AI"
 Vantage's AI desk is already an **agent that reasons over natural language and executes tools**, not a chatbot. Given one instruction it decides *which* capability to invoke and runs it:
