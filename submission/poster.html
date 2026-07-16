@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Vantage — AMD AI DevMaster Poster</title>
+<style>
+  /* Print: Chrome → Print → Destination "Save as PDF" → Paper size A2, Landscape, margins None, background graphics ON */
+  @page { size: A2 landscape; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg:#0B0E14; --panel:#121722; --edge:#1D2433; --amber:#FFB300; --text:#E8EBF2; --muted:#7E879B; --up:#2FD37A; --down:#F6465D; }
+  html, body { background: var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, sans-serif; }
+  .poster { width: 594mm; height: 420mm; padding: 10mm 16mm; display: flex; flex-direction: column; gap: 6mm; overflow: hidden; }
+  .mono { font-family: Consolas, "Courier New", monospace; }
+
+  header { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1.2mm solid var(--amber); padding-bottom: 5mm; }
+  .brand { font-size: 24mm; font-weight: 800; letter-spacing: 2mm; color: var(--amber); }
+  .brand small { font-size: 9mm; color: var(--text); font-weight: 600; letter-spacing: 1mm; }
+  .track { text-align: right; color: var(--muted); font-size: 6.5mm; line-height: 1.5; }
+  .track b { color: var(--text); }
+
+  .tagline { font-size: 9mm; line-height: 1.45; }
+  .tagline b { color: var(--amber); }
+
+  .cols { display: grid; grid-template-columns: 1.15fr 1.5fr 1.1fr; gap: 8mm; flex: 1; min-height: 0; }
+  .panel { background: var(--panel); border: 0.6mm solid var(--edge); border-radius: 4mm; padding: 6mm; display: flex; flex-direction: column; gap: 4mm; overflow: hidden; }
+  h2 { color: var(--amber); font-size: 7.2mm; letter-spacing: 0.5mm; text-transform: uppercase; }
+  p, li { font-size: 5.5mm; line-height: 1.5; color: var(--text); }
+  li { margin-left: 7mm; margin-bottom: 2.5mm; }
+  .muted { color: var(--muted); }
+
+  .flow { display: flex; flex-direction: column; gap: 2.2mm; }
+  .node { border: 0.6mm solid var(--edge); border-left: 2mm solid var(--amber); border-radius: 2.5mm; padding: 3mm 4mm; background: #0D121C; }
+  .node .t { font-weight: 700; font-size: 5.8mm; }
+  .node .d { font-size: 4.8mm; color: var(--muted); line-height: 1.45; }
+  .arrow { text-align: center; color: var(--amber); font-size: 5.5mm; line-height: 0.7; }
+  .node.amd { border-left-color: var(--up); background: #0d1a13; }
+  .node.amd .t { color: var(--up); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .cap { border: 0.6mm solid var(--edge); border-radius: 2.5mm; padding: 4mm; background: #0D121C; }
+  .cap .t { color: var(--amber); font-weight: 700; font-size: 5.4mm; margin-bottom: 1.5mm; }
+  .cap .d { font-size: 4.8mm; color: var(--text); line-height: 1.45; }
+
+  .proof { background: #05070b; border: 0.6mm solid var(--edge); border-radius: 2.5mm; padding: 3.5mm 4mm; font-size: 4.8mm; line-height: 1.6; color: var(--up); }
+  .proof .cmd { color: var(--amber); }
+  .proof .out { color: var(--text); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 5mm; }
+  th, td { border: 0.4mm solid var(--edge); padding: 2.5mm 3.5mm; text-align: left; }
+  th { color: var(--amber); background: #0D121C; }
+  td.num { color: var(--up); font-weight: 700; }
+
+  footer { border-top: 0.6mm solid var(--edge); padding-top: 3mm; display: flex; justify-content: space-between; font-size: 5mm; color: var(--muted); }
+  footer b { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="poster">
+  <header>
+    <div class="brand">VANTAGE <small>· the private AI market desk</small></div>
+    <div class="track"><b>AMD AI DevMaster Hackathon</b><br>Track 2 — Development &amp; Local Deployment of Private AI Agents<br>Team <b>[TEAM NAME]</b></div>
+  </header>
+
+  <div class="tagline">
+    An animated AI news anchor that charts stocks, explains the market out loud, takes voice commands and exports reports —
+    with every answer inferred <b>100% locally on an AMD Radeon GPU via ROCm</b>. Your questions, watchlist and portfolio <b>never leave the machine</b>.
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h2>Why private-by-architecture</h2>
+      <p>AI market tools ship your financial curiosity — every question, ticker and position — to a cloud API. Vantage inverts that: the whole agent
+      (reasoning, tool use, memory, report writing) runs against a local open-weights model. One URL flag (<span class="mono">?local=1</span>) disables every cloud path.</p>
+      <h2>Agent capabilities</h2>
+      <div class="grid2">
+        <div class="cap"><div class="t">Tool invocation</div><div class="d">Charts, watchlist &amp; portfolio ops, navigation, market calendar with on-air alerts — from plain language or voice.</div></div>
+        <div class="cap"><div class="t">Local multi-turn memory</div><div class="d">Last 6 exchanges kept on-device; "what about its risks?" resolves against earlier turns. One-click <i>forget conversation</i>.</div></div>
+        <div class="cap"><div class="t">Privacy &amp; permission control</div><div class="d">Accounts + plan gates; local-only mode; memory clearing; zero external calls in demo data mode.</div></div>
+        <div class="cap"><div class="t">Report writer</div><div class="d">"Write a report and export ppt" → local model writes it, browser builds PowerPoint / Word / Excel. No server.</div></div>
+      </div>
+      <h2>Experience</h2>
+      <p>Animated anchor reads answers on air (TTS) · voice input · 6 languages · 18 studio sets · live or demo tape.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Architecture — one question, end to end</h2>
+      <div class="flow">
+        <div class="node"><div class="t">🎙 One input box (typed or voice)</div><div class="d">"chart AMD and explain the move" · "add TSLA" · "write a report and export ppt"</div></div>
+        <div class="arrow">▼</div>
+        <div class="node"><div class="t">askDesk() — intent router (our open code, no agent platform)</div><div class="d">Export / navigation / alert intents run tools directly; open questions continue to the model</div></div>
+        <div class="arrow">▼</div>
+        <div class="node"><div class="t">Prompt assembly</div><div class="d">Question + compact market-snapshot JSON + <b>local conversation memory</b> (6 exchanges, raw Q/A, localStorage)</div></div>
+        <div class="arrow">▼</div>
+        <div class="node amd"><div class="t">AMD Radeon GPU · ROCm — Ollama (llama.cpp) / vLLM</div><div class="d">Llama 3.1 8B <b>Q4_K_M</b>, fully GPU-resident · streamed tokens · OpenAI-compatible local API · no cloud keys</div></div>
+        <div class="arrow">▼</div>
+        <div class="node"><div class="t">📺 Anchor answers on air</div><div class="d">Streaming render + speech; exchange written back to local memory; tools fire (chart, deck, alert)</div></div>
+      </div>
+      <div class="proof mono">
+        <span class="cmd">$ ollama ps</span><br>
+        <span class="out">NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SIZE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PROCESSOR</span><br>
+        llama3.1:latest&nbsp;&nbsp;5.3&nbsp;GB&nbsp;&nbsp;&nbsp;<b>100% GPU</b> ✓&nbsp;&nbsp;<span class="out">← verified on the Radeon instance, rocm-smi on video</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Inference-speed optimization</h2>
+      <ul>
+        <li><b>Q4_K_M quantization</b> — 8B in ~4.9 GB: whole model GPU-resident, no CPU offload split</li>
+        <li><b>Bounded prompts</b> — memory capped at 6 raw Q/A turns; snapshot is compact JSON → prefill stays constant</li>
+        <li><b>Streaming</b> — perceived latency ≈ time-to-first-token; the anchor starts speaking mid-decode</li>
+        <li><b>Right-size switch</b> — one-line swap to a 1B model ≈ halves wall-clock for latency-critical use</li>
+      </ul>
+      <table>
+        <tr><th>Setup (on Radeon / ROCm)</th><th>Answer time</th></tr>
+        <tr><td>Llama 3.1 8B Q4_K_M</td><td class="num">[TODO] ms</td></tr>
+        <tr><td>Llama 3.2 1B</td><td class="num">[TODO] ms</td></tr>
+        <tr><td>Memory-recall turn (multi-turn)</td><td class="num">[TODO] ms</td></tr>
+      </table>
+      <h2>Reproduce it</h2>
+      <p class="mono" style="font-size:5.4mm; line-height:1.8">
+        bash scripts/radeon-setup.sh<br>
+        → http://127.0.0.1:5173/?local=1<br>
+        ollama ps&nbsp;&nbsp;# must read 100% GPU
+      </p>
+      <p class="muted">Open stack: React SPA · Ollama (llama.cpp) / vLLM on ROCm · open-weights Llama · zero cloud dependencies in local mode. Works fully offline.</p>
+    </div>
+  </div>
+
+  <footer>
+    <div><b>github.com/ryanwien/VantageApplication</b> · README → "Run on AMD Radeon / ROCm"</div>
+    <div>Market intelligence, not financial advice · Built for AMD AI DevMaster 2026</div>
+  </footer>
+</div>
+</body>
+</html>
