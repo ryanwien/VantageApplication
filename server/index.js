@@ -52,8 +52,18 @@ const CFG = {
 // falls back to a clearly-labelled simulated unlock. Prices map a plan id → Stripe Price.
 const STRIPE = {
   secret: process.env.STRIPE_SECRET_KEY,
+  webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
   prices: { pro: process.env.STRIPE_PRICE_PRO, desk: process.env.STRIPE_PRICE_DESK },
 };
+
+const VERTEX = {
+  project: process.env.GOOGLE_CLOUD_PROJECT,
+  location: process.env.GOOGLE_CLOUD_LOCATION || "us-central1",
+  serviceAccount: process.env.GCP_SERVICE_ACCOUNT_EMAIL,
+  privateKey: process.env.GCP_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+  model: process.env.VERTEX_GEMINI_MODEL || "gemini-2.0-flash",
+};
+const MARKET = { finnhubKey: process.env.FINNHUB_API_KEY, cronSecret: process.env.AGENT_CRON_SECRET };
 
 // Social sign-in via OpenID Connect ("Continue with Google / Yahoo"). Each needs an OAuth app.
 // Google REUSES the meetings client id/secret (just register the extra redirect URI + these scopes).
@@ -79,11 +89,13 @@ const OAUTH = {
 // ---- persistent JSON stores (all gitignored — they hold hashes, live tokens, secrets) ----
 const USERS_FILE = path.join(__dirname, "users.json");        // { [email]: { email,name,plan,salt,hash,agreedAt,legalVersion,createdAt } }
 const SESSIONS_FILE = path.join(__dirname, "sessions.json");  // { [token]: { email, createdAt } }
+const AI_USAGE_FILE = path.join(__dirname, "ai-usage.json");
 const TOKENS_FILE = path.join(__dirname, "tokens.json");      // { [email]: { zoom:{...}, google:{...} } }  ← per-user OAuth tokens
 const readJSON = (f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return {}; } };
 const writeJSON = (f, o) => { try { fs.writeFileSync(f, JSON.stringify(o, null, 2)); } catch (e) { console.error(`save failed (${path.basename(f)}):`, e.message); } };
 let USERS = readJSON(USERS_FILE);
 let SESSIONS = readJSON(SESSIONS_FILE);
+let AI_USAGE = readJSON(AI_USAGE_FILE);
 let TOKENS = readJSON(TOKENS_FILE);
 const pendingState = new Map(); // oauth CSRF state -> { prov, email }
 
@@ -94,7 +106,65 @@ const send = (res, code, body, headers = {}) => {
   res.end(payload);
 };
 const readBody = (req) => new Promise((resolve) => { let d = ""; req.on("data", c => d += c); req.on("end", () => { try { resolve(d ? JSON.parse(d) : {}); } catch { resolve({}); } }); });
+const readRawBody = (req) => new Promise((resolve) => { const chunks = []; req.on("data", c => chunks.push(c)); req.on("end", () => resolve(Buffer.concat(chunks))); });
 const form = (obj) => new URLSearchParams(obj).toString();
+
+const b64url = (value) => Buffer.from(typeof value === "string" ? value : JSON.stringify(value)).toString("base64url");
+let vertexToken = null;
+async function vertexAccessToken() {
+  if (!VERTEX.project || !VERTEX.serviceAccount || !VERTEX.privateKey) throw new Error("Hosted AI is not configured on this server.");
+  if (vertexToken && Date.now() < vertexToken.expiresAt) return vertexToken.value;
+  const now = Math.floor(Date.now() / 1000), header = b64url({ alg: "RS256", typ: "JWT" });
+  const claim = b64url({ iss: VERTEX.serviceAccount, scope: "https://www.googleapis.com/auth/cloud-platform", aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600 });
+  const signer = crypto.createSign("RSA-SHA256"); signer.update(`${header}.${claim}`); signer.end();
+  const assertion = `${header}.${claim}.${signer.sign(VERTEX.privateKey).toString("base64url")}`;
+  const r = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: form({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion }) });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error_description || j.error || `Google token HTTP ${r.status}`);
+  vertexToken = { value: j.access_token, expiresAt: Date.now() + Math.max(60, Number(j.expires_in || 3600) - 60) * 1000 };
+  return vertexToken.value;
+}
+async function askVertex(prompt) {
+  const token = await vertexAccessToken();
+  const endpoint = `https://${VERTEX.location}-aiplatform.googleapis.com/v1/projects/${encodeURIComponent(VERTEX.project)}/locations/${encodeURIComponent(VERTEX.location)}/publishers/google/models/${encodeURIComponent(VERTEX.model)}:generateContent`;
+  const r = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 1000, temperature: 0.35 } }) });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error?.message || `Vertex AI HTTP ${r.status}`);
+  const text = (j.candidates || []).flatMap(c => c.content?.parts || []).map(p => p.text || "").join("").trim();
+  if (!text) throw new Error("Gemini returned an empty response.");
+  return text;
+}
+const todayKey = () => new Date().toISOString().slice(0, 10);
+const planQuota = (plan) => plan === "desk" ? 250 : plan === "pro" ? 75 : 5;
+function canUseAi(email) { const used = AI_USAGE[email]?.days?.[todayKey()] || 0, limit = planQuota(USERS[email]?.plan || "free"); return { used, limit, allowed: used < limit }; }
+function recordAiRun(email, promptChars, outcome, meta = {}) {
+  const user = AI_USAGE[email] || (AI_USAGE[email] = { days: {}, runs: [] }), day = todayKey();
+  user.days[day] = (user.days[day] || 0) + 1;
+  user.runs.push({ at: new Date().toISOString(), agent: "market-brief", plan: USERS[email]?.plan || "free", promptChars, outcome, ...meta });
+  user.runs = user.runs.slice(-500); writeJSON(AI_USAGE_FILE, AI_USAGE);
+  return { used: user.days[day], limit: planQuota(USERS[email]?.plan || "free") };
+}
+async function marketSnapshot(symbols) {
+  if (!MARKET.finnhubKey) throw new Error("Automated briefs need FINNHUB_API_KEY on the server.");
+  const clean = [...new Set((symbols || []).map(s => String(s).trim().toUpperCase()).filter(s => /^[A-Z.]{1,10}$/.test(s)))].slice(0, 12);
+  if (!clean.length) throw new Error("Add at least one ticker to the agent watchlist.");
+  const rows = await Promise.all(clean.map(async sym => {
+    const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${encodeURIComponent(MARKET.finnhubKey)}`);
+    const q = await r.json(); if (!r.ok || !Number.isFinite(q.c)) throw new Error(`${sym} quote unavailable`);
+    return { sym, price: q.c, change: q.d, changePct: q.dp, high: q.h, low: q.l, previousClose: q.pc };
+  }));
+  return rows;
+}
+async function runMarketAgent(email) {
+  const agent = USERS[email]?.agent;
+  if (!agent?.enabled) return { skipped: "disabled" };
+  const quota = canUseAi(email); if (!quota.allowed) return { skipped: "quota" };
+  const rows = await marketSnapshot(agent.symbols);
+  const prompt = `You are Vantage's market-brief agent. Create a concise, factual daily briefing from this quote snapshot only: ${JSON.stringify(rows)}. Explain notable moves and uncertainty. Do not give buy/sell recommendations, price targets, or imply real-time news. End with: \"Information only, not financial advice.\"`;
+  const text = await askVertex(prompt);
+  const usage = recordAiRun(email, prompt.length, "success", { model: VERTEX.model, trigger: "scheduled", symbols: rows.map(r => r.sym), outputChars: text.length });
+  AI_USAGE[email].latestBrief = { at: new Date().toISOString(), symbols: rows.map(r => r.sym), text };
+  writeJSON(AI_USAGE_FILE, AI_USAGE);
+  return { delivered: true, usage, symbols: rows.map(r => r.sym) };
+}
 
 // ============================================================
 //  AUTH — scrypt passwords + opaque session tokens (Bearer)
@@ -255,6 +325,10 @@ async function stripeCheckout(email, plan) {
     success_url: `${APP_ORIGIN}/?checkout=success&plan=${encodeURIComponent(plan)}`,
     cancel_url: `${APP_ORIGIN}/?checkout=cancel`,
     client_reference_id: email || "",
+    "metadata[plan]": plan,
+    "metadata[email]": email || "",
+    "subscription_data[metadata][plan]": plan,
+    "subscription_data[metadata][email]": email || "",
     ...(email ? { customer_email: email } : {}),
   });
   const r = await fetch("https://api.stripe.com/v1/checkout/sessions", {
@@ -267,6 +341,16 @@ async function stripeCheckout(email, plan) {
   return j.url;
 }
 
+function verifyStripeSignature(raw, signature) {
+  if (!STRIPE.webhookSecret || !signature) return false;
+  const values = Object.fromEntries(signature.split(",").map(x => x.split("=", 2)));
+  if (!values.t || !values.v1 || Math.abs(Date.now() / 1000 - Number(values.t)) > 300) return false;
+  const expected = crypto.createHmac("sha256", STRIPE.webhookSecret).update(`${values.t}.${raw.toString("utf8")}`).digest("hex");
+  const a = Buffer.from(expected, "hex"), b = Buffer.from(values.v1, "hex");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+const planFromStripeObject = (obj) => obj?.metadata?.plan || Object.entries(STRIPE.prices).find(([, id]) => id === (obj?.lines?.data?.[0]?.price?.id || obj?.items?.data?.[0]?.price?.id))?.[0] || null;
+
 // ---- request router ----
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, PUBLIC_ORIGIN);
@@ -274,6 +358,20 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") return send(res, 204, "", { "Access-Control-Allow-Methods": "GET,POST,OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" });
 
   try {
+    // This must run before JSON parsing: Stripe signs the exact request bytes.
+    if (p === "/api/billing/webhook" && req.method === "POST") {
+      const raw = await readRawBody(req);
+      if (!verifyStripeSignature(raw, req.headers["stripe-signature"])) return send(res, 400, { error: "Invalid Stripe signature." });
+      const event = JSON.parse(raw.toString("utf8")), obj = event.data?.object || {};
+      const email = obj.client_reference_id || obj.customer_email || obj.metadata?.email;
+      if (email && USERS[email]) {
+        if (event.type === "checkout.session.completed" || event.type === "customer.subscription.updated") {
+          const plan = planFromStripeObject(obj); if (plan) USERS[email].plan = plan;
+        } else if (event.type === "customer.subscription.deleted") USERS[email].plan = "free";
+        writeJSON(USERS_FILE, USERS);
+      }
+      return send(res, 200, { received: true });
+    }
     // ---- AUTH ----
     if (p === "/api/auth/signup" && req.method === "POST") {
       const { email, name, password, plan, legalVersion } = await readBody(req);
@@ -299,10 +397,16 @@ const server = http.createServer(async (req, res) => {
       if (tok && SESSIONS[tok]) { delete SESSIONS[tok]; writeJSON(SESSIONS_FILE, SESSIONS); }
       return send(res, 200, { ok: true });
     }
+    if (p === "/api/auth/me" && req.method === "GET") {
+      const email = emailFromReq(req, url);
+      if (!email || !USERS[email]) return send(res, 401, { error: "Not signed in." });
+      return send(res, 200, accountView(email));
+    }
     if (p === "/api/auth/plan" && req.method === "POST") {
       const email = emailFromReq(req, url);
       if (!email || !USERS[email]) return send(res, 401, { error: "Not signed in." });
       const { plan } = await readBody(req);
+      if (STRIPE.secret && plan && plan !== "free") return send(res, 403, { error: "Paid plans are updated only by verified Stripe webhooks." });
       USERS[email].plan = plan || "free"; writeJSON(USERS_FILE, USERS);
       return send(res, 200, { ok: true, plan: USERS[email].plan });
     }
@@ -352,9 +456,58 @@ const server = http.createServer(async (req, res) => {
     if (p === "/api/billing/checkout" && req.method === "POST") {
       if (!STRIPE.secret) return send(res, 400, { error: "Billing is not configured on this server." });
       const body = await readBody(req);
-      const email = emailFromReq(req, url) || body.email || "";
+      const email = emailFromReq(req, url);
+      if (!email) return send(res, 401, { error: "Sign in before starting checkout." });
       const url_ = await stripeCheckout(email, body.plan);
       return send(res, 200, { url: url_ });
+    }
+
+    // Hosted AI desk: the browser supplies context, but Gemini and its credentials stay server-side.
+    if (p === "/api/ai/brief" && req.method === "POST") {
+      const email = emailFromReq(req, url);
+      if (!email || !USERS[email]) return send(res, 401, { error: "Sign in to use the hosted AI desk." });
+      const { prompt } = await readBody(req), clean = String(prompt || "").trim();
+      if (!clean || clean.length > 14000) return send(res, 400, { error: "Prompt must be between 1 and 14,000 characters." });
+      const quota = canUseAi(email);
+      if (!quota.allowed) return send(res, 429, { error: `Daily AI limit reached (${quota.used}/${quota.limit}).` });
+      try {
+        const text = await askVertex(clean);
+        return send(res, 200, { text, model: VERTEX.model, usage: recordAiRun(email, clean.length, "success", { model: VERTEX.model, outputChars: text.length }) });
+      } catch (e) {
+        recordAiRun(email, clean.length, "error", { error: String(e.message || e).slice(0, 300) });
+        throw e;
+      }
+    }
+
+    // Opt-in configuration for the scheduled market-brief agent.
+    if (p === "/api/agent/preferences" && req.method === "GET") {
+      const email = emailFromReq(req, url);
+      if (!email || !USERS[email]) return send(res, 401, { error: "Not signed in." });
+      return send(res, 200, USERS[email].agent || { enabled: false, symbols: [] });
+    }
+    if (p === "/api/agent/preferences" && req.method === "POST") {
+      const email = emailFromReq(req, url);
+      if (!email || !USERS[email]) return send(res, 401, { error: "Not signed in." });
+      const body = await readBody(req);
+      const symbols = [...new Set((body.symbols || []).map(s => String(s).trim().toUpperCase()).filter(s => /^[A-Z.]{1,10}$/.test(s)))].slice(0, 12);
+      USERS[email].agent = { enabled: !!body.enabled, symbols, updatedAt: new Date().toISOString() };
+      writeJSON(USERS_FILE, USERS);
+      return send(res, 200, USERS[email].agent);
+    }
+    if (p === "/api/agent/latest" && req.method === "GET") {
+      const email = emailFromReq(req, url);
+      if (!email || !USERS[email]) return send(res, 401, { error: "Not signed in." });
+      return send(res, 200, { brief: AI_USAGE[email]?.latestBrief || null });
+    }
+    // Call from Cloud Scheduler once daily. The secret is intentionally distinct from user sessions.
+    if (p === "/api/agent/run" && req.method === "POST") {
+      if (!MARKET.cronSecret || req.headers["x-vantage-cron-secret"] !== MARKET.cronSecret) return send(res, 401, { error: "Unauthorized scheduler." });
+      const results = [];
+      for (const email of Object.keys(USERS)) {
+        try { results.push({ email, ...(await runMarketAgent(email)) }); }
+        catch (e) { recordAiRun(email, 0, "error", { trigger: "scheduled", error: String(e.message || e).slice(0, 300) }); results.push({ email, error: "brief failed" }); }
+      }
+      return send(res, 200, { ranAt: new Date().toISOString(), results });
     }
 
     // ---- MEETINGS: status (NEVER gates on auth — backendReachable() pings this) ----

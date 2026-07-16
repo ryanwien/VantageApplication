@@ -17,3 +17,4 @@ dist/
 server/tokens.json
 server/users.json
 server/sessions.json
+server/ai-usage.json

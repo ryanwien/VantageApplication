@@ -50,6 +50,7 @@ never see, and adds three independent layers — **each optional**:
 | **Accounts** (`/api/auth/*`) | Real sign-up / login with scrypt-hashed passwords + session tokens | nothing (works as soon as the backend runs) |
 | **Meetings** (`/api/:prov/*`) | Create real **Zoom / Google Meet** links, per user | your own Zoom/Google OAuth apps |
 | **Billing** (`/api/billing/*`) | Real **Stripe Checkout** for paid plans (test mode) | your own Stripe test keys |
+| **Hosted AI** (`/api/ai/brief`) | Vantage-operated Gemini market briefs, metering, and audit logs | Vertex AI service account |
 
 If the backend isn't running, the app falls back gracefully: accounts run **client-side** in
 localStorage, meetings use the **zero-setup** path (see below), and paid plans unlock as a clearly
@@ -72,6 +73,12 @@ ZOOM_CLIENT_ID / ZOOM_CLIENT_SECRET          # meetings (optional)
 GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET       # meetings + calendar (optional)
 STRIPE_SECRET_KEY                             # billing (optional; else simulated)
 STRIPE_PRICE_PRO / STRIPE_PRICE_DESK          # Stripe Price IDs for the two paid plans
+STRIPE_WEBHOOK_SECRET                         # Stripe endpoint-signing secret
+GOOGLE_CLOUD_PROJECT / GOOGLE_CLOUD_LOCATION  # Vertex AI project and region
+GCP_SERVICE_ACCOUNT_EMAIL / _PRIVATE_KEY      # Vertex AI service account (server-only)
+VERTEX_GEMINI_MODEL                           # defaults to gemini-2.0-flash
+FINNHUB_API_KEY                               # server-only quotes for scheduled AI briefs
+AGENT_CRON_SECRET                             # protects the scheduled-agent endpoint
 PORT           (default 8787)
 PUBLIC_ORIGIN  (default http://localhost:8787 — must match your OAuth redirect URIs)
 APP_ORIGIN     (default http://127.0.0.1:5173 — where the dashboard runs)
@@ -126,8 +133,16 @@ MEETINGS_SETUP.md  step-by-step Zoom / Google OAuth setup
   authorization boundary — anyone with devtools can read it. Real protection comes only from the
   backend.
 - The Stripe success redirect (`?checkout=success&plan=…`) is **client-trusted** — fine for test
-  mode (paid plans are simulated per the app's terms), but add a **Stripe webhook** before taking
-  real money.
+  mode only. For a real deployment, configure Stripe to POST events to
+  `/api/billing/webhook` and set `STRIPE_WEBHOOK_SECRET`; verified webhooks, rather than the
+  redirect, grant paid plans.
+- Hosted AI requires a signed-in backend account and keeps the Gemini credentials on the server.
+  Its local `server/ai-usage.json` file records metering and agent runs; use a managed database
+  before a multi-instance production deployment.
+- **Scheduled market-brief agent**: a signed-in user can opt in from ACCOUNT. It saves their
+  watchlist server-side and a scheduler can POST once daily to `/api/agent/run` using the
+  `x-vantage-cron-secret` header. It uses a server-side Finnhub key to build quote context,
+  writes a factual Gemini brief, and explicitly excludes trade execution and recommendations.
 - This is dev/local-oriented. For a shared deployment, host the backend over **HTTPS** and set
   `PUBLIC_ORIGIN` / `APP_ORIGIN` to your real domains (and register those OAuth redirect URIs).
 
