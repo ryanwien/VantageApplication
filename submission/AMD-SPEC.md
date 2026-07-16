@@ -1,7 +1,7 @@
 # Vantage — Project Specification Document
 ### AMD AI DevMaster Hackathon · Track 2: Development & Local Deployment of Private AI Agents
 
-> Team: **[TEAM NAME]** · Members: **[LEGAL NAMES]** · Contact: **[EMAIL used at Luma registration]**
+> Team: **Team Vantage** · Members: **Ryan Wien** (solo) · Contact: **ryanwien3d@gmail.com**
 > Repository: https://github.com/ryanwien/VantageApplication
 > Convert this document to PDF for submission (VS Code: print → Save as PDF, or any md→pdf tool).
 
@@ -121,4 +121,4 @@ Four concrete optimizations, each measurable with the same query set:
 
 | Name | Role | Contribution |
 |---|---|---|
-| [NAME] | [ROLE] | [WHAT THEY BUILT] |
+| Ryan Wien | Founder / Developer (solo) | Entire project: the Vantage agent (intent router, tool layer, local multi-turn memory), animated anchor + TTS broadcast experience, local-only AMD/ROCm deployment mode, report exporters, and this submission. |
