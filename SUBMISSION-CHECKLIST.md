@@ -47,6 +47,24 @@
 - [ ] **Direct file uploads only** — no Drive/Dropbox links; all English
 - [ ] Team bios + target users + any early‑tester feedback (strengthens "market‑ready")
 
+## 📜 Winner administration (from the full rules — matters AFTER you win)
+- AMD notifies winners **within 7 days** of judging via the **email/phone given at entry** — use an
+  address you actually watch; *"the authorized account holder of the e‑mail address used to enter"*
+  settles any dispute over who won.
+- You then have **10 days** to return an **Affidavit of Eligibility, Liability/Publicity Release,
+  and W‑9** (US) or W‑8 BEN — miss it and they award a runner‑up.
+- **Team prizes are split evenly** among members; you can't exchange the prize for cash or designate
+  someone else; **taxes are on you** (payout is before withholding).
+- Winners list appears in the **AMD Discord**; inquiries only honored within **14 days** of close.
+- Registration has been **open since Jul 10** — there is no reason to wait.
+
+## 📄 README gap (rule: "environment configuration, startup guide and dependency list")
+Current README ✅ covers quick start, Node 20+, env config. ❌ It has **no AMD/ROCm section** —
+a judge following it never reaches the Radeon path. Before submitting, add a **"Run on AMD
+Radeon / ROCm"** section: Radeon Cloud instance → serve the model (vLLM or Ollama) → open
+Vantage with `?local=1` (or Settings → AI → local‑only) → what you should see. Write it as
+**step‑by‑step reproduction** — judges follow instructions, they don't explore.
+
 ## Rule‑compliance verdict today
 - **AMD**: *not yet compliant* — nothing you're doing breaks a rule, but the two platform
   requirements (Radeon Cloud + ROCm execution; ≥2 capabilities *robustly*) aren't met yet.
