@@ -21,8 +21,11 @@ export function loadPrefs(rawString, legacyBreaking) {
   let stored = {};
   try { stored = rawString ? JSON.parse(rawString) : {}; } catch { stored = {}; }
   if (!stored || typeof stored !== "object") stored = {};
-  const notify = { ...DEFAULT_PREFS.notify, ...(stored.notify || {}) };
-  const hadExplicit = stored.notify && "breakingNews" in stored.notify;
+  const storedNotify = (stored.notify && typeof stored.notify === "object" && !Array.isArray(stored.notify))
+    ? stored.notify
+    : null;
+  const notify = { ...DEFAULT_PREFS.notify, ...(storedNotify || {}) };
+  const hadExplicit = storedNotify && "breakingNews" in storedNotify;
   if (!hadExplicit && (legacyBreaking === "off" || legacyBreaking === "on")) {
     notify.breakingNews = legacyBreaking !== "off";
   }

@@ -34,4 +34,23 @@ describe("loadPrefs", () => {
     const p = loadPrefs(JSON.stringify({ notify: { priceTriggers: true, breakingNews: true } }), "off");
     expect(p.notify.breakingNews).toBe(true);
   });
+  it("never throws when stored notify is a truthy primitive, and falls back to defaults", () => {
+    expect(() => loadPrefs('{"notify":"oops"}')).not.toThrow();
+    expect(loadPrefs('{"notify":"oops"}').notify).toEqual(DEFAULT_PREFS.notify);
+
+    expect(() => loadPrefs('{"notify":42}')).not.toThrow();
+    expect(loadPrefs('{"notify":42}').notify).toEqual(DEFAULT_PREFS.notify);
+
+    expect(() => loadPrefs('{"notify":true}')).not.toThrow();
+    expect(loadPrefs('{"notify":true}').notify).toEqual(DEFAULT_PREFS.notify);
+  });
+  it("never throws when stored notify is an array, and falls back to defaults", () => {
+    expect(() => loadPrefs('{"notify":[1,2,3]}')).not.toThrow();
+    expect(loadPrefs('{"notify":[1,2,3]}').notify).toEqual(DEFAULT_PREFS.notify);
+  });
+  it("still applies the legacy migration when stored notify is a non-object primitive", () => {
+    expect(loadPrefs('{"notify":"oops"}', "off").notify.breakingNews).toBe(false);
+    expect(loadPrefs('{"notify":42}', "on").notify.breakingNews).toBe(true);
+    expect(loadPrefs('{"notify":[1,2,3]}', "off").notify.breakingNews).toBe(false);
+  });
 });
