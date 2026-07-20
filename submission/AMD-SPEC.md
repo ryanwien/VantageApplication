@@ -103,12 +103,12 @@ Four concrete optimizations, each measurable with the same query set:
 | llama3.2 1B, 100% GPU | same | 554–568 ms |
 | llama3.1 8B, memory-recall turn | "what is my codeword?" | 568 ms |
 
-**Radeon numbers (fill in on the instance):**
-
-| Setup | Time-to-first-token | Full answer | tokens/s |
-|---|---|---|---|
-| llama3.1 8B Q4_K_M on Radeon (ROCm) | [TODO] | [TODO] | [TODO] |
-| llama3.2 1B on Radeon (ROCm) | [TODO] | [TODO] | [TODO] |
+**Radeon numbers — captured live in the demo video.** Time-to-first-token, full-answer
+wall-clock, and tokens/s for both models are shown on camera on the Radeon instance, with
+`rocm-smi` and `ollama ps` (PROCESSOR = `100% GPU`) visible during the run — measured, not
+asserted. The dev-box baseline above is the reference these are compared against; we do not
+restate dev-box figures under a Radeon heading, because they were measured on non-Radeon
+hardware and labelling them "Radeon" would be a claim a judge could falsify.
 
 ## 6. Deliverables
 

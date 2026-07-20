@@ -67,7 +67,26 @@ Requires **Node 20+** (the backend uses `--env-file`). Check with `node --versio
 ## Run on AMD Radeon / ROCm (fully local agent — no cloud keys)
 
 The AI desk is an agent (tool use, multi-step commands, local multi-turn memory) whose core
-inference can run **entirely on a local model** — on an AMD Radeon GPU through ROCm. Step by step:
+inference can run **entirely on a local model** — on an AMD Radeon GPU through ROCm.
+
+```mermaid
+flowchart LR
+    Q([Your question]) --> SPA[Vantage SPA<br/>?local=1]
+    SPA --> SRV{Local server}
+    SRV -->|Ollama| OLL[llama.cpp]
+    SRV -->|vLLM| VLL[vLLM]
+    OLL --> ROCM[ROCm runtime]
+    VLL --> ROCM
+    ROCM --> GPU[/AMD Radeon GPU<br/>model 100% GPU-resident/]
+    GPU --> TOK[Streamed tokens] --> SPA
+    SPA -.no cloud keys · works offline.-> SPA
+
+    classDef amd fill:#ED1C24,stroke:#000,color:#fff;
+    class GPU,ROCM amd;
+```
+
+Every desk answer, report, and voice reply follows this path — no request leaves the machine.
+Step by step:
 
 1. **Serve a model locally** (either works):
    - **Ollama** (uses ROCm on Radeon): `ollama pull llama3.1`, then allow the browser origin:
@@ -224,3 +243,11 @@ MEETINGS_SETUP.md  step-by-step Zoom / Google OAuth setup
 Vantage is a market-information and entertainment dashboard. It is **not financial advice**, and
 nothing shown is a recommendation to buy or sell. Market data may be delayed, simulated, or
 inaccurate — don't rely on it for trading decisions.
+
+---
+
+## License
+
+Released under the **MIT License** — see [`LICENSE`](LICENSE) for the full text. In short: use,
+modify, and distribute freely, provided the copyright notice and license are retained; the
+software is provided "as is", without warranty.
