@@ -8142,7 +8142,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <span style={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, lineHeight: 1.6 }}>
                       {t("One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.")}
                     </span>
-                    <button onClick={() => { setPreDemoSnapshot(snapshotEnabled(aiModels)); setDevMode(true); soloModel("ollama"); }}
+                    <button onClick={() => { if (!preDemoSnapshot) setPreDemoSnapshot(snapshotEnabled(aiModels)); setDevMode(true); soloModel("ollama"); }}
                       style={{ alignSelf: "flex-start", background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 14px", cursor: "pointer" }}>
                       {t("Switch the desk to local")}
                     </button>
