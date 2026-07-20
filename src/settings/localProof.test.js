@@ -22,6 +22,28 @@ describe("isLocalModel", () => {
   it("is falsy-safe", () => {
     expect(isLocalModel(null)).toBeFalsy();
     expect(isLocalModel({})).toBeFalsy();
+    expect(isLocalModel(undefined)).toBeFalsy();
+  });
+
+  it("does not misclassify remote hosts that merely contain a loopback substring", () => {
+    expect(isLocalModel({ kind: "openai", baseUrl: "https://notlocalhost.evil.com/api" })).toBe(false);
+    expect(isLocalModel({ kind: "openai", baseUrl: "https://mylocalhost123.io/v1" })).toBe(false);
+    expect(isLocalModel({ kind: "openai", baseUrl: "https://api.example.com/path?ref=127.0.0.1" })).toBe(false);
+  });
+
+  it("treats a scheme-less baseUrl pointing at loopback as local", () => {
+    expect(isLocalModel({ kind: "openai", baseUrl: "localhost:11434" })).toBe(true);
+    expect(isLocalModel({ kind: "openai", baseUrl: "127.0.0.1:8000" })).toBe(true);
+  });
+
+  it("treats the IPv6 loopback hostname as local", () => {
+    expect(isLocalModel({ kind: "openai", baseUrl: "http://[::1]:8000/v1" })).toBe(true);
+  });
+
+  it("treats a malformed baseUrl as not local, without throwing", () => {
+    expect(() => isLocalModel({ kind: "openai", baseUrl: "http://" })).not.toThrow();
+    expect(isLocalModel({ kind: "openai", baseUrl: "http://" })).toBe(false);
+    expect(isLocalModel({ kind: "openai", baseUrl: "not a url at all :::" })).toBe(false);
   });
 });
 
