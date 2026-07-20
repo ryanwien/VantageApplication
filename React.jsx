@@ -3,6 +3,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
+import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./src/settings/localProof.js";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -189,14 +190,19 @@ const I18N = {
     "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Cada día a las {time}, la mesa redacta un informe de analista sobre {sym} y descarga automáticamente un resumen en {fmt}. Requiere que esta pestaña esté abierta (los navegadores no pueden ejecutarlo cerrada) y una clave de Anthropic para la redacción.",
     "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Establece una hora para generar y descargar automáticamente un informe con tu marca cada día. Déjalo en blanco para desactivar.",
     // AI tab
+    "FULLY LOCAL · nothing leaves this device": "TOTALMENTE LOCAL · nada sale de este dispositivo",
+    "CLOUD ENABLED · queries leave this device": "NUBE ACTIVADA · las consultas salen de este dispositivo",
+    "no model enabled": "ningún modelo activado",
+    "telemetry unavailable — is the local server running?": "telemetría no disponible — ¿está el servidor local en ejecución?",
+    "no model loaded": "ningún modelo cargado",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Las respuestas de la mesa de IA requieren {plan}. Los modelos de abajo están desactivados hasta que mejores tu plan (o actives el modo desarrollador en CUENTA).",
     "{n} models enabled": "{n} modelos activados", "One model at a time": "Un modelo a la vez",
     "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Usa \"solo este\" para un único modelo, o activa varios — la mesa responde en un solo cuadro, probándolos de arriba abajo y recurriendo al siguiente si uno falla (p. ej. Claude → OpenRouter).",
     "Auto-fallback to a local model.": "Recurrir automáticamente a un modelo local.",
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Si los modelos de pago fallan (sin créditos, clave incorrecta, sin conexión), la mesa y los informes reintentan automáticamente con tu modelo local (Ollama o LM Studio). Configura uno abajo — establece su BASE URL e inicia el servidor local.",
     "ACTIVE": "ACTIVO", "use only this": "usar solo este", "BASE URL": "BASE URL", "MODEL": "MODELO",
-    "Run local-only (AMD / ROCm)": "Ejecutar solo en local (AMD / ROCm)", "Switch the desk to local": "Cambiar la mesa a local", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic apunta la mesa a tu modelo local de Ollama (localhost:11434) y desactiva todos los modelos en la nube — así todo el agente se ejecuta con inferencia local (p. ej. una GPU AMD Radeon con ROCm), sin claves. También se abre con ?local=1 en la URL.",
-    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "La mesa recuerda esta conversación localmente (solo en este dispositivo) para que funcionen las preguntas de seguimiento.", "forget conversation": "olvidar conversación", "Desk memory cleared — the conversation is forgotten.": "Memoria de la mesa borrada — la conversación queda olvidada.",
+    "Run local-only (AMD / ROCm)": "Ejecutar solo en local (AMD / ROCm)", "Switch the desk to local": "Cambiar la mesa a local", "restore previous models": "restaurar modelos anteriores", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic apunta la mesa a tu modelo local de Ollama (localhost:11434) y desactiva todos los modelos en la nube — así todo el agente se ejecuta con inferencia local (p. ej. una GPU AMD Radeon con ROCm), sin claves. También se abre con ?local=1 en la URL.",
+    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "La mesa recuerda esta conversación localmente (solo en este dispositivo) para que funcionen las preguntas de seguimiento.", "forget conversation": "olvidar conversación", "Desk memory cleared — the conversation is forgotten.": "Memoria de la mesa borrada — la conversación queda olvidada.", "MEMORY": "MEMORIA", "{n} turns remembered on this device": "{n} turnos recordados en este dispositivo", "Memory": "Memoria", "empty": "vacío",
     "format:": "formato:", "e.g.": "p. ej.", "browse models": "explorar modelos",
     "detect installed models": "detectar modelos instalados", "Lists the models on your Ollama server — the same set as `ollama list`.": "Lista los modelos en tu servidor Ollama — el mismo conjunto que `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo aún no tiene una API alojada oficial — ejecuta un puente local compatible con OpenAI y apunta la BASE URL a él.", "Lumo bridge": "puente Lumo",
@@ -323,14 +329,19 @@ const I18N = {
     "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Chaque jour à {time}, le plateau rédige un rapport d'analyste sur {sym} et télécharge automatiquement un brief en {fmt}. Nécessite que cet onglet reste ouvert (les navigateurs ne peuvent pas l'exécuter fermé) et une clé Anthropic pour la rédaction.",
     "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Définissez une heure pour générer et télécharger automatiquement un rapport à votre marque chaque jour. Laissez vide pour désactiver.",
     // AI tab
+    "FULLY LOCAL · nothing leaves this device": "ENTIÈREMENT LOCAL · rien ne quitte cet appareil",
+    "CLOUD ENABLED · queries leave this device": "CLOUD ACTIVÉ · les requêtes quittent cet appareil",
+    "no model enabled": "aucun modèle activé",
+    "telemetry unavailable — is the local server running?": "télémétrie indisponible — le serveur local est-il en cours d'exécution ?",
+    "no model loaded": "aucun modèle chargé",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Les réponses du plateau IA nécessitent {plan}. Les modèles ci-dessous sont désactivés jusqu'à ce que vous passiez à l'offre supérieure (ou activiez le mode développeur dans COMPTE).",
     "{n} models enabled": "{n} modèles activés", "One model at a time": "Un modèle à la fois",
     "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Utilisez \"only this\" pour un seul modèle, ou activez-en plusieurs — le plateau répond dans une seule fenêtre, en les essayant de haut en bas et en passant au suivant si l'un échoue (par ex. Claude → OpenRouter).",
     "Auto-fallback to a local model.": "Bascule automatique vers un modèle local.",
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Si les modèles payants échouent (pas de crédits, mauvaise clé, hors ligne), le plateau et les rapports réessaient automatiquement avec votre modèle local (Ollama ou LM Studio). Configurez-en un ci-dessous — définissez sa BASE URL et démarrez le serveur local.",
     "ACTIVE": "ACTIF", "use only this": "utiliser seulement celui-ci", "BASE URL": "BASE URL", "MODEL": "MODÈLE",
-    "Run local-only (AMD / ROCm)": "Exécuter en local uniquement (AMD / ROCm)", "Switch the desk to local": "Basculer le plateau en local", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic pointe le plateau vers votre modèle Ollama local (localhost:11434) et désactive tous les modèles cloud — tout l'agent tourne alors en inférence locale (par ex. un GPU AMD Radeon via ROCm), sans clés. S'ouvre aussi avec ?local=1 dans l'URL.",
-    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "Le plateau mémorise cette conversation localement (uniquement sur cet appareil) pour que les questions de suivi fonctionnent.", "forget conversation": "oublier la conversation", "Desk memory cleared — the conversation is forgotten.": "Mémoire du plateau effacée — la conversation est oubliée.",
+    "Run local-only (AMD / ROCm)": "Exécuter en local uniquement (AMD / ROCm)", "Switch the desk to local": "Basculer le plateau en local", "restore previous models": "restaurer les modèles précédents", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic pointe le plateau vers votre modèle Ollama local (localhost:11434) et désactive tous les modèles cloud — tout l'agent tourne alors en inférence locale (par ex. un GPU AMD Radeon via ROCm), sans clés. S'ouvre aussi avec ?local=1 dans l'URL.",
+    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "Le plateau mémorise cette conversation localement (uniquement sur cet appareil) pour que les questions de suivi fonctionnent.", "forget conversation": "oublier la conversation", "Desk memory cleared — the conversation is forgotten.": "Mémoire du plateau effacée — la conversation est oubliée.", "MEMORY": "MÉMOIRE", "{n} turns remembered on this device": "{n} tours mémorisés sur cet appareil", "Memory": "Mémoire", "empty": "vide",
     "format:": "format :", "e.g.": "par ex.", "browse models": "parcourir les modèles",
     "detect installed models": "détecter les modèles installés", "Lists the models on your Ollama server — the same set as `ollama list`.": "Liste les modèles sur votre serveur Ollama — le même ensemble que `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo n'a pas encore d'API hébergée officielle — exécutez un pont local compatible OpenAI et faites pointer la BASE URL dessus.", "Lumo bridge": "pont Lumo",
@@ -457,14 +468,19 @@ const I18N = {
     "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Jeden Tag um {time} verfasst das Pult einen Analystenbericht zu {sym} und lädt automatisch ein {fmt}-Briefing herunter. Erfordert, dass dieser Tab geöffnet ist (Browser können es nicht geschlossen ausführen) und einen Anthropic-Schlüssel für den Text.",
     "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Legen Sie eine Uhrzeit fest, um täglich automatisch einen Bericht mit Ihrer Marke zu erstellen und herunterzuladen. Leer lassen zum Deaktivieren.",
     // AI tab
+    "FULLY LOCAL · nothing leaves this device": "VOLLSTÄNDIG LOKAL · nichts verlässt dieses Gerät",
+    "CLOUD ENABLED · queries leave this device": "CLOUD AKTIVIERT · Anfragen verlassen dieses Gerät",
+    "no model enabled": "kein Modell aktiviert",
+    "telemetry unavailable — is the local server running?": "Telemetrie nicht verfügbar — läuft der lokale Server?",
+    "no model loaded": "kein Modell geladen",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "KI-Pult-Antworten erfordern {plan}. Die Modelle unten sind deaktiviert, bis Sie upgraden (oder den Entwicklermodus in KONTO aktivieren).",
     "{n} models enabled": "{n} Modelle aktiviert", "One model at a time": "Ein Modell zur Zeit",
     "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Verwenden Sie \"only this\" für ein einzelnes Modell oder aktivieren Sie mehrere — das Pult antwortet in einem Feld, probiert sie von oben nach unten durch und wechselt zum nächsten, wenn eines fehlschlägt (z. B. Claude → OpenRouter).",
     "Auto-fallback to a local model.": "Automatischer Rückgriff auf ein lokales Modell.",
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Wenn kostenpflichtige Modelle fehlschlagen (keine Credits, falscher Schlüssel, offline), versuchen das Pult und die Berichte es automatisch erneut mit Ihrem lokalen Modell (Ollama oder LM Studio). Konfigurieren Sie unten eines — legen Sie seine BASE URL fest und starten Sie den lokalen Server.",
     "ACTIVE": "AKTIV", "use only this": "nur dieses verwenden", "BASE URL": "BASE URL", "MODEL": "MODELL",
-    "Run local-only (AMD / ROCm)": "Nur lokal ausführen (AMD / ROCm)", "Switch the desk to local": "Pult auf lokal umstellen", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Ein Klick richtet das Pult auf dein lokales Ollama-Modell (localhost:11434) und schaltet alle Cloud-Modelle ab — der gesamte Agent läuft dann mit lokaler Inferenz (z. B. einer AMD-Radeon-GPU über ROCm), ohne Schlüssel. Öffnet sich auch mit ?local=1 in der URL.",
-    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "Das Pult merkt sich dieses Gespräch lokal (nur auf diesem Gerät), damit Anschlussfragen funktionieren.", "forget conversation": "Gespräch vergessen", "Desk memory cleared — the conversation is forgotten.": "Pult-Gedächtnis gelöscht — das Gespräch ist vergessen.",
+    "Run local-only (AMD / ROCm)": "Nur lokal ausführen (AMD / ROCm)", "Switch the desk to local": "Pult auf lokal umstellen", "restore previous models": "vorherige Modelle wiederherstellen", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Ein Klick richtet das Pult auf dein lokales Ollama-Modell (localhost:11434) und schaltet alle Cloud-Modelle ab — der gesamte Agent läuft dann mit lokaler Inferenz (z. B. einer AMD-Radeon-GPU über ROCm), ohne Schlüssel. Öffnet sich auch mit ?local=1 in der URL.",
+    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "Das Pult merkt sich dieses Gespräch lokal (nur auf diesem Gerät), damit Anschlussfragen funktionieren.", "forget conversation": "Gespräch vergessen", "Desk memory cleared — the conversation is forgotten.": "Pult-Gedächtnis gelöscht — das Gespräch ist vergessen.", "MEMORY": "GEDÄCHTNIS", "{n} turns remembered on this device": "{n} Runden auf diesem Gerät gespeichert", "Memory": "Gedächtnis", "empty": "leer",
     "format:": "Format:", "e.g.": "z. B.", "browse models": "Modelle durchsuchen",
     "detect installed models": "installierte Modelle erkennen", "Lists the models on your Ollama server — the same set as `ollama list`.": "Listet die Modelle auf deinem Ollama-Server — dieselbe Menge wie `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo hat noch keine offizielle gehostete API — betreiben Sie eine lokale OpenAI-kompatible Brücke und richten Sie die BASE URL darauf aus.", "Lumo bridge": "Lumo-Brücke",
@@ -590,14 +606,19 @@ const I18N = {
     "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Todos os dias às {time}, a mesa redige um relatório de analista sobre {sym} e descarrega automaticamente um resumo em {fmt}. Requer que este separador esteja aberto (os navegadores não o executam fechado) e uma chave Anthropic para a redação.",
     "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Defina uma hora para gerar e descarregar automaticamente um relatório com a sua marca todos os dias. Deixe em branco para desativar.",
     // AI tab
+    "FULLY LOCAL · nothing leaves this device": "TOTALMENTE LOCAL · nada sai deste dispositivo",
+    "CLOUD ENABLED · queries leave this device": "NUVEM ATIVADA · as consultas saem deste dispositivo",
+    "no model enabled": "nenhum modelo ativado",
+    "telemetry unavailable — is the local server running?": "telemetria indisponível — o servidor local está em execução?",
+    "no model loaded": "nenhum modelo carregado",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "As respostas da mesa de IA requerem {plan}. Os modelos abaixo estão desativados até fazer o upgrade (ou ativar o modo programador em CONTA).",
     "{n} models enabled": "{n} modelos ativados", "One model at a time": "Um modelo de cada vez",
     "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Use \"only this\" para um único modelo, ou ative vários — a mesa responde numa só caixa, testando-os de cima para baixo e recorrendo ao seguinte se um falhar (por ex. Claude → OpenRouter).",
     "Auto-fallback to a local model.": "Recorrer automaticamente a um modelo local.",
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Se os modelos pagos falharem (sem créditos, chave errada, offline), a mesa e os relatórios tentam novamente com o seu modelo local (Ollama ou LM Studio) automaticamente. Configure um abaixo — defina a BASE URL e inicie o servidor local.",
     "ACTIVE": "ATIVO", "use only this": "usar apenas este", "BASE URL": "BASE URL", "MODEL": "MODELO",
-    "Run local-only (AMD / ROCm)": "Executar apenas local (AMD / ROCm)", "Switch the desk to local": "Mudar a mesa para local", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Um clique aponta a mesa para o teu modelo local do Ollama (localhost:11434) e desliga todos os modelos na nuvem — assim todo o agente corre com inferência local (por ex. uma GPU AMD Radeon via ROCm), sem chaves. Também abre com ?local=1 no URL.",
-    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "A mesa lembra esta conversa localmente (apenas neste dispositivo) para que as perguntas de seguimento funcionem.", "forget conversation": "esquecer conversa", "Desk memory cleared — the conversation is forgotten.": "Memória da mesa limpa — a conversa foi esquecida.",
+    "Run local-only (AMD / ROCm)": "Executar apenas local (AMD / ROCm)", "Switch the desk to local": "Mudar a mesa para local", "restore previous models": "restaurar modelos anteriores", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Um clique aponta a mesa para o teu modelo local do Ollama (localhost:11434) e desliga todos os modelos na nuvem — assim todo o agente corre com inferência local (por ex. uma GPU AMD Radeon via ROCm), sem chaves. Também abre com ?local=1 no URL.",
+    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "A mesa lembra esta conversa localmente (apenas neste dispositivo) para que as perguntas de seguimento funcionem.", "forget conversation": "esquecer conversa", "Desk memory cleared — the conversation is forgotten.": "Memória da mesa limpa — a conversa foi esquecida.", "MEMORY": "MEMÓRIA", "{n} turns remembered on this device": "{n} turnos lembrados neste dispositivo", "Memory": "Memória", "empty": "vazio",
     "format:": "formato:", "e.g.": "por ex.", "browse models": "explorar modelos",
     "detect installed models": "detetar modelos instalados", "Lists the models on your Ollama server — the same set as `ollama list`.": "Lista os modelos no teu servidor Ollama — o mesmo conjunto que `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "O Proton Lumo ainda não tem uma API alojada oficial — execute uma ponte local compatível com OpenAI e aponte a BASE URL para ela.", "Lumo bridge": "ponte Lumo",
@@ -723,14 +744,19 @@ const I18N = {
     "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Ogni giorno alle {time}, la postazione redige un rapporto d'analisi su {sym} e scarica automaticamente un brief in {fmt}. Richiede che questa scheda resti aperta (i browser non possono eseguirlo da chiusa) e una chiave Anthropic per la stesura.",
     "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Imposta un orario per generare e scaricare automaticamente ogni giorno un rapporto con il tuo marchio. Lascia vuoto per disattivare.",
     // AI tab
+    "FULLY LOCAL · nothing leaves this device": "COMPLETAMENTE LOCALE · nulla lascia questo dispositivo",
+    "CLOUD ENABLED · queries leave this device": "CLOUD ATTIVO · le richieste lasciano questo dispositivo",
+    "no model enabled": "nessun modello attivato",
+    "telemetry unavailable — is the local server running?": "telemetria non disponibile — il server locale è in esecuzione?",
+    "no model loaded": "nessun modello caricato",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Le risposte della postazione IA richiedono {plan}. I modelli qui sotto sono disattivati finché non esegui l'upgrade (o attivi la modalità sviluppatore in ACCOUNT).",
     "{n} models enabled": "{n} modelli attivati", "One model at a time": "Un modello alla volta",
     "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Usa \"only this\" per un singolo modello, oppure attivane diversi — la postazione risponde in un unico riquadro, provandoli dall'alto in basso e passando al successivo se uno fallisce (es. Claude → OpenRouter).",
     "Auto-fallback to a local model.": "Ripiego automatico su un modello locale.",
     "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Se i modelli a pagamento falliscono (niente crediti, chiave errata, offline), la postazione e i rapporti riprovano automaticamente sul tuo modello locale (Ollama o LM Studio). Configurane uno qui sotto — imposta la sua BASE URL e avvia il server locale.",
     "ACTIVE": "ATTIVO", "use only this": "usa solo questo", "BASE URL": "BASE URL", "MODEL": "MODELLO",
-    "Run local-only (AMD / ROCm)": "Esegui solo in locale (AMD / ROCm)", "Switch the desk to local": "Passa la postazione a locale", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic punta la postazione al tuo modello Ollama locale (localhost:11434) e disattiva tutti i modelli cloud — così l'intero agente gira con inferenza locale (es. una GPU AMD Radeon via ROCm), senza chiavi. Si apre anche con ?local=1 nell'URL.",
-    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "La postazione ricorda questa conversazione localmente (solo su questo dispositivo) così le domande di seguito funzionano.", "forget conversation": "dimentica conversazione", "Desk memory cleared — the conversation is forgotten.": "Memoria della postazione cancellata — la conversazione è dimenticata.",
+    "Run local-only (AMD / ROCm)": "Esegui solo in locale (AMD / ROCm)", "Switch the desk to local": "Passa la postazione a locale", "restore previous models": "ripristina modelli precedenti", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic punta la postazione al tuo modello Ollama locale (localhost:11434) e disattiva tutti i modelli cloud — così l'intero agente gira con inferenza locale (es. una GPU AMD Radeon via ROCm), senza chiavi. Si apre anche con ?local=1 nell'URL.",
+    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "La postazione ricorda questa conversazione localmente (solo su questo dispositivo) così le domande di seguito funzionano.", "forget conversation": "dimentica conversazione", "Desk memory cleared — the conversation is forgotten.": "Memoria della postazione cancellata — la conversazione è dimenticata.", "MEMORY": "MEMORIA", "{n} turns remembered on this device": "{n} turni memorizzati su questo dispositivo", "Memory": "Memoria", "empty": "vuoto",
     "format:": "formato:", "e.g.": "es.", "browse models": "sfoglia i modelli",
     "detect installed models": "rileva i modelli installati", "Lists the models on your Ollama server — the same set as `ollama list`.": "Elenca i modelli sul tuo server Ollama — lo stesso insieme di `ollama list`.",
     "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo non ha ancora un'API ospitata ufficiale — esegui un bridge locale compatibile con OpenAI e punta la BASE URL su di esso.", "Lumo bridge": "bridge Lumo",
@@ -3533,22 +3559,34 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // can pick one instead of typing an id that might not be pulled.
   const [ollamaTags, setOllamaTags] = useState([]);
   const [ollamaTagErr, setOllamaTagErr] = useState("");
+  // captures the enabled-flags snapshot right before the local-only preset is applied, so the
+  // restore button can undo it. Never holds apiKey values — see snapshotEnabled().
+  const [preDemoSnapshot, setPreDemoSnapshot] = useState(null);
 
   // ---- local multi-turn memory: the desk remembers the conversation, on this device only ----
   // Stored as [{role:"user"|"assistant", content}] so follow-ups like "what about its risks?"
   // resolve against earlier turns. Never sent anywhere except to the model the user picked.
   const DESK_MEMORY_MAX = 12; // last 6 exchanges
   const deskMemoryRef = useRef(null);
+  // deskMemoryRef is a ref, so mutating it does not re-render; this state mirrors its length
+  // at each assignment site so the settings UI can display a live turn count.
+  const [memoryTurns, setMemoryTurns] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("tape-desk-memory") || "[]").length; } catch { return 0; }
+  });
+  // last streamed Ollama chunk with done===true — feeds the settings telemetry strip's tok/s
+  const lastEvalRef = useRef(null);
   if (deskMemoryRef.current === null) {
     try { deskMemoryRef.current = JSON.parse(localStorage.getItem("tape-desk-memory") || "[]"); } catch { deskMemoryRef.current = []; }
   }
   const rememberTurn = useCallback((question, answer) => {
     const mem = [...deskMemoryRef.current, { role: "user", content: question }, { role: "assistant", content: answer }].slice(-DESK_MEMORY_MAX);
     deskMemoryRef.current = mem;
+    setMemoryTurns(mem.length);
     try { localStorage.setItem("tape-desk-memory", JSON.stringify(mem)); } catch { /* quota */ }
   }, []);
   const forgetConversation = useCallback(() => {
     deskMemoryRef.current = [];
+    setMemoryTurns(0);
     try { localStorage.removeItem("tape-desk-memory"); } catch { /* ok */ }
   }, []);
   const detectOllama = useCallback(async () => {
@@ -5245,6 +5283,31 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // load provider status whenever the Meetings tab is opened
   useEffect(() => { if (showSettings && settingsTab === "meetings") refreshMeetStatus(); }, [showSettings, settingsTab, refreshMeetStatus]);
 
+  // ---- inference telemetry: poll Ollama's /api/ps for which local model is loaded, how much
+  // sits in VRAM, and (once a question has been asked) tok/s. Only while the settings dialog is
+  // open on the MODELS tab — no background polling. Ollama never reports GPU vendor, so neither
+  // does this strip — see src/settings/localProof.js.
+  const [psInfo, setPsInfo] = useState(null); // { models: [...] } | "unavailable" | null
+  useEffect(() => {
+    if (!showSettings || settingsTab !== "models") return;
+    const local = pickLocalModel();
+    if (!local || local.kind !== "ollama") { setPsInfo(null); return; }
+    const base = (local.baseUrl || "http://localhost:11434").replace(/\/$/, "");
+    let alive = true;
+    const poll = async () => {
+      try {
+        const r = await fetch(`${base}/api/ps`);
+        const j = await r.json();
+        if (alive) setPsInfo(j && Array.isArray(j.models) ? j : { models: [] });
+      } catch {
+        if (alive) setPsInfo("unavailable"); // Ollama down or CORS-blocked
+      }
+    };
+    poll();
+    const id = setInterval(poll, 4000);
+    return () => { alive = false; clearInterval(id); };
+  }, [showSettings, settingsTab, aiModels]);
+
   // ---- billing (Layer 3): probe Stripe availability when the ACCOUNT tab opens ----
   // If the backend has Stripe keys, paid upgrades route through Stripe's hosted checkout.
   // Otherwise billingCfg.enabled stays false and paid plans unlock as a labelled simulation.
@@ -5661,7 +5724,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         try {
           const j = JSON.parse(line);
           if (j.message?.content) onToken(j.message.content);
-          if (j.done) return;
+          if (j.done) { lastEvalRef.current = { eval_count: j.eval_count, eval_duration: j.eval_duration }; return; }
         } catch { /* partial line */ }
       }
     }
@@ -6347,7 +6410,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     setAiModels(ms => ms.map(m => (m.id === id ? { ...m, ...patch } : m)));
 
   // a local model to fall back to when a cloud model fails: Ollama or LM Studio (no key, runs on localhost)
-  const isLocalModel = (m) => m && (m.kind === "ollama" || (m.baseUrl && /localhost|127\.0\.0\.1/.test(m.baseUrl)));
   const pickLocalModel = () =>
     aiModels.find(m => m.enabled && isLocalModel(m)) || aiModels.find(isLocalModel) || null;
 
@@ -7859,6 +7921,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   { label: t("Streaming"), ready: !!tmdbKey, note: tmdbKey ? t("on") : t("optional"), tab: "data" },
                   { label: t("Calendar"), ready: true, note: t("built-in"), tab: "data" },
                   { label: t("Meetings"), ready: meetOn, note: meetOn ? t("connected") : t("optional"), tab: "meetings" },
+                  { label: t("Memory"), ready: memoryTurns > 0, note: memoryTurns > 0 ? `${memoryTurns}` : t("empty"), tab: "models" },
                 ];
                 return (
                   <div style={{ display: "grid", gap: 16 }}>
@@ -8040,6 +8103,42 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               {/* ---- MODELS tab ---- */}
               {settingsTab === "models" && (
                 <div style={{ display: "grid", gap: 12 }}>
+                  {(() => {
+                    const bs = bannerState(aiModels);
+                    const tone = bs.kind === "local" ? C.up : bs.kind === "cloud" ? C.amber : C.faint;
+                    const text = bs.kind === "local" ? t("FULLY LOCAL · nothing leaves this device")
+                      : bs.kind === "cloud" ? t("CLOUD ENABLED · queries leave this device")
+                      : t("no model enabled");
+                    return (
+                      <div style={{
+                        display: "flex", alignItems: "center", gap: 8, marginBottom: 14,
+                        padding: "9px 11px", borderRadius: 6,
+                        border: `1px solid ${tone}`, background: "rgba(255,255,255,0.02)",
+                        fontFamily: MONO, fontSize: 11, letterSpacing: "0.06em", color: tone,
+                      }}>
+                        <span>{bs.kind === "local" ? "🔒" : bs.kind === "cloud" ? "☁" : "○"}</span>
+                        <span>{text}</span>
+                      </div>
+                    );
+                  })()}
+                  {psInfo && (
+                    <div style={{ marginBottom: 14, fontFamily: MONO, fontSize: 10.5, color: C.muted, lineHeight: 1.7 }}>
+                      {psInfo === "unavailable" && <div style={{ color: C.faint }}>{t("telemetry unavailable — is the local server running?")}</div>}
+                      {psInfo !== "unavailable" && psInfo.models.length === 0 && <div style={{ color: C.faint }}>{t("no model loaded")}</div>}
+                      {psInfo !== "unavailable" && psInfo.models.map((pm) => {
+                        const res = gpuResidency(pm);
+                        const tps = throughput(lastEvalRef.current);
+                        return (
+                          <div key={pm.name} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                            <span style={{ color: C.text }}>{pm.name}</span>
+                            {Number.isFinite(pm.size) && pm.size > 0 && <span>{(pm.size / 1e9).toFixed(1)} GB</span>}
+                            {res && <span style={{ color: res.cpuOnly ? C.amber : C.up }}>{res.label}</span>}
+                            {tps && <span>{tps} tok/s</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                   {!planAllows("ai") && (
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.amber, background: "rgba(255,179,0,0.08)", border: `1px solid ${C.amber}`, borderRadius: 6, padding: "8px 10px" }}>
                       {lockChip("ai")} {t("AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).").replace("{plan}", planFor("ai"))}
@@ -8051,18 +8150,32 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <span style={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, lineHeight: 1.6 }}>
                       {t("One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.")}
                     </span>
-                    <button onClick={() => { setDevMode(true); soloModel("ollama"); }}
+                    <button onClick={() => { if (!preDemoSnapshot) setPreDemoSnapshot(snapshotEnabled(aiModels)); setDevMode(true); soloModel("ollama"); }}
                       style={{ alignSelf: "flex-start", background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 14px", cursor: "pointer" }}>
                       {t("Switch the desk to local")}
                     </button>
+                    {preDemoSnapshot && (
+                      <button onClick={() => { setAiModels(ms => restoreEnabled(ms, preDemoSnapshot)); setPreDemoSnapshot(null); }}
+                        style={{ marginTop: 8, width: "100%", background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "8px 0", cursor: "pointer" }}>
+                        ↺ {t("restore previous models")}
+                      </button>
+                    )}
                   </div>
                   {/* local multi-turn memory: lives only in this browser; one click forgets it */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: MONO, fontSize: 10.5, color: C.muted, lineHeight: 1.6 }}>
-                    <span>🧠 {t("The desk remembers this conversation locally (this device only) so follow-up questions work.")}</span>
-                    <button onClick={() => { forgetConversation(); setCmdMsg(t("Desk memory cleared — the conversation is forgotten.")); }}
-                      style={{ flex: "0 0 auto", background: "transparent", color: C.muted, border: `1px solid ${C.panelEdge}`, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>
-                      {t("forget conversation")}
-                    </button>
+                  <div style={{ marginTop: 14, padding: "10px 11px", border: `1px solid ${C.panelEdge}`, borderRadius: 6 }}>
+                    <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted, marginBottom: 6 }}>
+                      {t("MEMORY")}
+                    </div>
+                    <div style={{ fontFamily: MONO, fontSize: 11, color: C.text, marginBottom: 8 }}>
+                      {t("{n} turns remembered on this device").replace("{n}", String(memoryTurns))}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: MONO, fontSize: 10.5, color: C.muted, lineHeight: 1.6 }}>
+                      <span>🧠 {t("The desk remembers this conversation locally (this device only) so follow-up questions work.")}</span>
+                      <button onClick={() => { forgetConversation(); setCmdMsg(t("Desk memory cleared — the conversation is forgotten.")); }}
+                        style={{ flex: "0 0 auto", background: "transparent", color: C.muted, border: `1px solid ${C.panelEdge}`, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>
+                        {t("forget conversation")}
+                      </button>
+                    </div>
                   </div>
                   <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.muted, background: "rgba(255,179,0,0.06)", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "8px 10px" }}>
                     <b style={{ color: C.text }}>{enabledCount > 1 ? t("{n} models enabled").replace("{n}", enabledCount) : t("One model at a time")}.</b>{" "}
