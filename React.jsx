@@ -172,6 +172,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANELES", "ticker tape": "cinta de cotizaciones", "watchlist": "lista de seguimiento", "top movers": "mayores movimientos", "news & video": "noticias y vídeo", "calendar": "calendario", "portfolio": "cartera",
     "breaking-news alerts during live trading": "alertas de última hora durante la negociación en directo",
+    "color-blind mode (blue/orange + ▲▼)": "modo para daltónicos (azul/naranja + ▲▼)",
     "CLOCK TIMEZONE": "ZONA HORARIA DEL RELOJ",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Ajusta el reloj de la cabecera. La insignia de mercado ABIERTO/CERRADO siempre sigue el horario del NYSE (hora del Este).",
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "EN DIRECTO",
@@ -311,6 +312,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANNEAUX", "ticker tape": "bandeau de cotation", "watchlist": "liste de suivi", "top movers": "plus fortes variations", "news & video": "actualités et vidéo", "calendar": "calendrier", "portfolio": "portefeuille",
     "breaking-news alerts during live trading": "alertes de dernière minute pendant la séance en direct",
+    "color-blind mode (blue/orange + ▲▼)": "mode daltonien (bleu/orange + ▲▼)",
     "CLOCK TIMEZONE": "FUSEAU HORAIRE DE L'HORLOGE",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Règle l'horloge de l'en-tête. Le badge de marché OUVERT/FERMÉ suit toujours les heures du NYSE (heure de l'Est).",
     "replay tutorial": "revoir le tutoriel", "DEMO": "DÉMO", "LIVE": "EN DIRECT",
@@ -450,6 +452,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANELS", "ticker tape": "Kursband", "watchlist": "Beobachtungsliste", "top movers": "größte Bewegungen", "news & video": "Nachrichten & Video", "calendar": "Kalender", "portfolio": "Portfolio",
     "breaking-news alerts during live trading": "Eilmeldungen während des Live-Handels",
+    "color-blind mode (blue/orange + ▲▼)": "Modus für Farbenblindheit (Blau/Orange + ▲▼)",
     "CLOCK TIMEZONE": "ZEITZONE DER UHR",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Stellt die Kopfzeilen-Uhr ein. Das OFFEN/GESCHLOSSEN-Abzeichen folgt immer den NYSE-Zeiten (Eastern).",
     "replay tutorial": "Tutorial wiederholen", "DEMO": "DEMO", "LIVE": "LIVE",
@@ -588,6 +591,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PAINÉIS", "ticker tape": "fita de cotações", "watchlist": "lista de acompanhamento", "top movers": "maiores variações", "news & video": "notícias e vídeo", "calendar": "calendário", "portfolio": "carteira",
     "breaking-news alerts during live trading": "alertas de última hora durante a negociação ao vivo",
+    "color-blind mode (blue/orange + ▲▼)": "modo para daltônicos (azul/laranja + ▲▼)",
     "CLOCK TIMEZONE": "FUSO HORÁRIO DO RELÓGIO",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Define o relógio do cabeçalho. O crachá de mercado ABERTO/FECHADO segue sempre o horário da NYSE (hora do Leste).",
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "AO VIVO",
@@ -726,6 +730,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANNELLI", "ticker tape": "nastro delle quotazioni", "watchlist": "lista di osservazione", "top movers": "maggiori variazioni", "news & video": "notizie e video", "calendar": "calendario", "portfolio": "portafoglio",
     "breaking-news alerts during live trading": "avvisi dell'ultima ora durante la contrattazione in diretta",
+    "color-blind mode (blue/orange + ▲▼)": "modalità per daltonici (blu/arancione + ▲▼)",
     "CLOCK TIMEZONE": "FUSO ORARIO DELL'OROLOGIO",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Imposta l'orologio dell'intestazione. Il badge di mercato APERTO/CHIUSO segue sempre gli orari del NYSE (ora orientale).",
     "replay tutorial": "rivedi il tutorial", "DEMO": "DEMO", "LIVE": "IN DIRETTA",
@@ -6440,8 +6445,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const soloModel = (id) => setAiModels(ms => ms.map(m => ({ ...m, enabled: m.id === id })));
   const enabledCount = aiModels.filter(m => m.enabled).length;
 
-  const chgUp = selectedRow?.chg > 0;
-  const accent = selectedRow?.chg == null ? C.amber : chgUp ? C.up : C.down;
+  const chgDir = selectedRow?.chg > 0 ? "up" : selectedRow?.chg < 0 ? "down" : "flat";
+  const accent = selectedRow?.chg == null ? C.amber : prefDirColor(chgDir);
 
   // ---- ticker tape items (doubled for seamless loop) ----
   const tapeRows = watchlist.map(getRow).filter(Boolean);
@@ -7461,7 +7466,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <div style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap" }}>
               <span style={{ fontFamily: SANS, fontWeight: 800, fontSize: 26, letterSpacing: "0.04em" }}>{selected}</span>
               {selectedRow?.name && <span style={{ color: C.muted, fontSize: 12 }}>{selectedRow.name}</span>}
-              <span style={{ fontFamily: MONO, fontSize: 26, fontWeight: 600, color: accent }}>{fmt(selectedRow?.price)}</span>
+              <span style={{ fontFamily: MONO, fontSize: 26, fontWeight: 600, color: accent }}>{selectedRow?.chg != null && prefDirGlyph(chgDir) ? `${prefDirGlyph(chgDir)} ` : ""}{fmt(selectedRow?.price)}</span>
               <span style={{ fontFamily: MONO, fontSize: 13, color: live && liveBad[selected] ? C.down : dirColor(selectedRow?.chg) }}>
                 {selectedRow?.chg != null
                   ? `${selectedRow.chg >= 0 ? "+" : ""}${fmt(selectedRow.chg)} (${pct(selectedRow.chgPct)})`
@@ -8008,6 +8013,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: MONO, fontSize: 11, color: breakingOn ? C.text : C.faint, cursor: "pointer" }}>
                       <input type="checkbox" checked={breakingOn} onChange={() => setBreakingOn(v => !v)} />
                       ⚡ {t("breaking-news alerts during live trading")}
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.text, cursor: "pointer" }}>
+                      <input type="checkbox" checked={prefs.colorBlind} onChange={() => setPref("colorBlind", !prefs.colorBlind)} />
+                      {t("color-blind mode (blue/orange + ▲▼)")}
                     </label>
                     <div style={{ marginTop: 14 }}>
                       <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("CLOCK TIMEZONE")}</label>
