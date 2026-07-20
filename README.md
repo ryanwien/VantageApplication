@@ -16,28 +16,23 @@ optional — the app is fully usable without it.
 
 ```mermaid
 flowchart TD
-    U([User]) --> UI[Vantage SPA<br/>React · runs in the browser]
+    U([User]) --> UI["Vantage SPA<br/>runs in the browser"]
 
-    UI --> DESK{AI desk<br/>model routing}
-    DESK -->|cloud| CLOUD[OpenRouter · Claude<br/>OpenAI · Gemini]
-    DESK -->|local| LOCAL[Ollama · vLLM · LM Studio<br/>localhost — AMD Radeon / ROCm]
-    CLOUD -.->|on failure, auto-retry| LOCAL
+    UI --> DESK{AI desk}
+    DESK -->|cloud key| CLOUD["OpenRouter / Claude<br/>OpenAI / Gemini"]
+    DESK -->|local| LOCAL["Ollama / vLLM<br/>AMD Radeon (ROCm)"]
+    CLOUD -.->|auto-retry on failure| LOCAL
 
     UI --> DATA{Market + media}
-    DATA -->|no key| DEMO[Demo mode<br/>seeded random-walk engine]
-    DATA -->|Finnhub| FH[Live quotes · earnings]
-    DATA -->|TMDB · YouTube| MEDIA[Trailers · video · catalog]
+    DATA -->|no key| DEMO["Demo engine"]
+    DATA -->|with keys| FEEDS["Finnhub · TMDB · YouTube"]
 
-    UI --> VOICE{Anchor voice}
-    VOICE -->|ElevenLabs key| EL[Studio-grade voice]
-    VOICE -->|no key| TTS[Browser text-to-speech]
+    UI --> VOICE{Voice}
+    VOICE -->|key| EL["ElevenLabs"]
+    VOICE -->|no key| TTS["Browser TTS"]
 
-    UI <--> LS[(localStorage<br/>API keys · conversation memory)]
-
-    UI -.optional.-> BE[server/index.js<br/>Node backend]
-    BE -.-> AUTH[Accounts · OAuth sign-in]
-    BE -.-> MEET[Zoom · Google Meet]
-    BE -.-> PAY[Stripe subscriptions]
+    UI <--> LS[("localStorage<br/>keys + memory")]
+    UI -.optional.-> BE["Node backend<br/>auth · meetings · billing"]
 ```
 
 Two properties worth calling out:
