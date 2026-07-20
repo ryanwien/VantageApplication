@@ -4,6 +4,7 @@ import {
 } from "recharts";
 import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
 import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./src/settings/localProof.js";
+import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled, coerceRefreshMs } from "./src/settings/preferences.js";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -170,9 +171,13 @@ const I18N = {
     "skip — I'll explore on my own": "omitir — exploraré por mi cuenta",
     // DATA tab
     "PANELS": "PANELES", "ticker tape": "cinta de cotizaciones", "watchlist": "lista de seguimiento", "top movers": "mayores movimientos", "news & video": "noticias y vídeo", "calendar": "calendario", "portfolio": "cartera",
-    "breaking-news alerts during live trading": "alertas de última hora durante la negociación en directo",
+    "in-app alerts": "alertas en la aplicación", "price triggers": "activadores de precio", "breaking news": "última hora",
+    "color-blind mode (blue/orange + ▲▼)": "modo para daltónicos (azul/naranja + ▲▼)",
+    "privacy mode — blur balances (Shift+P)": "modo privacidad — difuminar saldos (Mayús+P)",
+    "hidden": "oculto",
     "CLOCK TIMEZONE": "ZONA HORARIA DEL RELOJ",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Ajusta el reloj de la cabecera. La insignia de mercado ABIERTO/CERRADO siempre sigue el horario del NYSE (hora del Este).",
+    "refresh interval": "intervalo de actualización", "Manual": "Manual", "refresh now": "actualizar ahora",
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "EN DIRECTO",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "El modo demo ejecuta un motor de mercado de paseo aleatorio con semilla — una sesión simulada reproducible, sin clave ni red.",
     "FINNHUB API KEY (free tier works)": "CLAVE API DE FINNHUB (el plan gratuito funciona)", "paste key": "pega la clave",
@@ -309,9 +314,13 @@ const I18N = {
     "skip — I'll explore on my own": "passer — je vais explorer par moi-même",
     // DATA tab
     "PANELS": "PANNEAUX", "ticker tape": "bandeau de cotation", "watchlist": "liste de suivi", "top movers": "plus fortes variations", "news & video": "actualités et vidéo", "calendar": "calendrier", "portfolio": "portefeuille",
-    "breaking-news alerts during live trading": "alertes de dernière minute pendant la séance en direct",
+    "in-app alerts": "alertes dans l'application", "price triggers": "seuils de prix", "breaking news": "dernière minute",
+    "color-blind mode (blue/orange + ▲▼)": "mode daltonien (bleu/orange + ▲▼)",
+    "privacy mode — blur balances (Shift+P)": "mode privé — flouter les soldes (Maj+P)",
+    "hidden": "masqué",
     "CLOCK TIMEZONE": "FUSEAU HORAIRE DE L'HORLOGE",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Règle l'horloge de l'en-tête. Le badge de marché OUVERT/FERMÉ suit toujours les heures du NYSE (heure de l'Est).",
+    "refresh interval": "intervalle d'actualisation", "Manual": "Manuel", "refresh now": "actualiser maintenant",
     "replay tutorial": "revoir le tutoriel", "DEMO": "DÉMO", "LIVE": "EN DIRECT",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "Le mode démo utilise un moteur de marché à marche aléatoire avec graine — une séance simulée reproductible, sans clé ni réseau.",
     "FINNHUB API KEY (free tier works)": "CLÉ API FINNHUB (l'offre gratuite suffit)", "paste key": "collez la clé",
@@ -448,9 +457,13 @@ const I18N = {
     "skip — I'll explore on my own": "überspringen — ich erkunde selbst",
     // DATA tab
     "PANELS": "PANELS", "ticker tape": "Kursband", "watchlist": "Beobachtungsliste", "top movers": "größte Bewegungen", "news & video": "Nachrichten & Video", "calendar": "Kalender", "portfolio": "Portfolio",
-    "breaking-news alerts during live trading": "Eilmeldungen während des Live-Handels",
+    "in-app alerts": "In-App-Benachrichtigungen", "price triggers": "Preisauslöser", "breaking news": "Eilmeldungen",
+    "color-blind mode (blue/orange + ▲▼)": "Modus für Farbenblindheit (Blau/Orange + ▲▼)",
+    "privacy mode — blur balances (Shift+P)": "Privatsphärenmodus — Salden verwischen (Umschalt+P)",
+    "hidden": "ausgeblendet",
     "CLOCK TIMEZONE": "ZEITZONE DER UHR",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Stellt die Kopfzeilen-Uhr ein. Das OFFEN/GESCHLOSSEN-Abzeichen folgt immer den NYSE-Zeiten (Eastern).",
+    "refresh interval": "Aktualisierungsintervall", "Manual": "Manuell", "refresh now": "jetzt aktualisieren",
     "replay tutorial": "Tutorial wiederholen", "DEMO": "DEMO", "LIVE": "LIVE",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "Der Demo-Modus nutzt eine Random-Walk-Markt-Engine mit festem Startwert — eine reproduzierbare simulierte Sitzung, ohne Schlüssel oder Netzwerk.",
     "FINNHUB API KEY (free tier works)": "FINNHUB-API-SCHLÜSSEL (kostenlose Stufe genügt)", "paste key": "Schlüssel einfügen",
@@ -586,9 +599,13 @@ const I18N = {
     "skip — I'll explore on my own": "ignorar — vou explorar sozinho",
     // DATA tab
     "PANELS": "PAINÉIS", "ticker tape": "fita de cotações", "watchlist": "lista de acompanhamento", "top movers": "maiores variações", "news & video": "notícias e vídeo", "calendar": "calendário", "portfolio": "carteira",
-    "breaking-news alerts during live trading": "alertas de última hora durante a negociação ao vivo",
+    "in-app alerts": "alertas no aplicativo", "price triggers": "gatilhos de preço", "breaking news": "última hora",
+    "color-blind mode (blue/orange + ▲▼)": "modo para daltônicos (azul/laranja + ▲▼)",
+    "privacy mode — blur balances (Shift+P)": "modo privacidade — desfocar saldos (Shift+P)",
+    "hidden": "oculto",
     "CLOCK TIMEZONE": "FUSO HORÁRIO DO RELÓGIO",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Define o relógio do cabeçalho. O crachá de mercado ABERTO/FECHADO segue sempre o horário da NYSE (hora do Leste).",
+    "refresh interval": "intervalo de atualização", "Manual": "Manual", "refresh now": "atualizar agora",
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "AO VIVO",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "O modo demo usa um motor de mercado de passeio aleatório com semente — uma sessão simulada reproduzível, sem chave nem rede.",
     "FINNHUB API KEY (free tier works)": "CHAVE API FINNHUB (o plano gratuito funciona)", "paste key": "cole a chave",
@@ -724,9 +741,13 @@ const I18N = {
     "skip — I'll explore on my own": "salta — esplorerò da solo",
     // DATA tab
     "PANELS": "PANNELLI", "ticker tape": "nastro delle quotazioni", "watchlist": "lista di osservazione", "top movers": "maggiori variazioni", "news & video": "notizie e video", "calendar": "calendario", "portfolio": "portafoglio",
-    "breaking-news alerts during live trading": "avvisi dell'ultima ora durante la contrattazione in diretta",
+    "in-app alerts": "avvisi nell'app", "price triggers": "soglie di prezzo", "breaking news": "ultima ora",
+    "color-blind mode (blue/orange + ▲▼)": "modalità per daltonici (blu/arancione + ▲▼)",
+    "privacy mode — blur balances (Shift+P)": "modalità privacy — sfoca i saldi (Maiusc+P)",
+    "hidden": "nascosto",
     "CLOCK TIMEZONE": "FUSO ORARIO DELL'OROLOGIO",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Imposta l'orologio dell'intestazione. Il badge di mercato APERTO/CHIUSO segue sempre gli orari del NYSE (ora orientale).",
+    "refresh interval": "intervallo di aggiornamento", "Manual": "Manuale", "refresh now": "aggiorna ora",
     "replay tutorial": "rivedi il tutorial", "DEMO": "DEMO", "LIVE": "IN DIRETTA",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "La modalità demo usa un motore di mercato a passeggiata casuale con seme — una sessione simulata riproducibile, senza chiave né rete.",
     "FINNHUB API KEY (free tier works)": "CHIAVE API FINNHUB (il piano gratuito funziona)", "paste key": "incolla la chiave",
@@ -939,7 +960,6 @@ function buildDemoMarket() {
 const fmt = (n, d = 2) =>
   n == null || isNaN(n) ? "—" : n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct = (n) => (n == null || isNaN(n) ? "—" : `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`);
-const dirColor = (n) => (n > 0 ? C.up : n < 0 ? C.down : C.muted);
 
 // Turn a raw transport error ("HTTP 429", "Ollama HTTP 404 — model not found") into plain
 // language before it ever reaches the screen. Keeps any human detail after the em dash and
@@ -3455,6 +3475,43 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [keyDraft, setKeyDraft] = useState(loadFinnhubKey);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState("quick");
+  // ---- persisted prefs (Settings Bundle B): one object at localStorage["tape-prefs"], migrating the
+  // legacy localStorage["tape-breaking"] flag on first load. See src/settings/preferences.js. ----
+  const [prefs, setPrefs] = useState(() => {
+    if (typeof window === "undefined") return DEFAULT_PREFS;
+    return loadPrefs(window.localStorage.getItem("tape-prefs"), window.localStorage.getItem("tape-breaking"));
+  });
+  const setPref = (key, value) => setPrefs((p) => ({ ...p, [key]: value }));
+  useEffect(() => {
+    try { window.localStorage.setItem("tape-prefs", JSON.stringify(prefs)); } catch { /* storage full/blocked */ }
+  }, [prefs]);
+  // Privacy mode hotkey: Shift+P toggles prefs.privacy, ignored while typing so a capital P in the
+  // ticker box or a chat field doesn't blur the screen.
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = (e.target && e.target.tagName) || "";
+      if (tag === "INPUT" || tag === "TEXTAREA" || e.target?.isContentEditable) return;
+      if (e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && (e.key === "P" || e.key === "p")) { e.preventDefault(); setPref("privacy", !prefs.privacy); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [prefs.privacy]);
+
+  // flat: C.muted (not C.faint) — matches the zero-case color the old numeric dirColor(n) used,
+  // so prefDirColor/dirColorN reproduce the exact default palette in non-colorblind mode.
+  const PALETTE = { up: C.up, down: C.down, flat: C.muted };
+  // Named prefDirColor/prefDirGlyph (not dirColor/dirGlyph) — a module-scope `dirColor(n)` numeric
+  // helper used to exist (formerly line ~942) and was used throughout this component; reusing the
+  // name here would have shadowed it. It has since been removed in favor of dirColorN below.
+  const prefDirColor = (dir) => directionColor(dir, prefs, PALETTE);
+  const prefDirGlyph = (dir) => directionGlyph(dir, prefs);
+  // Numeric wrapper so every former `dirColor(n)` call site can become color-blind aware with a
+  // pure rename. In default mode this is byte-identical to the old numeric dirColor(n).
+  const dirColorN = (n) => prefDirColor(n > 0 ? "up" : n < 0 ? "down" : "flat");
+  // Privacy mode: blur (not remove) sensitive money figures so layout never shifts. Wrap portfolio
+  // totals, per-position P&L/%, and $ amounts with priv(...) wherever they render.
+  const privacyStyle = prefs.privacy ? { filter: "blur(8px)", userSelect: "none" } : null;
+  const priv = (node) => <span style={privacyStyle} aria-label={prefs.privacy ? t("hidden") : undefined}>{node}</span>;
   const [justApplied, setJustApplied] = useState(false);
   const [watchlist, setWatchlist] = useState(UNIVERSE.slice(0, 8).map(u => u.sym));
   const [selected, setSelected] = useState("AMD");
@@ -3683,12 +3740,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       if (stopped) return;
       const hit429 = await pollLive();
       backoff = hit429 ? Math.min(backoff * 2, 8) : 1;
-      const base = liveStaleRef.current ? 60000 : 15000;
-      timer = setTimeout(run, Math.min(base * backoff, 5 * 60 * 1000));
+      const base = liveStaleRef.current ? 60000 : prefs.refreshMs;
+      // Manual mode (refreshMs === 0): poll once on entry (handled by run() above) and never reschedule.
+      if (prefs.refreshMs !== 0) timer = setTimeout(run, Math.min(base * backoff, 5 * 60 * 1000));
     };
     run();
     return () => { stopped = true; clearTimeout(timer); };
-  }, [live, pollLive]);
+  }, [live, pollLive, prefs.refreshMs]);
 
   // ---- unified view of a symbol ----
   const getRow = useCallback((sym) => {
@@ -4940,8 +4998,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }, [selected, completeMission]);
 
   // ---- breaking-news alerts during live trading (real Finnhub wire when live, market-move alerts otherwise) ----
-  const [breakingOn, setBreakingOn] = useState(() => (typeof window === "undefined" ? true : window.localStorage.getItem("tape-breaking") !== "off"));
-  useEffect(() => { window.localStorage?.setItem?.("tape-breaking", breakingOn ? "on" : "off"); }, [breakingOn]);
+  // gated on prefs.notify.breakingNews (Settings Bundle B) — legacy localStorage["tape-breaking"] is
+  // migrated into prefs by loadPrefs on first load; see src/settings/preferences.js.
   const [breakingAlert, setBreakingAlert] = useState(null); // { id, text, source }
   const breakingSeenRef = useRef(new Set());
   const breakingTimerRef = useRef(null);
@@ -4954,7 +5012,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     breakingTimerRef.current = setTimeout(() => setBreakingAlert(a => (a && a.id === id ? null : a)), 16000);
   }, [speak, playBreakingSfx]);
   const runBreakingCheck = useCallback(async () => {
-    if (!breakingOn) return;
+    if (!notifyEnabled(prefs, "breakingNews")) return;
     const { day, mins } = etNow();
     const marketOpen = day >= 1 && day <= 5 && mins >= 570 && mins < 960; // 9:30–16:00 ET weekdays
     if (!live || !marketOpen) return; // only during genuine live trading — live data AND market open (not demo, not after hours)
@@ -4978,13 +5036,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         pushBreaking(`${mover.sym} ${mover.chgPct >= 0 ? "surges" : "slides"} ${Math.abs(mover.chgPct).toFixed(1)}% ${mover.chgPct >= 0 ? "higher" : "lower"} in the session`, "market tape");
       }
     }
-  }, [breakingOn, live, apiKey, selected, watchlist, getRow, pushBreaking]);
+  }, [prefs.notify.breakingNews, live, apiKey, selected, watchlist, getRow, pushBreaking]);
   useEffect(() => {
-    if (!breakingOn) { setBreakingAlert(null); return; }
+    if (!notifyEnabled(prefs, "breakingNews")) { setBreakingAlert(null); return; }
     const first = setTimeout(runBreakingCheck, 9000);   // one shortly after load
     const iv = setInterval(runBreakingCheck, 85000);     // then periodically
     return () => { clearTimeout(first); clearInterval(iv); clearTimeout(breakingTimerRef.current); };
-  }, [breakingOn, runBreakingCheck]);
+  }, [prefs.notify.breakingNews, runBreakingCheck]);
 
   // ---- calendar reminders: when a scheduled event's time arrives, break in like breaking news ----
   const calRemindedRef = useRef(new Set());
@@ -5051,6 +5109,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }, [speak, playBreakingSfx]);
   useEffect(() => {
     if (!priceAlerts.length) return;
+    if (!notifyEnabled(prefs, "priceTriggers")) return;
     const check = () => {
       for (const a of priceAlerts) {
         const row = getRow(a.sym);
@@ -5061,7 +5120,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     };
     const iv = setInterval(check, 3000); check();
     return () => clearInterval(iv);
-  }, [priceAlerts, getRow, firePriceAlert]);
+  }, [priceAlerts, getRow, firePriceAlert, prefs.notify.priceTriggers]);
 
   // ---- market events: upcoming earnings dates for your watchlist, merged into the calendar ----
   const [marketEvents, setMarketEvents] = useState([]);
@@ -6422,8 +6481,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const soloModel = (id) => setAiModels(ms => ms.map(m => ({ ...m, enabled: m.id === id })));
   const enabledCount = aiModels.filter(m => m.enabled).length;
 
-  const chgUp = selectedRow?.chg > 0;
-  const accent = selectedRow?.chg == null ? C.amber : chgUp ? C.up : C.down;
+  const chgDir = selectedRow?.chg > 0 ? "up" : selectedRow?.chg < 0 ? "down" : "flat";
+  const accent = selectedRow?.chg == null ? C.amber : prefDirColor(selectedRow?.chg > 0 ? "up" : "down");
 
   // ---- ticker tape items (doubled for seamless loop) ----
   const tapeRows = watchlist.map(getRow).filter(Boolean);
@@ -6657,7 +6716,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <span key={i} style={{ fontFamily: MONO, fontSize: 12, marginRight: 34 }}>
               <span style={{ color: C.amber, fontWeight: 600 }}>{r.sym}</span>{" "}
               <span style={{ color: C.text }}>{fmt(r.price)}</span>{" "}
-              <span style={{ color: dirColor(r.chg) }}>{r.chg > 0 ? "▲" : r.chg < 0 ? "▼" : "•"} {pct(r.chgPct)}</span>
+              <span style={{ color: dirColorN(r.chg) }}>{r.chg > 0 ? "▲" : r.chg < 0 ? "▼" : "•"} {pct(r.chgPct)}</span>
             </span>
           ))}
         </div>
@@ -7106,7 +7165,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 {deskPortfolio && (
                   <div style={{ display: "flex", flexDirection: "column", borderTop: (aiResponses.nav || deskCalendar) ? `1px solid ${C.panelEdge}` : "none" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderBottom: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.amber }}>
-                      <span>💼 PORTFOLIO {positions.length > 0 && <span style={{ color: dirColor(portTotals.pnl), marginLeft: 6 }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>}</span>
+                      <span>💼 PORTFOLIO {positions.length > 0 && priv(<span style={{ color: dirColorN(portTotals.pnl), marginLeft: 6 }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}</span>
                       <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
                         {positions.length > 0 && <button onClick={briefPortfolio} title="Read on air" style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.amber, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶ read</button>}
                         <button onClick={() => setDeskPortfolio(false)} aria-label="Close portfolio" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
@@ -7122,16 +7181,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       {portfolioRows.map(r => (
                         <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 4, alignItems: "center", fontFamily: MONO, fontSize: 11, padding: "6px 0", borderBottom: `1px solid ${C.grid}` }}>
                           <button onClick={() => setSelected(r.sym)} style={{ background: "transparent", border: "none", color: C.text, fontFamily: MONO, fontSize: 11, fontWeight: 600, textAlign: "left", cursor: "pointer", padding: 0 }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 9 }}>×{r.shares}</span></button>
-                          <span style={{ textAlign: "right", color: C.muted, fontSize: 10 }}>{fmt(r.cost / r.shares)}→{r.price != null ? fmt(r.price) : "—"}</span>
-                          <span style={{ textAlign: "right", color: C.text }}>{r.val != null ? fmt(r.val) : "—"}</span>
-                          <span style={{ textAlign: "right", color: dirColor(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}{r.pnlPct != null ? <span style={{ fontSize: 9, display: "block", color: dirColor(r.pnl) }}>{r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%</span> : null}</span>
+                          <span style={{ textAlign: "right", color: C.muted, fontSize: 10, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{fmt(r.cost / r.shares)}→{r.price != null ? fmt(r.price) : "—"}</span>
+                          <span style={{ textAlign: "right", color: C.text, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.val != null ? fmt(r.val) : "—"}</span>
+                          <span style={{ textAlign: "right", color: dirColorN(r.pnl), ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}{r.pnlPct != null ? <span style={{ fontSize: 9, display: "block", color: dirColorN(r.pnl) }}>{r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%</span> : null}</span>
                           <button onClick={() => removePosition(r.id)} aria-label="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 11 }}>✕</button>
                         </div>
                       ))}
                       {positions.length > 0 && (
                         <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0 2px", fontFamily: MONO, fontSize: 11, fontWeight: 700 }}>
-                          <span style={{ color: C.muted }}>TOTAL · {fmt(portTotals.val)}</span>
-                          <span style={{ color: dirColor(portTotals.pnl) }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>
+                          {priv(<span style={{ color: C.muted }}>TOTAL · {fmt(portTotals.val)}</span>)}
+                          {priv(<span style={{ color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}
                         </div>
                       )}
                       <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
@@ -7427,7 +7486,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 600, color: on ? C.amber : C.text }}>{s}</span>
                 <span style={{ textAlign: "right" }}>
                   <div style={{ fontFamily: MONO, fontSize: 12, color: C.text }}>{fmt(r.price)}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 10, color: dirColor(r.chg) }}>{pct(r.chgPct)}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: dirColorN(r.chg) }}>{pct(r.chgPct)}</div>
                 </span>
               </button>
             );
@@ -7443,10 +7502,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <div style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap" }}>
               <span style={{ fontFamily: SANS, fontWeight: 800, fontSize: 26, letterSpacing: "0.04em" }}>{selected}</span>
               {selectedRow?.name && <span style={{ color: C.muted, fontSize: 12 }}>{selectedRow.name}</span>}
-              <span style={{ fontFamily: MONO, fontSize: 26, fontWeight: 600, color: accent }}>{fmt(selectedRow?.price)}</span>
-              <span style={{ fontFamily: MONO, fontSize: 13, color: live && liveBad[selected] ? C.down : dirColor(selectedRow?.chg) }}>
+              <span style={{ fontFamily: MONO, fontSize: 26, fontWeight: 600, color: accent }}>{selectedRow?.chg != null && prefDirGlyph(chgDir) ? `${prefDirGlyph(chgDir)} ` : ""}{fmt(selectedRow?.price)}</span>
+              <span style={{ fontFamily: MONO, fontSize: 13, color: live && liveBad[selected] ? C.down : dirColorN(selectedRow?.chg) }}>
                 {selectedRow?.chg != null
-                  ? `${selectedRow.chg >= 0 ? "+" : ""}${fmt(selectedRow.chg)} (${pct(selectedRow.chgPct)})`
+                  ? `${prefDirGlyph(chgDir) ? prefDirGlyph(chgDir) + " " : ""}${selectedRow.chg >= 0 ? "+" : ""}${fmt(selectedRow.chg)} (${pct(selectedRow.chgPct)})`
                   : live && liveBad[selected] ? "unrecognized symbol" : "waiting for data…"}
               </span>
               {liveStale && (
@@ -7523,9 +7582,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", color: C.muted }}>{label}</div>
                 <div style={{
                   fontFamily: MONO, fontSize: 15, fontWeight: 600, marginTop: 3,
-                  color: label.startsWith("CHANGE") ? dirColor(val) : C.text,
+                  color: label.startsWith("CHANGE") ? dirColorN(val) : C.text,
                 }}>
-                  {label === "CHANGE %" ? pct(val) : fmt(val)}
+                  {label.startsWith("CHANGE") && prefDirGlyph(val > 0 ? "up" : val < 0 ? "down" : "flat") ? `${prefDirGlyph(val > 0 ? "up" : val < 0 ? "down" : "flat")} ` : ""}{label === "CHANGE %" ? pct(val) : fmt(val)}
                 </div>
               </div>
             ))}
@@ -7544,11 +7603,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               style={{ display: "block", width: "100%", padding: "10px 12px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{r.sym}</span>
-                <span style={{ fontFamily: MONO, fontSize: 12, color: dirColor(r.chg) }}>{pct(r.chgPct)}</span>
+                <span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.chg) }}>{prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat") ? `${prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat")} ` : ""}{pct(r.chgPct)}</span>
               </div>
               <div style={{ height: 3, background: C.grid, borderRadius: 2, marginTop: 6 }}>
                 <div style={{
-                  height: 3, borderRadius: 2, background: dirColor(r.chg),
+                  height: 3, borderRadius: 2, background: dirColorN(r.chg),
                   width: `${Math.min(100, Math.abs(r.chgPct) * 22)}%`,
                 }} />
               </div>
@@ -7625,7 +7684,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted }}>💼 PORTFOLIO</span>
               {positions.length > 0 && (
                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 11, color: dirColor(portTotals.pnl) }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 11, color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}
                   <button onClick={briefPortfolio} title="Anchor briefs your portfolio" style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.amber, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶</button>
                 </span>
               )}
@@ -7635,11 +7694,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 style={{ display: "block", width: "100%", padding: "8px 12px", background: "transparent", border: "none", borderTop: `1px solid ${C.grid}`, cursor: "pointer", textAlign: "left" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 10 }}>×{r.shares}</span></span>
-                  <span style={{ fontFamily: MONO, fontSize: 11, color: dirColor(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 11, color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>)}
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: C.faint }}>@{fmt(r.cost / r.shares)} → {r.price != null ? fmt(r.price) : "—"}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: dirColor(r.pnl) }}>{r.pnlPct == null ? "" : `${r.pnlPct >= 0 ? "+" : ""}${r.pnlPct.toFixed(1)}%`}</span>
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 9, color: C.faint }}>@{fmt(r.cost / r.shares)} → {r.price != null ? fmt(r.price) : "—"}</span>)}
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 9, color: dirColorN(r.pnl) }}>{r.pnlPct == null ? "" : `${r.pnlPct >= 0 ? "+" : ""}${r.pnlPct.toFixed(1)}%`}</span>)}
                   <span onClick={e => { e.stopPropagation(); removePosition(r.id); }} style={{ fontFamily: MONO, fontSize: 10, color: C.faint, cursor: "pointer" }}>✕</span>
                 </div>
               </button>
@@ -7987,9 +8046,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         </label>
                       ))}
                     </div>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: MONO, fontSize: 11, color: breakingOn ? C.text : C.faint, cursor: "pointer" }}>
-                      <input type="checkbox" checked={breakingOn} onChange={() => setBreakingOn(v => !v)} />
-                      ⚡ {t("breaking-news alerts during live trading")}
+                    <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.muted }}>{t("in-app alerts")}</div>
+                    {[["priceTriggers", "price triggers"], ["breakingNews", "breaking news"]].map(([key, label]) => (
+                      <label key={key} style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontFamily: MONO, fontSize: 11, color: prefs.notify[key] ? C.text : C.faint, cursor: "pointer" }}>
+                        <input type="checkbox" checked={prefs.notify[key]}
+                          onChange={() => setPref("notify", { ...prefs.notify, [key]: !prefs.notify[key] })} />
+                        {t(label)}
+                      </label>
+                    ))}
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.text, cursor: "pointer" }}>
+                      <input type="checkbox" checked={prefs.colorBlind} onChange={() => setPref("colorBlind", !prefs.colorBlind)} />
+                      {t("color-blind mode (blue/orange + ▲▼)")}
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.text, cursor: "pointer" }}>
+                      <input type="checkbox" checked={prefs.privacy} onChange={() => setPref("privacy", !prefs.privacy)} />
+                      {t("privacy mode — blur balances (Shift+P)")}
                     </label>
                     <div style={{ marginTop: 14 }}>
                       <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("CLOCK TIMEZONE")}</label>
@@ -8005,6 +8076,26 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6, lineHeight: 1.6 }}>
                         {t("Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.")}
                       </div>
+                    </div>
+                    <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.text }}>
+                      <div style={{ color: C.muted, marginBottom: 6 }}>{t("refresh interval")}</div>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {[["Manual", 0], ["5s", 5000], ["15s", 15000], ["30s", 30000]].map(([label, ms]) => (
+                          <button key={ms} onClick={() => setPref("refreshMs", coerceRefreshMs(ms))}
+                            style={{ flex: 1, padding: "6px 0", borderRadius: 4, cursor: "pointer", fontFamily: MONO, fontSize: 11,
+                              border: `1px solid ${prefs.refreshMs === ms ? C.amber : C.panelEdge}`,
+                              background: prefs.refreshMs === ms ? "rgba(255,179,0,0.08)" : "transparent",
+                              color: prefs.refreshMs === ms ? C.amber : C.muted }}>{ms === 0 ? t(label) : label}</button>
+                        ))}
+                      </div>
+                      {prefs.refreshMs === 0 && (
+                        <button onClick={() => pollLive()} disabled={!live}
+                          style={{ marginTop: 8, width: "100%", padding: "7px 0", borderRadius: 4, cursor: live ? "pointer" : "not-allowed",
+                            fontFamily: MONO, fontSize: 11, background: "transparent", border: `1px solid ${C.panelEdge}`,
+                            color: live ? C.muted : C.faint }}>
+                          ↻ {t("refresh now")}
+                        </button>
+                      )}
                     </div>
                     <button onClick={() => { setTutStep(0); setShowTutorial(true); setShowSettings(false); }}
                       style={{ marginTop: 12, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "7px 12px", cursor: "pointer" }}>
