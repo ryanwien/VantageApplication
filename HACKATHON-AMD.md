@@ -203,15 +203,20 @@ Be precise about this — it's the difference between a claim that holds up and 
 4. **1:10** — **Multi‑turn memory (scored criterion — don't skip):** follow up with just *"what about its risks?"* → the desk resolves "its" from local memory. Then Settings → AI → point at **"forget conversation"**: "memory lives on this device, cleared in one click."
 5. **1:45** — 🎙 voice command: *"take me to Robinhood"* → agent navigates/embeds (tool use).
 6. **2:10** — *"write a report and export a PowerPoint"* → local model writes it; browser builds the deck. Open it.
-7. **2:50** — Go offline (disable networking on camera); repeat a query → still answers. "Fully local AMD inference — your questions never leave this machine."
+7. **2:50** — **Prove locality — without cutting the network.** (You're on a remote Radeon instance over SSH; disabling networking would kill the session mid-demo. Prove it with positive evidence instead of absence-of-network.) Three quick proofs on camera:
+   - **In-app:** Settings → AI shows the **🔒 FULLY LOCAL — nothing leaves this device** banner and the telemetry strip reading `llama3.1 · 100% GPU-resident` (with tokens/s). The app itself confirms no cloud model is in play.
+   - **Traffic:** open the browser **Network** panel, ask one more question, and show the *only* inference request is to `localhost:11434/api/chat` — **zero** calls to `openrouter.ai` / `api.openai.com` / `api.anthropic.com`. The query never reaches a third-party API.
+   - **Compute:** `rocm-smi` spikes as the answer streams — the Radeon is doing the work in real time.
+
+   State: "Inference runs entirely on the AMD instance — no third-party API ever touches the query." *(Optional hard proof if time allows: `sudo iptables -A OUTPUT -p tcp --dport 443 -j DROP` to block all outbound HTTPS, then ask again — it still answers, and SSH survives because it's on port 22.)*
 8. **3:20** — Close over `rocm-smi` under load: tools + memory + privacy from plain language, all on the AMD/ROCm stack.
 
 ## Submission checklist
 - [ ] Register on **Luma** (needs AMD approval) + the **AMD AI Developer Program** (prize eligibility)
 - [x] ~~Confirm new‑project rule~~ — **resolved**: the governing rules have no build‑during‑event requirement; prior work is fine
 - [ ] Radeon Cloud instance → `bash scripts/radeon-setup.sh` → **`ollama ps` reads `100% GPU`** (the demo claim depends on it)
-- [ ] Capture AMD evidence: `rocm-smi` during a query, `ollama ps` (PROCESSOR column), `api/ps` showing `size_vram` > 0, GPU‑utilization screenshots
-- [ ] Fill [TODO] latency numbers + team info into `submission/AMD-SPEC.md` and `submission/poster.html`; export both to PDF
+- [ ] Capture AMD evidence: `rocm-smi` during a query, `ollama ps` (PROCESSOR column), `api/ps` showing `size_vram` > 0, GPU‑utilization screenshots. In-app: the **FULLY LOCAL** banner + telemetry strip (`settings → AI`) corroborate this on screen, and the browser Network panel shows inference hitting only `localhost:11434`
+- [x] ~~Fill [TODO] latency numbers + team info~~ — **done in docs**: team info complete; Radeon latency reframed to "captured live in the demo video" (no fabricated/mislabelled numbers). Still to do: **export `AMD-SPEC.md` + `poster.html` to PDF** once the on-camera figures exist
 - [ ] Record demo video (**3–5 min**, script above) showing local‑on‑AMD agent + tools + multi‑turn memory
 - [x] README section "Run on AMD Radeon / ROCm" — **done** (step‑by‑step, with the CPU‑fallback check)
 - [x] Write‑up — **done**: `submission/AMD-SPEC.md` (Track 2, agent reasoning + tools, why AMD)
