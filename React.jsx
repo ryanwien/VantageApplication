@@ -945,7 +945,6 @@ function buildDemoMarket() {
 const fmt = (n, d = 2) =>
   n == null || isNaN(n) ? "—" : n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct = (n) => (n == null || isNaN(n) ? "—" : `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`);
-const dirColor = (n) => (n > 0 ? C.up : n < 0 ? C.down : C.muted);
 
 // Turn a raw transport error ("HTTP 429", "Ollama HTTP 404 — model not found") into plain
 // language before it ever reaches the screen. Keeps any human detail after the em dash and
@@ -3472,12 +3471,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     try { window.localStorage.setItem("tape-prefs", JSON.stringify(prefs)); } catch { /* storage full/blocked */ }
   }, [prefs]);
 
-  const PALETTE = { up: C.up, down: C.down, flat: C.faint };
+  // flat: C.muted (not C.faint) — matches the zero-case color the old numeric dirColor(n) used,
+  // so prefDirColor/dirColorN reproduce the exact default palette in non-colorblind mode.
+  const PALETTE = { up: C.up, down: C.down, flat: C.muted };
   // Named prefDirColor/prefDirGlyph (not dirColor/dirGlyph) — a module-scope `dirColor(n)` numeric
-  // helper already exists (line ~942) and is used throughout this component; reusing the name here
-  // would shadow it and silently break every existing color-coded value in this component.
+  // helper used to exist (formerly line ~942) and was used throughout this component; reusing the
+  // name here would have shadowed it. It has since been removed in favor of dirColorN below.
   const prefDirColor = (dir) => directionColor(dir, prefs, PALETTE);
   const prefDirGlyph = (dir) => directionGlyph(dir, prefs);
+  // Numeric wrapper so every former `dirColor(n)` call site can become color-blind aware with a
+  // pure rename. In default mode this is byte-identical to the old numeric dirColor(n).
+  const dirColorN = (n) => prefDirColor(n > 0 ? "up" : n < 0 ? "down" : "flat");
   const [justApplied, setJustApplied] = useState(false);
   const [watchlist, setWatchlist] = useState(UNIVERSE.slice(0, 8).map(u => u.sym));
   const [selected, setSelected] = useState("AMD");
@@ -6680,7 +6684,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <span key={i} style={{ fontFamily: MONO, fontSize: 12, marginRight: 34 }}>
               <span style={{ color: C.amber, fontWeight: 600 }}>{r.sym}</span>{" "}
               <span style={{ color: C.text }}>{fmt(r.price)}</span>{" "}
-              <span style={{ color: dirColor(r.chg) }}>{r.chg > 0 ? "▲" : r.chg < 0 ? "▼" : "•"} {pct(r.chgPct)}</span>
+              <span style={{ color: dirColorN(r.chg) }}>{r.chg > 0 ? "▲" : r.chg < 0 ? "▼" : "•"} {pct(r.chgPct)}</span>
             </span>
           ))}
         </div>
@@ -7129,7 +7133,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 {deskPortfolio && (
                   <div style={{ display: "flex", flexDirection: "column", borderTop: (aiResponses.nav || deskCalendar) ? `1px solid ${C.panelEdge}` : "none" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderBottom: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.amber }}>
-                      <span>💼 PORTFOLIO {positions.length > 0 && <span style={{ color: dirColor(portTotals.pnl), marginLeft: 6 }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>}</span>
+                      <span>💼 PORTFOLIO {positions.length > 0 && <span style={{ color: dirColorN(portTotals.pnl), marginLeft: 6 }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>}</span>
                       <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
                         {positions.length > 0 && <button onClick={briefPortfolio} title="Read on air" style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.amber, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶ read</button>}
                         <button onClick={() => setDeskPortfolio(false)} aria-label="Close portfolio" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
@@ -7147,14 +7151,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                           <button onClick={() => setSelected(r.sym)} style={{ background: "transparent", border: "none", color: C.text, fontFamily: MONO, fontSize: 11, fontWeight: 600, textAlign: "left", cursor: "pointer", padding: 0 }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 9 }}>×{r.shares}</span></button>
                           <span style={{ textAlign: "right", color: C.muted, fontSize: 10 }}>{fmt(r.cost / r.shares)}→{r.price != null ? fmt(r.price) : "—"}</span>
                           <span style={{ textAlign: "right", color: C.text }}>{r.val != null ? fmt(r.val) : "—"}</span>
-                          <span style={{ textAlign: "right", color: dirColor(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}{r.pnlPct != null ? <span style={{ fontSize: 9, display: "block", color: dirColor(r.pnl) }}>{r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%</span> : null}</span>
+                          <span style={{ textAlign: "right", color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}{r.pnlPct != null ? <span style={{ fontSize: 9, display: "block", color: dirColorN(r.pnl) }}>{r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%</span> : null}</span>
                           <button onClick={() => removePosition(r.id)} aria-label="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 11 }}>✕</button>
                         </div>
                       ))}
                       {positions.length > 0 && (
                         <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0 2px", fontFamily: MONO, fontSize: 11, fontWeight: 700 }}>
                           <span style={{ color: C.muted }}>TOTAL · {fmt(portTotals.val)}</span>
-                          <span style={{ color: dirColor(portTotals.pnl) }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>
+                          <span style={{ color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>
                         </div>
                       )}
                       <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
@@ -7450,7 +7454,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 600, color: on ? C.amber : C.text }}>{s}</span>
                 <span style={{ textAlign: "right" }}>
                   <div style={{ fontFamily: MONO, fontSize: 12, color: C.text }}>{fmt(r.price)}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 10, color: dirColor(r.chg) }}>{pct(r.chgPct)}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 10, color: dirColorN(r.chg) }}>{pct(r.chgPct)}</div>
                 </span>
               </button>
             );
@@ -7467,9 +7471,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               <span style={{ fontFamily: SANS, fontWeight: 800, fontSize: 26, letterSpacing: "0.04em" }}>{selected}</span>
               {selectedRow?.name && <span style={{ color: C.muted, fontSize: 12 }}>{selectedRow.name}</span>}
               <span style={{ fontFamily: MONO, fontSize: 26, fontWeight: 600, color: accent }}>{selectedRow?.chg != null && prefDirGlyph(chgDir) ? `${prefDirGlyph(chgDir)} ` : ""}{fmt(selectedRow?.price)}</span>
-              <span style={{ fontFamily: MONO, fontSize: 13, color: live && liveBad[selected] ? C.down : dirColor(selectedRow?.chg) }}>
+              <span style={{ fontFamily: MONO, fontSize: 13, color: live && liveBad[selected] ? C.down : dirColorN(selectedRow?.chg) }}>
                 {selectedRow?.chg != null
-                  ? `${selectedRow.chg >= 0 ? "+" : ""}${fmt(selectedRow.chg)} (${pct(selectedRow.chgPct)})`
+                  ? `${prefDirGlyph(chgDir) ? prefDirGlyph(chgDir) + " " : ""}${selectedRow.chg >= 0 ? "+" : ""}${fmt(selectedRow.chg)} (${pct(selectedRow.chgPct)})`
                   : live && liveBad[selected] ? "unrecognized symbol" : "waiting for data…"}
               </span>
               {liveStale && (
@@ -7546,9 +7550,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", color: C.muted }}>{label}</div>
                 <div style={{
                   fontFamily: MONO, fontSize: 15, fontWeight: 600, marginTop: 3,
-                  color: label.startsWith("CHANGE") ? dirColor(val) : C.text,
+                  color: label.startsWith("CHANGE") ? dirColorN(val) : C.text,
                 }}>
-                  {label === "CHANGE %" ? pct(val) : fmt(val)}
+                  {label.startsWith("CHANGE") && prefDirGlyph(val > 0 ? "up" : val < 0 ? "down" : "flat") ? `${prefDirGlyph(val > 0 ? "up" : val < 0 ? "down" : "flat")} ` : ""}{label === "CHANGE %" ? pct(val) : fmt(val)}
                 </div>
               </div>
             ))}
@@ -7567,11 +7571,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               style={{ display: "block", width: "100%", padding: "10px 12px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{r.sym}</span>
-                <span style={{ fontFamily: MONO, fontSize: 12, color: dirColor(r.chg) }}>{pct(r.chgPct)}</span>
+                <span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.chg) }}>{prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat") ? `${prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat")} ` : ""}{pct(r.chgPct)}</span>
               </div>
               <div style={{ height: 3, background: C.grid, borderRadius: 2, marginTop: 6 }}>
                 <div style={{
-                  height: 3, borderRadius: 2, background: dirColor(r.chg),
+                  height: 3, borderRadius: 2, background: dirColorN(r.chg),
                   width: `${Math.min(100, Math.abs(r.chgPct) * 22)}%`,
                 }} />
               </div>
@@ -7648,7 +7652,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted }}>💼 PORTFOLIO</span>
               {positions.length > 0 && (
                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 11, color: dirColor(portTotals.pnl) }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>
+                  <span style={{ fontFamily: MONO, fontSize: 11, color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>
                   <button onClick={briefPortfolio} title="Anchor briefs your portfolio" style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.amber, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶</button>
                 </span>
               )}
@@ -7658,11 +7662,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 style={{ display: "block", width: "100%", padding: "8px 12px", background: "transparent", border: "none", borderTop: `1px solid ${C.grid}`, cursor: "pointer", textAlign: "left" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 10 }}>×{r.shares}</span></span>
-                  <span style={{ fontFamily: MONO, fontSize: 11, color: dirColor(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 11, color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
                   <span style={{ fontFamily: MONO, fontSize: 9, color: C.faint }}>@{fmt(r.cost / r.shares)} → {r.price != null ? fmt(r.price) : "—"}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: dirColor(r.pnl) }}>{r.pnlPct == null ? "" : `${r.pnlPct >= 0 ? "+" : ""}${r.pnlPct.toFixed(1)}%`}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 9, color: dirColorN(r.pnl) }}>{r.pnlPct == null ? "" : `${r.pnlPct >= 0 ? "+" : ""}${r.pnlPct.toFixed(1)}%`}</span>
                   <span onClick={e => { e.stopPropagation(); removePosition(r.id); }} style={{ fontFamily: MONO, fontSize: 10, color: C.faint, cursor: "pointer" }}>✕</span>
                 </div>
               </button>
