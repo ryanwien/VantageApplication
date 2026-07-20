@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./localProof.js";
+import { isLocalModel, isPrivacyLocal, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./localProof.js";
 
 const ollama = { id: "ollama", kind: "ollama", baseUrl: "http://localhost:11434", enabled: true };
 const lmstudio = { id: "lmstudio", kind: "openai", baseUrl: "http://localhost:1234/v1", enabled: true };
@@ -62,6 +62,54 @@ describe("bannerState", () => {
 
   it("reports none for an empty list", () => {
     expect(bannerState([])).toEqual({ kind: "none" });
+  });
+
+  it("reports local for an ollama model whose baseUrl is actually loopback", () => {
+    expect(bannerState([ollama])).toEqual({ kind: "local" });
+  });
+
+  it("reports cloud for an ollama model pointed at a remote baseUrl, even though kind is ollama", () => {
+    const remoteOllama = { id: "ollama", kind: "ollama", baseUrl: "https://my-ollama.example.com", enabled: true };
+    expect(bannerState([remoteOllama])).toEqual({ kind: "cloud" });
+  });
+});
+
+describe("isPrivacyLocal", () => {
+  it("treats an ollama model at localhost as privacy-local", () => {
+    expect(isPrivacyLocal(ollama)).toBe(true);
+  });
+
+  it("does NOT treat a remote-hosted ollama model as privacy-local, regardless of kind", () => {
+    const remoteOllama = { id: "ollama", kind: "ollama", baseUrl: "https://my-ollama.example.com", enabled: true };
+    expect(isPrivacyLocal(remoteOllama)).toBe(false);
+  });
+
+  it("treats LM Studio at localhost as privacy-local", () => {
+    expect(isPrivacyLocal(lmstudio)).toBe(true);
+  });
+
+  it("treats a scheme-less loopback baseUrl as privacy-local", () => {
+    expect(isPrivacyLocal({ kind: "openai", baseUrl: "localhost:11434" })).toBe(true);
+  });
+
+  it("treats the IPv6 loopback hostname as privacy-local", () => {
+    expect(isPrivacyLocal({ kind: "openai", baseUrl: "http://[::1]:8000/v1" })).toBe(true);
+  });
+
+  it("treats a remote baseUrl as not privacy-local", () => {
+    expect(isPrivacyLocal(openrouter)).toBe(false);
+  });
+
+  it("treats a malformed baseUrl as not privacy-local, without throwing", () => {
+    expect(() => isPrivacyLocal({ kind: "ollama", baseUrl: "http://" })).not.toThrow();
+    expect(isPrivacyLocal({ kind: "ollama", baseUrl: "http://" })).toBe(false);
+    expect(isPrivacyLocal({ kind: "ollama", baseUrl: "not a url at all :::" })).toBe(false);
+  });
+
+  it("is falsy-safe", () => {
+    expect(isPrivacyLocal(null)).toBeFalsy();
+    expect(isPrivacyLocal(undefined)).toBeFalsy();
+    expect(isPrivacyLocal({})).toBeFalsy();
   });
 });
 

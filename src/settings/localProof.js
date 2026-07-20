@@ -17,18 +17,36 @@ function hostnameOf(baseUrl) {
   }
 }
 
+// True when the model's baseUrl hostname is exactly a loopback address.
+function isLoopbackBaseUrl(m) {
+  return !!(m && m.baseUrl && LOOPBACK_HOSTNAMES.has(hostnameOf(m.baseUrl)));
+}
+
 // A model is local when it is Ollama, or when its baseUrl's hostname is
 // exactly a loopback address. A substring match would misclassify remote
 // hosts such as "https://notlocalhost.evil.com" as local.
-export const isLocalModel = (m) =>
-  !!(m && (m.kind === "ollama" || (m.baseUrl && LOOPBACK_HOSTNAMES.has(hostnameOf(m.baseUrl)))));
+//
+// NOTE: the `kind === "ollama"` shortcut means this is a "would default to a
+// local-style keyless model" check, not a privacy guarantee — the Ollama
+// Base URL is user-editable and can point at a remote host. Used by
+// pickLocalModel(), where "any Ollama" is the correct meaning. Do NOT use
+// this for the privacy banner — see isPrivacyLocal below.
+export const isLocalModel = (m) => !!(m && (m.kind === "ollama" || isLoopbackBaseUrl(m)));
+
+// True ONLY when the model's baseUrl hostname is an actual loopback address.
+// Unlike isLocalModel, this has no kind-based shortcut: a remote-hosted
+// Ollama (baseUrl pointed at a non-loopback host) correctly returns false.
+// This is the predicate the privacy banner must use — claiming "nothing
+// leaves this device" based on kind alone would be false whenever a user
+// points the Ollama Base URL at a remote host.
+export const isPrivacyLocal = (m) => isLoopbackBaseUrl(m);
 
 // Which banner the AI tab shows. Derived on every render from aiModels, so it
 // cannot drift from the actual model configuration.
 export function bannerState(aiModels) {
   const enabled = (aiModels || []).filter((m) => m && m.enabled);
   if (enabled.length === 0) return { kind: "none" };
-  return { kind: enabled.every(isLocalModel) ? "local" : "cloud" };
+  return { kind: enabled.every(isPrivacyLocal) ? "local" : "cloud" };
 }
 
 // Residency from Ollama GET /api/ps. Reports only what the API actually knows:

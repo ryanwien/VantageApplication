@@ -8131,7 +8131,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         return (
                           <div key={pm.name} style={{ display: "flex", gap: 10, alignItems: "center" }}>
                             <span style={{ color: C.text }}>{pm.name}</span>
-                            <span>{(pm.size / 1e9).toFixed(1)} GB</span>
+                            {Number.isFinite(pm.size) && pm.size > 0 && <span>{(pm.size / 1e9).toFixed(1)} GB</span>}
                             {res && <span style={{ color: res.cpuOnly ? C.amber : C.up }}>{res.label}</span>}
                             {tps && <span>{tps} tok/s</span>}
                           </div>
