@@ -4,6 +4,7 @@ import {
 } from "recharts";
 import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
 import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./src/settings/localProof.js";
+import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled, coerceRefreshMs } from "./src/settings/preferences.js";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -3455,6 +3456,23 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [keyDraft, setKeyDraft] = useState(loadFinnhubKey);
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState("quick");
+  // ---- persisted prefs (Settings Bundle B): one object at localStorage["tape-prefs"], migrating the
+  // legacy localStorage["tape-breaking"] flag on first load. See src/settings/preferences.js. ----
+  const [prefs, setPrefs] = useState(() => {
+    if (typeof window === "undefined") return DEFAULT_PREFS;
+    return loadPrefs(window.localStorage.getItem("tape-prefs"), window.localStorage.getItem("tape-breaking"));
+  });
+  const setPref = (key, value) => setPrefs((p) => ({ ...p, [key]: value }));
+  useEffect(() => {
+    try { window.localStorage.setItem("tape-prefs", JSON.stringify(prefs)); } catch { /* storage full/blocked */ }
+  }, [prefs]);
+
+  const PALETTE = { up: C.up, down: C.down, flat: C.faint };
+  // Named prefDirColor/prefDirGlyph (not dirColor/dirGlyph) — a module-scope `dirColor(n)` numeric
+  // helper already exists (line ~942) and is used throughout this component; reusing the name here
+  // would shadow it and silently break every existing color-coded value in this component.
+  const prefDirColor = (dir) => directionColor(dir, prefs, PALETTE);
+  const prefDirGlyph = (dir) => directionGlyph(dir, prefs);
   const [justApplied, setJustApplied] = useState(false);
   const [watchlist, setWatchlist] = useState(UNIVERSE.slice(0, 8).map(u => u.sym));
   const [selected, setSelected] = useState("AMD");
