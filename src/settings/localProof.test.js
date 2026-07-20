@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isLocalModel, bannerState, gpuResidency, throughput } from "./localProof.js";
+import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./localProof.js";
 
 const ollama = { id: "ollama", kind: "ollama", baseUrl: "http://localhost:11434", enabled: true };
 const lmstudio = { id: "lmstudio", kind: "openai", baseUrl: "http://localhost:1234/v1", enabled: true };
@@ -106,5 +106,39 @@ describe("throughput", () => {
     expect(throughput({})).toBeNull();
     expect(throughput({ eval_count: 10, eval_duration: 0 })).toBeNull();
     expect(throughput(null)).toBeNull();
+  });
+});
+
+describe("snapshotEnabled / restoreEnabled", () => {
+  const models = [
+    { id: "ollama", kind: "ollama", baseUrl: "http://localhost:11434", enabled: false, apiKey: "" },
+    { id: "openrouter", kind: "openai", baseUrl: "https://openrouter.ai/api/v1", enabled: true, apiKey: "sk-or-secret" },
+  ];
+
+  it("captures only the enabled flags", () => {
+    expect(snapshotEnabled(models)).toEqual({ ollama: false, openrouter: true });
+  });
+
+  it("restores the previous enabled flags", () => {
+    const snap = snapshotEnabled(models);
+    const soloed = models.map((m) => ({ ...m, enabled: m.id === "ollama" }));
+    const restored = restoreEnabled(soloed, snap);
+    expect(restored.map((m) => m.enabled)).toEqual([false, true]);
+  });
+
+  it("PRESERVES API KEYS through a snapshot/solo/restore cycle", () => {
+    // The regression that matters most: a demo preset must never cost a user
+    // their credentials.
+    const snap = snapshotEnabled(models);
+    const soloed = models.map((m) => ({ ...m, enabled: m.id === "ollama" }));
+    const restored = restoreEnabled(soloed, snap);
+    expect(restored.find((m) => m.id === "openrouter").apiKey).toBe("sk-or-secret");
+    expect(soloed.find((m) => m.id === "openrouter").apiKey).toBe("sk-or-secret");
+  });
+
+  it("leaves models absent from the snapshot untouched", () => {
+    const restored = restoreEnabled(models, { ollama: true });
+    expect(restored.find((m) => m.id === "openrouter").enabled).toBe(true);
+    expect(restored.find((m) => m.id === "ollama").enabled).toBe(true);
   });
 });

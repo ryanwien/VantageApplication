@@ -48,3 +48,19 @@ export function throughput(chunk) {
   if (!chunk || !chunk.eval_count || !chunk.eval_duration) return null;
   return Math.round(chunk.eval_count / (chunk.eval_duration / 1e9));
 }
+
+// Capture which models were enabled, so "run local-only" can be undone.
+// Only the enabled flag is recorded — API keys are never read or written here.
+export function snapshotEnabled(aiModels) {
+  const snap = {};
+  for (const m of aiModels || []) snap[m.id] = !!m.enabled;
+  return snap;
+}
+
+// Re-apply a snapshot. Models missing from the snapshot keep their current flag.
+export function restoreEnabled(aiModels, snapshot) {
+  if (!snapshot) return aiModels;
+  return (aiModels || []).map((m) =>
+    Object.prototype.hasOwnProperty.call(snapshot, m.id) ? { ...m, enabled: snapshot[m.id] } : m
+  );
+}
