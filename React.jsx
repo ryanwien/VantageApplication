@@ -171,7 +171,7 @@ const I18N = {
     "skip — I'll explore on my own": "omitir — exploraré por mi cuenta",
     // DATA tab
     "PANELS": "PANELES", "ticker tape": "cinta de cotizaciones", "watchlist": "lista de seguimiento", "top movers": "mayores movimientos", "news & video": "noticias y vídeo", "calendar": "calendario", "portfolio": "cartera",
-    "breaking-news alerts during live trading": "alertas de última hora durante la negociación en directo",
+    "in-app alerts": "alertas en la aplicación", "price triggers": "activadores de precio", "breaking news": "última hora",
     "color-blind mode (blue/orange + ▲▼)": "modo para daltónicos (azul/naranja + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "modo privacidad — difuminar saldos (Mayús+P)",
     "hidden": "oculto",
@@ -314,7 +314,7 @@ const I18N = {
     "skip — I'll explore on my own": "passer — je vais explorer par moi-même",
     // DATA tab
     "PANELS": "PANNEAUX", "ticker tape": "bandeau de cotation", "watchlist": "liste de suivi", "top movers": "plus fortes variations", "news & video": "actualités et vidéo", "calendar": "calendrier", "portfolio": "portefeuille",
-    "breaking-news alerts during live trading": "alertes de dernière minute pendant la séance en direct",
+    "in-app alerts": "alertes dans l'application", "price triggers": "seuils de prix", "breaking news": "dernière minute",
     "color-blind mode (blue/orange + ▲▼)": "mode daltonien (bleu/orange + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "mode privé — flouter les soldes (Maj+P)",
     "hidden": "masqué",
@@ -457,7 +457,7 @@ const I18N = {
     "skip — I'll explore on my own": "überspringen — ich erkunde selbst",
     // DATA tab
     "PANELS": "PANELS", "ticker tape": "Kursband", "watchlist": "Beobachtungsliste", "top movers": "größte Bewegungen", "news & video": "Nachrichten & Video", "calendar": "Kalender", "portfolio": "Portfolio",
-    "breaking-news alerts during live trading": "Eilmeldungen während des Live-Handels",
+    "in-app alerts": "In-App-Benachrichtigungen", "price triggers": "Preisauslöser", "breaking news": "Eilmeldungen",
     "color-blind mode (blue/orange + ▲▼)": "Modus für Farbenblindheit (Blau/Orange + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "Privatsphärenmodus — Salden verwischen (Umschalt+P)",
     "hidden": "ausgeblendet",
@@ -599,7 +599,7 @@ const I18N = {
     "skip — I'll explore on my own": "ignorar — vou explorar sozinho",
     // DATA tab
     "PANELS": "PAINÉIS", "ticker tape": "fita de cotações", "watchlist": "lista de acompanhamento", "top movers": "maiores variações", "news & video": "notícias e vídeo", "calendar": "calendário", "portfolio": "carteira",
-    "breaking-news alerts during live trading": "alertas de última hora durante a negociação ao vivo",
+    "in-app alerts": "alertas no aplicativo", "price triggers": "gatilhos de preço", "breaking news": "última hora",
     "color-blind mode (blue/orange + ▲▼)": "modo para daltônicos (azul/laranja + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "modo privacidade — desfocar saldos (Shift+P)",
     "hidden": "oculto",
@@ -741,7 +741,7 @@ const I18N = {
     "skip — I'll explore on my own": "salta — esplorerò da solo",
     // DATA tab
     "PANELS": "PANNELLI", "ticker tape": "nastro delle quotazioni", "watchlist": "lista di osservazione", "top movers": "maggiori variazioni", "news & video": "notizie e video", "calendar": "calendario", "portfolio": "portafoglio",
-    "breaking-news alerts during live trading": "avvisi dell'ultima ora durante la contrattazione in diretta",
+    "in-app alerts": "avvisi nell'app", "price triggers": "soglie di prezzo", "breaking news": "ultima ora",
     "color-blind mode (blue/orange + ▲▼)": "modalità per daltonici (blu/arancione + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "modalità privacy — sfoca i saldi (Maiusc+P)",
     "hidden": "nascosto",
@@ -4998,8 +4998,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }, [selected, completeMission]);
 
   // ---- breaking-news alerts during live trading (real Finnhub wire when live, market-move alerts otherwise) ----
-  const [breakingOn, setBreakingOn] = useState(() => (typeof window === "undefined" ? true : window.localStorage.getItem("tape-breaking") !== "off"));
-  useEffect(() => { window.localStorage?.setItem?.("tape-breaking", breakingOn ? "on" : "off"); }, [breakingOn]);
+  // gated on prefs.notify.breakingNews (Settings Bundle B) — legacy localStorage["tape-breaking"] is
+  // migrated into prefs by loadPrefs on first load; see src/settings/preferences.js.
   const [breakingAlert, setBreakingAlert] = useState(null); // { id, text, source }
   const breakingSeenRef = useRef(new Set());
   const breakingTimerRef = useRef(null);
@@ -5012,7 +5012,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     breakingTimerRef.current = setTimeout(() => setBreakingAlert(a => (a && a.id === id ? null : a)), 16000);
   }, [speak, playBreakingSfx]);
   const runBreakingCheck = useCallback(async () => {
-    if (!breakingOn) return;
+    if (!notifyEnabled(prefs, "breakingNews")) return;
     const { day, mins } = etNow();
     const marketOpen = day >= 1 && day <= 5 && mins >= 570 && mins < 960; // 9:30–16:00 ET weekdays
     if (!live || !marketOpen) return; // only during genuine live trading — live data AND market open (not demo, not after hours)
@@ -5036,13 +5036,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         pushBreaking(`${mover.sym} ${mover.chgPct >= 0 ? "surges" : "slides"} ${Math.abs(mover.chgPct).toFixed(1)}% ${mover.chgPct >= 0 ? "higher" : "lower"} in the session`, "market tape");
       }
     }
-  }, [breakingOn, live, apiKey, selected, watchlist, getRow, pushBreaking]);
+  }, [prefs.notify.breakingNews, live, apiKey, selected, watchlist, getRow, pushBreaking]);
   useEffect(() => {
-    if (!breakingOn) { setBreakingAlert(null); return; }
+    if (!notifyEnabled(prefs, "breakingNews")) { setBreakingAlert(null); return; }
     const first = setTimeout(runBreakingCheck, 9000);   // one shortly after load
     const iv = setInterval(runBreakingCheck, 85000);     // then periodically
     return () => { clearTimeout(first); clearInterval(iv); clearTimeout(breakingTimerRef.current); };
-  }, [breakingOn, runBreakingCheck]);
+  }, [prefs.notify.breakingNews, runBreakingCheck]);
 
   // ---- calendar reminders: when a scheduled event's time arrives, break in like breaking news ----
   const calRemindedRef = useRef(new Set());
@@ -5109,6 +5109,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }, [speak, playBreakingSfx]);
   useEffect(() => {
     if (!priceAlerts.length) return;
+    if (!notifyEnabled(prefs, "priceTriggers")) return;
     const check = () => {
       for (const a of priceAlerts) {
         const row = getRow(a.sym);
@@ -5119,7 +5120,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     };
     const iv = setInterval(check, 3000); check();
     return () => clearInterval(iv);
-  }, [priceAlerts, getRow, firePriceAlert]);
+  }, [priceAlerts, getRow, firePriceAlert, prefs.notify.priceTriggers]);
 
   // ---- market events: upcoming earnings dates for your watchlist, merged into the calendar ----
   const [marketEvents, setMarketEvents] = useState([]);
@@ -8045,10 +8046,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         </label>
                       ))}
                     </div>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: MONO, fontSize: 11, color: breakingOn ? C.text : C.faint, cursor: "pointer" }}>
-                      <input type="checkbox" checked={breakingOn} onChange={() => setBreakingOn(v => !v)} />
-                      ⚡ {t("breaking-news alerts during live trading")}
-                    </label>
+                    <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.muted }}>{t("in-app alerts")}</div>
+                    {[["priceTriggers", "price triggers"], ["breakingNews", "breaking news"]].map(([key, label]) => (
+                      <label key={key} style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontFamily: MONO, fontSize: 11, color: prefs.notify[key] ? C.text : C.faint, cursor: "pointer" }}>
+                        <input type="checkbox" checked={prefs.notify[key]}
+                          onChange={() => setPref("notify", { ...prefs.notify, [key]: !prefs.notify[key] })} />
+                        {t(label)}
+                      </label>
+                    ))}
                     <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.text, cursor: "pointer" }}>
                       <input type="checkbox" checked={prefs.colorBlind} onChange={() => setPref("colorBlind", !prefs.colorBlind)} />
                       {t("color-blind mode (blue/orange + ▲▼)")}
