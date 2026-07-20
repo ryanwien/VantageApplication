@@ -173,6 +173,8 @@ const I18N = {
     "PANELS": "PANELES", "ticker tape": "cinta de cotizaciones", "watchlist": "lista de seguimiento", "top movers": "mayores movimientos", "news & video": "noticias y vídeo", "calendar": "calendario", "portfolio": "cartera",
     "breaking-news alerts during live trading": "alertas de última hora durante la negociación en directo",
     "color-blind mode (blue/orange + ▲▼)": "modo para daltónicos (azul/naranja + ▲▼)",
+    "privacy mode — blur balances (Shift+P)": "modo privacidad — difuminar saldos (Mayús+P)",
+    "hidden": "oculto",
     "CLOCK TIMEZONE": "ZONA HORARIA DEL RELOJ",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Ajusta el reloj de la cabecera. La insignia de mercado ABIERTO/CERRADO siempre sigue el horario del NYSE (hora del Este).",
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "EN DIRECTO",
@@ -313,6 +315,8 @@ const I18N = {
     "PANELS": "PANNEAUX", "ticker tape": "bandeau de cotation", "watchlist": "liste de suivi", "top movers": "plus fortes variations", "news & video": "actualités et vidéo", "calendar": "calendrier", "portfolio": "portefeuille",
     "breaking-news alerts during live trading": "alertes de dernière minute pendant la séance en direct",
     "color-blind mode (blue/orange + ▲▼)": "mode daltonien (bleu/orange + ▲▼)",
+    "privacy mode — blur balances (Shift+P)": "mode privé — flouter les soldes (Maj+P)",
+    "hidden": "masqué",
     "CLOCK TIMEZONE": "FUSEAU HORAIRE DE L'HORLOGE",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Règle l'horloge de l'en-tête. Le badge de marché OUVERT/FERMÉ suit toujours les heures du NYSE (heure de l'Est).",
     "replay tutorial": "revoir le tutoriel", "DEMO": "DÉMO", "LIVE": "EN DIRECT",
@@ -453,6 +457,8 @@ const I18N = {
     "PANELS": "PANELS", "ticker tape": "Kursband", "watchlist": "Beobachtungsliste", "top movers": "größte Bewegungen", "news & video": "Nachrichten & Video", "calendar": "Kalender", "portfolio": "Portfolio",
     "breaking-news alerts during live trading": "Eilmeldungen während des Live-Handels",
     "color-blind mode (blue/orange + ▲▼)": "Modus für Farbenblindheit (Blau/Orange + ▲▼)",
+    "privacy mode — blur balances (Shift+P)": "Privatsphärenmodus — Salden verwischen (Umschalt+P)",
+    "hidden": "ausgeblendet",
     "CLOCK TIMEZONE": "ZEITZONE DER UHR",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Stellt die Kopfzeilen-Uhr ein. Das OFFEN/GESCHLOSSEN-Abzeichen folgt immer den NYSE-Zeiten (Eastern).",
     "replay tutorial": "Tutorial wiederholen", "DEMO": "DEMO", "LIVE": "LIVE",
@@ -592,6 +598,8 @@ const I18N = {
     "PANELS": "PAINÉIS", "ticker tape": "fita de cotações", "watchlist": "lista de acompanhamento", "top movers": "maiores variações", "news & video": "notícias e vídeo", "calendar": "calendário", "portfolio": "carteira",
     "breaking-news alerts during live trading": "alertas de última hora durante a negociação ao vivo",
     "color-blind mode (blue/orange + ▲▼)": "modo para daltônicos (azul/laranja + ▲▼)",
+    "privacy mode — blur balances (Shift+P)": "modo privacidade — desfocar saldos (Shift+P)",
+    "hidden": "oculto",
     "CLOCK TIMEZONE": "FUSO HORÁRIO DO RELÓGIO",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Define o relógio do cabeçalho. O crachá de mercado ABERTO/FECHADO segue sempre o horário da NYSE (hora do Leste).",
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "AO VIVO",
@@ -731,6 +739,8 @@ const I18N = {
     "PANELS": "PANNELLI", "ticker tape": "nastro delle quotazioni", "watchlist": "lista di osservazione", "top movers": "maggiori variazioni", "news & video": "notizie e video", "calendar": "calendario", "portfolio": "portafoglio",
     "breaking-news alerts during live trading": "avvisi dell'ultima ora durante la contrattazione in diretta",
     "color-blind mode (blue/orange + ▲▼)": "modalità per daltonici (blu/arancione + ▲▼)",
+    "privacy mode — blur balances (Shift+P)": "modalità privacy — sfoca i saldi (Maiusc+P)",
+    "hidden": "nascosto",
     "CLOCK TIMEZONE": "FUSO ORARIO DELL'OROLOGIO",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Imposta l'orologio dell'intestazione. Il badge di mercato APERTO/CHIUSO segue sempre gli orari del NYSE (ora orientale).",
     "replay tutorial": "rivedi il tutorial", "DEMO": "DEMO", "LIVE": "IN DIRETTA",
@@ -3470,6 +3480,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   useEffect(() => {
     try { window.localStorage.setItem("tape-prefs", JSON.stringify(prefs)); } catch { /* storage full/blocked */ }
   }, [prefs]);
+  // Privacy mode hotkey: Shift+P toggles prefs.privacy, ignored while typing so a capital P in the
+  // ticker box or a chat field doesn't blur the screen.
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = (e.target && e.target.tagName) || "";
+      if (tag === "INPUT" || tag === "TEXTAREA" || e.target?.isContentEditable) return;
+      if (e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && (e.key === "P" || e.key === "p")) { e.preventDefault(); setPref("privacy", !prefs.privacy); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [prefs.privacy]);
 
   // flat: C.muted (not C.faint) — matches the zero-case color the old numeric dirColor(n) used,
   // so prefDirColor/dirColorN reproduce the exact default palette in non-colorblind mode.
@@ -3482,6 +3503,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // Numeric wrapper so every former `dirColor(n)` call site can become color-blind aware with a
   // pure rename. In default mode this is byte-identical to the old numeric dirColor(n).
   const dirColorN = (n) => prefDirColor(n > 0 ? "up" : n < 0 ? "down" : "flat");
+  // Privacy mode: blur (not remove) sensitive money figures so layout never shifts. Wrap portfolio
+  // totals, per-position P&L/%, and $ amounts with priv(...) wherever they render.
+  const privacyStyle = prefs.privacy ? { filter: "blur(8px)", userSelect: "none" } : null;
+  const priv = (node) => <span style={privacyStyle} aria-label={prefs.privacy ? t("hidden") : undefined}>{node}</span>;
   const [justApplied, setJustApplied] = useState(false);
   const [watchlist, setWatchlist] = useState(UNIVERSE.slice(0, 8).map(u => u.sym));
   const [selected, setSelected] = useState("AMD");
@@ -7133,7 +7158,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 {deskPortfolio && (
                   <div style={{ display: "flex", flexDirection: "column", borderTop: (aiResponses.nav || deskCalendar) ? `1px solid ${C.panelEdge}` : "none" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderBottom: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.amber }}>
-                      <span>💼 PORTFOLIO {positions.length > 0 && <span style={{ color: dirColorN(portTotals.pnl), marginLeft: 6 }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>}</span>
+                      <span>💼 PORTFOLIO {positions.length > 0 && priv(<span style={{ color: dirColorN(portTotals.pnl), marginLeft: 6 }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}</span>
                       <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
                         {positions.length > 0 && <button onClick={briefPortfolio} title="Read on air" style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.amber, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶ read</button>}
                         <button onClick={() => setDeskPortfolio(false)} aria-label="Close portfolio" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
@@ -7149,16 +7174,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       {portfolioRows.map(r => (
                         <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 4, alignItems: "center", fontFamily: MONO, fontSize: 11, padding: "6px 0", borderBottom: `1px solid ${C.grid}` }}>
                           <button onClick={() => setSelected(r.sym)} style={{ background: "transparent", border: "none", color: C.text, fontFamily: MONO, fontSize: 11, fontWeight: 600, textAlign: "left", cursor: "pointer", padding: 0 }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 9 }}>×{r.shares}</span></button>
-                          <span style={{ textAlign: "right", color: C.muted, fontSize: 10 }}>{fmt(r.cost / r.shares)}→{r.price != null ? fmt(r.price) : "—"}</span>
-                          <span style={{ textAlign: "right", color: C.text }}>{r.val != null ? fmt(r.val) : "—"}</span>
-                          <span style={{ textAlign: "right", color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}{r.pnlPct != null ? <span style={{ fontSize: 9, display: "block", color: dirColorN(r.pnl) }}>{r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%</span> : null}</span>
+                          <span style={{ textAlign: "right", color: C.muted, fontSize: 10, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{fmt(r.cost / r.shares)}→{r.price != null ? fmt(r.price) : "—"}</span>
+                          <span style={{ textAlign: "right", color: C.text, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.val != null ? fmt(r.val) : "—"}</span>
+                          <span style={{ textAlign: "right", color: dirColorN(r.pnl), ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}{r.pnlPct != null ? <span style={{ fontSize: 9, display: "block", color: dirColorN(r.pnl) }}>{r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%</span> : null}</span>
                           <button onClick={() => removePosition(r.id)} aria-label="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 11 }}>✕</button>
                         </div>
                       ))}
                       {positions.length > 0 && (
                         <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0 2px", fontFamily: MONO, fontSize: 11, fontWeight: 700 }}>
-                          <span style={{ color: C.muted }}>TOTAL · {fmt(portTotals.val)}</span>
-                          <span style={{ color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>
+                          {priv(<span style={{ color: C.muted }}>TOTAL · {fmt(portTotals.val)}</span>)}
+                          {priv(<span style={{ color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}
                         </div>
                       )}
                       <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
@@ -7652,7 +7677,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted }}>💼 PORTFOLIO</span>
               {positions.length > 0 && (
                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 11, color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 11, color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}
                   <button onClick={briefPortfolio} title="Anchor briefs your portfolio" style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.amber, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶</button>
                 </span>
               )}
@@ -7662,11 +7687,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 style={{ display: "block", width: "100%", padding: "8px 12px", background: "transparent", border: "none", borderTop: `1px solid ${C.grid}`, cursor: "pointer", textAlign: "left" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 10 }}>×{r.shares}</span></span>
-                  <span style={{ fontFamily: MONO, fontSize: 11, color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 11, color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>)}
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: C.faint }}>@{fmt(r.cost / r.shares)} → {r.price != null ? fmt(r.price) : "—"}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: dirColorN(r.pnl) }}>{r.pnlPct == null ? "" : `${r.pnlPct >= 0 ? "+" : ""}${r.pnlPct.toFixed(1)}%`}</span>
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 9, color: C.faint }}>@{fmt(r.cost / r.shares)} → {r.price != null ? fmt(r.price) : "—"}</span>)}
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 9, color: dirColorN(r.pnl) }}>{r.pnlPct == null ? "" : `${r.pnlPct >= 0 ? "+" : ""}${r.pnlPct.toFixed(1)}%`}</span>)}
                   <span onClick={e => { e.stopPropagation(); removePosition(r.id); }} style={{ fontFamily: MONO, fontSize: 10, color: C.faint, cursor: "pointer" }}>✕</span>
                 </div>
               </button>
@@ -8021,6 +8046,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.text, cursor: "pointer" }}>
                       <input type="checkbox" checked={prefs.colorBlind} onChange={() => setPref("colorBlind", !prefs.colorBlind)} />
                       {t("color-blind mode (blue/orange + ▲▼)")}
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.text, cursor: "pointer" }}>
+                      <input type="checkbox" checked={prefs.privacy} onChange={() => setPref("privacy", !prefs.privacy)} />
+                      {t("privacy mode — blur balances (Shift+P)")}
                     </label>
                     <div style={{ marginTop: 14 }}>
                       <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("CLOCK TIMEZONE")}</label>
