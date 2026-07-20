@@ -36,3 +36,23 @@ export function loadPrefs(rawString, legacyBreaking) {
     notify,
   };
 }
+
+const CB_PALETTE = { up: "#3B82F6", down: "#F59E0B" };
+const GLYPH = { up: "▲", down: "▼" };
+
+// Resolve the up/down color. palette is the app's default { up, down, flat }.
+export function directionColor(dir, prefs, palette) {
+  if (dir !== "up" && dir !== "down") return palette.flat;
+  return prefs && prefs.colorBlind ? CB_PALETTE[dir] : palette[dir];
+}
+
+// Direction glyph — only in colorblind mode, only for up/down.
+export function directionGlyph(dir, prefs) {
+  if (!prefs || !prefs.colorBlind) return "";
+  return GLYPH[dir] || "";
+}
+
+// Is this in-app alert type enabled?
+export function notifyEnabled(prefs, type) {
+  return !!(prefs && prefs.notify && prefs.notify[type]);
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { DEFAULT_PREFS, loadPrefs, coerceRefreshMs } from "./preferences.js";
+import { DEFAULT_PREFS, loadPrefs, coerceRefreshMs, directionColor, directionGlyph, notifyEnabled } from "./preferences.js";
 
 describe("coerceRefreshMs", () => {
   it("accepts the four allowed values", () => {
@@ -52,5 +52,46 @@ describe("loadPrefs", () => {
     expect(loadPrefs('{"notify":"oops"}', "off").notify.breakingNews).toBe(false);
     expect(loadPrefs('{"notify":42}', "on").notify.breakingNews).toBe(true);
     expect(loadPrefs('{"notify":[1,2,3]}', "off").notify.breakingNews).toBe(false);
+  });
+});
+
+const PALETTE = { up: "#2FD37A", down: "#F6465D", flat: "#8A94A6" };
+
+describe("directionColor", () => {
+  it("returns the default palette when colorBlind is off", () => {
+    expect(directionColor("up", { colorBlind: false }, PALETTE)).toBe("#2FD37A");
+    expect(directionColor("down", { colorBlind: false }, PALETTE)).toBe("#F6465D");
+  });
+  it("returns the colorblind-safe palette when on", () => {
+    expect(directionColor("up", { colorBlind: true }, PALETTE)).toBe("#3B82F6");
+    expect(directionColor("down", { colorBlind: true }, PALETTE)).toBe("#F59E0B");
+  });
+  it("returns the flat/neutral color for unknown directions, never throws", () => {
+    expect(directionColor("sideways", { colorBlind: false }, PALETTE)).toBe("#8A94A6");
+    expect(directionColor(undefined, { colorBlind: true }, PALETTE)).toBe("#8A94A6");
+  });
+});
+
+describe("directionGlyph", () => {
+  it("emits no glyph in default mode", () => {
+    expect(directionGlyph("up", { colorBlind: false })).toBe("");
+    expect(directionGlyph("down", { colorBlind: false })).toBe("");
+  });
+  it("emits triangles in colorblind mode", () => {
+    expect(directionGlyph("up", { colorBlind: true })).toBe("▲");
+    expect(directionGlyph("down", { colorBlind: true })).toBe("▼");
+    expect(directionGlyph("flat", { colorBlind: true })).toBe("");
+  });
+});
+
+describe("notifyEnabled", () => {
+  it("reads the per-type flag", () => {
+    const p = { notify: { priceTriggers: true, breakingNews: false } };
+    expect(notifyEnabled(p, "priceTriggers")).toBe(true);
+    expect(notifyEnabled(p, "breakingNews")).toBe(false);
+  });
+  it("defaults missing types to false, never throws", () => {
+    expect(notifyEnabled({}, "priceTriggers")).toBe(false);
+    expect(notifyEnabled(null, "breakingNews")).toBe(false);
   });
 });
