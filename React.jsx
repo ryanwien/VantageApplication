@@ -177,6 +177,7 @@ const I18N = {
     "hidden": "oculto",
     "CLOCK TIMEZONE": "ZONA HORARIA DEL RELOJ",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Ajusta el reloj de la cabecera. La insignia de mercado ABIERTO/CERRADO siempre sigue el horario del NYSE (hora del Este).",
+    "refresh interval": "intervalo de actualización", "Manual": "Manual", "refresh now": "actualizar ahora",
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "EN DIRECTO",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "El modo demo ejecuta un motor de mercado de paseo aleatorio con semilla — una sesión simulada reproducible, sin clave ni red.",
     "FINNHUB API KEY (free tier works)": "CLAVE API DE FINNHUB (el plan gratuito funciona)", "paste key": "pega la clave",
@@ -319,6 +320,7 @@ const I18N = {
     "hidden": "masqué",
     "CLOCK TIMEZONE": "FUSEAU HORAIRE DE L'HORLOGE",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Règle l'horloge de l'en-tête. Le badge de marché OUVERT/FERMÉ suit toujours les heures du NYSE (heure de l'Est).",
+    "refresh interval": "intervalle d'actualisation", "Manual": "Manuel", "refresh now": "actualiser maintenant",
     "replay tutorial": "revoir le tutoriel", "DEMO": "DÉMO", "LIVE": "EN DIRECT",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "Le mode démo utilise un moteur de marché à marche aléatoire avec graine — une séance simulée reproductible, sans clé ni réseau.",
     "FINNHUB API KEY (free tier works)": "CLÉ API FINNHUB (l'offre gratuite suffit)", "paste key": "collez la clé",
@@ -461,6 +463,7 @@ const I18N = {
     "hidden": "ausgeblendet",
     "CLOCK TIMEZONE": "ZEITZONE DER UHR",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Stellt die Kopfzeilen-Uhr ein. Das OFFEN/GESCHLOSSEN-Abzeichen folgt immer den NYSE-Zeiten (Eastern).",
+    "refresh interval": "Aktualisierungsintervall", "Manual": "Manuell", "refresh now": "jetzt aktualisieren",
     "replay tutorial": "Tutorial wiederholen", "DEMO": "DEMO", "LIVE": "LIVE",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "Der Demo-Modus nutzt eine Random-Walk-Markt-Engine mit festem Startwert — eine reproduzierbare simulierte Sitzung, ohne Schlüssel oder Netzwerk.",
     "FINNHUB API KEY (free tier works)": "FINNHUB-API-SCHLÜSSEL (kostenlose Stufe genügt)", "paste key": "Schlüssel einfügen",
@@ -602,6 +605,7 @@ const I18N = {
     "hidden": "oculto",
     "CLOCK TIMEZONE": "FUSO HORÁRIO DO RELÓGIO",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Define o relógio do cabeçalho. O crachá de mercado ABERTO/FECHADO segue sempre o horário da NYSE (hora do Leste).",
+    "refresh interval": "intervalo de atualização", "Manual": "Manual", "refresh now": "atualizar agora",
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "AO VIVO",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "O modo demo usa um motor de mercado de passeio aleatório com semente — uma sessão simulada reproduzível, sem chave nem rede.",
     "FINNHUB API KEY (free tier works)": "CHAVE API FINNHUB (o plano gratuito funciona)", "paste key": "cole a chave",
@@ -743,6 +747,7 @@ const I18N = {
     "hidden": "nascosto",
     "CLOCK TIMEZONE": "FUSO ORARIO DELL'OROLOGIO",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Imposta l'orologio dell'intestazione. Il badge di mercato APERTO/CHIUSO segue sempre gli orari del NYSE (ora orientale).",
+    "refresh interval": "intervallo di aggiornamento", "Manual": "Manuale", "refresh now": "aggiorna ora",
     "replay tutorial": "rivedi il tutorial", "DEMO": "DEMO", "LIVE": "IN DIRETTA",
     "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "La modalità demo usa un motore di mercato a passeggiata casuale con seme — una sessione simulata riproducibile, senza chiave né rete.",
     "FINNHUB API KEY (free tier works)": "CHIAVE API FINNHUB (il piano gratuito funziona)", "paste key": "incolla la chiave",
@@ -3735,12 +3740,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       if (stopped) return;
       const hit429 = await pollLive();
       backoff = hit429 ? Math.min(backoff * 2, 8) : 1;
-      const base = liveStaleRef.current ? 60000 : 15000;
-      timer = setTimeout(run, Math.min(base * backoff, 5 * 60 * 1000));
+      const base = liveStaleRef.current ? 60000 : prefs.refreshMs;
+      // Manual mode (refreshMs === 0): poll once on entry (handled by run() above) and never reschedule.
+      if (prefs.refreshMs !== 0) timer = setTimeout(run, Math.min(base * backoff, 5 * 60 * 1000));
     };
     run();
     return () => { stopped = true; clearTimeout(timer); };
-  }, [live, pollLive]);
+  }, [live, pollLive, prefs.refreshMs]);
 
   // ---- unified view of a symbol ----
   const getRow = useCallback((sym) => {
@@ -8065,6 +8071,26 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6, lineHeight: 1.6 }}>
                         {t("Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.")}
                       </div>
+                    </div>
+                    <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.text }}>
+                      <div style={{ color: C.muted, marginBottom: 6 }}>{t("refresh interval")}</div>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {[["Manual", 0], ["5s", 5000], ["15s", 15000], ["30s", 30000]].map(([label, ms]) => (
+                          <button key={ms} onClick={() => setPref("refreshMs", coerceRefreshMs(ms))}
+                            style={{ flex: 1, padding: "6px 0", borderRadius: 4, cursor: "pointer", fontFamily: MONO, fontSize: 11,
+                              border: `1px solid ${prefs.refreshMs === ms ? C.amber : C.panelEdge}`,
+                              background: prefs.refreshMs === ms ? "rgba(255,179,0,0.08)" : "transparent",
+                              color: prefs.refreshMs === ms ? C.amber : C.muted }}>{ms === 0 ? t(label) : label}</button>
+                        ))}
+                      </div>
+                      {prefs.refreshMs === 0 && (
+                        <button onClick={() => pollLive()} disabled={!live}
+                          style={{ marginTop: 8, width: "100%", padding: "7px 0", borderRadius: 4, cursor: live ? "pointer" : "not-allowed",
+                            fontFamily: MONO, fontSize: 11, background: "transparent", border: `1px solid ${C.panelEdge}`,
+                            color: live ? C.muted : C.faint }}>
+                          ↻ {t("refresh now")}
+                        </button>
+                      )}
                     </div>
                     <button onClick={() => { setTutStep(0); setShowTutorial(true); setShowSettings(false); }}
                       style={{ marginTop: 12, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "7px 12px", cursor: "pointer" }}>
