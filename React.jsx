@@ -3,7 +3,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
-import { isLocalModel, bannerState } from "./src/settings/localProof.js";
+import { isLocalModel, bannerState, gpuResidency, throughput } from "./src/settings/localProof.js";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -193,6 +193,8 @@ const I18N = {
     "FULLY LOCAL · nothing leaves this device": "TOTALMENTE LOCAL · nada sale de este dispositivo",
     "CLOUD ENABLED · queries leave this device": "NUBE ACTIVADA · las consultas salen de este dispositivo",
     "no model enabled": "ningún modelo activado",
+    "telemetry unavailable — is the local server running?": "telemetría no disponible — ¿está el servidor local en ejecución?",
+    "no model loaded": "ningún modelo cargado",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Las respuestas de la mesa de IA requieren {plan}. Los modelos de abajo están desactivados hasta que mejores tu plan (o actives el modo desarrollador en CUENTA).",
     "{n} models enabled": "{n} modelos activados", "One model at a time": "Un modelo a la vez",
     "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Usa \"solo este\" para un único modelo, o activa varios — la mesa responde en un solo cuadro, probándolos de arriba abajo y recurriendo al siguiente si uno falla (p. ej. Claude → OpenRouter).",
@@ -330,6 +332,8 @@ const I18N = {
     "FULLY LOCAL · nothing leaves this device": "ENTIÈREMENT LOCAL · rien ne quitte cet appareil",
     "CLOUD ENABLED · queries leave this device": "CLOUD ACTIVÉ · les requêtes quittent cet appareil",
     "no model enabled": "aucun modèle activé",
+    "telemetry unavailable — is the local server running?": "télémétrie indisponible — le serveur local est-il en cours d'exécution ?",
+    "no model loaded": "aucun modèle chargé",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Les réponses du plateau IA nécessitent {plan}. Les modèles ci-dessous sont désactivés jusqu'à ce que vous passiez à l'offre supérieure (ou activiez le mode développeur dans COMPTE).",
     "{n} models enabled": "{n} modèles activés", "One model at a time": "Un modèle à la fois",
     "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Utilisez \"only this\" pour un seul modèle, ou activez-en plusieurs — le plateau répond dans une seule fenêtre, en les essayant de haut en bas et en passant au suivant si l'un échoue (par ex. Claude → OpenRouter).",
@@ -467,6 +471,8 @@ const I18N = {
     "FULLY LOCAL · nothing leaves this device": "VOLLSTÄNDIG LOKAL · nichts verlässt dieses Gerät",
     "CLOUD ENABLED · queries leave this device": "CLOUD AKTIVIERT · Anfragen verlassen dieses Gerät",
     "no model enabled": "kein Modell aktiviert",
+    "telemetry unavailable — is the local server running?": "Telemetrie nicht verfügbar — läuft der lokale Server?",
+    "no model loaded": "kein Modell geladen",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "KI-Pult-Antworten erfordern {plan}. Die Modelle unten sind deaktiviert, bis Sie upgraden (oder den Entwicklermodus in KONTO aktivieren).",
     "{n} models enabled": "{n} Modelle aktiviert", "One model at a time": "Ein Modell zur Zeit",
     "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Verwenden Sie \"only this\" für ein einzelnes Modell oder aktivieren Sie mehrere — das Pult antwortet in einem Feld, probiert sie von oben nach unten durch und wechselt zum nächsten, wenn eines fehlschlägt (z. B. Claude → OpenRouter).",
@@ -603,6 +609,8 @@ const I18N = {
     "FULLY LOCAL · nothing leaves this device": "TOTALMENTE LOCAL · nada sai deste dispositivo",
     "CLOUD ENABLED · queries leave this device": "NUVEM ATIVADA · as consultas saem deste dispositivo",
     "no model enabled": "nenhum modelo ativado",
+    "telemetry unavailable — is the local server running?": "telemetria indisponível — o servidor local está em execução?",
+    "no model loaded": "nenhum modelo carregado",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "As respostas da mesa de IA requerem {plan}. Os modelos abaixo estão desativados até fazer o upgrade (ou ativar o modo programador em CONTA).",
     "{n} models enabled": "{n} modelos ativados", "One model at a time": "Um modelo de cada vez",
     "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Use \"only this\" para um único modelo, ou ative vários — a mesa responde numa só caixa, testando-os de cima para baixo e recorrendo ao seguinte se um falhar (por ex. Claude → OpenRouter).",
@@ -739,6 +747,8 @@ const I18N = {
     "FULLY LOCAL · nothing leaves this device": "COMPLETAMENTE LOCALE · nulla lascia questo dispositivo",
     "CLOUD ENABLED · queries leave this device": "CLOUD ATTIVO · le richieste lasciano questo dispositivo",
     "no model enabled": "nessun modello attivato",
+    "telemetry unavailable — is the local server running?": "telemetria non disponibile — il server locale è in esecuzione?",
+    "no model loaded": "nessun modello caricato",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Le risposte della postazione IA richiedono {plan}. I modelli qui sotto sono disattivati finché non esegui l'upgrade (o attivi la modalità sviluppatore in ACCOUNT).",
     "{n} models enabled": "{n} modelli attivati", "One model at a time": "Un modello alla volta",
     "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Usa \"only this\" per un singolo modello, oppure attivane diversi — la postazione risponde in un unico riquadro, provandoli dall'alto in basso e passando al successivo se uno fallisce (es. Claude → OpenRouter).",
@@ -3555,6 +3565,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // resolve against earlier turns. Never sent anywhere except to the model the user picked.
   const DESK_MEMORY_MAX = 12; // last 6 exchanges
   const deskMemoryRef = useRef(null);
+  // last streamed Ollama chunk with done===true — feeds the settings telemetry strip's tok/s
+  const lastEvalRef = useRef(null);
   if (deskMemoryRef.current === null) {
     try { deskMemoryRef.current = JSON.parse(localStorage.getItem("tape-desk-memory") || "[]"); } catch { deskMemoryRef.current = []; }
   }
@@ -5261,6 +5273,31 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // load provider status whenever the Meetings tab is opened
   useEffect(() => { if (showSettings && settingsTab === "meetings") refreshMeetStatus(); }, [showSettings, settingsTab, refreshMeetStatus]);
 
+  // ---- inference telemetry: poll Ollama's /api/ps for which local model is loaded, how much
+  // sits in VRAM, and (once a question has been asked) tok/s. Only while the settings dialog is
+  // open on the MODELS tab — no background polling. Ollama never reports GPU vendor, so neither
+  // does this strip — see src/settings/localProof.js.
+  const [psInfo, setPsInfo] = useState(null); // { models: [...] } | "unavailable" | null
+  useEffect(() => {
+    if (!showSettings || settingsTab !== "models") return;
+    const local = pickLocalModel();
+    if (!local || local.kind !== "ollama") { setPsInfo(null); return; }
+    const base = (local.baseUrl || "http://localhost:11434").replace(/\/$/, "");
+    let alive = true;
+    const poll = async () => {
+      try {
+        const r = await fetch(`${base}/api/ps`);
+        const j = await r.json();
+        if (alive) setPsInfo(j && Array.isArray(j.models) ? j : { models: [] });
+      } catch {
+        if (alive) setPsInfo("unavailable"); // Ollama down or CORS-blocked
+      }
+    };
+    poll();
+    const id = setInterval(poll, 4000);
+    return () => { alive = false; clearInterval(id); };
+  }, [showSettings, settingsTab, aiModels]);
+
   // ---- billing (Layer 3): probe Stripe availability when the ACCOUNT tab opens ----
   // If the backend has Stripe keys, paid upgrades route through Stripe's hosted checkout.
   // Otherwise billingCfg.enabled stays false and paid plans unlock as a labelled simulation.
@@ -5677,7 +5714,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         try {
           const j = JSON.parse(line);
           if (j.message?.content) onToken(j.message.content);
-          if (j.done) return;
+          if (j.done) { lastEvalRef.current = { eval_count: j.eval_count, eval_duration: j.eval_duration }; return; }
         } catch { /* partial line */ }
       }
     }
@@ -8073,6 +8110,24 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       </div>
                     );
                   })()}
+                  {psInfo && (
+                    <div style={{ marginBottom: 14, fontFamily: MONO, fontSize: 10.5, color: C.muted, lineHeight: 1.7 }}>
+                      {psInfo === "unavailable" && <div style={{ color: C.faint }}>{t("telemetry unavailable — is the local server running?")}</div>}
+                      {psInfo !== "unavailable" && psInfo.models.length === 0 && <div style={{ color: C.faint }}>{t("no model loaded")}</div>}
+                      {psInfo !== "unavailable" && psInfo.models.map((pm) => {
+                        const res = gpuResidency(pm);
+                        const tps = throughput(lastEvalRef.current);
+                        return (
+                          <div key={pm.name} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                            <span style={{ color: C.text }}>{pm.name}</span>
+                            <span>{(pm.size / 1e9).toFixed(1)} GB</span>
+                            {res && <span style={{ color: res.cpuOnly ? C.amber : C.up }}>{res.label}</span>}
+                            {tps && <span>{tps} tok/s</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                   {!planAllows("ai") && (
                     <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.amber, background: "rgba(255,179,0,0.08)", border: `1px solid ${C.amber}`, borderRadius: 6, padding: "8px 10px" }}>
                       {lockChip("ai")} {t("AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).").replace("{plan}", planFor("ai"))}
