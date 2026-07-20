@@ -71,15 +71,14 @@ inference can run **entirely on a local model** — on an AMD Radeon GPU through
 
 ```mermaid
 flowchart LR
-    Q([Your question]) --> SPA[Vantage SPA<br/>?local=1]
+    Q([Your question]) --> SPA["Vantage SPA<br/>?local=1 · no cloud keys"]
     SPA --> SRV{Local server}
     SRV -->|Ollama| OLL[llama.cpp]
     SRV -->|vLLM| VLL[vLLM]
     OLL --> ROCM[ROCm runtime]
     VLL --> ROCM
-    ROCM --> GPU[/AMD Radeon GPU<br/>model 100% GPU-resident/]
-    GPU --> TOK[Streamed tokens] --> SPA
-    SPA -.no cloud keys · works offline.-> SPA
+    ROCM --> GPU["AMD Radeon GPU<br/>model 100% GPU-resident"]
+    GPU -->|streamed tokens| SPA
 
     classDef amd fill:#ED1C24,stroke:#000,color:#fff;
     class GPU,ROCM amd;
