@@ -6450,7 +6450,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const enabledCount = aiModels.filter(m => m.enabled).length;
 
   const chgDir = selectedRow?.chg > 0 ? "up" : selectedRow?.chg < 0 ? "down" : "flat";
-  const accent = selectedRow?.chg == null ? C.amber : prefDirColor(chgDir);
+  const accent = selectedRow?.chg == null ? C.amber : prefDirColor(selectedRow?.chg > 0 ? "up" : "down");
 
   // ---- ticker tape items (doubled for seamless loop) ----
   const tapeRows = watchlist.map(getRow).filter(Boolean);
