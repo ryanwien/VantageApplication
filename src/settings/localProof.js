@@ -30,3 +30,21 @@ export function bannerState(aiModels) {
   if (enabled.length === 0) return { kind: "none" };
   return { kind: enabled.every(isLocalModel) ? "local" : "cloud" };
 }
+
+// Residency from Ollama GET /api/ps. Reports only what the API actually knows:
+// how much of the model sits in VRAM. Ollama does not report GPU vendor, so no
+// vendor string is ever produced here — see the spec's "Vendor honesty" section.
+export function gpuResidency(psModel) {
+  if (!psModel || !psModel.size) return null;
+  const vram = psModel.size_vram || 0;
+  const pct = Math.round((vram / psModel.size) * 100);
+  if (pct === 0) return { label: "CPU-only", pct: 0, cpuOnly: true };
+  return { label: `${pct}% GPU-resident`, pct, cpuOnly: false };
+}
+
+// Tokens/sec from the final streaming chunk. Ollama reports eval_duration in
+// nanoseconds.
+export function throughput(chunk) {
+  if (!chunk || !chunk.eval_count || !chunk.eval_duration) return null;
+  return Math.round(chunk.eval_count / (chunk.eval_duration / 1e9));
+}
