@@ -9,6 +9,47 @@ studio voice, real meetings, accounts, subscriptions) is **optional** and layers
 
 ---
 
+## How it works
+
+Everything in the solid path runs in the browser. The backend is dotted because it is entirely
+optional — the app is fully usable without it.
+
+```mermaid
+flowchart TD
+    U([User]) --> UI[Vantage SPA<br/>React · runs in the browser]
+
+    UI --> DESK{AI desk<br/>model routing}
+    DESK -->|cloud| CLOUD[OpenRouter · Claude<br/>OpenAI · Gemini]
+    DESK -->|local| LOCAL[Ollama · vLLM · LM Studio<br/>localhost — AMD Radeon / ROCm]
+    CLOUD -.->|on failure, auto-retry| LOCAL
+
+    UI --> DATA{Market + media}
+    DATA -->|no key| DEMO[Demo mode<br/>seeded random-walk engine]
+    DATA -->|Finnhub| FH[Live quotes · earnings]
+    DATA -->|TMDB · YouTube| MEDIA[Trailers · video · catalog]
+
+    UI --> VOICE{Anchor voice}
+    VOICE -->|ElevenLabs key| EL[Studio-grade voice]
+    VOICE -->|no key| TTS[Browser text-to-speech]
+
+    UI <--> LS[(localStorage<br/>API keys · conversation memory)]
+
+    UI -.optional.-> BE[server/index.js<br/>Node backend]
+    BE -.-> AUTH[Accounts · OAuth sign-in]
+    BE -.-> MEET[Zoom · Google Meet]
+    BE -.-> PAY[Stripe subscriptions]
+```
+
+Two properties worth calling out:
+
+- **Keys and conversation memory never leave the device** — they live in `localStorage` and are sent
+  only to their own provider's API.
+- **The desk degrades instead of breaking.** No AI key → everything but answers still works. No
+  Finnhub key → demo market engine. No ElevenLabs key → browser speech. Cloud model fails → it
+  retries on your local model.
+
+---
+
 ## Quick start
 
 ```bash
