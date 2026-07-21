@@ -37,9 +37,26 @@ describe("detectCatalogIntent", () => {
   });
 
   it("does not hijack market-dashboard questions that merely use ambiguous words", () => {
+    expect(detectCatalogIntent("chart AMD and explain the move")).toBe(null);
+    expect(detectCatalogIntent("who owns AMD")).toBe(null);
     expect(detectCatalogIntent("show me a column chart of AMD")).toBe(null);
     expect(detectCatalogIntent("AMD is playing table stakes in the chip market")).toBe(null);
     expect(detectCatalogIntent("what's the schema of this trade going to look like")).toBe(null);
+  });
+
+  it("does not veto legitimate catalog assets that share names with market vocabulary", () => {
+    // Regression: a financial company's data catalog legitimately has a `trades` table.
+    // A blocklist of market words is the wrong approach — these must be claimed on
+    // positive evidence (the "the <name> table/dataset" construction, or an
+    // identifier-shaped name paired with catalog vocabulary).
+    expect(detectCatalogIntent("who owns the trades table?"))
+      .toEqual({ kind: "owner", term: "trades" });
+    expect(detectCatalogIntent("what columns are in the portfolio_positions table?").kind)
+      .toBe("schema");
+    expect(detectCatalogIntent("show me the schema of the market_data table").kind)
+      .toBe("schema");
+    expect(detectCatalogIntent("what feeds fct_users_created?").kind)
+      .toBe("lineage");
   });
 
   it("is total: never throws, even on a caller-supplied toString that throws", () => {
