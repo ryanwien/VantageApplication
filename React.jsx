@@ -6262,6 +6262,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       }
 
       const context = disclosure + contextForLLM(summary, lineage, direction);
+
+      if (!closeMatch) {
+        // No exact match: never hand these facts to a model. The model is the
+        // component that re-attributes a near-match's facts to whatever name the
+        // user typed — removing it from this path makes that structurally impossible.
+        // Build the answer deterministically from the disclosure + fact block instead.
+        setResp("desk", { status: "done", text: context, ms: ms(), via: "DataHub", model: "catalog", tried: [] });
+        rememberTurn(q, context);
+        if (autoSpeak) speak("desk", context);
+        return;
+      }
+
       const enabledModels = aiModels.filter(m => m.enabled);
       if (!enabledModels.length) {
         // No model to narrate with — show the facts plainly rather than nothing.
@@ -6270,7 +6282,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         return;
       }
 
-      const prompt = `${context}\n\nAnswer this question using ONLY the facts above. If the facts do not contain the answer, say so plainly. Do not invent columns, owners, or datasets.\n\nQuestion: ${q}`;
+      const prompt = `${context}\n\nAnswer this question using ONLY the facts above. If the facts do not contain the answer, say so plainly. Do not invent columns, owners, or datasets. Refer to the dataset only by its actual name: ${hit.name}. Do not attribute these facts to any other name.\n\nQuestion: ${q}`;
       const m = enabledModels[0];
       const askAny = (mm, pr, onTok) =>
         mm.kind === "claude" ? askClaude(mm, pr, undefined, onTok)
