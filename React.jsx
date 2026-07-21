@@ -5,6 +5,7 @@ import {
 import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
 import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./src/settings/localProof.js";
 import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled, coerceRefreshMs } from "./src/settings/preferences.js";
+import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM } from "./src/datahub/catalog.js";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -6215,6 +6216,74 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     }
   }, [speak, youtubeKey, searchYouTube]);
 
+  // DataHub catalog questions. Honesty rule: if the catalog has no answer we say so —
+  // we never let the model invent schemas, owners, or lineage.
+  const runCatalogQuery = async (q, intent) => {
+    const t0 = performance.now();
+    setAiResponses(p => (p.nav ? { nav: p.nav } : {}));
+    setResp("desk", { status: "running", text: "", ms: null, via: "DataHub", model: "catalog", tried: [] });
+    const ms = () => Math.round(performance.now() - t0);
+    const fail = (msg) => setResp("desk", { status: "error", text: msg, ms: ms(), via: "DataHub", tried: [] });
+
+    const call = async (op, variables) => {
+      const r = await fetch("/api/datahub/graphql", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ op, variables }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+      return j;
+    };
+
+    try {
+      const hit = firstSearchHit(await call("search", { term: intent.term }));
+      if (!hit) { fail(t("DataHub has no dataset matching") + ` "${intent.term}".`); return; }
+
+      if (intent.kind === "search") {
+        const text = t("DataHub match:") + ` ${hit.name}${hit.platform ? ` on ${hit.platform}` : ""}.`;
+        setResp("desk", { status: "done", text, ms: ms(), via: "DataHub", model: "catalog", tried: [] });
+        rememberTurn(q, text);
+        if (autoSpeak) speak("desk", text);
+        return;
+      }
+
+      const summary = summarizeEntity(await call("entity", { urn: hit.urn }));
+      let lineage = [], direction = "UPSTREAM";
+      if (intent.kind === "lineage") {
+        direction = /\bdownstream\b/i.test(q) ? "DOWNSTREAM" : "UPSTREAM";
+        lineage = summarizeLineage(await call("lineage", { urn: hit.urn, direction }));
+      }
+
+      const context = contextForLLM(summary, lineage, direction);
+      const enabledModels = aiModels.filter(m => m.enabled);
+      if (!enabledModels.length) {
+        // No model to narrate with — show the facts plainly rather than nothing.
+        setResp("desk", { status: "done", text: context, ms: ms(), via: "DataHub", model: "catalog", tried: [] });
+        rememberTurn(q, context);
+        return;
+      }
+
+      const prompt = `${context}\n\nAnswer this question using ONLY the facts above. If the facts do not contain the answer, say so plainly. Do not invent columns, owners, or datasets.\n\nQuestion: ${q}`;
+      const m = enabledModels[0];
+      const askAny = (mm, pr, onTok) =>
+        mm.kind === "claude" ? askClaude(mm, pr, undefined, onTok)
+        : mm.kind === "ollama" ? askOllama(mm, pr, undefined, onTok)
+        : mm.kind === "gemini" ? askGemini(mm, pr, undefined, onTok)
+        : askOpenAICompat(mm, pr, undefined, onTok);
+      let acc = "";
+      setResp("desk", { status: "running", text: "", ms: null, via: `DataHub + ${m.label}`, model: m.model, tried: [] });
+      await askAny(m, prompt, (tok) => {
+        acc += tok;
+        setAiResponses(p => ({ ...p, desk: { ...p.desk, text: (p.desk?.text || "") + tok } }));
+      });
+      setResp("desk", { status: "done", text: acc, ms: ms(), via: `DataHub + ${m.label}`, model: m.model, tried: [] });
+      if (acc) rememberTurn(q, acc);
+      if (autoSpeak && acc) speak("desk", acc);
+    } catch (e) {
+      fail(t("DataHub lookup failed:") + ` ${humanizeError(e)}`);
+    }
+  };
+
   const askDesk = (override) => {
     const q = (typeof override === "string" ? override : aiQuestion).trim();
     if (!q) return;
@@ -6235,6 +6304,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     // export intent runs first: "download excel", "make a powerpoint", "write a report and export ppt"
     const ex = matchExport(q);
     if (ex) { runExportCmd(ex); return; } // desk-handled — build the file, no model fan-out
+
+    // DataHub catalog intent: schema / owners / lineage questions answered from the live catalog
+    const dhIntent = detectCatalogIntent(q);
+    if (dhIntent) { runCatalogQuery(q, dhIntent); return; } // desk-handled — no market model fan-out
 
     // Games: "play a game", "games" → the menu; "teach me / tutorial / how do stocks work" → straight to Stock School
     if (/\b(games?|play (a )?game|arcade|game room)\b/i.test(q)) { openGames(); return; }
