@@ -7,6 +7,10 @@ trailers, hosts games, tracks a portfolio, and rings the opening bell on a real 
 The dashboard runs **fully in the browser with zero setup**. Everything below (live data, AI answers,
 studio voice, real meetings, accounts, subscriptions) is **optional** and layers on top.
 
+> **License:** [Apache 2.0](LICENSE) — use, modify, and distribute freely (including commercially),
+> provided you keep the copyright/license notices and state significant changes; includes an explicit
+> patent grant from contributors. Provided "as is", without warranty.
+
 ---
 
 ## How it works
@@ -242,7 +246,5 @@ inaccurate — don't rely on it for trading decisions.
 
 ## License
 
-Released under the **Apache License 2.0** — see [`LICENSE`](LICENSE) for the full text. In short:
-use, modify, and distribute freely (including commercially), provided you retain the copyright and
-license notices and state significant changes; the license also grants an explicit patent license
-from contributors. The software is provided "as is", without warranty.
+Released under the **Apache License 2.0** (noted at the top of this README) — see [`LICENSE`](LICENSE)
+for the full text.
