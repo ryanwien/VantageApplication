@@ -165,6 +165,17 @@ export function summarizeLineage(json) {
     .filter((x) => x.name);
 }
 
+// Absent facts must be stated, not omitted. Dropping an empty section leaves the model
+// with no evidence the fact is missing, and a small model fills the gap by inventing one
+// (llama3.2:1b invented owners in 4/5 runs and whole column lists in 3/5 against a silently
+// truncated block). Every dimension we actually looked up gets a line either way.
+const NONE = "(none recorded in DataHub)";
+
+// `lineage` distinguishes three states deliberately:
+//   null/undefined — we never ran a lineage query, so we say nothing about it. Claiming
+//                    "no upstreams" for a lookup we never performed would be its own lie.
+//   []             — we queried and DataHub returned nothing: say so explicitly.
+//   [rows]         — list them.
 export function contextForLLM(summary, lineage, direction) {
   const s = summary || {};
   const lines = [
@@ -172,17 +183,41 @@ export function contextForLLM(summary, lineage, direction) {
     `dataset: ${s.name || "(unknown)"}${s.platform ? ` (platform: ${s.platform})` : ""}`,
   ];
   if (s.description) lines.push(`description: ${s.description}`);
-  if (arr(s.owners).length) lines.push(`owners: ${s.owners.join(", ")}`);
-  if (arr(s.fields).length) {
+
+  const owners = arr(s.owners);
+  lines.push(`owners: ${owners.length ? owners.join(", ") : NONE}`);
+
+  const fields = arr(s.fields);
+  if (fields.length) {
     lines.push("schema:");
-    for (const f of s.fields.slice(0, 40)) {
+    for (const f of fields.slice(0, 40)) {
       lines.push(`  - ${f.path}${f.type ? ` : ${f.type}` : ""}${f.description ? ` — ${f.description}` : ""}`);
     }
+  } else {
+    lines.push(`schema: ${NONE}`);
   }
-  const lin = arr(lineage);
-  if (lin.length) {
-    lines.push(`${direction === "DOWNSTREAM" ? "downstream" : "upstream"} datasets:`);
-    for (const l of lin.slice(0, 20)) lines.push(`  - ${l.name}${l.platform ? ` (${l.platform})` : ""}`);
+
+  if (Array.isArray(lineage)) {
+    const label = `${direction === "DOWNSTREAM" ? "downstream" : "upstream"} datasets`;
+    if (lineage.length) {
+      lines.push(`${label}:`);
+      for (const l of lineage.slice(0, 20)) lines.push(`  - ${l.name}${l.platform ? ` (${l.platform})` : ""}`);
+    } else {
+      lines.push(`${label}: ${NONE}`);
+    }
   }
   return lines.join("\n");
+}
+
+// Does the catalog actually hold the dimension this question depends on? A question about
+// columns is unanswerable without schema, about owners without ownership, about lineage
+// without lineage rows. Returns the missing dimension's name, or null when we can answer.
+// Callers use this to keep a model out of the path entirely rather than trusting prompt
+// wording to stop it inventing the missing part.
+export function missingDimension(kind, summary, lineage) {
+  const s = summary || {};
+  if (kind === "schema" && !arr(s.fields).length) return "schema";
+  if (kind === "owner" && !arr(s.owners).length) return "owners";
+  if (kind === "lineage" && !arr(lineage).length) return "lineage";
+  return null;
 }

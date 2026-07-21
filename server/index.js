@@ -419,6 +419,11 @@ const server = http.createServer(async (req, res) => {
       if (!datahubConfigured()) {
         return send(res, 503, { error: "DataHub is not configured on the server (set DATAHUB_GMS_URL and DATAHUB_TOKEN)." });
       }
+      // A token means this proxy borrows real catalog credentials, so it must not answer
+      // anonymous callers — otherwise anyone could enumerate internal dataset names, owners
+      // and lineage through it. The tokenless local quickstart carries no such authority and
+      // stays open, which is what keeps the unwalled guest demo working.
+      if (DATAHUB_TOKEN && !emailFromReq(req, url)) return send(res, 401, { error: "Not signed in." });
       const { op, variables } = await readBody(req);
       if (!isKnownOp(op)) return send(res, 400, { error: "Unknown DataHub operation." });
       const spec = GRAPHQL_OPS[op];

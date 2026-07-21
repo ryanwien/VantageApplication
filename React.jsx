@@ -5,7 +5,7 @@ import {
 import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
 import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./src/settings/localProof.js";
 import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled, coerceRefreshMs } from "./src/settings/preferences.js";
-import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, isCloseMatch } from "./src/datahub/catalog.js";
+import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, isCloseMatch, missingDimension } from "./src/datahub/catalog.js";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -6227,7 +6227,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
     const call = async (op, variables) => {
       const r = await fetch("/api/datahub/graphql", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", ...authHdr },
         body: JSON.stringify({ op, variables }),
       });
       const j = await r.json().catch(() => ({}));
@@ -6255,19 +6255,31 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       }
 
       const summary = summarizeEntity(await call("entity", { urn: hit.urn }));
-      let lineage = [], direction = "UPSTREAM";
+      // null (not []) until we actually run a lineage query — contextForLLM must never
+      // report "no upstreams" for a lookup we never performed.
+      let lineage = null, direction = "UPSTREAM";
       if (intent.kind === "lineage") {
         direction = /\bdownstream\b/i.test(q) ? "DOWNSTREAM" : "UPSTREAM";
         lineage = summarizeLineage(await call("lineage", { urn: hit.urn, direction }));
       }
 
-      const context = disclosure + contextForLLM(summary, lineage, direction);
+      // The catalog may know the dataset but hold nothing for the dimension asked about.
+      const missing = missingDimension(intent.kind, summary, lineage);
+      const absence = missing === "schema" ? t("DataHub has no schema recorded for") + ` ${hit.name}. `
+        : missing === "owners" ? t("DataHub has no owner recorded for") + ` ${hit.name}. `
+        : missing === "lineage" ? (direction === "DOWNSTREAM"
+            ? t("DataHub records no downstream datasets for") : t("DataHub records no upstream datasets for")) + ` ${hit.name}. `
+        : "";
 
-      if (!closeMatch) {
-        // No exact match: never hand these facts to a model. The model is the
-        // component that re-attributes a near-match's facts to whatever name the
-        // user typed — removing it from this path makes that structurally impossible.
-        // Build the answer deterministically from the disclosure + fact block instead.
+      const context = disclosure + absence + contextForLLM(summary, lineage, direction);
+
+      if (!closeMatch || missing) {
+        // Never hand these facts to a model. The model is the component that invents the
+        // missing part — re-attributing a near-match's facts to the name the user typed,
+        // or filling an absent schema/owner/lineage with plausible fiction (llama3.2:1b
+        // did both in the majority of runs when guarded only by prompt wording). Removing
+        // it from this path makes that structurally impossible; the answer is built
+        // deterministically from the disclosure, the absence statement, and the facts.
         setResp("desk", { status: "done", text: context, ms: ms(), via: "DataHub", model: "catalog", tried: [] });
         rememberTurn(q, context);
         if (autoSpeak) speak("desk", context);
@@ -6279,6 +6291,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         // No model to narrate with — show the facts plainly rather than nothing.
         setResp("desk", { status: "done", text: context, ms: ms(), via: "DataHub", model: "catalog", tried: [] });
         rememberTurn(q, context);
+        if (autoSpeak) speak("desk", context);
         return;
       }
 

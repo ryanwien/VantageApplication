@@ -237,7 +237,7 @@ describe("isCloseMatch", () => {
   });
 });
 
-import { firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM } from "./catalog.js";
+import { firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, missingDimension } from "./catalog.js";
 
 const SEARCH = { data: { searchAcrossEntities: { searchResults: [
   { entity: { urn: "urn:li:dataset:(a,fct_users,PROD)", name: "fct_users", platform: { name: "hive" } } },
@@ -290,10 +290,60 @@ describe("normalization", () => {
   });
 
   it("formats a context block naming the source", () => {
-    const ctx = contextForLLM(summarizeEntity(ENTITY), [], "UPSTREAM");
+    const ctx = contextForLLM(summarizeEntity(ENTITY), null, "UPSTREAM");
     expect(ctx).toMatch(/DataHub/);
     expect(ctx).toMatch(/fct_users/);
     expect(ctx).toMatch(/jdoe/);
     expect(ctx).toMatch(/email/);
+  });
+});
+
+describe("contextForLLM states absent facts", () => {
+  const BARE = summarizeEntity({ data: { dataset: { name: "orders_v2", platform: { name: "hive" } } } });
+
+  it("says owners and schema are absent instead of dropping the lines", () => {
+    const ctx = contextForLLM(BARE, null, "UPSTREAM");
+    expect(ctx).toMatch(/owners: \(none recorded in DataHub\)/);
+    expect(ctx).toMatch(/schema: \(none recorded in DataHub\)/);
+  });
+
+  it("says nothing about lineage when lineage was never queried", () => {
+    expect(contextForLLM(BARE, null, "UPSTREAM")).not.toMatch(/upstream|downstream/i);
+    expect(contextForLLM(BARE, undefined, "UPSTREAM")).not.toMatch(/upstream|downstream/i);
+  });
+
+  it("states an empty lineage result explicitly when it WAS queried", () => {
+    expect(contextForLLM(BARE, [], "UPSTREAM")).toMatch(/upstream datasets: \(none recorded in DataHub\)/);
+    expect(contextForLLM(BARE, [], "DOWNSTREAM")).toMatch(/downstream datasets: \(none recorded in DataHub\)/);
+  });
+
+  it("still lists lineage rows when there are any", () => {
+    const ctx = contextForLLM(BARE, [{ name: "raw_orders", platform: "kafka" }], "UPSTREAM");
+    expect(ctx).toMatch(/raw_orders \(kafka\)/);
+    expect(ctx).not.toMatch(/none recorded in DataHub\)\s*$/);
+  });
+});
+
+describe("missingDimension", () => {
+  const FULL = summarizeEntity(ENTITY);
+  const BARE = summarizeEntity({ data: { dataset: { name: "orders_v2" } } });
+
+  it("reports the dimension the question needs but the catalog lacks", () => {
+    expect(missingDimension("schema", BARE, null)).toBe("schema");
+    expect(missingDimension("owner", BARE, null)).toBe("owners");
+    expect(missingDimension("lineage", FULL, [])).toBe("lineage");
+  });
+
+  it("returns null when the catalog can answer", () => {
+    expect(missingDimension("schema", FULL, null)).toBe(null);
+    expect(missingDimension("owner", FULL, null)).toBe(null);
+    expect(missingDimension("lineage", FULL, [{ name: "raw" }])).toBe(null);
+  });
+
+  it("does not fault a search intent on missing detail, and never throws", () => {
+    expect(missingDimension("search", BARE, null)).toBe(null);
+    for (const bad of [null, undefined, {}, 42, "x"]) {
+      expect(missingDimension("schema", bad, bad)).toBe("schema");
+    }
   });
 });
