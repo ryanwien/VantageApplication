@@ -5,7 +5,7 @@ import {
 import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
 import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./src/settings/localProof.js";
 import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled, coerceRefreshMs } from "./src/settings/preferences.js";
-import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM } from "./src/datahub/catalog.js";
+import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, isCloseMatch } from "./src/datahub/catalog.js";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -6239,8 +6239,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const hit = firstSearchHit(await call("search", { term: intent.term }));
       if (!hit) { fail(t("DataHub has no dataset matching") + ` "${intent.term}".`); return; }
 
+      // DataHub's search is fuzzy — it can return a near-match even when nothing really
+      // matches. Never attribute facts to a near-match without saying so: disclose it in
+      // both what's shown/spoken and what's fed to the model, so the desk never implies
+      // the query resolved cleanly when it didn't.
+      const closeMatch = isCloseMatch(intent.term, hit.name);
+      const disclosure = closeMatch ? "" : t("DataHub had no exact match. Closest dataset:") + " " + hit.name + ". ";
+
       if (intent.kind === "search") {
-        const text = t("DataHub match:") + ` ${hit.name}${hit.platform ? ` on ${hit.platform}` : ""}.`;
+        const text = disclosure + t("DataHub match:") + ` ${hit.name}${hit.platform ? ` on ${hit.platform}` : ""}.`;
         setResp("desk", { status: "done", text, ms: ms(), via: "DataHub", model: "catalog", tried: [] });
         rememberTurn(q, text);
         if (autoSpeak) speak("desk", text);
@@ -6254,7 +6261,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         lineage = summarizeLineage(await call("lineage", { urn: hit.urn, direction }));
       }
 
-      const context = contextForLLM(summary, lineage, direction);
+      const context = disclosure + contextForLLM(summary, lineage, direction);
       const enabledModels = aiModels.filter(m => m.enabled);
       if (!enabledModels.length) {
         // No model to narrate with — show the facts plainly rather than nothing.
@@ -6270,8 +6277,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         : mm.kind === "ollama" ? askOllama(mm, pr, undefined, onTok)
         : mm.kind === "gemini" ? askGemini(mm, pr, undefined, onTok)
         : askOpenAICompat(mm, pr, undefined, onTok);
-      let acc = "";
-      setResp("desk", { status: "running", text: "", ms: null, via: `DataHub + ${m.label}`, model: m.model, tried: [] });
+      // Seed the streamed answer with the disclosure so it survives into the displayed
+      // text and whatever the anchor reads aloud — not just a fact buried in the prompt
+      // the model might paraphrase away or drop.
+      let acc = disclosure;
+      setResp("desk", { status: "running", text: acc, ms: null, via: `DataHub + ${m.label}`, model: m.model, tried: [] });
       await askAny(m, prompt, (tok) => {
         acc += tok;
         setAiResponses(p => ({ ...p, desk: { ...p.desk, text: (p.desk?.text || "") + tok } }));

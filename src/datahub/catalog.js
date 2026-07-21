@@ -110,6 +110,22 @@ export const GRAPHQL_OPS = {
   },
 };
 
+// Fuzzy-search honesty check: DataHub's search returns near-matches even when nothing
+// really matches (e.g. "asdfghjkl_no_such_dataset" still returns SampleHdfsDataset).
+// This tells the caller whether a search hit is actually close to what was asked for,
+// so a near-match can be disclosed instead of silently presented as the real answer.
+// Total: normalizes both sides (lowercase, strip non-alphanumerics) and returns true
+// if either normalized string contains the other. Never throws — non-string or empty
+// input simply yields false.
+export function isCloseMatch(term, name) {
+  if (typeof term !== "string" || typeof name !== "string") return false;
+  const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const a = normalize(term);
+  const b = normalize(name);
+  if (!a || !b) return false;
+  return a.includes(b) || b.includes(a);
+}
+
 export function isKnownOp(name) {
   return typeof name === "string" && Object.prototype.hasOwnProperty.call(GRAPHQL_OPS, name);
 }

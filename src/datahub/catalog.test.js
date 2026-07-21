@@ -195,6 +195,48 @@ describe("GRAPHQL_OPS", () => {
   });
 });
 
+import { isCloseMatch } from "./catalog.js";
+
+describe("isCloseMatch", () => {
+  it("matches identical names", () => {
+    expect(isCloseMatch("fct_users_created", "fct_users_created")).toBe(true);
+  });
+
+  it("is punctuation-insensitive", () => {
+    expect(isCloseMatch("fct users created", "fct_users_created")).toBe(true);
+  });
+
+  it("is case-insensitive", () => {
+    expect(isCloseMatch("FCT_USERS_CREATED", "fct_users_created")).toBe(true);
+  });
+
+  it("matches when the term is a substring of the name", () => {
+    expect(isCloseMatch("users", "fct_users_created")).toBe(true);
+  });
+
+  it("rejects unrelated fuzzy-search hits", () => {
+    expect(isCloseMatch("asdfghjkl_no_such_dataset", "SampleHdfsDataset")).toBe(false);
+    expect(isCloseMatch("trades", "SampleHiveDataset")).toBe(false);
+  });
+
+  it("returns false for null, non-string, or empty input rather than throwing", () => {
+    expect(isCloseMatch(null, "x")).toBe(false);
+    expect(isCloseMatch("x", null)).toBe(false);
+    expect(isCloseMatch("", "")).toBe(false);
+  });
+
+  it("is total: never throws, even on hostile input", () => {
+    const hostileToString = { toString() { throw new Error("boom"); } };
+    const inputs = [undefined, {}, [], 42, Symbol("s"), hostileToString];
+    for (const bad of inputs) {
+      expect(() => isCloseMatch(bad, "fct_users_created")).not.toThrow();
+      expect(isCloseMatch(bad, "fct_users_created")).toBe(false);
+      expect(() => isCloseMatch("fct_users_created", bad)).not.toThrow();
+      expect(isCloseMatch("fct_users_created", bad)).toBe(false);
+    }
+  });
+});
+
 import { firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM } from "./catalog.js";
 
 const SEARCH = { data: { searchAcrossEntities: { searchResults: [
