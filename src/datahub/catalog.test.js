@@ -85,3 +85,43 @@ describe("detectCatalogIntent", () => {
     expect(result.term).not.toMatch(/'/);
   });
 });
+
+import { GRAPHQL_OPS, isKnownOp } from "./catalog.js";
+
+describe("GRAPHQL_OPS", () => {
+  it("exposes exactly the three read-only ops", () => {
+    expect(Object.keys(GRAPHQL_OPS).sort()).toEqual(["entity", "lineage", "search"]);
+  });
+
+  it("contains no mutations", () => {
+    for (const op of Object.values(GRAPHQL_OPS)) {
+      expect(op.query).not.toMatch(/\bmutation\b/i);
+      expect(op.query).toMatch(/^\s*query\b/i);
+    }
+  });
+
+  it("builds search variables from a term", () => {
+    expect(GRAPHQL_OPS.search.variables({ term: "customers" })).toEqual({ q: "customers" });
+    expect(GRAPHQL_OPS.search.variables(null)).toEqual({ q: "" });
+  });
+
+  it("builds entity variables from a urn", () => {
+    expect(GRAPHQL_OPS.entity.variables({ urn: "urn:li:dataset:(x,y,PROD)" }))
+      .toEqual({ urn: "urn:li:dataset:(x,y,PROD)" });
+  });
+
+  it("builds lineage variables and defaults direction to UPSTREAM", () => {
+    expect(GRAPHQL_OPS.lineage.variables({ urn: "u", direction: "DOWNSTREAM" }))
+      .toEqual({ urn: "u", direction: "DOWNSTREAM" });
+    expect(GRAPHQL_OPS.lineage.variables({ urn: "u" }))
+      .toEqual({ urn: "u", direction: "UPSTREAM" });
+    expect(GRAPHQL_OPS.lineage.variables({ urn: "u", direction: "SIDEWAYS" }))
+      .toEqual({ urn: "u", direction: "UPSTREAM" });
+  });
+
+  it("isKnownOp gates unknown names", () => {
+    expect(isKnownOp("search")).toBe(true);
+    expect(isKnownOp("deleteEverything")).toBe(false);
+    expect(isKnownOp(null)).toBe(false);
+  });
+});

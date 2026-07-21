@@ -64,3 +64,46 @@ export function detectCatalogIntent(text) {
     : "search";
   return { kind, term };
 }
+
+const SEARCH_QUERY = `query VantageSearch($q: String!) {
+  searchAcrossEntities(input: { types: [DATASET], query: $q, start: 0, count: 5 }) {
+    searchResults { entity { urn ... on Dataset {
+      name
+      platform { name }
+      properties { description }
+    } } }
+  }
+}`;
+
+const ENTITY_QUERY = `query VantageEntity($urn: String!) {
+  dataset(urn: $urn) {
+    urn
+    name
+    platform { name }
+    properties { description }
+    ownership { owners { owner { ... on CorpUser { username } ... on CorpGroup { name } } } }
+    schemaMetadata { fields { fieldPath type nativeDataType description } }
+  }
+}`;
+
+const LINEAGE_QUERY = `query VantageLineage($urn: String!, $direction: LineageDirection!) {
+  searchAcrossLineage(input: { urn: $urn, direction: $direction, start: 0, count: 10 }) {
+    searchResults { entity { urn ... on Dataset { name platform { name } } } }
+  }
+}`;
+
+export const GRAPHQL_OPS = {
+  search: { query: SEARCH_QUERY, variables: (v) => ({ q: String(v?.term ?? "") }) },
+  entity: { query: ENTITY_QUERY, variables: (v) => ({ urn: String(v?.urn ?? "") }) },
+  lineage: {
+    query: LINEAGE_QUERY,
+    variables: (v) => ({
+      urn: String(v?.urn ?? ""),
+      direction: v?.direction === "DOWNSTREAM" ? "DOWNSTREAM" : "UPSTREAM",
+    }),
+  },
+};
+
+export function isKnownOp(name) {
+  return typeof name === "string" && Object.prototype.hasOwnProperty.call(GRAPHQL_OPS, name);
+}
