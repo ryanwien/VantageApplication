@@ -18,3 +18,11 @@ server/tokens.json
 server/users.json
 server/sessions.json
 server/ai-usage.json
+
+# Local editor/agent tooling that is NOT part of this project. Kept out of the repo on
+# purpose: .claude/settings.json registers a hook that executes .appsec/appsec-gate.ps1 on
+# every file edit, and publishing that would run it on the machine of anyone who clones.
+# These are local-only concerns — remove these lines if you ever intend to ship such config.
+.appsec/
+.claude/
+.github/copilot-instructions.md
