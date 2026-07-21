@@ -30,11 +30,18 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { GRAPHQL_OPS, isKnownOp } from "../src/datahub/catalog.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
 const PUBLIC_ORIGIN = process.env.PUBLIC_ORIGIN || `http://localhost:${PORT}`;
 const APP_ORIGIN = process.env.APP_ORIGIN || "http://127.0.0.1:5173";
+const DATAHUB_GMS_URL = (process.env.DATAHUB_GMS_URL || "http://localhost:8080").replace(/\/+$/, "");
+const DATAHUB_TOKEN = process.env.DATAHUB_TOKEN || "";
+// The token is OPTIONAL: the local quickstart runs with metadata-service auth disabled and
+// accepts unauthenticated queries. A deployed DataHub will require the token. So "configured"
+// means we know where GMS is; the Authorization header is attached only when a token exists.
+const datahubConfigured = () => Boolean(DATAHUB_GMS_URL);
 
 const CFG = {
   zoom: {
@@ -397,6 +404,46 @@ const server = http.createServer(async (req, res) => {
       if (tok && SESSIONS[tok]) { delete SESSIONS[tok]; writeJSON(SESSIONS_FILE, SESSIONS); }
       return send(res, 200, { ok: true });
     }
+
+    // ---- DATAHUB (read-only catalog context) ----
+    if (p === "/api/datahub/health" && req.method === "GET") {
+      if (!datahubConfigured()) return send(res, 200, { configured: false, reachable: false });
+      try {
+        const r = await fetch(`${DATAHUB_GMS_URL}/health`, { signal: AbortSignal.timeout(4000) });
+        return send(res, 200, { configured: true, reachable: r.ok });
+      } catch {
+        return send(res, 200, { configured: true, reachable: false });
+      }
+    }
+    if (p === "/api/datahub/graphql" && req.method === "POST") {
+      if (!datahubConfigured()) {
+        return send(res, 503, { error: "DataHub is not configured on the server (set DATAHUB_GMS_URL and DATAHUB_TOKEN)." });
+      }
+      const { op, variables } = await readBody(req);
+      if (!isKnownOp(op)) return send(res, 400, { error: "Unknown DataHub operation." });
+      const spec = GRAPHQL_OPS[op];
+      try {
+        const r = await fetch(`${DATAHUB_GMS_URL}/api/graphql`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // Only send Authorization when a token exists — the quickstart runs with
+            // metadata-service auth disabled and rejects nothing, but a deployed GMS needs it.
+            ...(DATAHUB_TOKEN ? { Authorization: `Bearer ${DATAHUB_TOKEN}` } : {}),
+          },
+          body: JSON.stringify({ query: spec.query, variables: spec.variables(variables) }),
+          signal: AbortSignal.timeout(15000),
+        });
+        if (r.status === 401 || r.status === 403) return send(res, 502, { error: "DataHub rejected the access token." });
+        if (!r.ok) return send(res, 502, { error: `DataHub returned HTTP ${r.status}.` });
+        const json = await r.json();
+        // Forward data only. Never echo the token, and never forward raw server errors.
+        return send(res, 200, { data: json?.data ?? null });
+      } catch {
+        return send(res, 502, { error: "Could not reach DataHub." });
+      }
+    }
+
     if (p === "/api/auth/me" && req.method === "GET") {
       const email = emailFromReq(req, url);
       if (!email || !USERS[email]) return send(res, 401, { error: "Not signed in." });
