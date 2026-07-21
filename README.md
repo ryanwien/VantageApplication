@@ -111,6 +111,33 @@ Troubleshooting: `model "llama3.1" not found` → `ollama pull llama3.1` (or set
 
 ---
 
+## DataHub catalog context (optional)
+
+Point the desk at a [DataHub](https://datahub.com) instance and it answers questions about your
+data — schemas, owners, and lineage — from the live catalog, read on air by the anchor.
+
+1. Start DataHub (quickstart on `http://localhost:9002`, GMS on `http://localhost:8080`).
+2. Set the server-side var (the token never reaches the browser):
+
+   ```bash
+   DATAHUB_GMS_URL=http://localhost:8080
+   DATAHUB_TOKEN=<your personal access token>  # Only needed if auth is enabled; generate in Settings → Access Tokens
+   ```
+
+3. The quickstart ships with an empty catalog — ingest sample metadata before the desk can
+   answer questions.
+4. Run the backend: `node --env-file=.env server/index.js`, then ask the desk:
+   - *"who owns the fct_users_created table?"*
+   - *"what columns are in the customers dataset?"*
+   - *"what feeds fct_users_created?"*
+
+Queries are **read-only** and limited to a server-side whitelist. If DataHub is unreachable, the
+desk reports the lookup failed — it never invents catalog facts. When the desk doesn't find an
+exact match for a dataset name, it discloses the closest match instead of silently answering
+about a different one.
+
+---
+
 ## Optional API keys (each unlocks one extra)
 
 All keys live in your **browser's localStorage only** — they're sent only to their own provider's
