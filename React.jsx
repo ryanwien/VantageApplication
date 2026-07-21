@@ -6265,13 +6265,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
       // The catalog may know the dataset but hold nothing for the dimension asked about.
       const missing = missingDimension(intent.kind, summary, lineage);
-      const absence = missing === "schema" ? t("DataHub has no schema recorded for") + ` ${hit.name}. `
-        : missing === "owners" ? t("DataHub has no owner recorded for") + ` ${hit.name}. `
+      const absence = missing === "schema" ? t("DataHub has no schema recorded for") + ` ${hit.name}.`
+        : missing === "owners" ? t("DataHub has no owner recorded for") + ` ${hit.name}.`
         : missing === "lineage" ? (direction === "DOWNSTREAM"
-            ? t("DataHub records no downstream datasets for") : t("DataHub records no upstream datasets for")) + ` ${hit.name}. `
+            ? t("DataHub records no downstream datasets for") : t("DataHub records no upstream datasets for")) + ` ${hit.name}.`
         : "";
 
-      const context = disclosure + absence + contextForLLM(summary, lineage, direction);
+      // Each statement on its own line — the answer is read on air and shown on screen,
+      // and running the headline sentence into the fact block hurts both.
+      const context = [disclosure.trim(), absence, contextForLLM(summary, lineage, direction)]
+        .filter(Boolean).join("\n");
 
       if (!closeMatch || missing) {
         // Never hand these facts to a model. The model is the component that invents the
@@ -6307,10 +6310,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       // the model might paraphrase away or drop.
       let acc = disclosure;
       setResp("desk", { status: "running", text: acc, ms: null, via: `DataHub + ${m.label}`, model: m.model, tried: [] });
-      await askAny(m, prompt, (tok) => {
-        acc += tok;
-        setAiResponses(p => ({ ...p, desk: { ...p.desk, text: (p.desk?.text || "") + tok } }));
-      });
+      try {
+        await askAny(m, prompt, (tok) => {
+          acc += tok;
+          setAiResponses(p => ({ ...p, desk: { ...p.desk, text: (p.desk?.text || "") + tok } }));
+        });
+      } catch {
+        // The catalog lookup succeeded — only the narrating model failed (no API key, model
+        // offline, rate limit). Blaming DataHub would be false, and dropping real facts we
+        // already hold would be worse: fall back to showing them exactly as the model-free
+        // paths above do. A desk with no working model still answers catalog questions.
+        setResp("desk", { status: "done", text: context, ms: ms(), via: "DataHub", model: "catalog", tried: [] });
+        rememberTurn(q, context);
+        if (autoSpeak) speak("desk", context);
+        return;
+      }
       setResp("desk", { status: "done", text: acc, ms: ms(), via: `DataHub + ${m.label}`, model: m.model, tried: [] });
       if (acc) rememberTurn(q, acc);
       if (autoSpeak && acc) speak("desk", acc);
