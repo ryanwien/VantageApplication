@@ -237,7 +237,7 @@ describe("isCloseMatch", () => {
   });
 });
 
-import { firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, missingDimension } from "./catalog.js";
+import { firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, missingDimension, mentionedColumn, namedAbsentColumn } from "./catalog.js";
 
 const SEARCH = { data: { searchAcrossEntities: { searchResults: [
   { entity: { urn: "urn:li:dataset:(a,fct_users,PROD)", name: "fct_users", platform: { name: "hive" } } },
@@ -344,6 +344,72 @@ describe("missingDimension", () => {
     expect(missingDimension("search", BARE, null)).toBe(null);
     for (const bad of [null, undefined, {}, 42, "x"]) {
       expect(missingDimension("schema", bad, bad)).toBe("schema");
+    }
+  });
+});
+
+describe("mentionedColumn", () => {
+  it("extracts a specific column from high-confidence shapes", () => {
+    expect(mentionedColumn("what type is the foobar column?")).toBe("foobar");
+    expect(mentionedColumn("describe the user_id field")).toBe("user_id");
+    expect(mentionedColumn("the column named created_at")).toBe("created_at");
+    expect(mentionedColumn("field called total_amount")).toBe("total_amount");
+    expect(mentionedColumn('the "order_id" column')).toBe("order_id");
+  });
+
+  it("does NOT capture the descriptor noun after a bare 'column'", () => {
+    // "column type/name/count/..." names a property OF a column, not a column.
+    expect(mentionedColumn("what is the column type of user_id")).toBe(null);
+    expect(mentionedColumn("how many columns are there")).toBe(null);
+    expect(mentionedColumn("what is the column name")).toBe(null);
+  });
+
+  it("rejects articles and quantifiers as column names", () => {
+    expect(mentionedColumn("which column is the key")).toBe(null);
+    expect(mentionedColumn("what does each column mean")).toBe(null);
+    expect(mentionedColumn("show the schema")).toBe(null);
+  });
+
+  it("never throws on hostile input", () => {
+    for (const bad of [null, undefined, {}, 42, [], { toString() { throw new Error("x"); } }]) {
+      expect(() => mentionedColumn(bad)).not.toThrow();
+    }
+  });
+});
+
+describe("namedAbsentColumn", () => {
+  const withFields = (paths) => ({ name: "orders_v2", fields: paths.map((p) => ({ path: p })) });
+
+  it("refuses only when a named column is truly absent from a present schema", () => {
+    expect(namedAbsentColumn("what type is the foobar column?", withFields(["user_id", "user_name"]))).toBe("foobar");
+  });
+
+  it("does not refuse when the named column IS present (incl. decorated + nested paths)", () => {
+    // decorated DataHub path — the real name is the leaf segment
+    expect(namedAbsentColumn("what type is the field_foo_2 column",
+      withFields(["[version=2.0].[type=boolean].field_foo_2"]))).toBe(null);
+    // nested/struct field — the token matches a non-leaf segment
+    expect(namedAbsentColumn("describe the address column", withFields(["address.zipcode"]))).toBe(null);
+    expect(namedAbsentColumn("what type is the user_id column", withFields(["user_id"]))).toBe(null);
+  });
+
+  it("does not refuse when no specific column is named", () => {
+    expect(namedAbsentColumn("what columns are in orders_v2?", withFields(["user_id"]))).toBe(null);
+    expect(namedAbsentColumn("what is the column type of user_id", withFields(["user_id"]))).toBe(null);
+  });
+
+  it("stays silent when the schema is empty (the dimension-level check owns that)", () => {
+    expect(namedAbsentColumn("what type is the foobar column?", withFields([]))).toBe(null);
+    expect(namedAbsentColumn("what type is the foobar column?", null)).toBe(null);
+  });
+
+  it("does not treat the dataset name itself as an absent column", () => {
+    expect(namedAbsentColumn("the orders_v2 column", withFields(["user_id"]))).toBe(null);
+  });
+
+  it("never throws on hostile input", () => {
+    for (const bad of [null, undefined, {}, 42, { fields: "nope" }]) {
+      expect(() => namedAbsentColumn("the foobar column", bad)).not.toThrow();
     }
   });
 });

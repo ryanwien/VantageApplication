@@ -209,6 +209,64 @@ export function contextForLLM(summary, lineage, direction) {
   return lines.join("\n");
 }
 
+// Descriptor nouns that follow or precede "column"/"field" but never NAME one, plus articles
+// and quantifiers. A minimal backstop, not the primary defense — the extraction patterns below
+// are already anchored (a word blocklist was the wrong tool for the intent gate upstream, and
+// it is only a backstop here too).
+const COLUMN_STOPWORDS = new Set([
+  "the", "a", "an", "this", "that", "these", "those", "each", "any", "some", "every", "which",
+  "what", "no", "first", "last", "one", "other", "another", "same", "single", "key", "primary",
+  "partition", "name", "names", "type", "types", "count", "header", "value", "values", "kind",
+]);
+
+// A schema question may name a SPECIFIC column. Extract it only from high-confidence shapes:
+//   "<x> column" / "<x> field"     — English puts the identifier BEFORE the noun when naming it
+//   "column named/called <x>"      — anchored forward form
+//   (both allow surrounding quotes)
+// The bare forward "column <x>" is deliberately omitted: it captures the descriptor noun in
+// "the column TYPE of user_id" and would emit a false "no such column" refusal on a question
+// that actually names a present column. Missing a rare phrasing (false negative) just degrades
+// to the model path; a false refusal does not, so precision wins over recall here.
+export function mentionedColumn(text) {
+  if (typeof text !== "string") return null;
+  const t = text.trim();
+  const pick = (m) => {
+    const tok = m && m[1];
+    if (!tok || tok.length < 2 || COLUMN_STOPWORDS.has(tok.toLowerCase())) return null;
+    return tok;
+  };
+  return (
+    pick(t.match(/\bcolumn\s+(?:named|called)\s+["`]?([A-Za-z_][A-Za-z0-9_]*)["`]?/i)) ||
+    pick(t.match(/\bfield\s+(?:named|called)\s+["`]?([A-Za-z_][A-Za-z0-9_]*)["`]?/i)) ||
+    pick(t.match(/["`]?([A-Za-z_][A-Za-z0-9_]*)["`]?\s+(?:column|field)\b/i)) ||
+    null
+  );
+}
+
+// Compare a user's column token against a DataHub fieldPath. DataHub decorates paths with
+// [version=…].[type=…] segments and uses dotted paths for nested/struct fields. Match
+// generously — the full path OR any dotted segment (decorations stripped) — so a present
+// column is never mistaken for absent. Erring toward "present" errs toward NOT refusing.
+function pathMatchesColumn(fieldPath, want) {
+  const p = String(fieldPath || "").toLowerCase();
+  if (p === want) return true;
+  return p.split(".").some((seg) => seg.replace(/\[[^\]]*\]/g, "").replace(/[^a-z0-9_]/g, "") === want);
+}
+
+// The within-dimension honesty check: the schema is present, but does it actually contain the
+// column the question names? Returns the column string only when it is truly absent — in every
+// ambiguous case (no specific column named, schema empty, token is the dataset name, or the
+// column is present under any path form) it returns null, so the model keeps the normal path.
+export function namedAbsentColumn(text, summary) {
+  const col = mentionedColumn(text);
+  if (!col) return null;
+  const fields = arr(summary?.fields);
+  if (!fields.length) return null; // no schema at all — the dimension-level check owns this case
+  const want = col.toLowerCase();
+  if (str(summary?.name).toLowerCase() === want) return null; // they named the table, not a column
+  return fields.some((f) => pathMatchesColumn(f?.path, want)) ? null : col;
+}
+
 // Does the catalog actually hold the dimension this question depends on? A question about
 // columns is unanswerable without schema, about owners without ownership, about lineage
 // without lineage rows. Returns the missing dimension's name, or null when we can answer.

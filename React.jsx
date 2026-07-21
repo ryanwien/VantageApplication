@@ -5,7 +5,7 @@ import {
 import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
 import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./src/settings/localProof.js";
 import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled, coerceRefreshMs } from "./src/settings/preferences.js";
-import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, isCloseMatch, missingDimension } from "./src/datahub/catalog.js";
+import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, isCloseMatch, missingDimension, namedAbsentColumn } from "./src/datahub/catalog.js";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -6265,10 +6265,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
       // The catalog may know the dataset but hold nothing for the dimension asked about.
       const missing = missingDimension(intent.kind, summary, lineage);
+      // Or it may hold the schema but not the SPECIFIC column named — same honesty rule, one
+      // level finer: a model handed a full schema will still invent a type for a column that
+      // isn't there, so state the absence and keep the model out.
+      const absentCol = (intent.kind === "schema" && !missing) ? namedAbsentColumn(q, summary) : null;
       const absence = missing === "schema" ? t("DataHub has no schema recorded for") + ` ${hit.name}.`
         : missing === "owners" ? t("DataHub has no owner recorded for") + ` ${hit.name}.`
         : missing === "lineage" ? (direction === "DOWNSTREAM"
             ? t("DataHub records no downstream datasets for") : t("DataHub records no upstream datasets for")) + ` ${hit.name}.`
+        : absentCol ? `${t("DataHub's schema for")} ${hit.name} ${t("has no column named")} "${absentCol}".`
         : "";
 
       // Each statement on its own line — the answer is read on air and shown on screen,
@@ -6276,10 +6281,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const context = [disclosure.trim(), absence, contextForLLM(summary, lineage, direction)]
         .filter(Boolean).join("\n");
 
-      if (!closeMatch || missing) {
+      if (!closeMatch || missing || absentCol) {
         // Never hand these facts to a model. The model is the component that invents the
         // missing part — re-attributing a near-match's facts to the name the user typed,
-        // or filling an absent schema/owner/lineage with plausible fiction (llama3.2:1b
+        // or filling an absent schema/owner/lineage/column with plausible fiction (llama3.2:1b
         // did both in the majority of runs when guarded only by prompt wording). Removing
         // it from this path makes that structurally impossible; the answer is built
         // deterministically from the disclosure, the absence statement, and the facts.
