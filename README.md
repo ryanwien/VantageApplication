@@ -136,6 +136,32 @@ desk reports the lookup failed — it never invents catalog facts. When the desk
 exact match for a dataset name, it discloses the closest match instead of silently answering
 about a different one.
 
+### Seeing the honesty behaviour
+
+The interesting case is when the catalog knows the dataset but *not the answer* — a small model
+handed an incomplete fact block will happily invent owners and column lists. Here the model is
+removed from the path entirely and the gap is stated instead.
+
+DataHub's sample metadata is fully populated, so nothing exercises this. Ingest a deliberately
+incomplete dataset:
+
+```bash
+node scripts/datahub/ingest-bare.cjs
+```
+
+Then ask — each answers with **no model involved** (the response header reads `DataHub (catalog)`
+rather than `DataHub + <model>`, so you can tell at a glance):
+
+| Ask | Answer |
+| --- | --- |
+| *"who owns the orders_v2 table?"* | DataHub has no owner recorded for orders_v2. |
+| *"what columns are in the orders_v2 table?"* | DataHub has no schema recorded for orders_v2. |
+| *"what type is the foobar column in fct_users_created?"* | …has no column named "foobar". |
+| *"what feeds the SampleKafkaDataset dataset?"* | DataHub records no upstream datasets for it. |
+
+A question the catalog *can* answer still goes to a model for narration — compare
+*"in fct_users_created, what type is the user_id column?"*, which reports the real type.
+
 ---
 
 ## Optional API keys (each unlocks one extra)
