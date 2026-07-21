@@ -5,6 +5,7 @@ import {
 import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
 import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./src/settings/localProof.js";
 import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled, coerceRefreshMs } from "./src/settings/preferences.js";
+import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, isCloseMatch, missingDimension } from "./src/datahub/catalog.js";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -6215,6 +6216,123 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     }
   }, [speak, youtubeKey, searchYouTube]);
 
+  // DataHub catalog questions. Honesty rule: if the catalog has no answer we say so —
+  // we never let the model invent schemas, owners, or lineage.
+  const runCatalogQuery = async (q, intent) => {
+    const t0 = performance.now();
+    setAiResponses(p => (p.nav ? { nav: p.nav } : {}));
+    setResp("desk", { status: "running", text: "", ms: null, via: "DataHub", model: "catalog", tried: [] });
+    const ms = () => Math.round(performance.now() - t0);
+    const fail = (msg) => setResp("desk", { status: "error", text: msg, ms: ms(), via: "DataHub", tried: [] });
+
+    const call = async (op, variables) => {
+      const r = await fetch("/api/datahub/graphql", {
+        method: "POST", headers: { "Content-Type": "application/json", ...authHdr },
+        body: JSON.stringify({ op, variables }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+      return j;
+    };
+
+    try {
+      const hit = firstSearchHit(await call("search", { term: intent.term }));
+      if (!hit) { fail(t("DataHub has no dataset matching") + ` "${intent.term}".`); return; }
+
+      // DataHub's search is fuzzy — it can return a near-match even when nothing really
+      // matches. Never attribute facts to a near-match without saying so: disclose it in
+      // both what's shown/spoken and what's fed to the model, so the desk never implies
+      // the query resolved cleanly when it didn't.
+      const closeMatch = isCloseMatch(intent.term, hit.name);
+      const disclosure = closeMatch ? "" : t("DataHub had no exact match. Closest dataset:") + " " + hit.name + ". ";
+
+      if (intent.kind === "search") {
+        const text = disclosure + t("DataHub match:") + ` ${hit.name}${hit.platform ? ` on ${hit.platform}` : ""}.`;
+        setResp("desk", { status: "done", text, ms: ms(), via: "DataHub", model: "catalog", tried: [] });
+        rememberTurn(q, text);
+        if (autoSpeak) speak("desk", text);
+        return;
+      }
+
+      const summary = summarizeEntity(await call("entity", { urn: hit.urn }));
+      // null (not []) until we actually run a lineage query — contextForLLM must never
+      // report "no upstreams" for a lookup we never performed.
+      let lineage = null, direction = "UPSTREAM";
+      if (intent.kind === "lineage") {
+        direction = /\bdownstream\b/i.test(q) ? "DOWNSTREAM" : "UPSTREAM";
+        lineage = summarizeLineage(await call("lineage", { urn: hit.urn, direction }));
+      }
+
+      // The catalog may know the dataset but hold nothing for the dimension asked about.
+      const missing = missingDimension(intent.kind, summary, lineage);
+      const absence = missing === "schema" ? t("DataHub has no schema recorded for") + ` ${hit.name}.`
+        : missing === "owners" ? t("DataHub has no owner recorded for") + ` ${hit.name}.`
+        : missing === "lineage" ? (direction === "DOWNSTREAM"
+            ? t("DataHub records no downstream datasets for") : t("DataHub records no upstream datasets for")) + ` ${hit.name}.`
+        : "";
+
+      // Each statement on its own line — the answer is read on air and shown on screen,
+      // and running the headline sentence into the fact block hurts both.
+      const context = [disclosure.trim(), absence, contextForLLM(summary, lineage, direction)]
+        .filter(Boolean).join("\n");
+
+      if (!closeMatch || missing) {
+        // Never hand these facts to a model. The model is the component that invents the
+        // missing part — re-attributing a near-match's facts to the name the user typed,
+        // or filling an absent schema/owner/lineage with plausible fiction (llama3.2:1b
+        // did both in the majority of runs when guarded only by prompt wording). Removing
+        // it from this path makes that structurally impossible; the answer is built
+        // deterministically from the disclosure, the absence statement, and the facts.
+        setResp("desk", { status: "done", text: context, ms: ms(), via: "DataHub", model: "catalog", tried: [] });
+        rememberTurn(q, context);
+        if (autoSpeak) speak("desk", context);
+        return;
+      }
+
+      const enabledModels = aiModels.filter(m => m.enabled);
+      if (!enabledModels.length) {
+        // No model to narrate with — show the facts plainly rather than nothing.
+        setResp("desk", { status: "done", text: context, ms: ms(), via: "DataHub", model: "catalog", tried: [] });
+        rememberTurn(q, context);
+        if (autoSpeak) speak("desk", context);
+        return;
+      }
+
+      const prompt = `${context}\n\nAnswer this question using ONLY the facts above. If the facts do not contain the answer, say so plainly. Do not invent columns, owners, or datasets. Refer to the dataset only by its actual name: ${hit.name}. Do not attribute these facts to any other name.\n\nQuestion: ${q}`;
+      const m = enabledModels[0];
+      const askAny = (mm, pr, onTok) =>
+        mm.kind === "claude" ? askClaude(mm, pr, undefined, onTok)
+        : mm.kind === "ollama" ? askOllama(mm, pr, undefined, onTok)
+        : mm.kind === "gemini" ? askGemini(mm, pr, undefined, onTok)
+        : askOpenAICompat(mm, pr, undefined, onTok);
+      // Seed the streamed answer with the disclosure so it survives into the displayed
+      // text and whatever the anchor reads aloud — not just a fact buried in the prompt
+      // the model might paraphrase away or drop.
+      let acc = disclosure;
+      setResp("desk", { status: "running", text: acc, ms: null, via: `DataHub + ${m.label}`, model: m.model, tried: [] });
+      try {
+        await askAny(m, prompt, (tok) => {
+          acc += tok;
+          setAiResponses(p => ({ ...p, desk: { ...p.desk, text: (p.desk?.text || "") + tok } }));
+        });
+      } catch {
+        // The catalog lookup succeeded — only the narrating model failed (no API key, model
+        // offline, rate limit). Blaming DataHub would be false, and dropping real facts we
+        // already hold would be worse: fall back to showing them exactly as the model-free
+        // paths above do. A desk with no working model still answers catalog questions.
+        setResp("desk", { status: "done", text: context, ms: ms(), via: "DataHub", model: "catalog", tried: [] });
+        rememberTurn(q, context);
+        if (autoSpeak) speak("desk", context);
+        return;
+      }
+      setResp("desk", { status: "done", text: acc, ms: ms(), via: `DataHub + ${m.label}`, model: m.model, tried: [] });
+      if (acc) rememberTurn(q, acc);
+      if (autoSpeak && acc) speak("desk", acc);
+    } catch (e) {
+      fail(t("DataHub lookup failed:") + ` ${humanizeError(e)}`);
+    }
+  };
+
   const askDesk = (override) => {
     const q = (typeof override === "string" ? override : aiQuestion).trim();
     if (!q) return;
@@ -6235,6 +6353,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     // export intent runs first: "download excel", "make a powerpoint", "write a report and export ppt"
     const ex = matchExport(q);
     if (ex) { runExportCmd(ex); return; } // desk-handled — build the file, no model fan-out
+
+    // DataHub catalog intent: schema / owners / lineage questions answered from the live catalog
+    const dhIntent = detectCatalogIntent(q);
+    if (dhIntent) { runCatalogQuery(q, dhIntent); return; } // desk-handled — no market model fan-out
 
     // Games: "play a game", "games" → the menu; "teach me / tutorial / how do stocks work" → straight to Stock School
     if (/\b(games?|play (a )?game|arcade|game room)\b/i.test(q)) { openGames(); return; }
