@@ -92,13 +92,19 @@ const LINEAGE_QUERY = `query VantageLineage($urn: String!, $direction: LineageDi
   }
 }`;
 
+// Safe coercion for GraphQL variable fields: a garbage FIELD VALUE (e.g. an object with a
+// throwing toString/Symbol.toPrimitive, or a Symbol) must never crash a variables builder.
+// We deliberately do NOT attempt to stringify non-strings — that's exactly what would invoke
+// a caller-supplied coercion method. Anything that isn't already a string becomes "".
+const safeStr = (v) => (typeof v === "string" ? v : "");
+
 export const GRAPHQL_OPS = {
-  search: { query: SEARCH_QUERY, variables: (v) => ({ q: String(v?.term ?? "") }) },
-  entity: { query: ENTITY_QUERY, variables: (v) => ({ urn: String(v?.urn ?? "") }) },
+  search: { query: SEARCH_QUERY, variables: (v) => ({ q: safeStr(v?.term) }) },
+  entity: { query: ENTITY_QUERY, variables: (v) => ({ urn: safeStr(v?.urn) }) },
   lineage: {
     query: LINEAGE_QUERY,
     variables: (v) => ({
-      urn: String(v?.urn ?? ""),
+      urn: safeStr(v?.urn),
       direction: v?.direction === "DOWNSTREAM" ? "DOWNSTREAM" : "UPSTREAM",
     }),
   },

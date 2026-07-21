@@ -124,4 +124,73 @@ describe("GRAPHQL_OPS", () => {
     expect(isKnownOp("deleteEverything")).toBe(false);
     expect(isKnownOp(null)).toBe(false);
   });
+
+  it("isKnownOp rejects inherited properties and non-strings without throwing", () => {
+    const hostiles = [
+      "toString",
+      "constructor",
+      "__proto__",
+      "hasOwnProperty",
+      "valueOf",
+      null,
+      undefined,
+      42,
+      {},
+      [],
+      Symbol("s"),
+    ];
+    for (const h of hostiles) {
+      expect(() => isKnownOp(h)).not.toThrow();
+      expect(isKnownOp(h)).toBe(false);
+    }
+  });
+
+  it("variables builders never throw and always return a well-formed object", () => {
+    const hostileToString = { toString() { throw new Error("boom"); } };
+    const inputs = [
+      null,
+      undefined,
+      {},
+      [],
+      "a string",
+      42,
+      hostileToString,
+      Symbol("s"),
+    ];
+
+    for (const input of inputs) {
+      expect(() => GRAPHQL_OPS.search.variables(input)).not.toThrow();
+      const searchVars = GRAPHQL_OPS.search.variables(input);
+      expect(typeof searchVars.q).toBe("string");
+
+      expect(() => GRAPHQL_OPS.entity.variables(input)).not.toThrow();
+      const entityVars = GRAPHQL_OPS.entity.variables(input);
+      expect(typeof entityVars.urn).toBe("string");
+
+      expect(() => GRAPHQL_OPS.lineage.variables(input)).not.toThrow();
+      const lineageVars = GRAPHQL_OPS.lineage.variables(input);
+      expect(typeof lineageVars.urn).toBe("string");
+      expect(["UPSTREAM", "DOWNSTREAM"]).toContain(lineageVars.direction);
+    }
+  });
+
+  it("variables builders treat a hostile term/urn field value as empty rather than throwing", () => {
+    const hostileToString = { toString() { throw new Error("boom"); } };
+    const hostileValueOf = { valueOf() { throw new Error("boom"); } };
+    const symbolValue = Symbol("s");
+
+    expect(() => GRAPHQL_OPS.search.variables({ term: hostileToString })).not.toThrow();
+    expect(GRAPHQL_OPS.search.variables({ term: hostileToString })).toEqual({ q: "" });
+    expect(GRAPHQL_OPS.search.variables({ term: symbolValue })).toEqual({ q: "" });
+
+    expect(() => GRAPHQL_OPS.entity.variables({ urn: hostileToString })).not.toThrow();
+    expect(GRAPHQL_OPS.entity.variables({ urn: hostileToString })).toEqual({ urn: "" });
+    expect(GRAPHQL_OPS.entity.variables({ urn: symbolValue })).toEqual({ urn: "" });
+
+    expect(() => GRAPHQL_OPS.lineage.variables({ urn: hostileValueOf })).not.toThrow();
+    expect(GRAPHQL_OPS.lineage.variables({ urn: hostileValueOf }))
+      .toEqual({ urn: "", direction: "UPSTREAM" });
+    expect(GRAPHQL_OPS.lineage.variables({ urn: symbolValue }))
+      .toEqual({ urn: "", direction: "UPSTREAM" });
+  });
 });
