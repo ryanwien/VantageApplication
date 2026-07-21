@@ -480,8 +480,17 @@ import { GRAPHQL_OPS, isKnownOp } from "../src/datahub/catalog.js";
 ```js
 const DATAHUB_GMS_URL = (process.env.DATAHUB_GMS_URL || "http://localhost:8080").replace(/\/+$/, "");
 const DATAHUB_TOKEN = process.env.DATAHUB_TOKEN || "";
-const datahubConfigured = () => Boolean(DATAHUB_GMS_URL && DATAHUB_TOKEN);
+// The token is OPTIONAL: the local quickstart runs with metadata-service auth disabled and
+// accepts unauthenticated queries. A deployed DataHub will require the token. So "configured"
+// means we know where GMS is; the Authorization header is attached only when a token exists.
+const datahubConfigured = () => Boolean(DATAHUB_GMS_URL);
 ```
+
+**VERIFIED AGAINST A LIVE DATAHUB v1.6.0 QUICKSTART** (do not "correct" these):
+- The GMS GraphQL endpoint is **`/api/graphql`**. `/api/v2/graphql` returns **404** on GMS
+  (port 8080) — that path belongs to the *frontend* (port 9002) and requires a session cookie (401).
+- All three query documents in Task 2 were executed verbatim against this instance and returned
+  data, including ownership (`jdoe`, `datahub`), `schemaMetadata.fields`, and upstream lineage.
 
 - [ ] **Step 3: Add the routes inside the request handler**
 
@@ -506,9 +515,14 @@ Insert after the `/api/auth/logout` handler:
       if (!isKnownOp(op)) return send(res, 400, { error: "Unknown DataHub operation." });
       const spec = GRAPHQL_OPS[op];
       try {
-        const r = await fetch(`${DATAHUB_GMS_URL}/api/v2/graphql`, {
+        const r = await fetch(`${DATAHUB_GMS_URL}/api/graphql`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${DATAHUB_TOKEN}` },
+          headers: {
+            "Content-Type": "application/json",
+            // Only send Authorization when a token exists — the quickstart runs with
+            // metadata-service auth disabled and rejects nothing, but a deployed GMS needs it.
+            ...(DATAHUB_TOKEN ? { Authorization: `Bearer ${DATAHUB_TOKEN}` } : {}),
+          },
           body: JSON.stringify({ query: spec.query, variables: spec.variables(variables) }),
           signal: AbortSignal.timeout(15000),
         });
