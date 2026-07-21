@@ -194,3 +194,64 @@ describe("GRAPHQL_OPS", () => {
       .toEqual({ urn: "", direction: "UPSTREAM" });
   });
 });
+
+import { firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM } from "./catalog.js";
+
+const SEARCH = { data: { searchAcrossEntities: { searchResults: [
+  { entity: { urn: "urn:li:dataset:(a,fct_users,PROD)", name: "fct_users", platform: { name: "hive" } } },
+] } } };
+
+const ENTITY = { data: { dataset: {
+  urn: "urn:li:dataset:(a,fct_users,PROD)",
+  name: "fct_users",
+  platform: { name: "hive" },
+  properties: { description: "User fact table" },
+  ownership: { owners: [{ owner: { username: "jdoe" } }, { owner: { name: "data-eng" } }] },
+  schemaMetadata: { fields: [
+    { fieldPath: "id", type: "NUMBER", nativeDataType: "bigint", description: "pk" },
+    { fieldPath: "email", type: "STRING", nativeDataType: "varchar", description: null },
+  ] },
+} } };
+
+describe("normalization", () => {
+  it("pulls the first search hit", () => {
+    expect(firstSearchHit(SEARCH)).toEqual({
+      urn: "urn:li:dataset:(a,fct_users,PROD)", name: "fct_users", platform: "hive",
+    });
+  });
+
+  it("returns null when there are no hits", () => {
+    expect(firstSearchHit({ data: { searchAcrossEntities: { searchResults: [] } } })).toBe(null);
+    expect(firstSearchHit(null)).toBe(null);
+    expect(firstSearchHit({})).toBe(null);
+  });
+
+  it("summarizes an entity", () => {
+    const s = summarizeEntity(ENTITY);
+    expect(s.name).toBe("fct_users");
+    expect(s.platform).toBe("hive");
+    expect(s.description).toBe("User fact table");
+    expect(s.owners).toEqual(["jdoe", "data-eng"]);
+    expect(s.fields).toEqual([
+      { path: "id", type: "bigint", description: "pk" },
+      { path: "email", type: "varchar", description: "" },
+    ]);
+  });
+
+  it("never throws on malformed input", () => {
+    for (const bad of [null, undefined, {}, [], { data: null }, { data: { dataset: null } }]) {
+      const s = summarizeEntity(bad);
+      expect(s.owners).toEqual([]);
+      expect(s.fields).toEqual([]);
+      expect(summarizeLineage(bad)).toEqual([]);
+    }
+  });
+
+  it("formats a context block naming the source", () => {
+    const ctx = contextForLLM(summarizeEntity(ENTITY), [], "UPSTREAM");
+    expect(ctx).toMatch(/DataHub/);
+    expect(ctx).toMatch(/fct_users/);
+    expect(ctx).toMatch(/jdoe/);
+    expect(ctx).toMatch(/email/);
+  });
+});

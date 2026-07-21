@@ -113,3 +113,60 @@ export const GRAPHQL_OPS = {
 export function isKnownOp(name) {
   return typeof name === "string" && Object.prototype.hasOwnProperty.call(GRAPHQL_OPS, name);
 }
+
+const arr = (v) => (Array.isArray(v) ? v : []);
+const str = (v) => (typeof v === "string" ? v : "");
+
+export function firstSearchHit(json) {
+  const hit = arr(json?.data?.searchAcrossEntities?.searchResults)[0]?.entity;
+  if (!hit || !hit.urn) return null;
+  return { urn: str(hit.urn), name: str(hit.name), platform: str(hit.platform?.name) };
+}
+
+export function summarizeEntity(json) {
+  const d = json?.data?.dataset;
+  const owners = arr(d?.ownership?.owners)
+    .map((o) => str(o?.owner?.username) || str(o?.owner?.name))
+    .filter(Boolean);
+  const fields = arr(d?.schemaMetadata?.fields).map((f) => ({
+    path: str(f?.fieldPath),
+    type: str(f?.nativeDataType) || str(f?.type),
+    description: str(f?.description),
+  }));
+  return {
+    urn: str(d?.urn),
+    name: str(d?.name),
+    platform: str(d?.platform?.name),
+    description: str(d?.properties?.description),
+    owners,
+    fields,
+  };
+}
+
+export function summarizeLineage(json) {
+  return arr(json?.data?.searchAcrossLineage?.searchResults)
+    .map((r) => ({ name: str(r?.entity?.name), platform: str(r?.entity?.platform?.name) }))
+    .filter((x) => x.name);
+}
+
+export function contextForLLM(summary, lineage, direction) {
+  const s = summary || {};
+  const lines = [
+    "FACTS FROM DataHub (the live metadata catalog). Use ONLY these facts:",
+    `dataset: ${s.name || "(unknown)"}${s.platform ? ` (platform: ${s.platform})` : ""}`,
+  ];
+  if (s.description) lines.push(`description: ${s.description}`);
+  if (arr(s.owners).length) lines.push(`owners: ${s.owners.join(", ")}`);
+  if (arr(s.fields).length) {
+    lines.push("schema:");
+    for (const f of s.fields.slice(0, 40)) {
+      lines.push(`  - ${f.path}${f.type ? ` : ${f.type}` : ""}${f.description ? ` — ${f.description}` : ""}`);
+    }
+  }
+  const lin = arr(lineage);
+  if (lin.length) {
+    lines.push(`${direction === "DOWNSTREAM" ? "downstream" : "upstream"} datasets:`);
+    for (const l of lin.slice(0, 20)) lines.push(`  - ${l.name}${l.platform ? ` (${l.platform})` : ""}`);
+  }
+  return lines.join("\n");
+}
