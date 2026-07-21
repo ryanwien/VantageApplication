@@ -242,6 +242,7 @@ inaccurate — don't rely on it for trading decisions.
 
 ## License
 
-Released under the **MIT License** — see [`LICENSE`](LICENSE) for the full text. In short: use,
-modify, and distribute freely, provided the copyright notice and license are retained; the
-software is provided "as is", without warranty.
+Released under the **Apache License 2.0** — see [`LICENSE`](LICENSE) for the full text. In short:
+use, modify, and distribute freely (including commercially), provided you retain the copyright and
+license notices and state significant changes; the license also grants an explicit patent license
+from contributors. The software is provided "as is", without warranty.
