@@ -168,7 +168,7 @@ export function summarizeLineage(json) {
 export function contextForLLM(summary, lineage, direction) {
   const s = summary || {};
   const lines = [
-    "FACTS FROM DataHub (the live metadata catalog). Use ONLY these facts:",
+    "Facts from DataHub (live metadata catalog):",
     `dataset: ${s.name || "(unknown)"}${s.platform ? ` (platform: ${s.platform})` : ""}`,
   ];
   if (s.description) lines.push(`description: ${s.description}`);
