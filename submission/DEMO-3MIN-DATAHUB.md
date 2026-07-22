@@ -35,6 +35,42 @@ curl -s http://localhost:11434/api/tags | head -c 80
 
 ---
 
+## Measured timings (dry run, 2026-07-22)
+
+Every beat driven through the real app against the live catalog, typing simulated at 22 cps.
+**Set the desk model to `llama3.1:latest` before recording** — see the finding below.
+
+| Beat | Type | Answer | Total | `via` badge |
+|---|---|---|---|---|
+| chart AMD and explain the move | 1.5s | 2.0s | **3.5s** | `Ollama (local)` |
+| who owns the fct_users_created table? | 1.9s | 5.2s | **7.1s** | `DataHub + Ollama (local)` |
+| what feeds the fct_users_created table? | 2.0s | 2.1s | **4.0s** | `DataHub + Ollama (local)` |
+| who owns the orders_v2 table? *(refusal)* | 1.5s | 0.8s | **2.3s** | **`DataHub (catalog)`** |
+| what type is the foobar column…? *(refusal)* | 2.6s | 0.8s | **3.4s** | **`DataHub (catalog)`** |
+
+**All on-screen action totals ~20s** against a ~172s film. Pacing is set by narration and holds,
+not by waiting on the app — there is no risk of a beat running long.
+
+**The refusal resolves in ~385 ms — it is almost too fast to notice.** This is the single most
+important beat in the video and it is over before a viewer registers it. Hold deliberately:
+land the answer, then stay on the `via` badge through the silence for a full 3–4 seconds.
+
+### Use `llama3.1:latest`, not `llama3.2:1b`
+
+The 1B model *drops facts* — not fabrication, but lossy narration that undercuts the whole
+"faithful to the catalog" argument:
+
+| Question | `llama3.2:1b` | `llama3.1:latest` |
+|---|---|---|
+| who owns fct_users_created | "jdoe" — **dropped the second owner** | "owned by jdoe and datahub" |
+| what feeds fct_users_created | only "logging_events" — **dropped 3 of 4** | lists all four upstreams |
+
+llama3.1 was also *faster* in practice (4.7s vs 6.2s). Note the refusal beats are unaffected
+either way — they resolve at ~385 ms with **no model in the path at all**, which is the point.
+
+**Also disable LM Studio** in Settings → AI. It was enabled with nothing listening on :1234,
+so it sits in the fallback chain waiting to throw an error on camera.
+
 ## The cut
 
 | Time | On screen | Say (VO) | What it proves |
