@@ -92,6 +92,49 @@ One is a nice detail; three in a row reads as a design principle, which is the a
 
 ---
 
+## VO sheet — read this over the finished footage
+
+**Decision: VO is recorded after the take, not during it.** The on-screen take is driven
+programmatically with no vocal pressure; you then read these lines over the cut. Retaking your
+voice never costs an app retake.
+
+Timings are the window each line has. Read at ~150 wpm (≈2.5 words/sec) — every line below fits
+its window with room, so slow down rather than rush.
+
+| At | Words | Line |
+|---|---|---|
+| 0:00 | 26 | "This is Vantage. You run it by talking to it — and it's wired into DataHub, so it answers from your real catalog." |
+| 0:12 | 24 | "One instruction. It reasons, picks the charting tool, pulls the data, writes the analysis, and reads it back on air." |
+| 0:36 | 10 | "One sentence. Two tool calls. Executed in order." |
+| 0:56 | 30 | "Now a different tool entirely. That answer came out of a live DataHub instance — the agent chose the catalog, ran a read-only query, and had the model narrate the result." |
+| 1:22 | 14 | "Lineage in under two seconds. Every upstream dataset, straight from the catalog." |
+| **1:42** | **44** | **"Here's the part that matters. The catalog has this dataset — but no owner recorded. Most agents will invent one. This one can't. When the fact is missing, the model is removed from the path entirely, and the desk states the gap instead."** |
+| 2:14 | 12 | "Same rule, one level finer. It won't invent a column either." |
+| 2:28 | 16 | "And it won't quietly answer about a different table. Near matches get disclosed, not substituted." |
+| 2:40 | 18 | "Tools, catalog context, and an agent that tells you when it doesn't know. That's Vantage." |
+
+**Total ≈ 194 words over 2:48** — deliberately sparse. The silences are doing work, especially
+around 1:42; resist filling them.
+
+### Two things to get right when reading
+
+1. **Pause before the 1:42 line.** Let the refusal appear on screen in silence first, then speak.
+   Landing the line *over* the reveal steps on it.
+2. **Do not oversell.** Say "it can't invent one" — not "we solved hallucination." The precise
+   claim is the credible one, and a judge who knows the field will notice the difference.
+
+### Anchor audio during the take
+
+The anchor's text-to-speech will also be reading answers aloud. Record it on a **separate OBS
+audio track** from your mic so the edit can duck it under your VO. Two options, both fine:
+
+- **Duck the anchor** under VO everywhere — cleanest, your voice carries the film.
+- **Let the anchor speak the refusal at 1:42**, and start your VO after it finishes. A machine
+  declining to invent something *in its own voice* is a strong moment if you have the room.
+
+If you would rather have no competing voice at all, turn off auto-speak in settings before the
+take and the footage will carry only UI sounds and the ambient bed.
+
 ## The lines that matter
 
 The climax only works if the contrast is explicit. Say the badge out loud:
