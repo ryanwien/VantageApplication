@@ -176,8 +176,15 @@ const NONE = "(none recorded in DataHub)";
 //                    "no upstreams" for a lookup we never performed would be its own lie.
 //   []             — we queried and DataHub returned nothing: say so explicitly.
 //   [rows]         — list them.
-export function contextForLLM(summary, lineage, direction) {
+// `focus` optionally narrows the block to the dimension the question actually asked about.
+// Answering "who owns this?" with the full column list reads as a debug dump rather than an
+// answer. Only the three known focuses narrow; anything else reports everything, so an
+// unrecognised value can never silently hide a fact. Callers building a MODEL prompt pass no
+// focus — the model should still see all the context it can get.
+export function contextForLLM(summary, lineage, direction, focus) {
   const s = summary || {};
+  const only = focus === "owner" || focus === "schema" || focus === "lineage" ? focus : null;
+  const wants = (dim) => !only || only === dim;
   const lines = [
     "Facts from DataHub (live metadata catalog):",
     `dataset: ${s.name || "(unknown)"}${s.platform ? ` (platform: ${s.platform})` : ""}`,
@@ -185,19 +192,21 @@ export function contextForLLM(summary, lineage, direction) {
   if (s.description) lines.push(`description: ${s.description}`);
 
   const owners = arr(s.owners);
-  lines.push(`owners: ${owners.length ? owners.join(", ") : NONE}`);
+  if (wants("owner")) lines.push(`owners: ${owners.length ? owners.join(", ") : NONE}`);
 
   const fields = arr(s.fields);
-  if (fields.length) {
-    lines.push("schema:");
-    for (const f of fields.slice(0, 40)) {
-      lines.push(`  - ${f.path}${f.type ? ` : ${f.type}` : ""}${f.description ? ` — ${f.description}` : ""}`);
+  if (wants("schema")) {
+    if (fields.length) {
+      lines.push("schema:");
+      for (const f of fields.slice(0, 40)) {
+        lines.push(`  - ${f.path}${f.type ? ` : ${f.type}` : ""}${f.description ? ` — ${f.description}` : ""}`);
+      }
+    } else {
+      lines.push(`schema: ${NONE}`);
     }
-  } else {
-    lines.push(`schema: ${NONE}`);
   }
 
-  if (Array.isArray(lineage)) {
+  if (wants("lineage") && Array.isArray(lineage)) {
     const label = `${direction === "DOWNSTREAM" ? "downstream" : "upstream"} datasets`;
     if (lineage.length) {
       lines.push(`${label}:`);

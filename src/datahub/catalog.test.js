@@ -324,6 +324,45 @@ describe("contextForLLM states absent facts", () => {
   });
 });
 
+describe("contextForLLM focus", () => {
+  const FULL = summarizeEntity(ENTITY);
+
+  it("shows only the dimension asked about, and always the dataset identity", () => {
+    const owner = contextForLLM(FULL, null, "UPSTREAM", "owner");
+    expect(owner).toMatch(/fct_users/);
+    expect(owner).toMatch(/owners: jdoe, data-eng/);
+    expect(owner).not.toMatch(/schema/);      // asking who owns it should not dump columns
+    expect(owner).not.toMatch(/email/);
+
+    const schema = contextForLLM(FULL, null, "UPSTREAM", "schema");
+    expect(schema).toMatch(/email/);
+    expect(schema).not.toMatch(/owners:/);
+  });
+
+  it("still reports an absence for the focused dimension", () => {
+    const bare = summarizeEntity({ data: { dataset: { name: "orders_v2" } } });
+    expect(contextForLLM(bare, null, "UPSTREAM", "owner")).toMatch(/owners: \(none recorded in DataHub\)/);
+    expect(contextForLLM(bare, null, "UPSTREAM", "schema")).toMatch(/schema: \(none recorded in DataHub\)/);
+  });
+
+  it("keeps lineage's queried-vs-not distinction under focus", () => {
+    expect(contextForLLM(FULL, [], "UPSTREAM", "lineage")).toMatch(/upstream datasets: \(none recorded in DataHub\)/);
+    expect(contextForLLM(FULL, null, "UPSTREAM", "lineage")).not.toMatch(/upstream/i);
+  });
+
+  it("without a focus, reports everything (the model prompt still gets full context)", () => {
+    const all = contextForLLM(FULL, null, "UPSTREAM");
+    expect(all).toMatch(/owners:/);
+    expect(all).toMatch(/schema:/);
+  });
+
+  it("an unknown focus falls back to everything rather than hiding facts", () => {
+    const all = contextForLLM(FULL, null, "UPSTREAM", "search");
+    expect(all).toMatch(/owners:/);
+    expect(all).toMatch(/schema:/);
+  });
+});
+
 describe("missingDimension", () => {
   const FULL = summarizeEntity(ENTITY);
   const BARE = summarizeEntity({ data: { dataset: { name: "orders_v2" } } });

@@ -6276,10 +6276,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         : absentCol ? `${t("DataHub's schema for")} ${hit.name} ${t("has no column named")} "${absentCol}".`
         : "";
 
+      // What the viewer sees is narrowed to the dimension they asked about — answering
+      // "who owns this?" with the whole column list reads as a debug dump. The model, by
+      // contrast, still gets every fact we hold, so narrowing can never cost it context.
+      const shown = contextForLLM(summary, lineage, direction, intent.kind === "owner" ? "owner" : intent.kind);
+      const everything = contextForLLM(summary, lineage, direction);
+
       // Each statement on its own line — the answer is read on air and shown on screen,
       // and running the headline sentence into the fact block hurts both.
-      const context = [disclosure.trim(), absence, contextForLLM(summary, lineage, direction)]
-        .filter(Boolean).join("\n");
+      const context = [disclosure.trim(), absence, shown].filter(Boolean).join("\n");
+      const fullContext = [disclosure.trim(), absence, everything].filter(Boolean).join("\n");
 
       if (!closeMatch || missing || absentCol) {
         // Never hand these facts to a model. The model is the component that invents the
@@ -6303,7 +6309,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         return;
       }
 
-      const prompt = `${context}\n\nAnswer this question using ONLY the facts above. If the facts do not contain the answer, say so plainly. Do not invent columns, owners, or datasets. Refer to the dataset only by its actual name: ${hit.name}. Do not attribute these facts to any other name.\n\nQuestion: ${q}`;
+      const prompt = `${fullContext}\n\nAnswer this question using ONLY the facts above. If the facts do not contain the answer, say so plainly. Do not invent columns, owners, or datasets. Refer to the dataset only by its actual name: ${hit.name}. Do not attribute these facts to any other name.\n\nQuestion: ${q}`;
       const m = enabledModels[0];
       const askAny = (mm, pr, onTok) =>
         mm.kind === "claude" ? askClaude(mm, pr, undefined, onTok)
