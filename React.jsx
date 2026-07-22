@@ -3351,6 +3351,14 @@ function AuthScreen({ onAuthed, onGuest }) {
             {socialBlock}
             <button style={primaryBtn()} onClick={() => { setErr(""); setStep("signup"); }}>{t("Create account")}</button>
             <button style={{ ...primaryBtn(), background: "transparent", color: C.text, border: `1px solid ${C.panelEdge}` }} onClick={() => { setErr(""); setStep("login"); }}>{t("Log in")}</button>
+            {/* The gate is skippable on purpose: a first-time visitor (or a judge opening a
+                hosted link) gets the whole dashboard without signing up. An account only
+                adds a saved plan — watchlist, portfolio and settings persist either way. */}
+            {onGuest && (
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <button style={ghostBtn} onClick={onGuest}>{t("Explore in demo mode →")}</button>
+              </div>
+            )}
           </>)}
 
           {/* ---------- LOG IN ---------- */}
@@ -8988,6 +8996,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 export default function App() {
   // account: a signed-in user; guest: chose to skip the gate. Either one lets us in.
   const [account, setAccount] = useState(loadAccount);
+  // Deliberately NOT persisted: skipping the gate lasts for the visit, not forever.
+  const [guest, setGuest] = useState(false);
   // UI + AI language (persisted). Provided app-wide so AuthScreen and the dashboard both translate.
   const [lang, setLangState] = useState(loadLang);
   const setLang = useCallback((code) => { setLangState(code); try { localStorage.setItem("vantage-lang", code); } catch { /* ignore */ } }, []);
@@ -9010,7 +9020,8 @@ export default function App() {
   const signOut = () => {
     // best-effort backend logout; local state always clears
     if (account?.backend && account?.token) { fetch("/api/auth/logout", { method: "POST", headers: { Authorization: `Bearer ${account.token}` } }).catch(() => {}); }
-    saveAccount(null); setAccount(null);
+    // also drops guest mode, so "Sign in / create account" returns to the gate
+    saveAccount(null); setAccount(null); setGuest(false);
   };
   // Update the current plan. For a local account, also patch the tape-users record so it
   // survives sign-out/in. (Real paid upgrades route through Stripe in the ACCOUNT tab first.)
@@ -9030,8 +9041,8 @@ export default function App() {
 
   return (
     <I18nContext.Provider value={i18n}>
-      {!account
-        ? <AuthScreen onAuthed={signIn} />
+      {!account && !guest
+        ? <AuthScreen onAuthed={signIn} onGuest={() => setGuest(true)} />
         : <MarketDashboard account={account} onSignOut={signOut} onChangePlan={changePlan} />}
     </I18nContext.Provider>
   );
