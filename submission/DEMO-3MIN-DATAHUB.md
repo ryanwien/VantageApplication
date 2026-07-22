@@ -73,16 +73,22 @@ so it sits in the fallback chain waiting to throw an error on camera.
 
 ## The cut
 
+Target **2:48**, leaving 12s of margin under the hard 3:00 cap.
+
 | Time | On screen | Say (VO) | What it proves |
 |---|---|---|---|
-| 0:00–0:12 | Vantage live, anchor on the desk, ticker moving | "This is Vantage. You run it by talking to it — and it's wired into DataHub, so it answers from your real catalog." | hook |
-| 0:12–0:38 | Type **"chart AMD and explain the move"** → charts, writes the read, anchor speaks it | "One instruction. It reasons, picks the charting tool, pulls the data, writes the analysis, and reads it on air." | **reasoning → tool invocation** |
-| 0:38–1:00 | Type **"add TSLA to my watchlist, then take me to Robinhood"** → watchlist mutates, then navigates | "One sentence, two tool calls, executed in order." | **multi-step execution** |
-| 1:00–1:30 | Type **"who owns the fct_users_created table?"** → *owners are jdoe and datahub*. Point at badge: **`DataHub + Ollama`** | "Now a different tool. That answer came out of a live DataHub instance — the agent picked the catalog, ran a read-only GraphQL query, and had the model narrate the result." | **external context platform as a tool** |
-| 1:30–1:52 | Type **"what feeds the fct_users_created table?"** → logging_events, SampleHiveDataset, SampleKafkaDataset | "Lineage, in about a second — upstream datasets, straight from the catalog." | **multi-hop structured query** |
-| 1:52–2:28 | **THE BEAT.** Type **"who owns the orders_v2 table?"** → *"DataHub has no owner recorded for orders_v2."* Badge reads **`DataHub (catalog)`** — no model. Hold 2s on the badge. | "Here's the part I care about. The catalog has this dataset but no owner. Most agents invent one. This one can't — when the fact is missing, the model is removed from the path entirely and the desk states the gap instead." | **honest tool use — the differentiator** |
-| 2:28–2:40 | Type **"what type is the foobar column in fct_users_created?"** → *"...has no column named 'foobar'."* Still `DataHub (catalog)` | "Same rule one level down. It won't invent a column either." | refusal generalises |
-| 2:40–2:52 | End card: repo URL · Apache-2.0 · "100 tests · runs local or cloud" | "Tools, catalog context, and an agent that tells you when it doesn't know. That's Vantage." | close |
+| 0:00–0:10 | Vantage live, anchor on the desk, ticker moving | "This is Vantage. You run it by talking to it — and it's wired into DataHub, so it answers from your real catalog." | hook |
+| 0:10–0:34 | Type **"chart AMD and explain the move"** → charts, writes the read, anchor speaks it | "One instruction. It reasons, picks the charting tool, pulls the data, writes the analysis, and reads it on air." | **reasoning → tool invocation** |
+| 0:34–0:54 | Type **"add TSLA to my watchlist, then take me to Robinhood"** → watchlist mutates, then navigates | "One sentence, two tool calls, executed in order." | **multi-step execution** |
+| 0:54–1:20 | Type **"who owns the fct_users_created table?"** → *"owned by jdoe and datahub"*. Badge: **`DataHub + Ollama`** | "Now a different tool. That came out of a live DataHub instance — the agent picked the catalog, ran a read-only query, and had the model narrate the result." | **external context platform as a tool** |
+| 1:20–1:40 | Type **"what feeds the fct_users_created table?"** → all four upstreams listed | "Lineage in under two seconds — upstream datasets, straight from the catalog." | **multi-hop structured query** |
+| **1:40–2:12** | **THE BEAT.** Type **"who owns the orders_v2 table?"** → *"DataHub has no owner recorded for orders_v2."* Badge reads **`DataHub (catalog)`** — no model. **Hold 3–4s on the badge, in silence.** | "Here's the part that matters. The catalog has this dataset but no owner. Most agents invent one. This one can't — when the fact is missing the model is removed from the path entirely, and the desk states the gap instead." | **honest tool use — the differentiator** |
+| 2:12–2:26 | Type **"what type is the foobar column in fct_users_created?"** → *"…has no column named 'foobar'."* Still `DataHub (catalog)` | "Same rule one level finer. It won't invent a column either." | refusal generalises |
+| 2:26–2:38 | Type **"who owns the user_events table?"** → *"DataHub had no exact match. Closest dataset: fct_users_created."* | "And it won't quietly answer about a different table — near matches get disclosed, not substituted." | third honesty behaviour |
+| 2:38–2:48 | End card: repo URL · Apache-2.0 · "100 tests · runs local or cloud" | "Tools, catalog context, and an agent that tells you when it doesn't know. That's Vantage." | close |
+
+The three honesty beats escalate deliberately: **missing fact → missing sub-fact → wrong entity.**
+One is a nice detail; three in a row reads as a design principle, which is the actual claim.
 
 ---
 
