@@ -46,7 +46,7 @@ browser's localStorage and are sent solely to their own provider.
 ## Tech
 React (Vite) SPA · optional dependency-free Node backend · **DataHub catalog context via a
 read-only, whitelisted GraphQL proxy** · local inference via Ollama / vLLM (ROCm-capable) ·
-Finnhub / TMDB / YouTube / ElevenLabs as optional integrations · Vitest test suite (100 tests) ·
+Finnhub / TMDB / YouTube / ElevenLabs as optional integrations · Vitest test suite (105 tests) ·
 Apache 2.0.
 
 ## Repository
