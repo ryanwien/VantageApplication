@@ -53,8 +53,10 @@ Apache 2.0.
 https://github.com/ryanwien/VantageApplication  (Apache-2.0, public)
 
 ## Live demo
-<FILL: current Netlify URL>  — runs in Demo mode with zero setup; cloud-AI and live-data
-features activate when a viewer adds their own keys in Settings.
+<FILL: current Netlify URL>  — needs **no keys and no server**. First visit asks you to create an
+account; it is created **in your own browser** (localStorage — no server, no email
+verification, nothing sent anywhere), then the full dashboard opens in Demo mode. Cloud-AI
+and live-data features activate when a viewer adds their own keys in Settings.
 
 **What the hosted demo cannot show, and why.** Two capabilities need something running on the
 viewer's own machine, so they are shown in the demo video rather than the hosted build:

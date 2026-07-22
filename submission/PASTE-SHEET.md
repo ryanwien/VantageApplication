@@ -6,7 +6,9 @@ Everything here is copy-paste ready. Nothing in this file is a claim the app can
 
 ## 1. YouTube upload — **Public**, not Unlisted
 
-File: `Desktop\vantage-take-02.mp4` (2:44, 1080p, 10.6 MB) — after your VO is laid over it.
+File: `C:\Users\Ryan\OneDrive\Desktop\vantage-take-02.mp4` (2:44, 1080p, 10.1 MB) — after your
+VO is laid over it. *(The takes live in the OneDrive Desktop; the deploy folder in step 3
+lives in the plain Desktop. Different folders, same-looking name.)*
 
 > The rules say *publicly visible*. Unlisted is not public: a judge who searches
 > can't find it, and some review flows treat it as unavailable. Set **Public**.
@@ -85,9 +87,20 @@ C:\Users\Ryan\Desktop\vantage-submission\dist
 4. Paste it into: GitHub About → Website, the submission form, and
    `submission/SUBMISSION-COPY.md` line 56 (`<FILL: current Netlify URL>`)
 
-The hosted build runs in Demo mode with no setup. DataHub and local-model inference
-can't run on a static host — that's stated plainly in `SUBMISSION-COPY.md` under
-*What the hosted demo cannot show, and why*, with local repro steps.
+**Verified before staging:** this exact folder was served as a plain static site with no
+backend running and walked end-to-end — gate → local account → dashboard, ticker, anchor and
+onboarding all render. What a first-time visitor actually meets is the sign-in gate; the
+account is created *in their own browser* (no server, no email verification), and the
+dashboard opens straight into Demo mode after it. The submission copy now says that rather
+than implying the app opens unwalled.
+
+**Do not add a `_redirects` file.** The usual SPA rule (`/* /index.html 200`) makes
+`/api/status` answer 200 with the HTML page, so the app concludes a backend exists and routes
+sign-in to a server that isn't there. Vantage is one route — it doesn't need the rule, and it
+breaks auth. (Caught by serving the same folder both ways.)
+
+DataHub and local-model inference can't run on a static host — that's stated plainly in
+`SUBMISSION-COPY.md` under *What the hosted demo cannot show, and why*, with local repro steps.
 
 ---
 
