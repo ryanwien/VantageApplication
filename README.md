@@ -276,26 +276,15 @@ MEETINGS_SETUP.md  step-by-step Zoom / Google OAuth setup
 
 ---
 
-## Security notes (read before deploying)
+## Security
 
-- **Never commit secrets.** `.env`, `server/users.json`, `server/sessions.json`, and
-  `server/tokens.json` are gitignored — they hold password hashes and live tokens.
-- The **client-side** account layer (localStorage) is a prototype convenience, **not** an
-  authorization boundary — anyone with devtools can read it. Real protection comes only from the
-  backend.
-- The Stripe success redirect (`?checkout=success&plan=…`) is **client-trusted** — fine for test
-  mode only. For a real deployment, configure Stripe to POST events to
-  `/api/billing/webhook` and set `STRIPE_WEBHOOK_SECRET`; verified webhooks, rather than the
-  redirect, grant paid plans.
-- Hosted AI requires a signed-in backend account and keeps the Gemini credentials on the server.
-  Its local `server/ai-usage.json` file records metering and agent runs; use a managed database
-  before a multi-instance production deployment.
-- **Scheduled market-brief agent**: a signed-in user can opt in from ACCOUNT. It saves their
-  watchlist server-side and a scheduler can POST once daily to `/api/agent/run` using the
-  `x-vantage-cron-secret` header. It uses a server-side Finnhub key to build quote context,
-  writes a factual Gemini brief, and explicitly excludes trade execution and recommendations.
-- This is dev/local-oriented. For a shared deployment, host the backend over **HTTPS** and set
-  `PUBLIC_ORIGIN` / `APP_ORIGIN` to your real domains (and register those OAuth redirect URIs).
+Read **[SECURITY.md](SECURITY.md)** before deploying any part of this beyond your own machine.
+It covers what's deliberate and what's a prototype shortcut — the client-side account layer, the
+client-trusted Stripe redirect, where API keys are held, and how to report a vulnerability
+privately.
+
+Short version: Vantage is a prototype. It runs entirely in the browser by default, and the
+optional Node backend is dev/local-oriented.
 
 ---
 
