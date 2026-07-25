@@ -1,15 +1,17 @@
 # Vantage
 
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
+> **License: [Apache 2.0](LICENSE)** — use, modify, and distribute freely (including commercially),
+> provided you keep the copyright/license notices and state significant changes; includes an explicit
+> patent grant from contributors. Provided "as is", without warranty.
+
 A browser market dashboard fronted by an animated AI "broadcast desk." A single-page React app
 where an animated news anchor charts stocks, answers questions out loud, reads the news, plays
 trailers, hosts games, tracks a portfolio, and rings the opening bell on a real trading-day clock.
 
 The dashboard runs **fully in the browser with zero setup**. Everything below (live data, AI answers,
 studio voice, real meetings, accounts, subscriptions) is **optional** and layers on top.
-
-> **License:** [Apache 2.0](LICENSE) — use, modify, and distribute freely (including commercially),
-> provided you keep the copyright/license notices and state significant changes; includes an explicit
-> patent grant from contributors. Provided "as is", without warranty.
 
 ---
 
