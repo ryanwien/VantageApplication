@@ -6317,7 +6317,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         return;
       }
 
-      const prompt = `${fullContext}\n\nAnswer this question using ONLY the facts above. If the facts do not contain the answer, say so plainly. Do not invent columns, owners, or datasets. Refer to the dataset only by its actual name: ${hit.name}. Do not attribute these facts to any other name.\n\nQuestion: ${q}`;
+      const prompt = `${fullContext}\n\nAnswer this question in one complete, natural sentence using ONLY the facts above, and include every value the facts list (for example, list all owners) — never drop any or reduce the answer to a bare comma-separated list. If the facts do not contain the answer, say so plainly. Do not invent columns, owners, or datasets. Refer to the dataset only by its actual name: ${hit.name}. Do not attribute these facts to any other name.\n\nQuestion: ${q}`;
       const m = enabledModels[0];
       const askAny = (mm, pr, onTok) =>
         mm.kind === "claude" ? askClaude(mm, pr, undefined, onTok)
