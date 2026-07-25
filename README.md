@@ -75,7 +75,7 @@ The AI desk is an agent (tool use, multi-step commands, local multi-turn memory)
 inference can run **entirely on a local model** — on an AMD Radeon GPU through ROCm.
 
 ```mermaid
-flowchart LR
+flowchart TD
     Q([Your question]) --> SPA["Vantage SPA<br/>?local=1 · no cloud keys"]
     SPA --> SRV{Local server}
     SRV -->|Ollama| OLL[llama.cpp]
