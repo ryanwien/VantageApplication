@@ -13,6 +13,10 @@ trailers, hosts games, tracks a portfolio, and rings the opening bell on a real 
 The dashboard runs **fully in the browser with zero setup**. Everything below (live data, AI answers,
 studio voice, real meetings, accounts, subscriptions) is **optional** and layers on top.
 
+> **Want to see what it produces without running it?** [`examples/`](examples/) holds real
+> generated output — catalog answers and refusals, an analyst report, and the complete list of
+> queries the server can send — all readable straight in the file viewer.
+
 ---
 
 ## How it works
@@ -260,7 +264,11 @@ APP_ORIGIN     (default http://127.0.0.1:5173 — where the dashboard runs)
 ```
 React.jsx          the whole UI (one big component + a few module components)
 exporters.js       lazy-loaded Excel / Word / PowerPoint generators
+src/datahub/       catalog intent detection, whitelisted queries, honesty checks (+ tests)
+src/settings/      preferences & local-proof modules (+ tests)
 server/index.js    the optional backend: accounts, meetings, billing (dependency-free)
+examples/          real generated output — read it without running anything
+scripts/datahub/   seed a bare dataset to reproduce the refusal behaviour
 index.html         Vite entry
 vite.config.js     dev server + /api → backend proxy
 MEETINGS_SETUP.md  step-by-step Zoom / Google OAuth setup
