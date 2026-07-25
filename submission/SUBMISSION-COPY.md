@@ -53,7 +53,7 @@ Apache 2.0.
 https://github.com/ryanwien/VantageApplication  (Apache-2.0, public)
 
 ## Live demo
-<FILL: current Netlify URL>  — needs **no keys and no server**. First visit asks you to create an
+https://vantageappliaction.netlify.app/  — needs **no keys and no server**. First visit asks you to create an
 account; it is created **in your own browser** (localStorage — no server, no email
 verification, nothing sent anywhere), then the full dashboard opens in Demo mode. Cloud-AI
 and live-data features activate when a viewer adds their own keys in Settings.

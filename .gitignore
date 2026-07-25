@@ -26,3 +26,4 @@ server/ai-usage.json
 .appsec/
 .claude/
 .github/copilot-instructions.md
+.demo-tooling/

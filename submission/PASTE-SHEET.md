@@ -71,6 +71,16 @@ Also tick **Releases**/**Packages** off if they're cluttering the sidebar; leave
 
 ## 3. Live demo URL — Netlify Drop
 
+> ✅ **DEPLOYED:** <https://vantageappliaction.netlify.app/> — verified live (HTTP 200).
+> The served bundle is built from pushed `main`, so the hosted demo and the public repo
+> match. `/api/status` correctly returns **404**, confirming no `_redirects` catch-all is
+> breaking sign-in.
+>
+> ⚠️ **The site name is misspelled** — `vantageappliaction` (the `ca` in "application" is
+> transposed to `ac`). Rename it in Netlify → Site configuration → Domain management →
+> Options → *Edit site name* **before** the URL propagates into the submission form and the
+> GitHub About sidebar. Everything below is the original drop procedure, kept for reference.
+
 The folder is staged and **rebuilt from `main` today**:
 
 ```
@@ -106,7 +116,13 @@ DataHub and local-model inference can't run on a static host — that's stated p
 
 ## 4. Category
 
-**Autonomous AI agents / tool usage**
+Dropdown option to select: **Agents That Do Real Work**
+
+*(The four choices are: Agents That Do Real Work · Metadata-Aware Code Generation &
+Development · Production ML Agents · Open / Wildcard. "Metadata-Aware" is the near-miss —
+it's about generating **code** from metadata, and Vantage generates answers and documents,
+not code. This is the same position as the "autonomous AI agents / tool usage" wording used
+in the YouTube description and `SUBMISSION-COPY.md`.)*
 
 If the form wants a sentence:
 ```
