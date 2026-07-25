@@ -7928,7 +7928,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               <rect width="100%" height="100%" fill="rgba(5,8,13,0.80)" mask="url(#tour-mask)" />
               {r && <rect x={r.x - pad} y={r.y - pad} width={r.w + pad * 2} height={r.h + pad * 2} rx="8" fill="none" stroke={C.amber} strokeWidth="2" />}
             </svg>
-            <div style={{ position: "absolute", width: TIPW, left: tip.left, top: tip.top, maxHeight: maxH, overflowY: "auto", background: C.panel, border: `1px solid ${C.amber}`, borderRadius: 8, padding: 16, boxShadow: "0 16px 50px rgba(0,0,0,0.6)" }}>
+            <div style={{ position: "absolute", boxSizing: "border-box", width: TIPW, maxWidth: "calc(100vw - 24px)", left: tip.left, top: tip.top, maxHeight: maxH, overflowY: "auto", background: C.panel, border: `1px solid ${C.amber}`, borderRadius: 8, padding: 16, boxShadow: "0 16px 50px rgba(0,0,0,0.6)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", color: C.faint }}>TOUR · {tourStep + 1}/{TOUR_STEPS.length}</span>
                 <button onClick={endSpotlight} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 11, cursor: "pointer" }}>{t("exit")} ✕</button>
