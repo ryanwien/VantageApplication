@@ -84,6 +84,12 @@ const C = {
 const MONO = "'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace";
 const SANS = "'Archivo', 'Helvetica Neue', Arial, sans-serif";
 
+// The origin this page is served from, which is exactly what a local model server has to be told
+// to allow. Verified against a deployed HTTPS build reaching http://localhost:11434: the browser
+// DOES send the request (Private Network Access is not enforced here) and the only thing standing
+// in the way is the CORS header, so naming this origin is advice that actually works.
+const PAGE_ORIGIN = (typeof window !== "undefined" && window.location?.origin) || "*";
+
 // ============================================================
 // i18n — UI translation + AI-answer language. English is the base; target
 // dictionaries are pre-baked JSON (keyed by the English source string) so
@@ -3669,7 +3675,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       setOllamaTags([]);
       // A wildcard origin is the simplest reliable fix (localhost ≠ 127.0.0.1 to a browser, so an
       // exact-origin allow-list often mismatches). Keep this calm — it's a setup hint, not an error.
-      setOllamaTagErr(`Ollama isn't reachable at ${base}. Start it so this page is allowed:  OLLAMA_ORIGINS=* ollama serve`);
+      // Off a local origin no CORS setting can help, so say what actually works instead.
+      // A failed fetch can't distinguish "not installed" from "running but not allowing this
+      // origin", so cover both. Naming this page's origin is what makes the hint copy-pasteable.
+      setOllamaTagErr(`Ollama isn't reachable at ${base} from this page. If it's running, restart it allowing this origin:  OLLAMA_ORIGINS=${PAGE_ORIGIN} ollama serve  (or use *). If it isn't installed yet: https://ollama.com/download`);
     }
   }, [aiModels]);
   const [aiQuestion, setAiQuestion] = useState("");
@@ -6542,7 +6551,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       let msg = humanizeError(e);
       if (e.name === "AbortError") return "timed out";
       if (e instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(msg)) {
-        return m.kind === "ollama" ? "can't reach Ollama — run: OLLAMA_ORIGINS=* ollama serve"
+        return m.kind === "ollama" ? `can't reach Ollama — restart it with: OLLAMA_ORIGINS=${PAGE_ORIGIN} ollama serve (or *)`
           : (m.kind === "openai" && !m.needsKey) ? "local server unreachable (CORS?)"
           : "network error";
       }
@@ -8499,12 +8508,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, lineHeight: 1.7 }}>
                     {lang === "en" ? (
                       <>Local endpoints need CORS enabled to accept requests from this page:<br />
-                      · Ollama — start with <span style={{ color: C.muted }}>OLLAMA_ORIGINS="https://claude.ai"</span> (or *)<br />
+                      · Ollama — start with <span style={{ color: C.muted }}>{`OLLAMA_ORIGINS="${PAGE_ORIGIN}"`}</span> (or *)<br />
                       · LM Studio — Developer tab → enable server + turn on CORS<br />
                       The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).</>
                     ) : (
                       <>{t("Local endpoints need CORS enabled to accept requests from this page:")}<br />
-                      · Ollama — {t("start with")} <span style={{ color: C.muted }}>OLLAMA_ORIGINS="https://claude.ai"</span> ({t("or")} *)<br />
+                      · Ollama — {t("start with")} <span style={{ color: C.muted }}>{`OLLAMA_ORIGINS="${PAGE_ORIGIN}"`}</span> ({t("or")} *)<br />
                       · LM Studio — {t("Developer tab → enable server + turn on CORS")}<br />
                       {t("The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).")}</>
                     )}

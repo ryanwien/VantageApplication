@@ -53,18 +53,28 @@ Apache 2.0.
 https://github.com/ryanwien/VantageApplication  (Apache-2.0, public)
 
 ## Live demo
-https://vantageappliaction.netlify.app/  — needs **no keys and no server**. First visit asks you to create an
+https://vantage-desk.netlify.app/  — needs **no keys and no server**. First visit asks you to create an
 account; it is created **in your own browser** (localStorage — no server, no email
 verification, nothing sent anywhere), then the full dashboard opens in Demo mode. Cloud-AI
 and live-data features activate when a viewer adds their own keys in Settings.
 
-**What the hosted demo cannot show, and why.** Two capabilities need something running on the
-viewer's own machine, so they are shown in the demo video rather than the hosted build:
+**What the hosted demo cannot show, and why.**
 
 - **DataHub catalog context** — needs the Node backend plus a reachable DataHub instance. The
-  hosted build is static, and the proxy that holds the token is deliberately server-side.
-- **Local-model inference** — browser Private Network Access blocks a public HTTPS page from
-  reaching `localhost:11434`.
+  hosted build is static, and the proxy that holds the token is deliberately server-side, so
+  this one is shown in the demo video rather than on the hosted build.
+
+**What the hosted demo *can* show, with one command.** **Local-model inference works on the
+hosted build.** If you have Ollama installed, restart it allowing this origin and the live site
+will drive your own local model — nothing leaves your machine:
+
+```bash
+OLLAMA_ORIGINS=https://vantage-desk.netlify.app ollama serve   # or OLLAMA_ORIGINS=*
+```
+
+Verified from the deployed HTTPS build: the browser reaches `http://localhost:11434` and returns
+the installed models. The only barrier is the CORS header — Chrome does not apply Private Network
+Access restrictions here.
 
 Both are reproducible locally in a few minutes: `README.md` → *DataHub catalog context*, then
 `node scripts/datahub/ingest-bare.cjs` to see the refusal behaviour.
