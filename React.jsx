@@ -6,6 +6,8 @@ import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
 import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./src/settings/localProof.js";
 import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled, coerceRefreshMs } from "./src/settings/preferences.js";
 import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, isCloseMatch, missingDimension, namedAbsentColumn } from "./src/datahub/catalog.js";
+import { buildPnF } from "./src/pnf/pnf.js";
+import { detectPattern } from "./src/pnf/patterns.js";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -122,6 +124,7 @@ const I18N = {
     "ASK ALL": "PREGUNTAR A TODOS",
     "Ask the desk anything": "Pregúntale lo que quieras a la mesa", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Las respuestas aparecen aquí y el presentador las lee en directo. Toca una sugerencia — o escribe la tuya abajo.", "Summarize {sym} today": "Resume {sym} hoy", "What's moving today?": "¿Qué se mueve hoy?", "Take me to Robinhood": "Llévame a Robinhood", "What's on Netflix?": "¿Qué hay en Netflix?", "Write a report → PPT": "Escribe un informe → PPT",
     "WATCHLIST": "LISTA DE SEGUIMIENTO", "TOP MOVERS": "MAYORES MOVIMIENTOS", "full chart": "gráfico completo",
+    "LINE": "LÍNEA", "not enough movement for a P&F column yet": "aún no hay suficiente movimiento para una columna P&F", "3-box reversal · this session": "reversión de 3 casillas · esta sesión",
     "Language": "Idioma",
     "The AI broadcast desk for the markets.": "La mesa de retransmisión con IA para los mercados.",
     "Create account": "Crear cuenta", "Log in": "Iniciar sesión", "Explore in demo mode →": "Explorar en modo demo →",
@@ -265,6 +268,7 @@ const I18N = {
     "ASK ALL": "TOUT DEMANDER",
     "Ask the desk anything": "Demandez ce que vous voulez au plateau", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Les réponses apparaissent ici et le présentateur les lit à l'antenne. Touchez une suggestion — ou saisissez la vôtre ci-dessous.", "Summarize {sym} today": "Résumez {sym} aujourd'hui", "What's moving today?": "Qu'est-ce qui bouge aujourd'hui ?", "Take me to Robinhood": "Emmène-moi sur Robinhood", "What's on Netflix?": "Qu'y a-t-il sur Netflix ?", "Write a report → PPT": "Rédiger un rapport → PPT",
     "WATCHLIST": "LISTE DE SUIVI", "TOP MOVERS": "PLUS FORTES VARIATIONS", "full chart": "graphique complet",
+    "LINE": "LIGNE", "not enough movement for a P&F column yet": "pas encore assez de mouvement pour une colonne P&F", "3-box reversal · this session": "retournement de 3 cases · cette séance",
     "Language": "Langue",
     "The AI broadcast desk for the markets.": "Le plateau de diffusion IA pour les marchés.",
     "Create account": "Créer un compte", "Log in": "Se connecter", "Explore in demo mode →": "Explorer en mode démo →",
@@ -408,6 +412,7 @@ const I18N = {
     "ASK ALL": "ALLE FRAGEN",
     "Ask the desk anything": "Frag das Pult alles", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Antworten erscheinen hier und der Moderator liest sie auf Sendung vor. Tippe einen Vorschlag an — oder schreibe unten deinen eigenen.", "Summarize {sym} today": "Fasse {sym} heute zusammen", "What's moving today?": "Was bewegt sich heute?", "Take me to Robinhood": "Bring mich zu Robinhood", "What's on Netflix?": "Was läuft auf Netflix?", "Write a report → PPT": "Bericht schreiben → PPT",
     "WATCHLIST": "BEOBACHTUNGSLISTE", "TOP MOVERS": "GRÖSSTE BEWEGUNGEN", "full chart": "vollständiges Diagramm",
+    "LINE": "LINIE", "not enough movement for a P&F column yet": "noch nicht genug Bewegung für eine P&F-Spalte", "3-box reversal · this session": "3-Box-Umkehr · diese Sitzung",
     "Language": "Sprache",
     "The AI broadcast desk for the markets.": "Das KI-Broadcast-Pult für die Märkte.",
     "Create account": "Konto erstellen", "Log in": "Anmelden", "Explore in demo mode →": "Im Demo-Modus erkunden →",
@@ -551,6 +556,7 @@ const I18N = {
     "ASK ALL": "PERGUNTAR A TODOS",
     "Ask the desk anything": "Pergunte à mesa o que quiser", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "As respostas aparecem aqui e o apresentador lê-as ao vivo. Toque numa sugestão — ou escreva a sua abaixo.", "Summarize {sym} today": "Resumir {sym} hoje", "What's moving today?": "O que está a mover-se hoje?", "Take me to Robinhood": "Leva-me ao Robinhood", "What's on Netflix?": "O que há na Netflix?", "Write a report → PPT": "Escrever um relatório → PPT",
     "WATCHLIST": "LISTA DE ACOMPANHAMENTO", "TOP MOVERS": "MAIORES VARIAÇÕES", "full chart": "gráfico completo",
+    "LINE": "LINHA", "not enough movement for a P&F column yet": "ainda não há movimento suficiente para uma coluna P&F", "3-box reversal · this session": "reversão de 3 caixas · esta sessão",
     "Language": "Idioma",
     "The AI broadcast desk for the markets.": "A mesa de transmissão com IA para os mercados.",
     "Create account": "Criar conta", "Log in": "Iniciar sessão", "Explore in demo mode →": "Explorar no modo demo →",
@@ -693,6 +699,7 @@ const I18N = {
     "ASK ALL": "CHIEDI A TUTTI",
     "Ask the desk anything": "Chiedi qualsiasi cosa alla postazione", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Le risposte appaiono qui e il conduttore le legge in diretta. Tocca uno spunto — o scrivi il tuo qui sotto.", "Summarize {sym} today": "Riassumi {sym} oggi", "What's moving today?": "Cosa si muove oggi?", "Take me to Robinhood": "Portami su Robinhood", "What's on Netflix?": "Cosa c'è su Netflix?", "Write a report → PPT": "Scrivi un report → PPT",
     "WATCHLIST": "LISTA DI OSSERVAZIONE", "TOP MOVERS": "MAGGIORI VARIAZIONI", "full chart": "grafico completo",
+    "LINE": "LINEA", "not enough movement for a P&F column yet": "movimento ancora insufficiente per una colonna P&F", "3-box reversal · this session": "inversione a 3 caselle · questa sessione",
     "Language": "Lingua",
     "The AI broadcast desk for the markets.": "La postazione di trasmissione IA per i mercati.",
     "Create account": "Crea account", "Log in": "Accedi", "Explore in demo mode →": "Esplora in modalità demo →",
@@ -3451,6 +3458,48 @@ function AuthScreen({ onAuthed, onGuest }) {
   );
 }
 
+// ---------- Point & Figure chart (SVG) ----------
+// Pure presentational: columns/boxSize come from src/pnf/pnf.js. Renders the last
+// 48 columns as an X/O box grid with price labels in a right gutter.
+function PnFChart({ columns, boxSize, up, down }) {
+  const CELL = 14, GUTTER = 56, MAXC = 48;
+  const cols = columns.slice(-MAXC);
+  const top = Math.max(...cols.map(k => k.top));
+  const bot = Math.min(...cols.map(k => k.bottom));
+  const rows = top - bot + 1;
+  const w = cols.length * CELL + GUTTER, h = rows * CELL;
+  const py = (bi) => (top - bi) * CELL;
+  const labelEvery = Math.max(1, Math.ceil(rows / 8));
+  const kids = [];
+  for (let ci = 0; ci <= cols.length; ci++) {
+    kids.push(<line key={`v${ci}`} x1={ci * CELL} y1={0} x2={ci * CELL} y2={h} stroke={C.grid} strokeWidth="0.5" />);
+  }
+  for (let bi = bot; bi <= top + 1; bi++) {
+    const y = (top - bi + 1) * CELL;   // bottom edge of box bi sits at price bi*boxSize
+    kids.push(<line key={`h${bi}`} x1={0} y1={y} x2={cols.length * CELL} y2={y} stroke={C.grid} strokeWidth="0.5" />);
+    if (bi % labelEvery === 0) {
+      kids.push(<text key={`t${bi}`} x={cols.length * CELL + 6} y={y + 3.5} fill={C.faint} fontSize="9" fontFamily={MONO}>{fmt(bi * boxSize)}</text>);
+    }
+  }
+  cols.forEach((col, ci) => {
+    const x = ci * CELL;
+    for (let bi = col.bottom; bi <= col.top; bi++) {
+      const y = py(bi);
+      if (col.type === "X") {
+        kids.push(<line key={`x${ci}-${bi}a`} x1={x + 3.5} y1={y + 3.5} x2={x + CELL - 3.5} y2={y + CELL - 3.5} stroke={up} strokeWidth="1.6" />);
+        kids.push(<line key={`x${ci}-${bi}b`} x1={x + CELL - 3.5} y1={y + 3.5} x2={x + 3.5} y2={y + CELL - 3.5} stroke={up} strokeWidth="1.6" />);
+      } else {
+        kids.push(<circle key={`o${ci}-${bi}`} cx={x + CELL / 2} cy={y + CELL / 2} r={CELL / 2 - 3.5} fill="none" stroke={down} strokeWidth="1.6" />);
+      }
+    }
+  });
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%", display: "block" }}>
+      {kids}
+    </svg>
+  );
+}
+
 // ============================================================
 function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const { lang, setLang, t } = useI18n();               // UI translation + AI-answer language
@@ -4779,11 +4828,20 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     } catch { /* fine */ }
   }, [speakingId]);
 
+  // ---- chart mode: classic line tape vs Point & Figure ----
+  const [chartMode, setChartMode] = useState(() => {
+    try { return window.localStorage.getItem("tape-chartmode") === "pnf" ? "pnf" : "line"; } catch { return "line"; }
+  });
+  useEffect(() => { try { window.localStorage.setItem("tape-chartmode", chartMode); } catch { /* private */ } }, [chartMode]);
+
   const chartData = useMemo(() => {
     if (live) return liveTape[selected] || [];
     const st = demoMkt[selected];
     return st ? st.bars.slice(0, st.cursor + 1) : [];
   }, [live, liveTape, demoMkt, selected]);
+
+  const pnf = useMemo(() => (chartMode === "pnf" ? buildPnF(chartData.map(d => d.price)) : null), [chartMode, chartData]);
+  const pnfPattern = useMemo(() => (pnf ? detectPattern(pnf.columns) : null), [pnf]);
 
   // Tight y-axis around the actual data (+ prev close). Recharts "auto" balloons to a huge range when
   // every point is identical — e.g. a market-closed frozen price — making a real value look broken.
@@ -7663,14 +7721,38 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   MARKET CLOSED
                 </span>
               )}
+              <div style={{ marginLeft: "auto", display: "flex", border: `1px solid ${C.panelEdge}`, borderRadius: 4, overflow: "hidden" }}>
+                {[["line", t("LINE")], ["pnf", "P&F"]].map(([m, label]) => (
+                  <button key={m} onClick={() => setChartMode(m)}
+                    title={m === "pnf" ? "Point & Figure — X/O columns, 3-box reversal" : "Line chart of the session tape"}
+                    style={{ background: chartMode === m ? "#171E2C" : "transparent", border: "none", color: chartMode === m ? C.amber : C.muted, fontFamily: MONO, fontSize: 11, padding: "5px 10px", cursor: "pointer" }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
               <button onClick={() => openChart(selected)} title="Open the full interactive TradingView chart inside Vantage"
-                style={{ marginLeft: "auto", background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>
+                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>
                 📈 {t("full chart")}
               </button>
             </div>
 
-            <div style={{ height: 300, marginTop: 10 }}>
-              {chartData.length > 1 ? (
+            <div style={{ height: 300, marginTop: 10, position: "relative" }}>
+              {chartMode === "pnf" ? (
+                pnf && pnf.columns.length >= 2 ? (
+                  <>
+                    <PnFChart columns={pnf.columns} boxSize={pnf.boxSize} up={dirColorN(1)} down={dirColorN(-1)} />
+                    {pnfPattern && (
+                      <div style={{ position: "absolute", top: 8, left: 10, fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: pnfPattern.side === "bull" ? dirColorN(1) : dirColorN(-1), background: "rgba(13,18,28,0.85)", border: `1px solid ${C.panelEdge}`, borderRadius: 4, padding: "4px 8px" }}>
+                        {pnfPattern.name}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: C.faint, fontFamily: MONO, fontSize: 12, textAlign: "center", padding: "0 24px" }}>
+                    {t("not enough movement for a P&F column yet")}
+                  </div>
+                )
+              ) : chartData.length > 1 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 8, right: 6, bottom: 0, left: 0 }}>
                     <defs>
@@ -7712,6 +7794,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 </div>
               )}
             </div>
+            {chartMode === "pnf" && pnf && pnf.columns.length >= 2 && (
+              <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6 }}>
+                box {fmt(pnf.boxSize)} · {t("3-box reversal · this session")}
+              </div>
+            )}
             <div style={{ fontFamily: MONO, fontSize: 10, color: liveStale ? C.amber : C.faint, marginTop: 6 }}>
               {live
                 ? (liveStale
