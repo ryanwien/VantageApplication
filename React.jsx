@@ -182,6 +182,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANELES", "ticker tape": "cinta de cotizaciones", "watchlist": "lista de seguimiento", "top movers": "mayores movimientos", "news & video": "noticias y vídeo", "calendar": "calendario", "portfolio": "cartera",
     "in-app alerts": "alertas en la aplicación", "price triggers": "activadores de precio", "breaking news": "última hora",
+    "P&F SIGNALS": "SEÑALES P&F", "P&F signals": "señales P&F", "P&F pattern alerts": "alertas de patrones P&F",
     "color-blind mode (blue/orange + ▲▼)": "modo para daltónicos (azul/naranja + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "modo privacidad — difuminar saldos (Mayús+P)",
     "hidden": "oculto",
@@ -326,6 +327,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANNEAUX", "ticker tape": "bandeau de cotation", "watchlist": "liste de suivi", "top movers": "plus fortes variations", "news & video": "actualités et vidéo", "calendar": "calendrier", "portfolio": "portefeuille",
     "in-app alerts": "alertes dans l'application", "price triggers": "seuils de prix", "breaking news": "dernière minute",
+    "P&F SIGNALS": "SIGNAUX P&F", "P&F signals": "signaux P&F", "P&F pattern alerts": "alertes de figures P&F",
     "color-blind mode (blue/orange + ▲▼)": "mode daltonien (bleu/orange + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "mode privé — flouter les soldes (Maj+P)",
     "hidden": "masqué",
@@ -470,6 +472,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANELS", "ticker tape": "Kursband", "watchlist": "Beobachtungsliste", "top movers": "größte Bewegungen", "news & video": "Nachrichten & Video", "calendar": "Kalender", "portfolio": "Portfolio",
     "in-app alerts": "In-App-Benachrichtigungen", "price triggers": "Preisauslöser", "breaking news": "Eilmeldungen",
+    "P&F SIGNALS": "P&F-SIGNALE", "P&F signals": "P&F-Signale", "P&F pattern alerts": "P&F-Muster-Benachrichtigungen",
     "color-blind mode (blue/orange + ▲▼)": "Modus für Farbenblindheit (Blau/Orange + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "Privatsphärenmodus — Salden verwischen (Umschalt+P)",
     "hidden": "ausgeblendet",
@@ -613,6 +616,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PAINÉIS", "ticker tape": "fita de cotações", "watchlist": "lista de acompanhamento", "top movers": "maiores variações", "news & video": "notícias e vídeo", "calendar": "calendário", "portfolio": "carteira",
     "in-app alerts": "alertas no aplicativo", "price triggers": "gatilhos de preço", "breaking news": "última hora",
+    "P&F SIGNALS": "SINAIS P&F", "P&F signals": "sinais P&F", "P&F pattern alerts": "alertas de padrões P&F",
     "color-blind mode (blue/orange + ▲▼)": "modo para daltônicos (azul/laranja + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "modo privacidade — desfocar saldos (Shift+P)",
     "hidden": "oculto",
@@ -756,6 +760,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANNELLI", "ticker tape": "nastro delle quotazioni", "watchlist": "lista di osservazione", "top movers": "maggiori variazioni", "news & video": "notizie e video", "calendar": "calendario", "portfolio": "portafoglio",
     "in-app alerts": "avvisi nell'app", "price triggers": "soglie di prezzo", "breaking news": "ultima ora",
+    "P&F SIGNALS": "SEGNALI P&F", "P&F signals": "segnali P&F", "P&F pattern alerts": "avvisi di pattern P&F",
     "color-blind mode (blue/orange + ▲▼)": "modalità per daltonici (blu/arancione + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "modalità privacy — sfoca i saldi (Maiusc+P)",
     "hidden": "nascosto",
@@ -3845,7 +3850,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   useEffect(() => { liveStaleRef.current = !!liveStale; }, [liveStale]);
 
   // ---- panel visibility ----
-  const [panels, setPanels] = useState({ tape: true, watchlist: true, movers: true, news: true, calendar: true, portfolio: true });
+  const [panels, setPanels] = useState({ tape: true, watchlist: true, movers: true, news: true, calendar: true, portfolio: true, pnf: true });
   const togglePanel = (k) => setPanels(p => ({ ...p, [k]: !p[k] }));
 
   // ---- tutorial + onboarding system (hub → spotlight tour / auto-demo / missions) ----
@@ -8014,6 +8019,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           </div>
         )}
 
+        {/* --- P&F pattern signals (right rail, only when a pattern is on the board) --- */}
+        {panels.pnf && Object.keys(pnfSignals).length > 0 && (
+          <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
+            <div style={{ padding: "9px 12px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>✕○ {t("P&F SIGNALS")}</div>
+            {Object.entries(pnfSignals).map(([sym, p]) => (
+              <div key={sym} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderTop: `1px solid ${C.grid}` }}>
+                <span style={{ fontFamily: MONO, fontSize: 11, color: C.text }}>{sym}</span>
+                <span style={{ fontFamily: MONO, fontSize: 11, marginLeft: "auto", color: p.side === "bull" ? dirColorN(1) : dirColorN(-1) }}>{p.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* --- Vantage Calendar (native, right rail) --- */}
         {panels.calendar && (
           <div id="app-calendar-panel" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
@@ -8318,7 +8336,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${C.panelEdge}` }}>
                     <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("PANELS")}</label>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
-                      {[["tape", "ticker tape"], ["watchlist", "watchlist"], ["movers", "top movers"], ["news", "news & video"], ["calendar", "calendar"], ["portfolio", "portfolio"]].map(([k, label]) => (
+                      {[["tape", "ticker tape"], ["watchlist", "watchlist"], ["movers", "top movers"], ["news", "news & video"], ["calendar", "calendar"], ["portfolio", "portfolio"], ["pnf", "P&F signals"]].map(([k, label]) => (
                         <label key={k} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 11, color: panels[k] ? C.text : C.faint, cursor: "pointer" }}>
                           <input type="checkbox" checked={panels[k]} onChange={() => togglePanel(k)} />
                           {t(label)}
@@ -8326,7 +8344,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       ))}
                     </div>
                     <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.muted }}>{t("in-app alerts")}</div>
-                    {[["priceTriggers", "price triggers"], ["breakingNews", "breaking news"]].map(([key, label]) => (
+                    {[["priceTriggers", "price triggers"], ["breakingNews", "breaking news"], ["pnfPatterns", "P&F pattern alerts"]].map(([key, label]) => (
                       <label key={key} style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontFamily: MONO, fontSize: 11, color: prefs.notify[key] ? C.text : C.faint, cursor: "pointer" }}>
                         <input type="checkbox" checked={prefs.notify[key]}
                           onChange={() => setPref("notify", { ...prefs.notify, [key]: !prefs.notify[key] })} />
