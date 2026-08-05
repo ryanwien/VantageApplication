@@ -3482,7 +3482,9 @@ function PnFChart({ columns, boxSize, up, down }) {
   for (let bi = bot; bi <= top + 1; bi++) {
     const y = (top - bi + 1) * CELL;   // bottom edge of box bi sits at price bi*boxSize
     kids.push(<line key={`h${bi}`} x1={0} y1={y} x2={cols.length * CELL} y2={y} stroke={C.grid} strokeWidth="0.5" />);
-    if (bi % labelEvery === 0) {
+    // bi === top + 1 sits at y=0 (the SVG's top edge) — a label there clips above the viewBox,
+    // so skip it and keep just the gridline; every other rung has room to render its label.
+    if (bi % labelEvery === 0 && bi !== top + 1) {
       kids.push(<text key={`t${bi}`} x={cols.length * CELL + 6} y={y + 3.5} fill={C.faint} fontSize="9" fontFamily={MONO}>{fmt(bi * boxSize)}</text>);
     }
   }
@@ -5207,9 +5209,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // The scan always runs (it feeds the P&F SIGNALS rail); prefs.notify.pnfPatterns gates only
   // the on-air announcement. pnfSeenRef: undefined = never scanned (seed silently on the first
   // sweep so a page load doesn't announce every pattern already on the board), null = scanned,
-  // no pattern. At most one break-in per sweep so speech never piles up. The driving effect below
-  // mounts once and fires on a stable 3s interval; pnfCheckRef holds the latest scan closure
-  // (reassigned every render) so the interval always reads fresh selected/watchlist/prefs/etc
+  // no pattern. At most one break-in per sweep so speech never piles up — a symbol that would
+  // have announced but got capped by another symbol's announcement this sweep has its seen entry
+  // LEFT AT prev (not advanced), so it announces on the next sweep instead of being dropped
+  // forever. That deferral only applies when the cap is the reason for suppression: if the pref
+  // itself is off, the seen entry still advances, so re-enabling the pref later doesn't dump a
+  // stale backlog of everything that printed while notifications were off. The driving effect
+  // below mounts once and fires on a stable 3s interval; pnfCheckRef holds the latest scan
+  // closure (reassigned every render) so the interval always reads fresh selected/watchlist/prefs
   // without needing to tear down and restart every time demoMkt/liveTape tick.
   const [pnfSignals, setPnfSignals] = useState({});   // sym -> { id, name, side }
   const pnfSeenRef = useRef({});
@@ -5227,11 +5234,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const pat = detectPattern(buildPnF(getCloses(sym)).columns);
       if (pat) next[sym] = pat;
       const prev = pnfSeenRef.current[sym];
-      if (pat && prev !== undefined && pat.id !== prev && !announced && notifyEnabled(prefs, "pnfPatterns")) {
+      const wantsAnnounce = pat && prev !== undefined && pat.id !== prev;
+      if (wantsAnnounce && !announced && notifyEnabled(prefs, "pnfPatterns")) {
         announced = true;
         pushBreaking(`${sym} just printed a ${pat.name} on the point-and-figure chart`, "P&F scan");
+        pnfSeenRef.current[sym] = pat.id;
+      } else if (wantsAnnounce && announced && notifyEnabled(prefs, "pnfPatterns")) {
+        // capped this sweep — keep prev so the next sweep announces it instead of dropping it
+      } else {
+        pnfSeenRef.current[sym] = pat ? pat.id : null;
       }
-      pnfSeenRef.current[sym] = pat ? pat.id : null;
     }
     setPnfSignals(s => {
       const keys = Object.keys(s);
