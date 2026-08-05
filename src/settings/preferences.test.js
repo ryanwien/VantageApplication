@@ -95,3 +95,12 @@ describe("notifyEnabled", () => {
     expect(notifyEnabled(null, "breakingNews")).toBe(false);
   });
 });
+
+describe("pnfPatterns notify pref", () => {
+  it("defaults on, honors an explicit stored false, works through notifyEnabled", () => {
+    expect(loadPrefs(null).notify.pnfPatterns).toBe(true);
+    expect(loadPrefs(JSON.stringify({ notify: { pnfPatterns: false } })).notify.pnfPatterns).toBe(false);
+    expect(notifyEnabled(loadPrefs(null), "pnfPatterns")).toBe(true);
+    expect(notifyEnabled(loadPrefs(JSON.stringify({ notify: { pnfPatterns: false } })), "pnfPatterns")).toBe(false);
+  });
+});

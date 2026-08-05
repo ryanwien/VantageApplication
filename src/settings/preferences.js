@@ -5,7 +5,7 @@ export const DEFAULT_PREFS = {
   colorBlind: false,
   privacy: false,
   refreshMs: 15000,
-  notify: { priceTriggers: true, breakingNews: true },
+  notify: { priceTriggers: true, breakingNews: true, pnfPatterns: true },
 };
 
 const ALLOWED_REFRESH = new Set([0, 5000, 15000, 30000]);
