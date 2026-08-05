@@ -44,3 +44,38 @@ describe("detectPattern — guards", () => {
     expect(detectPattern([X(0, 5), O(4, 2), { type: "X", bottom: 3, top: NaN }])).toBeNull();
   });
 });
+
+describe("detectPattern — advanced patterns", () => {
+  it("Ascending Triple Top: rising X tops with rising O bottoms", () => {
+    expect(detectPattern([X(0, 4), O(3, 1), X(2, 5), O(4, 2), X(3, 6)]))
+      .toEqual({ id: "asc-triple-top", name: "Ascending Triple Top Breakout", side: "bull" });
+  });
+  it("Descending Triple Bottom: falling O bottoms with falling X tops", () => {
+    expect(detectPattern([O(6, 2), X(3, 5), O(4, 1), X(2, 4), O(3, 0)]))
+      .toEqual({ id: "desc-triple-bottom", name: "Descending Triple Bottom Breakdown", side: "bear" });
+  });
+  it("Bullish Catapult: triple-top breakout, pullback holds, double-top breakout — beats Ascending Triple", () => {
+    expect(detectPattern([X(0, 5), O(4, 2), X(3, 5), O(4, 2), X(3, 6), O(5, 3), X(4, 7)]))
+      .toEqual({ id: "bull-catapult", name: "Bullish Catapult", side: "bull" });
+  });
+  it("Bearish Catapult (mirror)", () => {
+    expect(detectPattern([O(7, 2), X(3, 5), O(4, 2), X(3, 5), O(4, 1), X(2, 4), O(3, 0)]))
+      .toEqual({ id: "bear-catapult", name: "Bearish Catapult", side: "bear" });
+  });
+  it("Bullish Triangle: converging columns then upside breakout", () => {
+    expect(detectPattern([X(0, 8), O(7, 2), X(3, 6), O(5, 3), X(4, 7)]))
+      .toEqual({ id: "bull-triangle", name: "Bullish Triangle Breakout", side: "bull" });
+  });
+  it("Bearish Triangle (mirror)", () => {
+    expect(detectPattern([O(8, 0), X(1, 6), O(5, 2), X(3, 5), O(4, 1)]))
+      .toEqual({ id: "bear-triangle", name: "Bearish Triangle Breakdown", side: "bear" });
+  });
+  it("Bearish Signal Reversed: long slide, then one X takes out the whole sequence", () => {
+    expect(detectPattern([X(0, 9), O(8, 5), X(6, 8), O(7, 4), X(5, 7), O(6, 3), X(4, 10)]))
+      .toEqual({ id: "bearish-signal-reversed", name: "Bearish Signal Reversed", side: "bull" });
+  });
+  it("Bullish Signal Reversed (mirror)", () => {
+    expect(detectPattern([O(9, 1), X(2, 4), O(3, 2), X(3, 5), O(4, 3), X(4, 6), O(5, 0)]))
+      .toEqual({ id: "bullish-signal-reversed", name: "Bullish Signal Reversed", side: "bear" });
+  });
+});

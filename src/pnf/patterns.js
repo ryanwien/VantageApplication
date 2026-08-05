@@ -46,8 +46,66 @@ const quadBottom = (k) => {
   return a.type === "O" && !!p3 && p1.bottom === p2.bottom && p2.bottom === p3.bottom && a.bottom < p1.bottom;
 };
 
+// ---- advanced patterns ----
+const ascTripleTop = (k) => {
+  const a = c(k, 0), x1 = c(k, 2), x2 = c(k, 4), o1 = c(k, 1), o2 = c(k, 3);
+  return a.type === "X" && !!x2 && a.top > x1.top && x1.top > x2.top && o1.bottom > o2.bottom;
+};
+const descTripleBottom = (k) => {
+  const a = c(k, 0), o1 = c(k, 2), o2 = c(k, 4), x1 = c(k, 1), x2 = c(k, 3);
+  return a.type === "O" && !!o2 && a.bottom < o1.bottom && o1.bottom < o2.bottom && x1.top < x2.top;
+};
+const bullCatapult = (k) => {
+  const a = c(k, 0), x1 = c(k, 2), x2 = c(k, 4), x3 = c(k, 6), o1 = c(k, 1), o2 = c(k, 3);
+  return a.type === "X" && !!x3 &&
+    x2.top === x3.top && x1.top > x2.top &&   // the triple top, broken by x1
+    o1.bottom > o2.bottom &&                  // pullback holds above the prior low
+    a.top > x1.top;                           // and now a double-top breakout
+};
+const bearCatapult = (k) => {
+  const a = c(k, 0), o1 = c(k, 2), o2 = c(k, 4), o3 = c(k, 6), x1 = c(k, 1), x2 = c(k, 3);
+  return a.type === "O" && !!o3 &&
+    o2.bottom === o3.bottom && o1.bottom < o2.bottom &&
+    x1.top < x2.top &&
+    a.bottom < o1.bottom;
+};
+const bullTriangle = (k) => {
+  const a = c(k, 0), x1 = c(k, 2), x2 = c(k, 4), o1 = c(k, 1), o2 = c(k, 3);
+  return a.type === "X" && !!x2 &&
+    x1.top < x2.top && o1.bottom > o2.bottom &&  // converging: falling tops, rising bottoms
+    a.top > x1.top;                              // upside breakout
+};
+const bearTriangle = (k) => {
+  const a = c(k, 0), o1 = c(k, 2), o2 = c(k, 4), x1 = c(k, 1), x2 = c(k, 3);
+  return a.type === "O" && !!o2 &&
+    x1.top < x2.top && o1.bottom > o2.bottom &&
+    a.bottom < o1.bottom;                        // downside breakdown
+};
+const bearishSignalReversed = (k) => {
+  const a = c(k, 0), x1 = c(k, 2), x2 = c(k, 4), x3 = c(k, 6), o1 = c(k, 1), o2 = c(k, 3), o3 = c(k, 5);
+  return a.type === "X" && !!x3 &&
+    x1.top < x2.top && x2.top < x3.top &&           // falling X tops
+    o1.bottom < o2.bottom && o2.bottom < o3.bottom && // falling O bottoms
+    a.top > x3.top;                                  // one X takes out the whole slide
+};
+const bullishSignalReversed = (k) => {
+  const a = c(k, 0), o1 = c(k, 2), o2 = c(k, 4), o3 = c(k, 6), x1 = c(k, 1), x2 = c(k, 3), x3 = c(k, 5);
+  return a.type === "O" && !!o3 &&
+    o1.bottom > o2.bottom && o2.bottom > o3.bottom &&
+    x1.top > x2.top && x2.top > x3.top &&
+    a.bottom < o3.bottom;
+};
+
 // precedence: most specific first — extended by Tasks 3 and 4
 const CATALOG = [
+  ["bull-catapult", "Bullish Catapult", "bull", bullCatapult],
+  ["bear-catapult", "Bearish Catapult", "bear", bearCatapult],
+  ["bull-triangle", "Bullish Triangle Breakout", "bull", bullTriangle],
+  ["bear-triangle", "Bearish Triangle Breakdown", "bear", bearTriangle],
+  ["bearish-signal-reversed", "Bearish Signal Reversed", "bull", bearishSignalReversed],
+  ["bullish-signal-reversed", "Bullish Signal Reversed", "bear", bullishSignalReversed],
+  ["asc-triple-top", "Ascending Triple Top Breakout", "bull", ascTripleTop],
+  ["desc-triple-bottom", "Descending Triple Bottom Breakdown", "bear", descTripleBottom],
   ["quad-top", "Quadruple Top Breakout", "bull", quadTop],
   ["quad-bottom", "Quadruple Bottom Breakdown", "bear", quadBottom],
   ["triple-top", "Triple Top Breakout", "bull", tripleTop],
