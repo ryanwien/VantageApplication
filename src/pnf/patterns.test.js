@@ -97,8 +97,10 @@ describe("detectPattern — poles and traps", () => {
     expect(detectPattern([O(6, 1), X(2, 4), O(3, 1), X(2, 4), O(3, 0), X(1, 4)]))
       .toEqual({ id: "bear-trap", name: "Bear Trap", side: "bull" });
   });
-  it("a modest 2-box pole with retrace is NOT a High Pole", () => {
-    // pole is only 9-8=1 box above the prior X top → not a pole, and no other pattern fits
-    expect(detectPattern([X(0, 8), O(7, 5), X(6, 9), O(8, 5)])).toBeNull();
+  it("a 2-box pole with retrace is NOT a High Pole", () => {
+    // pole is 9-7=2 boxes above the prior X top → below the real >=3 threshold, so null;
+    // pins the threshold itself (a >=2 mutant would wrongly call this a High Pole), and no
+    // other pattern fits this fixture either
+    expect(detectPattern([X(0, 7), O(7, 5), X(6, 9), O(8, 5)])).toBeNull();
   });
 });
