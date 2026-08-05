@@ -51,4 +51,10 @@ describe("buildPnF", () => {
     const { columns } = buildPnF([10.0, 10.3], { boxSize: 0.1 });
     expect(columns[0].top).toBe(103);
   });
+  it("epsilon guard scales to large price / small box ratios", () => {
+    // 223893.86/0.01 = 22389385.999… with old 1e-9 guard would drop to box 22389385
+    // because the magnitude makes 1e-9 insignificant. Scaled epsilon must reach up to 22389386.
+    const { columns } = buildPnF([223893.80, 223893.86], { boxSize: 0.01 });
+    expect(columns).toEqual([{ type: "X", bottom: 22389380, top: 22389386 }]);
+  });
 });

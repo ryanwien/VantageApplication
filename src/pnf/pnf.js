@@ -23,8 +23,9 @@ export function buildPnF(closes, { boxSize = "auto", reversal = 3 } = {}) {
   if (!Number.isFinite(box) || box <= 0 || !Number.isFinite(reversal) || reversal < 1) {
     return { columns: [], boxSize: 0 };
   }
-  // epsilon guards float division (10.3/0.1 = 102.999…) from dropping a box
-  const toBox = (p) => Math.floor(p / box + 1e-9);
+  // epsilon guards float division (10.3/0.1 = 102.999…) from dropping a box.
+  // Scaled to price/box magnitude so it works for large prices with small boxes.
+  const toBox = (p) => Math.floor(p / box + Math.max(1e-9, Math.abs(p / box) * 1e-12));
   const columns = [];
   let dir = 0;                // 0 until the first one-box move decides direction
   let cur = null;
