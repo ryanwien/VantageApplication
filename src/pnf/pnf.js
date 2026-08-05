@@ -17,7 +17,7 @@ export function autoBoxSize(price) {
 }
 
 export function buildPnF(closes, { boxSize = "auto", reversal = 3 } = {}) {
-  const clean = (Array.isArray(closes) ? closes : []).filter(Number.isFinite);
+  const clean = (Array.isArray(closes) ? closes : []).filter((v) => Number.isFinite(v) && v > 0);
   if (!clean.length) return { columns: [], boxSize: 0 };
   const box = boxSize === "auto" ? autoBoxSize(clean[0]) : boxSize;
   if (!Number.isFinite(box) || box <= 0 || !Number.isFinite(reversal) || reversal < 1) {

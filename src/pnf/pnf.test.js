@@ -57,4 +57,8 @@ describe("buildPnF", () => {
     const { columns } = buildPnF([223893.80, 223893.86], { boxSize: 0.01 });
     expect(columns).toEqual([{ type: "X", bottom: 22389380, top: 22389386 }]);
   });
+  it("drops zero and negative closes", () => {
+    const { columns } = buildPnF([10.0, 0, -3, 11.5], { boxSize: 1 });
+    expect(columns).toEqual([{ type: "X", bottom: 10, top: 11 }]);
+  });
 });
