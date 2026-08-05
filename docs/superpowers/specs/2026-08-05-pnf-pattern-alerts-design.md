@@ -152,10 +152,13 @@ Malformed/empty column input → `null`.
 
 ### 6. i18n
 
-New I18N entries for: "P&F", "pattern alerts", the rail panel title "P&F SIGNALS", the
-empty-state line, the caption template, and the anchor sentence template — across the five
-non-English languages, matching the existing catalog style. Pattern names themselves are not
-translated (non-goal).
+New I18N entries for: "P&F", "pattern alerts", the rail panel title "P&F SIGNALS", and the
+empty-state line — across the five non-English languages, matching the existing catalog style.
+Pattern names themselves are not translated (non-goal). The anchor break-in sentence pushed to
+`pushBreaking` stays English-only, like every other `pushBreaking` message in the app (breaking
+news headlines, market moves, calendar reminders) — none of those are translated either, so
+giving the P&F anchor sentence its own i18n template would be inconsistent with the rest of the
+on-air feed. Only UI labels are translated.
 
 ## Error handling
 
