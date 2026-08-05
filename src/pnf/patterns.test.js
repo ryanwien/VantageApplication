@@ -79,3 +79,26 @@ describe("detectPattern — advanced patterns", () => {
       .toEqual({ id: "bullish-signal-reversed", name: "Bullish Signal Reversed", side: "bear" });
   });
 });
+
+describe("detectPattern — poles and traps", () => {
+  it("High Pole Warning: 3+ box pole above the prior top, then >50% retrace", () => {
+    expect(detectPattern([X(0, 4), O(3, 1), X(2, 9), O(8, 5)]))
+      .toEqual({ id: "high-pole", name: "High Pole Warning", side: "bear" });
+  });
+  it("Low Pole Reversal (mirror)", () => {
+    expect(detectPattern([O(9, 5), X(6, 8), O(7, 0), X(1, 4)]))
+      .toEqual({ id: "low-pole", name: "Low Pole Reversal", side: "bull" });
+  });
+  it("Bull Trap: triple-top broken by exactly one box, immediately reversed", () => {
+    expect(detectPattern([X(0, 5), O(4, 2), X(3, 5), O(4, 2), X(3, 6), O(5, 3)]))
+      .toEqual({ id: "bull-trap", name: "Bull Trap", side: "bear" });
+  });
+  it("Bear Trap (mirror)", () => {
+    expect(detectPattern([O(6, 1), X(2, 4), O(3, 1), X(2, 4), O(3, 0), X(1, 4)]))
+      .toEqual({ id: "bear-trap", name: "Bear Trap", side: "bull" });
+  });
+  it("a modest 2-box pole with retrace is NOT a High Pole", () => {
+    // pole is only 9-8=1 box above the prior X top → not a pole, and no other pattern fits
+    expect(detectPattern([X(0, 8), O(7, 5), X(6, 9), O(8, 5)])).toBeNull();
+  });
+});
