@@ -5198,6 +5198,43 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     return () => clearInterval(iv);
   }, [priceAlerts, getRow, firePriceAlert, prefs.notify.priceTriggers]);
 
+  // ---- P&F pattern scan: when a watchlist symbol prints a NEW pattern, the anchor breaks in ----
+  // The scan always runs (it feeds the P&F SIGNALS rail); prefs.notify.pnfPatterns gates only
+  // the on-air announcement. pnfSeenRef: undefined = never scanned (seed silently on the first
+  // sweep so a page load doesn't announce every pattern already on the board), null = scanned,
+  // no pattern. At most one break-in per sweep so speech never piles up.
+  const [pnfSignals, setPnfSignals] = useState({});   // sym -> { id, name, side }
+  const pnfSeenRef = useRef({});
+  const getCloses = useCallback((sym) => {
+    if (live) return (liveTape[sym] || []).map(p => p.price);
+    const st = demoMkt[sym];
+    return st ? st.bars.slice(0, st.cursor + 1).map(b => b.price) : [];
+  }, [live, liveTape, demoMkt]);
+  useEffect(() => {
+    const check = () => {
+      const syms = [...new Set([selected, ...watchlist])];
+      const next = {};
+      let announced = false;
+      for (const sym of syms) {
+        const pat = detectPattern(buildPnF(getCloses(sym)).columns);
+        if (pat) next[sym] = pat;
+        const prev = pnfSeenRef.current[sym];
+        if (pat && prev !== undefined && pat.id !== prev && !announced && notifyEnabled(prefs, "pnfPatterns")) {
+          announced = true;
+          pushBreaking(`${sym} just printed a ${pat.name} on the point-and-figure chart`, "P&F scan");
+        }
+        pnfSeenRef.current[sym] = pat ? pat.id : null;
+      }
+      setPnfSignals(s => {
+        const keys = Object.keys(s);
+        if (keys.length === Object.keys(next).length && keys.every(k => next[k] && next[k].id === s[k].id)) return s;
+        return next;
+      });
+    };
+    const iv = setInterval(check, 3000); check();
+    return () => clearInterval(iv);
+  }, [selected, watchlist, getCloses, prefs, pushBreaking]);
+
   // ---- market events: upcoming earnings dates for your watchlist, merged into the calendar ----
   const [marketEvents, setMarketEvents] = useState([]);
   const fetchMarketEvents = useCallback(async () => {
