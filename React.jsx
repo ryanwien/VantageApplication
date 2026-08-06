@@ -1,4 +1,4 @@
- import React, { useState, useEffect, useRef, useCallback, useMemo, createContext, useContext } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, createContext, useContext } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer, CartesianGrid,
 } from "recharts";
@@ -6,6 +6,8 @@ import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
 import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./src/settings/localProof.js";
 import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled, coerceRefreshMs } from "./src/settings/preferences.js";
 import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, isCloseMatch, missingDimension, namedAbsentColumn } from "./src/datahub/catalog.js";
+import { buildPnF, pnfTargets, visibleWindow, INTRADAY_BOX_PCT } from "./src/pnf/pnf.js";
+import { detectPattern } from "./src/pnf/patterns.js";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -122,6 +124,8 @@ const I18N = {
     "ASK ALL": "PREGUNTAR A TODOS",
     "Ask the desk anything": "Pregúntale lo que quieras a la mesa", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Las respuestas aparecen aquí y el presentador las lee en directo. Toca una sugerencia — o escribe la tuya abajo.", "Summarize {sym} today": "Resume {sym} hoy", "What's moving today?": "¿Qué se mueve hoy?", "Take me to Robinhood": "Llévame a Robinhood", "What's on Netflix?": "¿Qué hay en Netflix?", "Write a report → PPT": "Escribe un informe → PPT",
     "WATCHLIST": "LISTA DE SEGUIMIENTO", "TOP MOVERS": "MAYORES MOVIMIENTOS", "full chart": "gráfico completo",
+    "LINE": "LÍNEA", "not enough movement for a P&F column yet": "aún no hay suficiente movimiento para una columna P&F", "3-box reversal · this session": "reversión de 3 casillas · esta sesión",
+    "tracking {price} · box {box} · session range {lo}–{hi}": "siguiendo {price} · casilla {box} · rango de la sesión {lo}–{hi}", "first column at ≥ {up} or < {down}": "primera columna con ≥ {up} o < {down}", "column 2 needs a reversal < {down}": "la columna 2 necesita una reversión < {down}", "column 2 needs a reversal ≥ {up}": "la columna 2 necesita una reversión ≥ {up}",
     "Language": "Idioma",
     "The AI broadcast desk for the markets.": "La mesa de retransmisión con IA para los mercados.",
     "Create account": "Crear cuenta", "Log in": "Iniciar sesión", "Explore in demo mode →": "Explorar en modo demo →",
@@ -179,6 +183,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANELES", "ticker tape": "cinta de cotizaciones", "watchlist": "lista de seguimiento", "top movers": "mayores movimientos", "news & video": "noticias y vídeo", "calendar": "calendario", "portfolio": "cartera",
     "in-app alerts": "alertas en la aplicación", "price triggers": "activadores de precio", "breaking news": "última hora",
+    "P&F SIGNALS": "SEÑALES P&F", "P&F signals": "señales P&F", "P&F pattern alerts": "alertas de patrones P&F",
     "color-blind mode (blue/orange + ▲▼)": "modo para daltónicos (azul/naranja + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "modo privacidad — difuminar saldos (Mayús+P)",
     "hidden": "oculto",
@@ -265,6 +270,8 @@ const I18N = {
     "ASK ALL": "TOUT DEMANDER",
     "Ask the desk anything": "Demandez ce que vous voulez au plateau", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Les réponses apparaissent ici et le présentateur les lit à l'antenne. Touchez une suggestion — ou saisissez la vôtre ci-dessous.", "Summarize {sym} today": "Résumez {sym} aujourd'hui", "What's moving today?": "Qu'est-ce qui bouge aujourd'hui ?", "Take me to Robinhood": "Emmène-moi sur Robinhood", "What's on Netflix?": "Qu'y a-t-il sur Netflix ?", "Write a report → PPT": "Rédiger un rapport → PPT",
     "WATCHLIST": "LISTE DE SUIVI", "TOP MOVERS": "PLUS FORTES VARIATIONS", "full chart": "graphique complet",
+    "LINE": "LIGNE", "not enough movement for a P&F column yet": "pas encore assez de mouvement pour une colonne P&F", "3-box reversal · this session": "retournement de 3 cases · cette séance",
+    "tracking {price} · box {box} · session range {lo}–{hi}": "suivi {price} · case {box} · amplitude de la séance {lo}–{hi}", "first column at ≥ {up} or < {down}": "première colonne à ≥ {up} ou < {down}", "column 2 needs a reversal < {down}": "la colonne 2 exige un retournement < {down}", "column 2 needs a reversal ≥ {up}": "la colonne 2 exige un retournement ≥ {up}",
     "Language": "Langue",
     "The AI broadcast desk for the markets.": "Le plateau de diffusion IA pour les marchés.",
     "Create account": "Créer un compte", "Log in": "Se connecter", "Explore in demo mode →": "Explorer en mode démo →",
@@ -322,6 +329,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANNEAUX", "ticker tape": "bandeau de cotation", "watchlist": "liste de suivi", "top movers": "plus fortes variations", "news & video": "actualités et vidéo", "calendar": "calendrier", "portfolio": "portefeuille",
     "in-app alerts": "alertes dans l'application", "price triggers": "seuils de prix", "breaking news": "dernière minute",
+    "P&F SIGNALS": "SIGNAUX P&F", "P&F signals": "signaux P&F", "P&F pattern alerts": "alertes de figures P&F",
     "color-blind mode (blue/orange + ▲▼)": "mode daltonien (bleu/orange + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "mode privé — flouter les soldes (Maj+P)",
     "hidden": "masqué",
@@ -408,6 +416,8 @@ const I18N = {
     "ASK ALL": "ALLE FRAGEN",
     "Ask the desk anything": "Frag das Pult alles", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Antworten erscheinen hier und der Moderator liest sie auf Sendung vor. Tippe einen Vorschlag an — oder schreibe unten deinen eigenen.", "Summarize {sym} today": "Fasse {sym} heute zusammen", "What's moving today?": "Was bewegt sich heute?", "Take me to Robinhood": "Bring mich zu Robinhood", "What's on Netflix?": "Was läuft auf Netflix?", "Write a report → PPT": "Bericht schreiben → PPT",
     "WATCHLIST": "BEOBACHTUNGSLISTE", "TOP MOVERS": "GRÖSSTE BEWEGUNGEN", "full chart": "vollständiges Diagramm",
+    "LINE": "LINIE", "not enough movement for a P&F column yet": "noch nicht genug Bewegung für eine P&F-Spalte", "3-box reversal · this session": "3-Box-Umkehr · diese Sitzung",
+    "tracking {price} · box {box} · session range {lo}–{hi}": "verfolge {price} · Box {box} · Sitzungsspanne {lo}–{hi}", "first column at ≥ {up} or < {down}": "erste Spalte ab ≥ {up} oder < {down}", "column 2 needs a reversal < {down}": "Spalte 2 braucht eine Umkehr < {down}", "column 2 needs a reversal ≥ {up}": "Spalte 2 braucht eine Umkehr ≥ {up}",
     "Language": "Sprache",
     "The AI broadcast desk for the markets.": "Das KI-Broadcast-Pult für die Märkte.",
     "Create account": "Konto erstellen", "Log in": "Anmelden", "Explore in demo mode →": "Im Demo-Modus erkunden →",
@@ -465,6 +475,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANELS", "ticker tape": "Kursband", "watchlist": "Beobachtungsliste", "top movers": "größte Bewegungen", "news & video": "Nachrichten & Video", "calendar": "Kalender", "portfolio": "Portfolio",
     "in-app alerts": "In-App-Benachrichtigungen", "price triggers": "Preisauslöser", "breaking news": "Eilmeldungen",
+    "P&F SIGNALS": "P&F-SIGNALE", "P&F signals": "P&F-Signale", "P&F pattern alerts": "P&F-Muster-Benachrichtigungen",
     "color-blind mode (blue/orange + ▲▼)": "Modus für Farbenblindheit (Blau/Orange + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "Privatsphärenmodus — Salden verwischen (Umschalt+P)",
     "hidden": "ausgeblendet",
@@ -551,6 +562,8 @@ const I18N = {
     "ASK ALL": "PERGUNTAR A TODOS",
     "Ask the desk anything": "Pergunte à mesa o que quiser", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "As respostas aparecem aqui e o apresentador lê-as ao vivo. Toque numa sugestão — ou escreva a sua abaixo.", "Summarize {sym} today": "Resumir {sym} hoje", "What's moving today?": "O que está a mover-se hoje?", "Take me to Robinhood": "Leva-me ao Robinhood", "What's on Netflix?": "O que há na Netflix?", "Write a report → PPT": "Escrever um relatório → PPT",
     "WATCHLIST": "LISTA DE ACOMPANHAMENTO", "TOP MOVERS": "MAIORES VARIAÇÕES", "full chart": "gráfico completo",
+    "LINE": "LINHA", "not enough movement for a P&F column yet": "ainda não há movimento suficiente para uma coluna P&F", "3-box reversal · this session": "reversão de 3 caixas · esta sessão",
+    "tracking {price} · box {box} · session range {lo}–{hi}": "acompanhando {price} · caixa {box} · intervalo da sessão {lo}–{hi}", "first column at ≥ {up} or < {down}": "primeira coluna com ≥ {up} ou < {down}", "column 2 needs a reversal < {down}": "a coluna 2 precisa de uma reversão < {down}", "column 2 needs a reversal ≥ {up}": "a coluna 2 precisa de uma reversão ≥ {up}",
     "Language": "Idioma",
     "The AI broadcast desk for the markets.": "A mesa de transmissão com IA para os mercados.",
     "Create account": "Criar conta", "Log in": "Iniciar sessão", "Explore in demo mode →": "Explorar no modo demo →",
@@ -607,6 +620,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PAINÉIS", "ticker tape": "fita de cotações", "watchlist": "lista de acompanhamento", "top movers": "maiores variações", "news & video": "notícias e vídeo", "calendar": "calendário", "portfolio": "carteira",
     "in-app alerts": "alertas no aplicativo", "price triggers": "gatilhos de preço", "breaking news": "última hora",
+    "P&F SIGNALS": "SINAIS P&F", "P&F signals": "sinais P&F", "P&F pattern alerts": "alertas de padrões P&F",
     "color-blind mode (blue/orange + ▲▼)": "modo para daltônicos (azul/laranja + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "modo privacidade — desfocar saldos (Shift+P)",
     "hidden": "oculto",
@@ -693,6 +707,8 @@ const I18N = {
     "ASK ALL": "CHIEDI A TUTTI",
     "Ask the desk anything": "Chiedi qualsiasi cosa alla postazione", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Le risposte appaiono qui e il conduttore le legge in diretta. Tocca uno spunto — o scrivi il tuo qui sotto.", "Summarize {sym} today": "Riassumi {sym} oggi", "What's moving today?": "Cosa si muove oggi?", "Take me to Robinhood": "Portami su Robinhood", "What's on Netflix?": "Cosa c'è su Netflix?", "Write a report → PPT": "Scrivi un report → PPT",
     "WATCHLIST": "LISTA DI OSSERVAZIONE", "TOP MOVERS": "MAGGIORI VARIAZIONI", "full chart": "grafico completo",
+    "LINE": "LINEA", "not enough movement for a P&F column yet": "movimento ancora insufficiente per una colonna P&F", "3-box reversal · this session": "inversione a 3 caselle · questa sessione",
+    "tracking {price} · box {box} · session range {lo}–{hi}": "seguendo {price} · casella {box} · intervallo della sessione {lo}–{hi}", "first column at ≥ {up} or < {down}": "prima colonna a ≥ {up} o < {down}", "column 2 needs a reversal < {down}": "la colonna 2 richiede un'inversione < {down}", "column 2 needs a reversal ≥ {up}": "la colonna 2 richiede un'inversione ≥ {up}",
     "Language": "Lingua",
     "The AI broadcast desk for the markets.": "La postazione di trasmissione IA per i mercati.",
     "Create account": "Crea account", "Log in": "Accedi", "Explore in demo mode →": "Esplora in modalità demo →",
@@ -749,6 +765,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANNELLI", "ticker tape": "nastro delle quotazioni", "watchlist": "lista di osservazione", "top movers": "maggiori variazioni", "news & video": "notizie e video", "calendar": "calendario", "portfolio": "portafoglio",
     "in-app alerts": "avvisi nell'app", "price triggers": "soglie di prezzo", "breaking news": "ultima ora",
+    "P&F SIGNALS": "SEGNALI P&F", "P&F signals": "segnali P&F", "P&F pattern alerts": "avvisi di pattern P&F",
     "color-blind mode (blue/orange + ▲▼)": "modalità per daltonici (blu/arancione + ▲▼)",
     "privacy mode — blur balances (Shift+P)": "modalità privacy — sfoca i saldi (Maiusc+P)",
     "hidden": "nascosto",
@@ -1387,7 +1404,7 @@ function chessApply(bd, from, to) {
 }
 
 // ---- Chess game component: pass-and-play, vs AI or 2-player ----
-function ChessGame({ onCheer, onWin }) {
+function ChessGame({ onCheer, onWin, sfx }) {
   const [vsAI, setVsAI] = useState(true);        // default: play the computer (Bears) — good for a lone player
   const [board, setBoard] = useState(chessInit);
   const [turn, setTurn] = useState("w");         // 'w' = Bulls (green, the human) move first
@@ -1395,12 +1412,36 @@ function ChessGame({ onCheer, onWin }) {
   const [targets, setTargets] = useState([]);
   const [winner, setWinner] = useState(null);
   const [captured, setCaptured] = useState({ w: [], b: [] });
+  // flying-piece overlay: the board state applies instantly, but the moved glyph slides
+  // from→to on top of the grid (~180ms) before the destination square shows its piece
+  const [anim, setAnim] = useState(null);        // { from, to, glyph, color, go }
+  const animTimer = useRef(null);
+  const reducedMotion = typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  useLayoutEffect(() => {
+    if (!anim || anim.go) return;
+    const id = requestAnimationFrame(() => setAnim(a => (a && !a.go ? { ...a, go: true } : a)));
+    return () => cancelAnimationFrame(id);
+  }, [anim]);
+  useEffect(() => () => clearTimeout(animTimer.current), []);
 
-  const reset = (ai = vsAI) => { setVsAI(ai); setBoard(chessInit()); setTurn("w"); setSel(null); setTargets([]); setWinner(null); setCaptured({ w: [], b: [] }); };
+  const reset = (ai = vsAI) => { setVsAI(ai); setBoard(chessInit()); setTurn("w"); setSel(null); setTargets([]); setWinner(null); setCaptured({ w: [], b: [] }); clearTimeout(animTimer.current); setAnim(null); };
 
   // commit a move (from either the human or the AI) and pass the turn / detect a king capture
-  const commit = (next, taken, side) => {
+  const commit = (next, taken, side, from, to) => {
     setBoard(next);
+    // sounds land WITH the flying piece; a king capture adds the win/lose sting a beat later
+    const landed = () => {
+      setAnim(null);
+      sfx?.(taken ? "capture" : "move");
+      if (taken?.t === "k") setTimeout(() => sfx?.(vsAI ? (side === "w" ? "win" : "lose") : "win"), 170);
+    };
+    clearTimeout(animTimer.current);
+    if (reducedMotion || !from || !to) landed();
+    else {
+      const moved = next[to.r][to.c];
+      setAnim({ from, to, glyph: CHESS_GLYPH[moved.t], color: moved.s === "w" ? "#3FE08A" : "#FF6B7A", go: false });
+      animTimer.current = setTimeout(landed, 200);
+    }
     if (taken) {
       setCaptured(cap => ({ ...cap, [side]: [...cap[side], taken.t] }));
       if (!(vsAI && side === "b")) onCheer?.();            // cheer for the player's captures, not the computer's
@@ -1416,8 +1457,8 @@ function ChessGame({ onCheer, onWin }) {
       const mv = chessAIMove(board, "b");
       if (!mv) { setWinner("w"); onWin?.("w"); return; }    // computer has no moves → player wins
       const { next, taken } = chessApply(board, mv.from, mv.to);
-      commit(next, taken, "b");
-    }, 550);
+      commit(next, taken, "b", mv.from, mv.to);
+    }, 900 + Math.random() * 800);                          // humanlike pause — instant replies felt like a vending machine
     return () => clearTimeout(id);
   }, [turn, vsAI, winner, board]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1428,7 +1469,7 @@ function ChessGame({ onCheer, onWin }) {
     if (sel && targets.some(t => t.r === r && t.c === c)) {
       const { next, taken } = chessApply(board, sel, { r, c });
       setSel(null); setTargets([]);
-      commit(next, taken, turn);
+      commit(next, taken, turn, sel, { r, c });
       return;
     }
     if (piece && piece.s === turn) { setSel({ r, c }); setTargets(chessMoves(board, r, c)); }
@@ -1452,11 +1493,12 @@ function ChessGame({ onCheer, onWin }) {
         <button onClick={() => reset()} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>new game ↻</button>
       </div>
       <div style={{ fontSize: 12, fontWeight: 700, textAlign: "center", color: winner ? (winner === "w" ? C.up : C.down) : turn === "w" ? C.up : C.down }}>{status}</div>
-      <div style={{ width: "100%", maxWidth: 320, aspectRatio: "1 / 1", display: "grid", gridTemplateColumns: "repeat(8, 1fr)", border: `1px solid ${C.panelEdge}`, alignSelf: "center", opacity: (vsAI && turn === "b" && !winner) ? 0.75 : 1 }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: 320, aspectRatio: "1 / 1", display: "grid", gridTemplateColumns: "repeat(8, 1fr)", border: `1px solid ${C.panelEdge}`, alignSelf: "center", opacity: (vsAI && turn === "b" && !winner) ? 0.75 : 1 }}>
         {board.map((row, r) => row.map((p, c) => {
           const light = (r + c) % 2 === 0;
           const isSel = sel && sel.r === r && sel.c === c;
           const isTarget = targets.some(t => t.r === r && t.c === c);
+          const inFlight = anim && anim.to.r === r && anim.to.c === c;   // real piece hides until the overlay lands
           return (
             <button key={`${r}-${c}`} onClick={() => clickSquare(r, c)}
               style={{
@@ -1464,11 +1506,21 @@ function ChessGame({ onCheer, onWin }) {
                 background: isSel ? "rgba(255,179,0,0.5)" : light ? "#2A3346" : "#1A2233",
                 display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
               }}>
-              {p && <span style={{ fontSize: 22, color: p.s === "w" ? "#3FE08A" : "#FF6B7A", textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}>{CHESS_GLYPH[p.t]}</span>}
+              {p && <span style={{ fontSize: 22, color: p.s === "w" ? "#3FE08A" : "#FF6B7A", textShadow: "0 1px 2px rgba(0,0,0,0.6)", opacity: inFlight ? 0 : 1 }}>{CHESS_GLYPH[p.t]}</span>}
               {isTarget && <span style={{ position: "absolute", width: p ? "82%" : 12, height: p ? "82%" : 12, borderRadius: p ? 6 : "50%", boxSizing: "border-box", border: p ? `2px solid ${C.amber}` : "none", background: p ? "transparent" : "rgba(255,179,0,0.55)" }} />}
             </button>
           );
         }))}
+        {anim && (
+          <span aria-hidden="true" style={{
+            position: "absolute", width: "12.5%", height: "12.5%", pointerEvents: "none", zIndex: 2,
+            left: `${(anim.go ? anim.to.c : anim.from.c) * 12.5}%`,
+            top: `${(anim.go ? anim.to.r : anim.from.r) * 12.5}%`,
+            transition: "left 0.18s ease, top 0.18s ease",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 22, lineHeight: 1, color: anim.color, textShadow: "0 1px 2px rgba(0,0,0,0.6)",
+          }}>{anim.glyph}</span>
+        )}
       </div>
       <div style={{ fontSize: 10, color: C.faint, lineHeight: 1.5 }}>
         {vsAI ? "You are 🐂 Bulls (green). Capture the Bears' king to win — lose yours and it's over." : "Two players, one screen: 🐂 Bulls vs 🐻 Bears. Capture the enemy king to win."} Pawns auto-promote to queens. (Casual rules — no check/castling.)
@@ -3451,6 +3503,55 @@ function AuthScreen({ onAuthed, onGuest }) {
   );
 }
 
+// ---------- Point & Figure chart (SVG) ----------
+// Pure presentational: columns/boxSize come from src/pnf/pnf.js. Renders the last
+// 48 columns as an X/O box grid with price labels in a right gutter.
+function PnFChart({ columns, boxSize, up, down }) {
+  const CELL = 14, GUTTER = 56, MAXC = 48, MAXR = 28;
+  const cols = columns.slice(-MAXC);
+  // Price window clamped to the last MAXR boxes of recent action: a single
+  // outlier column (bad tick, halt gap) would otherwise set the scale and
+  // squeeze the real chart into sub-pixel noise. Clipped columns just render
+  // the part that falls inside the window.
+  const { top, bot } = visibleWindow(cols, MAXR);
+  const rows = top - bot + 1;
+  const w = cols.length * CELL + GUTTER, h = rows * CELL;
+  const py = (bi) => (top - bi) * CELL;
+  const labelEvery = Math.max(1, Math.ceil(rows / 8));
+  const kids = [];
+  for (let ci = 0; ci <= cols.length; ci++) {
+    kids.push(<line key={`v${ci}`} x1={ci * CELL} y1={0} x2={ci * CELL} y2={h} stroke={C.grid} strokeWidth="0.5" />);
+  }
+  for (let bi = bot; bi <= top + 1; bi++) {
+    const y = (top - bi + 1) * CELL;   // bottom edge of box bi sits at price bi*boxSize
+    kids.push(<line key={`h${bi}`} x1={0} y1={y} x2={cols.length * CELL} y2={y} stroke={C.grid} strokeWidth="0.5" />);
+    // bi === top + 1 sits at y=0 (the SVG's top edge) — a label there clips above the viewBox,
+    // so skip it and keep just the gridline; every other rung has room to render its label.
+    if (bi % labelEvery === 0 && bi !== top + 1) {
+      kids.push(<text key={`t${bi}`} x={cols.length * CELL + 6} y={y + 3.5} fill={C.faint} fontSize="9" fontFamily={MONO}>{fmt(bi * boxSize)}</text>);
+    }
+  }
+  cols.forEach((col, ci) => {
+    const x = ci * CELL;
+    for (let bi = Math.max(col.bottom, bot); bi <= Math.min(col.top, top); bi++) {
+      const y = py(bi);
+      if (col.type === "X") {
+        kids.push(<line key={`x${ci}-${bi}a`} x1={x + 3.5} y1={y + 3.5} x2={x + CELL - 3.5} y2={y + CELL - 3.5} stroke={up} strokeWidth="1.6" />);
+        kids.push(<line key={`x${ci}-${bi}b`} x1={x + CELL - 3.5} y1={y + 3.5} x2={x + 3.5} y2={y + CELL - 3.5} stroke={up} strokeWidth="1.6" />);
+      } else {
+        kids.push(<circle key={`o${ci}-${bi}`} cx={x + CELL / 2} cy={y + CELL / 2} r={CELL / 2 - 3.5} fill="none" stroke={down} strokeWidth="1.6" />);
+      }
+    }
+  });
+  return (
+    // 6px vertical margin on the viewBox: the outermost gridline labels centre on the
+    // SVG's edges, so without it the bottom label's baseline (edge + 3.5) clips in half.
+    <svg viewBox={`0 -6 ${w} ${h + 12}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%", display: "block" }}>
+      {kids}
+    </svg>
+  );
+}
+
 // ============================================================
 function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const { lang, setLang, t } = useI18n();               // UI translation + AI-answer language
@@ -3796,7 +3897,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   useEffect(() => { liveStaleRef.current = !!liveStale; }, [liveStale]);
 
   // ---- panel visibility ----
-  const [panels, setPanels] = useState({ tape: true, watchlist: true, movers: true, news: true, calendar: true, portfolio: true });
+  const [panels, setPanels] = useState({ tape: true, watchlist: true, movers: true, news: true, calendar: true, portfolio: true, pnf: true });
   const togglePanel = (k) => setPanels(p => ({ ...p, [k]: !p[k] }));
 
   // ---- tutorial + onboarding system (hub → spotlight tour / auto-demo / missions) ----
@@ -4180,6 +4281,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const chirp = useCallback((notes, gap = 45) => {
     notes.forEach((n, i) => setTimeout(() => uiClick(n[0], n[1] || 0.05, n[2] || "square"), i * gap));
   }, [uiClick]);
+  // chess board cues — same kit (and same on/off toggle + volume) as the UI blips
+  const chessSfx = useCallback((kind) => {
+    if (kind === "move") uiClick(520, 0.06, "triangle", 0.09);
+    else if (kind === "capture") chirp([[290, 0.07, "sawtooth"], [175, 0.1, "sawtooth"]], 60);
+    else if (kind === "win") chirp([[523.3, 0.09, "triangle"], [659.3, 0.09, "triangle"], [784, 0.09, "triangle"], [1046.5, 0.22, "triangle"]], 70);
+    else if (kind === "lose") chirp([[392, 0.1, "triangle"], [311.1, 0.1, "triangle"], [246.9, 0.1, "triangle"], [196, 0.24, "triangle"]], 90);
+  }, [uiClick, chirp]);
 
   // ---- anchor cue sound effects: a real handbell, cutlery, a relaxed break chime ----
   // Uses the same shared AudioContext + master volume + on/off toggle as the UI blips.
@@ -4779,11 +4887,32 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     } catch { /* fine */ }
   }, [speakingId]);
 
+  // ---- chart mode: classic line tape vs Point & Figure ----
+  const [chartMode, setChartMode] = useState(() => {
+    try { return window.localStorage.getItem("tape-chartmode") === "pnf" ? "pnf" : "line"; } catch { return "line"; }
+  });
+  useEffect(() => { try { window.localStorage.setItem("tape-chartmode", chartMode); } catch { /* private */ } }, [chartMode]);
+
   const chartData = useMemo(() => {
     if (live) return liveTape[selected] || [];
     const st = demoMkt[selected];
     return st ? st.bars.slice(0, st.cursor + 1) : [];
   }, [live, liveTape, demoMkt, selected]);
+
+  // Live tapes only see the minutes since page load, so they get the finer
+  // intraday box grid; demo keeps the daily 0.1% scale its 390 seeded bars are tuned for.
+  const pnf = useMemo(() => (chartMode === "pnf" ? buildPnF(chartData.map(d => d.price), live ? { boxPct: INTRADAY_BOX_PCT } : {}) : null), [chartMode, chartData, live]);
+  const pnfPattern = useMemo(() => (pnf ? detectPattern(pnf.columns) : null), [pnf]);
+  // Warming-up detail for the P&F empty state: where the tape sits on the box
+  // grid and exactly what price prints enough columns to draw the chart.
+  const pnfWarmup = useMemo(() => {
+    if (chartMode !== "pnf" || (pnf && pnf.columns.length >= 2)) return null;
+    const prices = chartData.map(d => d.price).filter(v => Number.isFinite(v) && v > 0);
+    if (!prices.length) return null;
+    const targets = pnfTargets(prices, live ? { boxPct: INTRADAY_BOX_PCT } : {});
+    if (!targets) return null;
+    return { ...targets, last: prices[prices.length - 1], lo: Math.min(...prices), hi: Math.max(...prices) };
+  }, [chartMode, chartData, pnf, live]);
 
   // Tight y-axis around the actual data (+ prev close). Recharts "auto" balloons to a huge range when
   // every point is identical — e.g. a market-closed frozen price — making a real value look broken.
@@ -5139,6 +5268,58 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     const iv = setInterval(check, 3000); check();
     return () => clearInterval(iv);
   }, [priceAlerts, getRow, firePriceAlert, prefs.notify.priceTriggers]);
+
+  // ---- P&F pattern scan: when a watchlist symbol prints a NEW pattern, the anchor breaks in ----
+  // The scan always runs (it feeds the P&F SIGNALS rail); prefs.notify.pnfPatterns gates only
+  // the on-air announcement. pnfSeenRef: undefined = never scanned (seed silently on the first
+  // sweep so a page load doesn't announce every pattern already on the board), null = scanned,
+  // no pattern. At most one break-in per sweep so speech never piles up — a symbol that would
+  // have announced but got capped by another symbol's announcement this sweep has its seen entry
+  // LEFT AT prev (not advanced), so it announces on the next sweep instead of being dropped
+  // forever. That deferral only applies when the cap is the reason for suppression: if the pref
+  // itself is off, the seen entry still advances, so re-enabling the pref later doesn't dump a
+  // stale backlog of everything that printed while notifications were off. The driving effect
+  // below mounts once and fires on a stable 3s interval; pnfCheckRef holds the latest scan
+  // closure (reassigned every render) so the interval always reads fresh selected/watchlist/prefs
+  // without needing to tear down and restart every time demoMkt/liveTape tick.
+  const [pnfSignals, setPnfSignals] = useState({});   // sym -> { id, name, side }
+  const pnfSeenRef = useRef({});
+  const getCloses = useCallback((sym) => {
+    if (live) return (liveTape[sym] || []).map(p => p.price);
+    const st = demoMkt[sym];
+    return st ? st.bars.slice(0, st.cursor + 1).map(b => b.price) : [];
+  }, [live, liveTape, demoMkt]);
+  const pnfCheckRef = useRef(() => {});
+  pnfCheckRef.current = () => {
+    const syms = [...new Set([selected, ...watchlist])];
+    const next = {};
+    let announced = false;
+    for (const sym of syms) {
+      const pat = detectPattern(buildPnF(getCloses(sym), live ? { boxPct: INTRADAY_BOX_PCT } : {}).columns);
+      if (pat) next[sym] = pat;
+      const prev = pnfSeenRef.current[sym];
+      const wantsAnnounce = pat && prev !== undefined && pat.id !== prev;
+      if (wantsAnnounce && !announced && notifyEnabled(prefs, "pnfPatterns")) {
+        announced = true;
+        pushBreaking(`${sym} just printed a ${pat.name} on the point-and-figure chart`, "P&F scan");
+        pnfSeenRef.current[sym] = pat.id;
+      } else if (wantsAnnounce && announced && notifyEnabled(prefs, "pnfPatterns")) {
+        // capped this sweep — keep prev so the next sweep announces it instead of dropping it
+      } else {
+        pnfSeenRef.current[sym] = pat ? pat.id : null;
+      }
+    }
+    setPnfSignals(s => {
+      const keys = Object.keys(s);
+      if (keys.length === Object.keys(next).length && keys.every(k => next[k] && next[k].id === s[k].id)) return s;
+      return next;
+    });
+  };
+  useEffect(() => {
+    const iv = setInterval(() => pnfCheckRef.current(), 3000);
+    pnfCheckRef.current();
+    return () => clearInterval(iv);
+  }, []);
 
   // ---- market events: upcoming earnings dates for your watchlist, merged into the calendar ----
   const [marketEvents, setMarketEvents] = useState([]);
@@ -7146,7 +7327,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 }
                 if (gameMode === "chess") {
                   return shell("♟ BULLS vs BEARS", backBtn,
-                    <ChessGame onWin={(w) => triggerAnchor("cheer", { label: w === "w" ? "BULLS WIN! 🐂" : "BEARS WIN! 🐻" })} />);
+                    <ChessGame sfx={chessSfx} onWin={(w) => triggerAnchor("cheer", { label: w === "w" ? "BULLS WIN! 🐂" : "BEARS WIN! 🐻" })} />);
                 }
                 if (gameMode === "algowars") {
                   return shell("🖥️ ALGORITHM WARS", backBtn,
@@ -7663,14 +7844,57 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   MARKET CLOSED
                 </span>
               )}
+              <div style={{ marginLeft: "auto", display: "flex", border: `1px solid ${C.panelEdge}`, borderRadius: 4, overflow: "hidden" }}>
+                {[["line", t("LINE")], ["pnf", "P&F"]].map(([m, label]) => (
+                  <button key={m} onClick={() => setChartMode(m)}
+                    title={m === "pnf" ? "Point & Figure — X/O columns, 3-box reversal" : "Line chart of the session tape"}
+                    style={{ background: chartMode === m ? "#171E2C" : "transparent", border: "none", color: chartMode === m ? C.amber : C.muted, fontFamily: MONO, fontSize: 11, padding: "5px 10px", cursor: "pointer" }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
               <button onClick={() => openChart(selected)} title="Open the full interactive TradingView chart inside Vantage"
-                style={{ marginLeft: "auto", background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>
+                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>
                 📈 {t("full chart")}
               </button>
             </div>
 
-            <div style={{ height: 300, marginTop: 10 }}>
-              {chartData.length > 1 ? (
+            {/* P&F gets extra height: box cells are square and scale with rows, so a
+                session spanning ~20 boxes renders unreadably small inside the line
+                chart's 300px. */}
+            <div style={{ height: chartMode === "pnf" ? 440 : 300, marginTop: 10, position: "relative" }}>
+              {chartMode === "pnf" ? (
+                pnf && pnf.columns.length >= 2 ? (
+                  <>
+                    <PnFChart columns={pnf.columns} boxSize={pnf.boxSize} up={dirColorN(1)} down={dirColorN(-1)} />
+                    {pnfPattern && (
+                      <div style={{ position: "absolute", top: 8, left: 10, fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: pnfPattern.side === "bull" ? dirColorN(1) : dirColorN(-1), background: "rgba(13,18,28,0.85)", border: `1px solid ${C.panelEdge}`, borderRadius: 4, padding: "4px 8px" }}>
+                        {pnfPattern.name}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: C.faint, fontFamily: MONO, fontSize: 12, textAlign: "center", padding: "0 24px" }}>
+                    <div>{t("not enough movement for a P&F column yet")}</div>
+                    {pnfWarmup && (
+                      <>
+                        <div style={{ fontSize: 11, color: C.muted }}>
+                          {t("tracking {price} · box {box} · session range {lo}–{hi}")
+                            .replace("{price}", fmt(pnfWarmup.last)).replace("{box}", fmt(pnfWarmup.boxSize))
+                            .replace("{lo}", fmt(pnfWarmup.lo)).replace("{hi}", fmt(pnfWarmup.hi))}
+                        </div>
+                        <div style={{ fontSize: 11, color: C.amber }}>
+                          {pnfWarmup.kind === "first"
+                            ? t("first column at ≥ {up} or < {down}").replace("{up}", fmt(pnfWarmup.up)).replace("{down}", fmt(pnfWarmup.down))
+                            : pnfWarmup.down != null
+                              ? t("column 2 needs a reversal < {down}").replace("{down}", fmt(pnfWarmup.down))
+                              : t("column 2 needs a reversal ≥ {up}").replace("{up}", fmt(pnfWarmup.up))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )
+              ) : chartData.length > 1 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 8, right: 6, bottom: 0, left: 0 }}>
                     <defs>
@@ -7712,6 +7936,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 </div>
               )}
             </div>
+            {chartMode === "pnf" && pnf && pnf.columns.length >= 2 && (
+              <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6 }}>
+                box {fmt(pnf.boxSize)} · {t("3-box reversal · this session")}
+              </div>
+            )}
             <div style={{ fontFamily: MONO, fontSize: 10, color: liveStale ? C.amber : C.faint, marginTop: 6 }}>
               {live
                 ? (liveStale
@@ -7739,6 +7968,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               </div>
             ))}
           </div>
+
+          {/* --- P&F pattern signals (below stats, only when a pattern is on the board) --- */}
+          {panels.pnf && Object.keys(pnfSignals).length > 0 && (
+            <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
+              <div style={{ padding: "9px 12px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>✕○ {t("P&F SIGNALS")}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10, padding: 12 }}>
+                {Object.entries(pnfSignals).map(([sym, p]) => (
+                  <div key={sym} style={{ background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "10px 12px" }}>
+                    <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{sym}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 11, marginTop: 3, color: p.side === "bull" ? dirColorN(1) : dirColorN(-1) }}>{p.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* right rail: movers + trade */}
@@ -8189,7 +8433,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${C.panelEdge}` }}>
                     <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("PANELS")}</label>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
-                      {[["tape", "ticker tape"], ["watchlist", "watchlist"], ["movers", "top movers"], ["news", "news & video"], ["calendar", "calendar"], ["portfolio", "portfolio"]].map(([k, label]) => (
+                      {[["tape", "ticker tape"], ["watchlist", "watchlist"], ["movers", "top movers"], ["news", "news & video"], ["calendar", "calendar"], ["portfolio", "portfolio"], ["pnf", "P&F signals"]].map(([k, label]) => (
                         <label key={k} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 11, color: panels[k] ? C.text : C.faint, cursor: "pointer" }}>
                           <input type="checkbox" checked={panels[k]} onChange={() => togglePanel(k)} />
                           {t(label)}
@@ -8197,7 +8441,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       ))}
                     </div>
                     <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.muted }}>{t("in-app alerts")}</div>
-                    {[["priceTriggers", "price triggers"], ["breakingNews", "breaking news"]].map(([key, label]) => (
+                    {[["priceTriggers", "price triggers"], ["breakingNews", "breaking news"], ["pnfPatterns", "P&F pattern alerts"]].map(([key, label]) => (
                       <label key={key} style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontFamily: MONO, fontSize: 11, color: prefs.notify[key] ? C.text : C.faint, cursor: "pointer" }}>
                         <input type="checkbox" checked={prefs.notify[key]}
                           onChange={() => setPref("notify", { ...prefs.notify, [key]: !prefs.notify[key] })} />
