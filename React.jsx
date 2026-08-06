@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo, createContext, useContext } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, createContext, useContext } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer, CartesianGrid,
 } from "recharts";
@@ -1404,7 +1404,7 @@ function chessApply(bd, from, to) {
 }
 
 // ---- Chess game component: pass-and-play, vs AI or 2-player ----
-function ChessGame({ onCheer, onWin }) {
+function ChessGame({ onCheer, onWin, sfx }) {
   const [vsAI, setVsAI] = useState(true);        // default: play the computer (Bears) — good for a lone player
   const [board, setBoard] = useState(chessInit);
   const [turn, setTurn] = useState("w");         // 'w' = Bulls (green, the human) move first
@@ -1412,12 +1412,36 @@ function ChessGame({ onCheer, onWin }) {
   const [targets, setTargets] = useState([]);
   const [winner, setWinner] = useState(null);
   const [captured, setCaptured] = useState({ w: [], b: [] });
+  // flying-piece overlay: the board state applies instantly, but the moved glyph slides
+  // from→to on top of the grid (~180ms) before the destination square shows its piece
+  const [anim, setAnim] = useState(null);        // { from, to, glyph, color, go }
+  const animTimer = useRef(null);
+  const reducedMotion = typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  useLayoutEffect(() => {
+    if (!anim || anim.go) return;
+    const id = requestAnimationFrame(() => setAnim(a => (a && !a.go ? { ...a, go: true } : a)));
+    return () => cancelAnimationFrame(id);
+  }, [anim]);
+  useEffect(() => () => clearTimeout(animTimer.current), []);
 
-  const reset = (ai = vsAI) => { setVsAI(ai); setBoard(chessInit()); setTurn("w"); setSel(null); setTargets([]); setWinner(null); setCaptured({ w: [], b: [] }); };
+  const reset = (ai = vsAI) => { setVsAI(ai); setBoard(chessInit()); setTurn("w"); setSel(null); setTargets([]); setWinner(null); setCaptured({ w: [], b: [] }); clearTimeout(animTimer.current); setAnim(null); };
 
   // commit a move (from either the human or the AI) and pass the turn / detect a king capture
-  const commit = (next, taken, side) => {
+  const commit = (next, taken, side, from, to) => {
     setBoard(next);
+    // sounds land WITH the flying piece; a king capture adds the win/lose sting a beat later
+    const landed = () => {
+      setAnim(null);
+      sfx?.(taken ? "capture" : "move");
+      if (taken?.t === "k") setTimeout(() => sfx?.(vsAI ? (side === "w" ? "win" : "lose") : "win"), 170);
+    };
+    clearTimeout(animTimer.current);
+    if (reducedMotion || !from || !to) landed();
+    else {
+      const moved = next[to.r][to.c];
+      setAnim({ from, to, glyph: CHESS_GLYPH[moved.t], color: moved.s === "w" ? "#3FE08A" : "#FF6B7A", go: false });
+      animTimer.current = setTimeout(landed, 200);
+    }
     if (taken) {
       setCaptured(cap => ({ ...cap, [side]: [...cap[side], taken.t] }));
       if (!(vsAI && side === "b")) onCheer?.();            // cheer for the player's captures, not the computer's
@@ -1433,8 +1457,8 @@ function ChessGame({ onCheer, onWin }) {
       const mv = chessAIMove(board, "b");
       if (!mv) { setWinner("w"); onWin?.("w"); return; }    // computer has no moves → player wins
       const { next, taken } = chessApply(board, mv.from, mv.to);
-      commit(next, taken, "b");
-    }, 550);
+      commit(next, taken, "b", mv.from, mv.to);
+    }, 900 + Math.random() * 800);                          // humanlike pause — instant replies felt like a vending machine
     return () => clearTimeout(id);
   }, [turn, vsAI, winner, board]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1445,7 +1469,7 @@ function ChessGame({ onCheer, onWin }) {
     if (sel && targets.some(t => t.r === r && t.c === c)) {
       const { next, taken } = chessApply(board, sel, { r, c });
       setSel(null); setTargets([]);
-      commit(next, taken, turn);
+      commit(next, taken, turn, sel, { r, c });
       return;
     }
     if (piece && piece.s === turn) { setSel({ r, c }); setTargets(chessMoves(board, r, c)); }
@@ -1469,11 +1493,12 @@ function ChessGame({ onCheer, onWin }) {
         <button onClick={() => reset()} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>new game ↻</button>
       </div>
       <div style={{ fontSize: 12, fontWeight: 700, textAlign: "center", color: winner ? (winner === "w" ? C.up : C.down) : turn === "w" ? C.up : C.down }}>{status}</div>
-      <div style={{ width: "100%", maxWidth: 320, aspectRatio: "1 / 1", display: "grid", gridTemplateColumns: "repeat(8, 1fr)", border: `1px solid ${C.panelEdge}`, alignSelf: "center", opacity: (vsAI && turn === "b" && !winner) ? 0.75 : 1 }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: 320, aspectRatio: "1 / 1", display: "grid", gridTemplateColumns: "repeat(8, 1fr)", border: `1px solid ${C.panelEdge}`, alignSelf: "center", opacity: (vsAI && turn === "b" && !winner) ? 0.75 : 1 }}>
         {board.map((row, r) => row.map((p, c) => {
           const light = (r + c) % 2 === 0;
           const isSel = sel && sel.r === r && sel.c === c;
           const isTarget = targets.some(t => t.r === r && t.c === c);
+          const inFlight = anim && anim.to.r === r && anim.to.c === c;   // real piece hides until the overlay lands
           return (
             <button key={`${r}-${c}`} onClick={() => clickSquare(r, c)}
               style={{
@@ -1481,11 +1506,21 @@ function ChessGame({ onCheer, onWin }) {
                 background: isSel ? "rgba(255,179,0,0.5)" : light ? "#2A3346" : "#1A2233",
                 display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
               }}>
-              {p && <span style={{ fontSize: 22, color: p.s === "w" ? "#3FE08A" : "#FF6B7A", textShadow: "0 1px 2px rgba(0,0,0,0.6)" }}>{CHESS_GLYPH[p.t]}</span>}
+              {p && <span style={{ fontSize: 22, color: p.s === "w" ? "#3FE08A" : "#FF6B7A", textShadow: "0 1px 2px rgba(0,0,0,0.6)", opacity: inFlight ? 0 : 1 }}>{CHESS_GLYPH[p.t]}</span>}
               {isTarget && <span style={{ position: "absolute", width: p ? "82%" : 12, height: p ? "82%" : 12, borderRadius: p ? 6 : "50%", boxSizing: "border-box", border: p ? `2px solid ${C.amber}` : "none", background: p ? "transparent" : "rgba(255,179,0,0.55)" }} />}
             </button>
           );
         }))}
+        {anim && (
+          <span aria-hidden="true" style={{
+            position: "absolute", width: "12.5%", height: "12.5%", pointerEvents: "none", zIndex: 2,
+            left: `${(anim.go ? anim.to.c : anim.from.c) * 12.5}%`,
+            top: `${(anim.go ? anim.to.r : anim.from.r) * 12.5}%`,
+            transition: "left 0.18s ease, top 0.18s ease",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 22, lineHeight: 1, color: anim.color, textShadow: "0 1px 2px rgba(0,0,0,0.6)",
+          }}>{anim.glyph}</span>
+        )}
       </div>
       <div style={{ fontSize: 10, color: C.faint, lineHeight: 1.5 }}>
         {vsAI ? "You are 🐂 Bulls (green). Capture the Bears' king to win — lose yours and it's over." : "Two players, one screen: 🐂 Bulls vs 🐻 Bears. Capture the enemy king to win."} Pawns auto-promote to queens. (Casual rules — no check/castling.)
@@ -4246,6 +4281,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const chirp = useCallback((notes, gap = 45) => {
     notes.forEach((n, i) => setTimeout(() => uiClick(n[0], n[1] || 0.05, n[2] || "square"), i * gap));
   }, [uiClick]);
+  // chess board cues — same kit (and same on/off toggle + volume) as the UI blips
+  const chessSfx = useCallback((kind) => {
+    if (kind === "move") uiClick(520, 0.06, "triangle", 0.09);
+    else if (kind === "capture") chirp([[290, 0.07, "sawtooth"], [175, 0.1, "sawtooth"]], 60);
+    else if (kind === "win") chirp([[523.3, 0.09, "triangle"], [659.3, 0.09, "triangle"], [784, 0.09, "triangle"], [1046.5, 0.22, "triangle"]], 70);
+    else if (kind === "lose") chirp([[392, 0.1, "triangle"], [311.1, 0.1, "triangle"], [246.9, 0.1, "triangle"], [196, 0.24, "triangle"]], 90);
+  }, [uiClick, chirp]);
 
   // ---- anchor cue sound effects: a real handbell, cutlery, a relaxed break chime ----
   // Uses the same shared AudioContext + master volume + on/off toggle as the UI blips.
@@ -4861,6 +4903,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // intraday box grid; demo keeps the daily 0.1% scale its 390 seeded bars are tuned for.
   const pnf = useMemo(() => (chartMode === "pnf" ? buildPnF(chartData.map(d => d.price), live ? { boxPct: INTRADAY_BOX_PCT } : {}) : null), [chartMode, chartData, live]);
   const pnfPattern = useMemo(() => (pnf ? detectPattern(pnf.columns) : null), [pnf]);
+  // Warming-up detail for the P&F empty state: where the tape sits on the box
+  // grid and exactly what price prints enough columns to draw the chart.
+  const pnfWarmup = useMemo(() => {
+    if (chartMode !== "pnf" || (pnf && pnf.columns.length >= 2)) return null;
+    const prices = chartData.map(d => d.price).filter(v => Number.isFinite(v) && v > 0);
+    if (!prices.length) return null;
+    const targets = pnfTargets(prices, live ? { boxPct: INTRADAY_BOX_PCT } : {});
+    if (!targets) return null;
+    return { ...targets, last: prices[prices.length - 1], lo: Math.min(...prices), hi: Math.max(...prices) };
+  }, [chartMode, chartData, pnf, live]);
 
   // Tight y-axis around the actual data (+ prev close). Recharts "auto" balloons to a huge range when
   // every point is identical — e.g. a market-closed frozen price — making a real value look broken.
@@ -4903,16 +4955,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     let cand = SYMBOL_ALIASES[upKey] || null;                    // 1. known company name / alias
     if (!cand && tickerish && t === upKey) cand = upKey;         // 2. ALL-CAPS 1-5 letters = a ticker
     if (cand && await validate(cand)) return cand;
-  // Warming-up detail for the P&F empty state: where the tape sits on the box
-  // grid and exactly what price prints enough columns to draw the chart.
-  const pnfWarmup = useMemo(() => {
-    if (chartMode !== "pnf" || (pnf && pnf.columns.length >= 2)) return null;
-    const prices = chartData.map(d => d.price).filter(v => Number.isFinite(v) && v > 0);
-    if (!prices.length) return null;
-    const targets = pnfTargets(prices, live ? { boxPct: INTRADAY_BOX_PCT } : {});
-    if (!targets) return null;
-    return { ...targets, last: prices[prices.length - 1], lo: Math.min(...prices), hi: Math.max(...prices) };
-  }, [chartMode, chartData, pnf, live]);
     if (apiKey) { const hit = await finnhubSearch(t, apiKey); if (hit && await validate(hit)) return hit; } // 3. name search
     if (!live && tickerish) return upKey;                        // 4. demo: allow a synthesized ticker
     return null;                                                  // unrecognized → reject
@@ -7285,7 +7327,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 }
                 if (gameMode === "chess") {
                   return shell("♟ BULLS vs BEARS", backBtn,
-                    <ChessGame onWin={(w) => triggerAnchor("cheer", { label: w === "w" ? "BULLS WIN! 🐂" : "BEARS WIN! 🐻" })} />);
+                    <ChessGame sfx={chessSfx} onWin={(w) => triggerAnchor("cheer", { label: w === "w" ? "BULLS WIN! 🐂" : "BEARS WIN! 🐻" })} />);
                 }
                 if (gameMode === "algowars") {
                   return shell("🖥️ ALGORITHM WARS", backBtn,
