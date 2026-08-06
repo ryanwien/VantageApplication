@@ -171,6 +171,35 @@ Only UI labels are translated.
 - Live mode early in a session (tape too short) behaves identically to a flat tape: empty
   state, no alerts. No special-casing.
 
+## Amendment — 2026-08-06: live tapes get an intraday box + a warming-up empty state
+
+Shipped behavior superseding the two paragraphs above it references. Field-testing live mode
+showed the original design left the panel on its empty state essentially forever: the live
+tape only sees the minutes since page load, and at the daily 0.1% box a session needs a
+~0.1% move plus a ~0.3% reversal before `columns.length >= 2` renders anything.
+
+- **Intraday box for live tapes.** `autoBoxSize(price, pct)` now takes the percentage, and
+  `buildPnF`/`pnfTargets` accept a `boxPct` option. Live call sites (chart + scanner) pass
+  `INTRADAY_BOX_PCT = 0.00025` (0.025%, 4× finer — MSFT ≈ $0.25 box); demo keeps the 0.1%
+  scale its 390 seeded bars are tuned for. Explicit `boxSize` still wins over `boxPct`.
+- **`pnfTargets(closes, opts)`** (new, pure, tested): projects what price prints the NEXT
+  column — `kind: "first"` with both box-edge targets when no column exists, `kind:
+  "reversal"` with the single N-box reversal target against the rightmost column otherwise.
+- **Warming-up empty state.** When `columns.length < 2`, the chart panel now renders, under
+  the existing headline, two MONO detail lines: `tracking {price} · box {box} · session
+  range {lo}–{hi}` and the applicable target line (`first column at ≥ {up} or < {down}` /
+  `column 2 needs a reversal < {down}` / `… ≥ {up}`). All four templates are translated in
+  the five non-English catalogs, unlike the anchor break-in sentence (§6 rationale
+  unchanged).
+- **Render-window clamp.** `visibleWindow(columns, maxRows)` (new, pure, tested) bounds the
+  chart's price window to the last 28 boxes of recent action, anchored to the newest
+  column's growing end. Without it a single outlier column — one bad tick or a halt gap can
+  span thousands of boxes — sets the SVG scale and squeezes every real column into
+  sub-pixel noise. Clipped columns render only the part inside the window; detection is
+  unaffected (the scanner still sees full columns). The chart also gets a taller container
+  in P&F mode (440px vs the line chart's 300px) and a 6px vertical viewBox margin so the
+  outermost gridline labels no longer clip at the SVG edge.
+
 ## Testing
 
 TDD throughout, Vitest, same conventions as `src/settings/*.test.js`:
