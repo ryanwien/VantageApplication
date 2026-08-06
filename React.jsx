@@ -160,13 +160,7 @@ const I18N = {
     "Join": "Unirse", "copy link": "copiar enlace", "end": "finalizar",
     "paste your meeting link to pin it as LIVE…": "pega el enlace de tu reunión para fijarla como EN DIRECTO…",
     "Pin": "Fijar",
-    "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "O, para reuniones creadas y gestionadas dentro de Vantage (con enlaces de acceso aquí), conecta tus propias apps OAuth abajo — consulta MEETINGS_SETUP.md. Esta es la parte que necesita credenciales .env.",
-    "Backend not reachable. Start it in the project folder:": "No se puede acceder al backend. Inícialo en la carpeta del proyecto:",
-    "retry": "reintentar", "create app": "crear app",
-    "connected": "conectado", "not connected": "no conectado", "optional — not set up": "opcional — sin configurar",
-    "Sign in to connect": "Inicia sesión para conectar", "Connect": "Conectar",
-    "creating…": "creando…", "New meeting": "Nueva reunión", "disconnect": "desconectar",
-    "RECENT MEETINGS": "REUNIONES RECIENTES",
+    "connected": "conectado", "disconnect": "desconectar",
     // START tab
     "AI desk": "Mesa de IA", "ready": "listo", "add key ↑": "añadir clave ↑", "Voice": "Voz", "browser": "navegador",
     "Live quotes": "Cotizaciones en directo", "live": "en directo", "demo": "demo", "Real videos": "Vídeos reales",
@@ -306,13 +300,7 @@ const I18N = {
     "Join": "Rejoindre", "copy link": "copier le lien", "end": "terminer",
     "paste your meeting link to pin it as LIVE…": "collez le lien de votre réunion pour l'épingler comme EN DIRECT…",
     "Pin": "Épingler",
-    "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "Ou, pour des réunions créées et suivies dans Vantage (avec les liens de connexion ici), connectez vos propres applis OAuth ci-dessous — voir MEETINGS_SETUP.md. C'est la partie qui nécessite des identifiants .env.",
-    "Backend not reachable. Start it in the project folder:": "Backend inaccessible. Démarrez-le dans le dossier du projet :",
-    "retry": "réessayer", "create app": "créer une appli",
-    "connected": "connecté", "not connected": "non connecté", "optional — not set up": "optionnel — non configuré",
-    "Sign in to connect": "Connectez-vous pour relier", "Connect": "Relier",
-    "creating…": "création…", "New meeting": "Nouvelle réunion", "disconnect": "déconnecter",
-    "RECENT MEETINGS": "RÉUNIONS RÉCENTES",
+    "connected": "connecté", "disconnect": "déconnecter",
     // START tab
     "AI desk": "Plateau IA", "ready": "prêt", "add key ↑": "ajouter une clé ↑", "Voice": "Voix", "browser": "navigateur",
     "Live quotes": "Cotations en direct", "live": "en direct", "demo": "démo", "Real videos": "Vraies vidéos",
@@ -452,13 +440,7 @@ const I18N = {
     "Join": "Beitreten", "copy link": "Link kopieren", "end": "beenden",
     "paste your meeting link to pin it as LIVE…": "Meeting-Link einfügen, um ihn als LIVE anzuheften…",
     "Pin": "Anheften",
-    "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "Oder verbinden Sie für innerhalb von Vantage erstellte und verfolgte Meetings (mit Beitrittslinks hier) unten Ihre eigenen OAuth-Apps — siehe MEETINGS_SETUP.md. Das ist der Teil, der .env-Anmeldedaten benötigt.",
-    "Backend not reachable. Start it in the project folder:": "Backend nicht erreichbar. Starten Sie es im Projektordner:",
-    "retry": "erneut versuchen", "create app": "App erstellen",
-    "connected": "verbunden", "not connected": "nicht verbunden", "optional — not set up": "optional — nicht eingerichtet",
-    "Sign in to connect": "Zum Verbinden anmelden", "Connect": "Verbinden",
-    "creating…": "wird erstellt…", "New meeting": "Neues Meeting", "disconnect": "trennen",
-    "RECENT MEETINGS": "LETZTE MEETINGS",
+    "connected": "verbunden", "disconnect": "trennen",
     // START tab
     "AI desk": "KI-Pult", "ready": "bereit", "add key ↑": "Schlüssel hinzufügen ↑", "Voice": "Stimme", "browser": "Browser",
     "Live quotes": "Live-Kurse", "live": "live", "demo": "Demo", "Real videos": "Echte Videos",
@@ -597,13 +579,7 @@ const I18N = {
     "Join": "Entrar", "copy link": "copiar ligação", "end": "terminar",
     "paste your meeting link to pin it as LIVE…": "cole a ligação da sua reunião para a fixar como AO VIVO…",
     "Pin": "Fixar",
-    "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "Ou, para reuniões criadas e geridas dentro do Vantage (com ligações de acesso aqui), ligue as suas próprias apps OAuth abaixo — consulte MEETINGS_SETUP.md. Esta é a parte que precisa de credenciais .env.",
-    "Backend not reachable. Start it in the project folder:": "Backend inacessível. Inicie-o na pasta do projeto:",
-    "retry": "tentar novamente", "create app": "criar app",
-    "connected": "ligado", "not connected": "não ligado", "optional — not set up": "opcional — não configurado",
-    "Sign in to connect": "Inicie sessão para ligar", "Connect": "Ligar",
-    "creating…": "a criar…", "New meeting": "Nova reunião", "disconnect": "desligar",
-    "RECENT MEETINGS": "REUNIÕES RECENTES",
+    "connected": "ligado", "disconnect": "desligar",
     // START tab
     "AI desk": "Mesa de IA", "ready": "pronto", "add key ↑": "adicionar chave ↑", "Voice": "Voz", "browser": "navegador",
     "Live quotes": "Cotações ao vivo", "live": "ao vivo", "demo": "demo", "Real videos": "Vídeos reais",
@@ -742,13 +718,7 @@ const I18N = {
     "Join": "Partecipa", "copy link": "copia link", "end": "termina",
     "paste your meeting link to pin it as LIVE…": "incolla il link della tua riunione per fissarlo come IN DIRETTA…",
     "Pin": "Fissa",
-    "Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.": "Oppure, per riunioni create e gestite dentro Vantage (con i link di partecipazione qui), collega le tue app OAuth qui sotto — vedi MEETINGS_SETUP.md. Questa è la parte che richiede le credenziali .env.",
-    "Backend not reachable. Start it in the project folder:": "Backend non raggiungibile. Avvialo nella cartella del progetto:",
-    "retry": "riprova", "create app": "crea app",
-    "connected": "connesso", "not connected": "non connesso", "optional — not set up": "opzionale — non configurato",
-    "Sign in to connect": "Accedi per collegare", "Connect": "Collega",
-    "creating…": "creazione…", "New meeting": "Nuova riunione", "disconnect": "disconnetti",
-    "RECENT MEETINGS": "RIUNIONI RECENTI",
+    "connected": "connesso", "disconnect": "disconnetti",
     // START tab
     "AI desk": "Postazione IA", "ready": "pronto", "add key ↑": "aggiungi chiave ↑", "Voice": "Voce", "browser": "browser",
     "Live quotes": "Quotazioni in diretta", "live": "in diretta", "demo": "demo", "Real videos": "Video reali",
@@ -1198,7 +1168,6 @@ const SETUP_STEPS = [
   { icon: "🎬", name: "Streaming catalog", need: "optional", what: "Adds real Netflix / Disney+ / Hulu libraries and in-desk trailers.", how: "Settings → DATA → TMDB API key.", url: "https://www.themoviedb.org/settings/api", link: "get free TMDB key ↗" },
   { icon: "📰", name: "Real video results", need: "optional", what: "Pulls actual embeddable YouTube clips instead of AI guesses.", how: "Settings → DATA → YouTube Data API key.", url: "https://console.cloud.google.com/apis/credentials", link: "get YouTube key ↗" },
   { icon: "🎙️", name: "Studio voice", need: "optional", what: "The browser voice works instantly; ElevenLabs sounds broadcast-grade.", how: "Settings → VOICE → ElevenLabs key.", url: "https://elevenlabs.io/app/settings/api-keys", link: "get ElevenLabs key ↗" },
-  { icon: "📹", name: "Real meetings", need: "optional", what: "Create real Zoom / Google Meet links from the desk.", how: "Needs the local backend + your own OAuth app — full steps in MEETINGS_SETUP.md.", url: null, link: null },
 ];
 
 // friendly label for a calendar event's start time
@@ -3901,7 +3870,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const togglePanel = (k) => setPanels(p => ({ ...p, [k]: !p[k] }));
 
   // ---- tutorial + onboarding system (hub → spotlight tour / auto-demo / missions) ----
-  const [showTutorial, setShowTutorial] = useState(true);
+  // First launch only: once dismissed (skip, or picking a path), it stays gone. Replay
+  // from Settings → DATA SOURCE, which resets the flag.
+  const [showTutorial, setShowTutorial] = useState(() => {
+    try { return window.localStorage.getItem("tape-tutorial-seen") !== "1"; } catch { return true; }
+  });
   const [tutStep, setTutStep] = useState(0);
   const [tourMode, setTourMode] = useState(null);   // null | "spotlight"
   const [tourStep, setTourStep] = useState(0);
@@ -5084,8 +5057,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // Backend calls are per-user: send the session token (Bearer) so the server scopes
   // OAuth tokens / meetings / calendar to THIS account. Empty for guests & local accounts.
   const authHdr = useMemo(() => (account?.token ? { Authorization: `Bearer ${account.token}` } : {}), [account?.token]);
-  const [meetStatus, setMeetStatus] = useState(null);   // {zoom:{configured,connected}, google:{...}} or null if backend is down
-  const [meetings, setMeetings] = useState([]);         // recently created meeting links
+  const [meetStatus, setMeetStatus] = useState(null);   // {zoom:{configured,connected}, google:{...}} or null if backend is down — feeds the calendar auto-load + START chip; the MEET tab itself is zero-setup only
   // ---- Google Calendar: upcoming events shown in a dashboard panel ----
   const [calEvents, setCalEvents] = useState(null);     // null = not loaded, [] = none, [...] = events
   const [calErr, setCalErr] = useState("");
@@ -5114,8 +5086,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     const p = new URLSearchParams({ src: email, mode: "AGENDA", ctz: tz, showTitle: "0", showPrint: "0", showTabs: "0", showCalendars: "0", showTz: "0", bgcolor: "#0B0E14" });
     return `https://calendar.google.com/calendar/embed?${p.toString()}`;
   };
-  const [meetBusy, setMeetBusy] = useState("");
-  const [meetErr, setMeetErr] = useState("");
   // an "active meeting" you can pin (paste the link a Go-Live tab created) — kept across reloads, shown as a live badge
   const [liveMeeting, setLiveMeeting] = useState(() => (typeof window !== "undefined" && window.localStorage.getItem("tape-live-meeting")) || "");
   const [liveMeetDraft, setLiveMeetDraft] = useState("");
@@ -5416,6 +5386,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }, [speak]);
 
   // ---- onboarding launchers: spotlight tour, hands-free demo, missions ----
+  // Dismissing the welcome modal ANY way marks it seen, so it stops greeting you every launch.
+  useEffect(() => {
+    if (!showTutorial) { try { window.localStorage.setItem("tape-tutorial-seen", "1"); } catch { /* private */ } }
+  }, [showTutorial]);
+  // "Replay the welcome" from settings: clear the flag first so the effect above doesn't
+  // immediately re-mark it seen on the next dismissal cycle.
+  const replayTutorial = () => {
+    try { window.localStorage.removeItem("tape-tutorial-seen"); } catch { /* private */ }
+    setShowTutorial(true);
+  };
   const launchSpotlight = () => { setShowTutorial(false); setTourStep(0); setTourMode("spotlight"); };
   const endSpotlight = () => { setTourMode(null); stopSpeak(); };
   const launchMissions = () => { setShowTutorial(false); setMissionsOpen(true); };
@@ -5507,28 +5487,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     try { const r = await fetch("/api/status", { headers: authHdr }); setMeetStatus(r.ok ? await r.json() : null); }
     catch { setMeetStatus(null); } // backend not running
   }, [authHdr]);
-  const createMeeting = useCallback(async (provider) => {
-    setMeetBusy(provider); setMeetErr("");
-    try {
-      const r = await fetch(`/api/${provider}/meeting`, { method: "POST", headers: { "Content-Type": "application/json", ...authHdr }, body: JSON.stringify({ topic: `Vantage · ${selected} briefing` }) });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
-      setMeetings(m => [{ ...j, at: new Date().toLocaleTimeString() }, ...m].slice(0, 6));
-      if (j.start_url || j.join_url) window.open(j.start_url || j.join_url, "_blank", "noopener");
-    } catch (e) { setMeetErr(`${provider}: ${humanizeError(e)}`); }
-    finally { setMeetBusy(""); }
-  }, [selected, authHdr]);
-  const disconnectMeet = useCallback(async (provider) => {
-    try { await fetch(`/api/${provider}/disconnect`, { method: "POST", headers: authHdr }); } catch { /* ignore */ }
-    refreshMeetStatus();
-  }, [refreshMeetStatus, authHdr]);
-  // after the OAuth round-trip the backend bounces back to ?connected=<provider> — open Meetings and refresh
   useEffect(() => {
     const u = new URL(window.location.href);
-    if (u.searchParams.get("connected")) {
-      setSettingsTab("meetings"); setShowSettings(true); refreshMeetStatus();
-      u.searchParams.delete("connected"); window.history.replaceState({}, "", u.toString());
-    }
     // returning from Stripe Checkout (Layer 3): confirm the new plan and show the ACCOUNT tab
     const checkout = u.searchParams.get("checkout"), boughtPlan = u.searchParams.get("plan");
     if (checkout === "success" && boughtPlan) {
@@ -5537,7 +5497,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       setSettingsTab("account"); setShowSettings(true);
     }
     if (checkout) { u.searchParams.delete("checkout"); u.searchParams.delete("plan"); window.history.replaceState({}, "", u.toString()); }
-  }, [refreshMeetStatus, onChangePlan]);
+  }, [authHdr, onChangePlan]);
   // load provider status whenever the Meetings tab is opened
   useEffect(() => { if (showSettings && settingsTab === "meetings") refreshMeetStatus(); }, [showSettings, settingsTab, refreshMeetStatus]);
 
@@ -6145,6 +6105,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
   // ---- in-app video theater ----
   const [player, setPlayer] = useState(null); // {id, title, channel, url, brief?} | {archive, title, channel}
+  // the player docks at the TOP of the desk; opening one from deep in a catalog grid
+  // would otherwise land off-screen, so bring it into view when it (re)opens
+  const playerRef = useRef(null);
+  // "start", not "nearest": a 16:9 frame can be taller than the viewport, and nearest would
+  // align its bottom — pushing the panel's title/close row off the top of the screen.
+  useEffect(() => { if (player) playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [player]);
   // ---- streaming catalog (TMDB for Netflix/Disney+/Hulu libraries; archive.org for in-desk films) ----
   const [catalog, setCatalog] = useState(null); // {service?, kind?, archive?, popular?, query?, loading, items:[], error?}
   const [catalogPick, setCatalogPick] = useState(null); // an item whose summary is expanded
@@ -7210,6 +7176,60 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           </div>
 
 
+          {/* embedded player — docked at the TOP of the desk so a trailer opened from a
+              tall catalog grid is visible without scrolling */}
+          {player && (
+            <div ref={playerRef} style={{ margin: "12px 12px 0", border: `1px solid ${C.amber}`, borderRadius: 6, overflow: "hidden", background: "#0D121C" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
+                <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.text }}>
+                  <span style={{ color: C.down }}>▶</span> {player.title}
+                  <span style={{ color: C.faint, fontWeight: 400, marginLeft: 8 }}>{player.channel}</span>
+                </span>
+                <button onClick={() => setPlayer(null)} aria-label="Close embedded player"
+                  style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 12, padding: "3px 10px", cursor: "pointer" }}>✕</button>
+              </div>
+              {player.archive ? (
+                <ArchiveFrame id={player.archive} title={player.title} />
+              ) : player.id ? (
+                <VideoFrame id={player.id} title={player.title} />
+              ) : (
+                <div style={{ padding: 12, fontFamily: MONO, fontSize: 12, color: C.text, lineHeight: 1.6 }}>
+                  {player.brief || "This link cannot be embedded directly, but the desk brief is available above."}
+                </div>
+              )}
+              {player.archive ? (
+                <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>Public-domain film · playing inside Vantage</span>
+                  <a href={`https://archive.org/details/${player.archive}`} target="_blank" rel="noopener noreferrer"
+                    style={{ fontFamily: MONO, fontSize: 10, color: C.amber, textDecoration: "none", border: `1px solid ${C.amberDim}`, borderRadius: 3, padding: "3px 9px" }}>
+                    Open on Archive ↗
+                  </a>
+                </div>
+              ) : (
+                <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", color: C.amber }}>DESK BRIEF</span>
+                    <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <a href={ytWatchUrl(player)} target="_blank" rel="noopener noreferrer"
+                        style={{ fontFamily: MONO, fontSize: 10, color: C.amber, textDecoration: "none", border: `1px solid ${C.amberDim}`, borderRadius: 3, padding: "3px 9px" }}>
+                        Watch on YouTube ↗
+                      </a>
+                      {player.brief && (
+                        <button onClick={() => speak("brief", player.brief)}
+                          style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "3px 9px", cursor: "pointer" }}>
+                          ▶ read
+                        </button>
+                      )}
+                    </span>
+                  </div>
+                  <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.7, color: C.text, marginTop: 6 }}>
+                    {player.brief || "Researching what this video covers…"}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* anchor + response columns */}
           {(Object.keys(aiResponses).length > 0 || true) && (
             <div style={{ display: "flex", gap: 12, padding: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
@@ -7706,58 +7726,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           {lastAsked && (
             <div style={{ padding: "0 12px 4px", fontFamily: MONO, fontSize: 10, color: C.faint }}>
               last question: <span style={{ color: C.muted }}>{lastAsked}</span> · every answer sees the current snapshot ({live ? "live" : "simulated"} data)
-            </div>
-          )}
-
-          {player && (
-            <div style={{ margin: "0 12px 12px", border: `1px solid ${C.amber}`, borderRadius: 6, overflow: "hidden", background: "#0D121C" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-                <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.text }}>
-                  <span style={{ color: C.down }}>▶</span> {player.title}
-                  <span style={{ color: C.faint, fontWeight: 400, marginLeft: 8 }}>{player.channel}</span>
-                </span>
-                <button onClick={() => setPlayer(null)} aria-label="Close embedded player"
-                  style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 12, padding: "3px 10px", cursor: "pointer" }}>✕</button>
-              </div>
-              {player.archive ? (
-                <ArchiveFrame id={player.archive} title={player.title} />
-              ) : player.id ? (
-                <VideoFrame id={player.id} title={player.title} />
-              ) : (
-                <div style={{ padding: 12, fontFamily: MONO, fontSize: 12, color: C.text, lineHeight: 1.6 }}>
-                  {player.brief || "This link cannot be embedded directly, but the desk brief is available above."}
-                </div>
-              )}
-              {player.archive ? (
-                <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>Public-domain film · playing inside Vantage</span>
-                  <a href={`https://archive.org/details/${player.archive}`} target="_blank" rel="noopener noreferrer"
-                    style={{ fontFamily: MONO, fontSize: 10, color: C.amber, textDecoration: "none", border: `1px solid ${C.amberDim}`, borderRadius: 3, padding: "3px 9px" }}>
-                    Open on Archive ↗
-                  </a>
-                </div>
-              ) : (
-                <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}` }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", color: C.amber }}>DESK BRIEF</span>
-                    <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <a href={ytWatchUrl(player)} target="_blank" rel="noopener noreferrer"
-                        style={{ fontFamily: MONO, fontSize: 10, color: C.amber, textDecoration: "none", border: `1px solid ${C.amberDim}`, borderRadius: 3, padding: "3px 9px" }}>
-                        Watch on YouTube ↗
-                      </a>
-                      {player.brief && (
-                        <button onClick={() => speak("brief", player.brief)}
-                          style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "3px 9px", cursor: "pointer" }}>
-                          ▶ read
-                        </button>
-                      )}
-                    </span>
-                  </div>
-                  <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.7, color: C.text, marginTop: 6 }}>
-                    {player.brief || "Researching what this video covers…"}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -8291,15 +8259,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       {showTutorial && (
         <div role="dialog" aria-label="Welcome to Vantage"
           style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: 16 }}>
-          <div style={{ width: 480, maxWidth: "94vw", maxHeight: "92vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.amber}`, borderRadius: 12, padding: 24, boxShadow: "0 24px 70px rgba(0,0,0,0.6)" }}>
-            <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: 24, letterSpacing: "0.1em", color: C.amber }}>
-              VANTAGE <span style={{ fontSize: 11, letterSpacing: "0.08em", color: C.faint, fontWeight: 500 }}>· GETTING STARTED</span>
+          <div style={{ width: 480, maxWidth: "94vw", maxHeight: "92vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.amber}`, borderRadius: 12, padding: 20, boxShadow: "0 24px 70px rgba(0,0,0,0.6)" }}>
+            <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: 20, letterSpacing: "0.1em", color: C.amber }}>
+              VANTAGE <span style={{ fontSize: 10, letterSpacing: "0.08em", color: C.faint, fontWeight: 500 }}>· GETTING STARTED</span>
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 12.5, lineHeight: 1.7, color: C.text, marginTop: 10 }}>
+            <div style={{ fontFamily: MONO, fontSize: 11.5, lineHeight: 1.55, color: C.text, marginTop: 7 }}>
               Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 10.5, lineHeight: 1.6, color: C.muted, marginTop: 8, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "8px 10px" }}>
-              💡 <b style={{ color: C.text }}>No setup required to explore.</b> Everything here runs in demo mode. The only key worth adding is for the AI desk — its answers come from external AI models that bill to <i>your</i> account, so they need your key. Everything else (live prices, streaming, video) is optional.
+            <div style={{ fontFamily: MONO, fontSize: 10, lineHeight: 1.5, color: C.muted, marginTop: 7, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "7px 9px" }}>
+              💡 <b style={{ color: C.text }}>No setup required.</b> Everything runs in demo mode. The only key worth adding is for the AI desk — its answers come from external models that bill to <i>your</i> account. Live prices, streaming and video are optional.
             </div>
             {!aiReady() && (
               <div style={{ fontFamily: MONO, fontSize: 10.5, lineHeight: 1.6, color: C.down, marginTop: 8, background: "rgba(246,70,93,0.08)", border: `1px solid ${C.down}`, borderRadius: 6, padding: "8px 10px" }}>
@@ -8307,26 +8275,26 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 <button onClick={() => { setShowTutorial(false); setSetupOpen(true); }} style={{ background: "transparent", border: "none", color: C.amber, textDecoration: "underline", cursor: "pointer", fontFamily: MONO, fontSize: 10.5, padding: 0 }}>Set it up →</button>
               </div>
             )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 12 }}>
               {[
-                { icon: "🔦", title: "Take the guided tour", desc: "I'll spotlight each part of the screen and talk you through it, step by step.", cta: "Start tour", on: launchSpotlight },
-                { icon: "▶", title: "Watch me demo it", desc: "Sit back — I'll drive: chart a stock, ask a question, open a chart, ring the bell.", cta: "Play demo", on: runDemo },
-                { icon: "🎯", title: "Try the missions", desc: "Six hands-on tasks that check off automatically as you do them in the app.", cta: "Show missions", on: launchMissions },
-                { icon: "⚙️", title: "Set it up (keys & options)", desc: "What each key does, which are needed, and where to get them — the AI key and the optional extras.", cta: "Setup guide", on: () => { setShowTutorial(false); setSetupOpen(true); } },
+                { icon: "🔦", title: "Take the guided tour", desc: "I'll spotlight each part of the screen, step by step.", cta: "Start tour", on: launchSpotlight },
+                { icon: "▶", title: "Watch me demo it", desc: "Sit back — I'll chart a stock, ask a question, ring the bell.", cta: "Play demo", on: runDemo },
+                { icon: "🎯", title: "Try the missions", desc: "Six hands-on tasks that check off as you do them.", cta: "Show missions", on: launchMissions },
+                { icon: "⚙️", title: "Set it up (keys & options)", desc: "What each key does and where to get it.", cta: "Setup guide", on: () => { setShowTutorial(false); setSetupOpen(true); } },
               ].map((o, i) => (
                 <button key={i} onClick={o.on}
-                  style={{ textAlign: "left", display: "flex", alignItems: "center", gap: 14, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 8, padding: "14px 16px", cursor: "pointer" }}
+                  style={{ textAlign: "left", display: "flex", alignItems: "center", gap: 11, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 8, padding: "9px 12px", cursor: "pointer" }}
                   onMouseEnter={e => e.currentTarget.style.borderColor = C.amber} onMouseLeave={e => e.currentTarget.style.borderColor = C.panelEdge}>
-                  <span style={{ fontSize: 26, lineHeight: 1 }}>{o.icon}</span>
-                  <span style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-                    <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 14, color: C.text }}>{o.title}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 11, color: C.muted, marginTop: 3, lineHeight: 1.5 }}>{o.desc}</span>
+                  <span style={{ fontSize: 20, lineHeight: 1 }}>{o.icon}</span>
+                  <span style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
+                    <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 13, color: C.text }}>{o.title}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 10, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{o.desc}</span>
                   </span>
-                  <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: C.amber, whiteSpace: "nowrap" }}>{o.cta} →</span>
+                  <span style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: C.amber, whiteSpace: "nowrap" }}>{o.cta} →</span>
                 </button>
               ))}
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, gap: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 11, gap: 12, flexWrap: "wrap" }}>
               <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>Replay anytime from Settings → DATA SOURCE</span>
               <button onClick={() => setShowTutorial(false)}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = C.muted; e.currentTarget.style.color = C.text; }}
@@ -8414,7 +8382,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
                     {/* quick actions */}
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <button onClick={() => { setShowSettings(false); setTutStep(0); setShowTutorial(true); }}
+                      <button onClick={() => { setShowSettings(false); setTutStep(0); replayTutorial(); }}
                         style={{ flex: 1, minWidth: 140, background: "transparent", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 600, padding: "9px 0", cursor: "pointer" }}>
                         ↺ {t("tour · demo · missions")}
                       </button>
@@ -8491,7 +8459,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         </button>
                       )}
                     </div>
-                    <button onClick={() => { setTutStep(0); setShowTutorial(true); setShowSettings(false); }}
+                    <button onClick={() => { setTutStep(0); replayTutorial(); setShowSettings(false); }}
                       style={{ marginTop: 12, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "7px 12px", cursor: "pointer" }}>
                       ↺ {t("replay tutorial")}
                     </button>
@@ -9054,72 +9022,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     </div>
                   </div>
 
-                  <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.muted, background: "rgba(255,179,0,0.06)", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "8px 10px" }}>
-                    {lang === "en"
-                      ? <><b style={{ color: C.text }}>Or</b>, for meetings created & tracked <b style={{ color: C.text }}>inside</b> Vantage (with join links here), connect your own OAuth apps below — see <code style={{ color: C.amber }}>MEETINGS_SETUP.md</code>. This is the part that needs <code style={{ color: C.amber }}>.env</code> credentials.</>
-                      : t("Or, for meetings created & tracked inside Vantage (with join links here), connect your own OAuth apps below — see MEETINGS_SETUP.md. This is the part that needs .env credentials.")}
-                  </div>
-
-                  {meetStatus === null ? (
-                    <div style={{ fontFamily: MONO, fontSize: 11, color: C.down, border: `1px solid ${C.down}`, borderRadius: 6, padding: "10px 12px", lineHeight: 1.7 }}>
-                      ⚠ {t("Backend not reachable. Start it in the project folder:")}
-                      <div style={{ color: C.amber, marginTop: 6, wordBreak: "break-all" }}>node --env-file=.env server/index.js</div>
-                      <button onClick={refreshMeetStatus} style={{ marginTop: 8, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 12px", cursor: "pointer" }}>{t("retry")}</button>
-                    </div>
-                  ) : (
-                    [["zoom", "Zoom", "#2D8CFF", "https://marketplace.zoom.us/develop/create", "Z"], ["google", "Google Meet", "#00897B", "https://console.cloud.google.com/apis/credentials", "M"]].map(([id, name, col, setupUrl, letter]) => {
-                      const st = meetStatus[id] || {};
-                      const pill = st.connected ? { fg: C.up, label: t("connected") } : st.configured ? { fg: C.muted, label: t("not connected") } : { fg: C.faint, label: t("optional — not set up") };
-                      return (
-                        <div key={id} style={{ border: `1px solid ${st.connected ? C.amber : C.panelEdge}`, borderRadius: 8, padding: 14, display: "flex", flexDirection: "column", gap: 12, background: `linear-gradient(160deg, ${col}14, transparent 55%)` }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <span style={{ width: 30, height: 30, borderRadius: 8, background: col, display: "grid", placeItems: "center", fontFamily: SANS, fontSize: 15, fontWeight: 800, color: "#fff", flexShrink: 0 }}>{letter}</span>
-                            <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: C.text, flex: 1 }}>{name}</span>
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: MONO, fontSize: 9, letterSpacing: "0.04em", color: pill.fg, background: `${pill.fg}1A`, border: `1px solid ${pill.fg}44`, borderRadius: 999, padding: "3px 9px", whiteSpace: "nowrap" }}>
-                              <span style={{ width: 5, height: 5, borderRadius: "50%", background: pill.fg }} />{pill.label}
-                            </span>
-                          </div>
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                            {!st.connected ? (
-                              // connecting stores tokens under your account, so a backend session is required.
-                              // no token (guest / local-only account) → bounce to the ACCOUNT tab to sign in.
-                              <>
-                                <button onClick={() => { if (!account?.token) { setSettingsTab("account"); return; } window.location.href = `/api/${id}/login?token=${encodeURIComponent(account.token)}`; }} disabled={!st.configured}
-                                  title={!account?.token ? "Sign in with an account (backend running) to connect your own Zoom/Google" : undefined}
-                                  style={{ flex: "1 1 auto", background: st.configured ? C.amber : "transparent", color: st.configured ? "#141414" : C.faint, border: st.configured ? "none" : `1px solid ${C.panelEdge}`, borderRadius: 5, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "9px 16px", cursor: st.configured ? "pointer" : "not-allowed" }}>
-                                  {!account?.token ? t("Sign in to connect") : `${t("Connect")} ${name} ↗`}
-                                </button>
-                                {!st.configured && <a href={setupUrl} target="_blank" rel="noopener noreferrer" style={{ fontFamily: MONO, fontSize: 10, color: C.amber, textDecoration: "none", border: `1px solid ${C.amber}55`, borderRadius: 5, padding: "8px 12px", whiteSpace: "nowrap" }}>{t("create app")} ↗</a>}
-                              </>
-                            ) : (
-                              <>
-                                <button onClick={() => createMeeting(id)} disabled={meetBusy === id}
-                                  style={{ background: C.amber, color: "#141414", border: "none", borderRadius: 5, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "9px 16px", cursor: meetBusy === id ? "default" : "pointer", opacity: meetBusy === id ? 0.6 : 1 }}>
-                                  {meetBusy === id ? t("creating…") : `＋ ${t("New meeting")}`}
-                                </button>
-                                <button onClick={() => disconnectMeet(id)}
-                                  style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: MONO, fontSize: 11, padding: "9px 12px", cursor: "pointer" }}>{t("disconnect")}</button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-
-                  {meetErr && <div style={{ fontFamily: MONO, fontSize: 10, color: C.down }}>✗ {meetErr}</div>}
-
-                  {meetings.length > 0 && (
-                    <div style={{ borderTop: `1px solid ${C.panelEdge}`, paddingTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
-                      <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>{t("RECENT MEETINGS")}</label>
-                      {meetings.map((mt, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontFamily: MONO, fontSize: 11 }}>
-                          <span style={{ color: C.muted }}>{mt.provider === "zoom" ? "Zoom" : "Meet"} · {mt.at}</span>
-                          <a href={mt.join_url} target="_blank" rel="noopener noreferrer" style={{ color: C.amber, textDecoration: "none" }}>open ↗</a>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
 
