@@ -7885,6 +7885,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               </div>
             ))}
           </div>
+
+          {/* --- P&F pattern signals (below stats, only when a pattern is on the board) --- */}
+          {panels.pnf && Object.keys(pnfSignals).length > 0 && (
+            <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
+              <div style={{ padding: "9px 12px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>✕○ {t("P&F SIGNALS")}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10, padding: 12 }}>
+                {Object.entries(pnfSignals).map(([sym, p]) => (
+                  <div key={sym} style={{ background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "10px 12px" }}>
+                    <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{sym}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 11, marginTop: 3, color: p.side === "bull" ? dirColorN(1) : dirColorN(-1) }}>{p.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* right rail: movers + trade */}
@@ -8028,19 +8043,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               );
             })}
             <div style={{ padding: "8px 12px", borderTop: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 9, color: C.faint, lineHeight: 1.5 }}>Say "alert me when {selected} hits {fmt((getRow(selected)?.price || 100) * 1.05, 0)}" to add more.</div>
-          </div>
-        )}
-
-        {/* --- P&F pattern signals (right rail, only when a pattern is on the board) --- */}
-        {panels.pnf && Object.keys(pnfSignals).length > 0 && (
-          <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-            <div style={{ padding: "9px 12px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>✕○ {t("P&F SIGNALS")}</div>
-            {Object.entries(pnfSignals).map(([sym, p]) => (
-              <div key={sym} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderTop: `1px solid ${C.grid}` }}>
-                <span style={{ fontFamily: MONO, fontSize: 11, color: C.text }}>{sym}</span>
-                <span style={{ fontFamily: MONO, fontSize: 11, marginLeft: "auto", color: p.side === "bull" ? dirColorN(1) : dirColorN(-1) }}>{p.name}</span>
-              </div>
-            ))}
           </div>
         )}
 
