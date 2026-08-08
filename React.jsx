@@ -8,6 +8,7 @@ import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled
 import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, isCloseMatch, missingDimension, namedAbsentColumn } from "./src/datahub/catalog.js";
 import { buildPnF, pnfTargets, visibleWindow, INTRADAY_BOX_PCT } from "./src/pnf/pnf.js";
 import { detectPattern } from "./src/pnf/patterns.js";
+import { CHESS_GLYPH, chessInit, legalMoves, chessApply, gameStatus, inCheck, chessAIMove } from "./src/chess/chess.js";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -1317,62 +1318,9 @@ function bjValue(cards) {
   return sum;
 }
 
-// ---- Bull vs Bear chess: standard legal piece moves, pass-and-play (no engine, no checkmate) ----
-const CHESS_GLYPH = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
-function chessInit() {
-  const back = ["r", "n", "b", "q", "k", "b", "n", "r"];
-  const b = Array.from({ length: 8 }, () => Array(8).fill(null));
-  for (let c = 0; c < 8; c++) { b[0][c] = { s: "b", t: back[c] }; b[1][c] = { s: "b", t: "p" }; b[6][c] = { s: "w", t: "p" }; b[7][c] = { s: "w", t: back[c] }; }
-  return b;
-}
-// pseudo-legal moves for the piece at (r,c) — enough for a casual pass-and-play game (no check/castling/en-passant)
-function chessMoves(board, r, c) {
-  const p = board[r][c]; if (!p) return [];
-  const out = [], inB = (x, y) => x >= 0 && x < 8 && y >= 0 && y < 8;
-  const own = (x, y) => inB(x, y) && board[x][y] && board[x][y].s === p.s;
-  const enemy = (x, y) => inB(x, y) && board[x][y] && board[x][y].s !== p.s;
-  const empty = (x, y) => inB(x, y) && !board[x][y];
-  const ray = (dirs) => { for (const [dx, dy] of dirs) { let x = r + dx, y = c + dy; while (empty(x, y)) { out.push({ r: x, c: y }); x += dx; y += dy; } if (enemy(x, y)) out.push({ r: x, c: y }); } };
-  if (p.t === "p") {
-    const dir = p.s === "w" ? -1 : 1, start = p.s === "w" ? 6 : 1;
-    if (empty(r + dir, c)) { out.push({ r: r + dir, c }); if (r === start && empty(r + 2 * dir, c)) out.push({ r: r + 2 * dir, c }); }
-    for (const dc of [-1, 1]) if (enemy(r + dir, c + dc)) out.push({ r: r + dir, c: c + dc });
-  } else if (p.t === "n") {
-    for (const [dx, dy] of [[-2, -1], [-2, 1], [2, -1], [2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2]]) { const x = r + dx, y = c + dy; if (inB(x, y) && !own(x, y)) out.push({ r: x, c: y }); }
-  } else if (p.t === "b") ray([[-1, -1], [-1, 1], [1, -1], [1, 1]]);
-  else if (p.t === "r") ray([[-1, 0], [1, 0], [0, -1], [0, 1]]);
-  else if (p.t === "q") ray([[-1, -1], [-1, 1], [1, -1], [1, 1], [-1, 0], [1, 0], [0, -1], [0, 1]]);
-  else if (p.t === "k") { for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) { if (!dx && !dy) continue; const x = r + dx, y = c + dy; if (inB(x, y) && !own(x, y)) out.push({ r: x, c: y }); } }
-  return out;
-}
-
-const CHESS_VAL = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 1000 };
-// simple greedy AI: take the most valuable capture available, otherwise a random legal move
-function chessAIMove(board, side) {
-  const moves = [];
-  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
-    const p = board[r][c];
-    if (p && p.s === side) for (const t of chessMoves(board, r, c)) {
-      const tgt = board[t.r][t.c];
-      moves.push({ from: { r, c }, to: t, val: tgt ? CHESS_VAL[tgt.t] : 0 });
-    }
-  }
-  if (!moves.length) return null;
-  const best = Math.max(...moves.map(m => m.val));
-  const pool = moves.filter(m => m.val === best);
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-// return a NEW board with the piece moved from→to (immutable; assumes the move was already validated)
-function chessApply(bd, from, to) {
-  const next = bd.map(row => row.slice());
-  const moving = next[from.r][from.c];
-  const taken = next[to.r][to.c];
-  next[to.r][to.c] = moving; next[from.r][from.c] = null;
-  if (moving.t === "p" && (to.r === 0 || to.r === 7)) next[to.r][to.c] = { s: moving.s, t: "q" }; // auto-queen
-  return { next, taken };
-}
-
 // ---- Chess game component: pass-and-play, vs AI or 2-player ----
+// Rules live in src/chess/chess.js — full legality (check, checkmate, stalemate), casual scope
+// otherwise (no castling/en-passant, pawns auto-queen).
 function ChessGame({ onCheer, onWin, sfx }) {
   const [vsAI, setVsAI] = useState(true);        // default: play the computer (Bears) — good for a lone player
   const [board, setBoard] = useState(chessInit);
@@ -1395,14 +1343,18 @@ function ChessGame({ onCheer, onWin, sfx }) {
 
   const reset = (ai = vsAI) => { setVsAI(ai); setBoard(chessInit()); setTurn("w"); setSel(null); setTargets([]); setWinner(null); setCaptured({ w: [], b: [] }); clearTimeout(animTimer.current); setAnim(null); };
 
-  // commit a move (from either the human or the AI) and pass the turn / detect a king capture
+  // commit a move (from either the human or the AI), then end the game or pass the turn.
+  // Endings are real chess: checkmate wins, stalemate draws. King capture stays only as a
+  // backstop — legal-move filtering should make it impossible.
   const commit = (next, taken, side, from, to) => {
+    const opp = side === "w" ? "b" : "w";
+    const outcome = taken?.t === "k" ? "checkmate" : gameStatus(next, opp);
     setBoard(next);
-    // sounds land WITH the flying piece; a king capture adds the win/lose sting a beat later
+    // sounds land WITH the flying piece; checkmate adds the win/lose sting a beat later
     const landed = () => {
       setAnim(null);
       sfx?.(taken ? "capture" : "move");
-      if (taken?.t === "k") setTimeout(() => sfx?.(vsAI ? (side === "w" ? "win" : "lose") : "win"), 170);
+      if (outcome === "checkmate") setTimeout(() => sfx?.(vsAI ? (side === "w" ? "win" : "lose") : "win"), 170);
     };
     clearTimeout(animTimer.current);
     if (reducedMotion || !from || !to) landed();
@@ -1414,9 +1366,10 @@ function ChessGame({ onCheer, onWin, sfx }) {
     if (taken) {
       setCaptured(cap => ({ ...cap, [side]: [...cap[side], taken.t] }));
       if (!(vsAI && side === "b")) onCheer?.();            // cheer for the player's captures, not the computer's
-      if (taken.t === "k") { setWinner(side); onWin?.(side); return; }
     }
-    setTurn(side === "w" ? "b" : "w");
+    if (outcome === "checkmate") { setWinner(side); onWin?.(side); return; }
+    if (outcome === "stalemate") { setWinner("draw"); return; }
+    setTurn(opp);
   };
 
   // the computer's turn (plays Bears/black) — fires shortly after the human moves
@@ -1424,7 +1377,10 @@ function ChessGame({ onCheer, onWin, sfx }) {
     if (!vsAI || winner || turn !== "b") return;
     const id = setTimeout(() => {
       const mv = chessAIMove(board, "b");
-      if (!mv) { setWinner("w"); onWin?.("w"); return; }    // computer has no moves → player wins
+      if (!mv) {                                            // backstop — commit ends mated/stalemated games before the turn passes
+        if (inCheck(board, "b")) { setWinner("w"); onWin?.("w"); } else setWinner("draw");
+        return;
+      }
       const { next, taken } = chessApply(board, mv.from, mv.to);
       commit(next, taken, "b", mv.from, mv.to);
     }, 900 + Math.random() * 800);                          // humanlike pause — instant replies felt like a vending machine
@@ -1441,15 +1397,23 @@ function ChessGame({ onCheer, onWin, sfx }) {
       commit(next, taken, turn, sel, { r, c });
       return;
     }
-    if (piece && piece.s === turn) { setSel({ r, c }); setTargets(chessMoves(board, r, c)); }
+    if (piece && piece.s === turn) { setSel({ r, c }); setTargets(legalMoves(board, r, c)); }
     else { setSel(null); setTargets([]); }
   };
 
 
   // ---- Render the chessboard, controls, and status ----
+  const checkNow = !winner && inCheck(board, turn);        // side to move is in check → say so and mark the king
+  const checkedKing = useMemo(() => {
+    if (!checkNow) return null;
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { const p = board[r][c]; if (p && p.t === "k" && p.s === turn) return { r, c }; }
+    return null;
+  }, [checkNow, board, turn]);
   const status = winner
-    ? (vsAI ? (winner === "w" ? "🎉 You win!" : "💀 You lose") : (winner === "w" ? "🐂 Bulls win!" : "🐻 Bears win!"))
-    : (vsAI && turn === "b" ? "🐻 Computer thinking…" : `${turn === "w" ? "🐂 Bulls" : "🐻 Bears"} to move`);
+    ? (winner === "draw" ? "🤝 Stalemate — draw"
+      : vsAI ? (winner === "w" ? "🎉 Checkmate — you win!" : "💀 Checkmate — you lose")
+      : (winner === "w" ? "🐂 Bulls win by checkmate!" : "🐻 Bears win by checkmate!"))
+    : (vsAI && turn === "b" ? "🐻 Computer thinking…" : `${turn === "w" ? "🐂 Bulls" : "🐻 Bears"} to move${checkNow ? " — ⚠️ CHECK" : ""}`);
   const capLabel = (arr) => arr.map(t => CHESS_GLYPH[t]).join(" ");
   const modeBtn = (ai, label) => (
     <button onClick={() => reset(ai)}
@@ -1461,18 +1425,19 @@ function ChessGame({ onCheer, onWin, sfx }) {
         <span style={{ display: "flex", gap: 5 }}>{modeBtn(true, "vs Computer")}{modeBtn(false, "2 Player")}</span>
         <button onClick={() => reset()} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>new game ↻</button>
       </div>
-      <div style={{ fontSize: 12, fontWeight: 700, textAlign: "center", color: winner ? (winner === "w" ? C.up : C.down) : turn === "w" ? C.up : C.down }}>{status}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, textAlign: "center", color: winner ? (winner === "draw" ? C.amber : winner === "w" ? C.up : C.down) : turn === "w" ? C.up : C.down }}>{status}</div>
       <div style={{ position: "relative", width: "100%", maxWidth: 320, aspectRatio: "1 / 1", display: "grid", gridTemplateColumns: "repeat(8, 1fr)", border: `1px solid ${C.panelEdge}`, alignSelf: "center", opacity: (vsAI && turn === "b" && !winner) ? 0.75 : 1 }}>
         {board.map((row, r) => row.map((p, c) => {
           const light = (r + c) % 2 === 0;
           const isSel = sel && sel.r === r && sel.c === c;
           const isTarget = targets.some(t => t.r === r && t.c === c);
           const inFlight = anim && anim.to.r === r && anim.to.c === c;   // real piece hides until the overlay lands
+          const inDanger = checkedKing && checkedKing.r === r && checkedKing.c === c; // this king is in check
           return (
             <button key={`${r}-${c}`} onClick={() => clickSquare(r, c)}
               style={{
                 position: "relative", border: "none", cursor: winner ? "default" : "pointer", padding: 0,
-                background: isSel ? "rgba(255,179,0,0.5)" : light ? "#2A3346" : "#1A2233",
+                background: isSel ? "rgba(255,179,0,0.5)" : inDanger ? "rgba(255,77,109,0.45)" : light ? "#2A3346" : "#1A2233",
                 display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
               }}>
               {p && <span style={{ fontSize: 22, color: p.s === "w" ? "#3FE08A" : "#FF6B7A", textShadow: "0 1px 2px rgba(0,0,0,0.6)", opacity: inFlight ? 0 : 1 }}>{CHESS_GLYPH[p.t]}</span>}
@@ -1492,7 +1457,7 @@ function ChessGame({ onCheer, onWin, sfx }) {
         )}
       </div>
       <div style={{ fontSize: 10, color: C.faint, lineHeight: 1.5 }}>
-        {vsAI ? "You are 🐂 Bulls (green). Capture the Bears' king to win — lose yours and it's over." : "Two players, one screen: 🐂 Bulls vs 🐻 Bears. Capture the enemy king to win."} Pawns auto-promote to queens. (Casual rules — no check/castling.)
+        {vsAI ? "You are 🐂 Bulls (green). Checkmate the Bears' king to win — get checkmated and it's over." : "Two players, one screen: 🐂 Bulls vs 🐻 Bears. Checkmate the enemy king to win."} Pawns auto-promote to queens. (Casual rules — no castling or en-passant.)
         {(captured.w.length > 0 || captured.b.length > 0) && <div style={{ marginTop: 4 }}>🐂 took: {capLabel(captured.w) || "—"} · 🐻 took: {capLabel(captured.b) || "—"}</div>}
       </div>
     </div>
@@ -7320,7 +7285,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     { id: "bullbear", icon: "📊", name: "Bull or Bear", desc: "Read a headline, predict whether the stock goes up or down. Learn how news moves markets." },
                     { id: "ticker", icon: "🔤", name: "Ticker Match", desc: "Match famous companies to their real stock symbols. AAPL, NVDA, TSLA…" },
                     { id: "cards", icon: "🃏", name: "Market Blackjack", desc: "Play 21 against the dealer with a chip bankroll. Hit, stand, and try not to bust." },
-                    { id: "chess", icon: "♟", name: "Bulls vs Bears Chess", desc: "Two-player chess on one screen: green Bulls vs red Bears. Capture the enemy king." },
+                    { id: "chess", icon: "♟", name: "Bulls vs Bears Chess", desc: "Two-player chess on one screen: green Bulls vs red Bears. Checkmate the enemy king." },
                     { id: "algowars", icon: "🖥️", name: "Algorithm Wars", desc: "A live trading-floor RTS: deploy automated bots and re-script your army's AI in real time to crush the enemy algorithms." },
                   ];
                   return shell("🎮 GAME ROOM", <span style={{ fontFamily: MONO, fontSize: 10, color: C.muted }}>no account needed</span>,
