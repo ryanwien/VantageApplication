@@ -1,0 +1,79 @@
+{
+  "$description": "Vantage design tokens — W3C Design Tokens format, generated from src/ui/theme.js (Linear 'midnight precision instrument' reference). Import into Figma with a variables-import plugin (e.g. 'Tokens Studio' or 'Variables Import/Export') to get an editable variable collection. theme.js stays the source of truth: regenerate this file when the theme changes.",
+  "surface": {
+    "$description": "The documented 0-3 elevation ladder. Depth comes from this progression plus hairline borders, never from ambient shadow.",
+    "void":     { "$type": "color", "$value": "#08090a", "$description": "Level 0 - page canvas, full-bleed backgrounds" },
+    "carbon":   { "$type": "color", "$value": "#0f1011", "$description": "Level 1 - card surfaces, nav containers" },
+    "obsidian": { "$type": "color", "$value": "#161718", "$description": "Level 2 - elevated panels, inputs, nested surfaces" },
+    "slate":    { "$type": "color", "$value": "#23252a", "$description": "Level 3 - interactive surface tint, ghost button fills" }
+  },
+  "border": {
+    "graphite": { "$type": "color", "$value": "#23252a", "$description": "Hairline borders, dividers, ghost outlines" },
+    "smoke":    { "$type": "color", "$value": "#383b3f", "$description": "Higher-contrast hairlines, section separators" }
+  },
+  "text": {
+    "paper": { "$type": "color", "$value": "#ffffff", "$description": "Primary headings, max-contrast emphasis" },
+    "bone":  { "$type": "color", "$value": "#e5e5e6", "$description": "Near-white surface fills, high-contrast button text" },
+    "mist":  { "$type": "color", "$value": "#d0d6e0", "$description": "Body text, button labels on dark" },
+    "fog":   { "$type": "color", "$value": "#8a8f98", "$description": "Tertiary text, placeholders, icon fills" },
+    "ash":   { "$type": "color", "$value": "#62666d", "$description": "Muted metadata, inactive icons" }
+  },
+  "accent": {
+    "$description": "Acid lime is the ONLY chromatic UI element: the single primary action per view. Never decoration, never a secondary button, never data.",
+    "acid-lime":    { "$type": "color", "$value": "#e4f222", "$description": "Primary action fills, active nav indicators" },
+    "lime-press":   { "$type": "color", "$value": "#cfdb1f", "$description": "Pressed state of the primary action" },
+    "lime-dim":     { "$type": "color", "$value": "#8b9615", "$description": "Border weight of the accent - 3.4:1 on void" },
+    "signal-teal":  { "$type": "color", "$value": "#02b8cc", "$description": "Informational icon fills - supporting accent only" },
+    "iris-violet":  { "$type": "color", "$value": "#6366f1", "$description": "Tag and badge fills - supporting accent only" }
+  },
+  "data": {
+    "$description": "The documented deviation from the reference: a market terminal needs semantic direction colours, so the palette's green and red are used for price direction. Coral doubles as the on-air state, separated from 'down' by treatment (solid fill + dot vs plain text).",
+    "up":       { "$type": "color", "$value": "#27a644", "$description": "Rising price, success - 6.3:1 on void" },
+    "up-dim":   { "$type": "color", "$value": "#1a6e2d", "$description": "Border weight for rising state" },
+    "down":     { "$type": "color", "$value": "#eb5757", "$description": "Falling price, on-air, danger - 5.6:1 on void" },
+    "down-dim": { "$type": "color", "$value": "#8f3535", "$description": "Border weight for falling / live state" },
+    "on-fill":  { "$type": "color", "$value": "#08090a", "$description": "Label colour on any lime or coral fill - 5.6:1 or better" }
+  },
+  "radius": {
+    "$description": "The entire radius vocabulary. Nothing rounds past 12 except pills.",
+    "badge":  { "$type": "dimension", "$value": "4px" },
+    "button": { "$type": "dimension", "$value": "6px" },
+    "input":  { "$type": "dimension", "$value": "6px" },
+    "card":   { "$type": "dimension", "$value": "12px" },
+    "pill":   { "$type": "dimension", "$value": "9999px" }
+  },
+  "spacing": {
+    "$description": "4px base unit; the 8/12/24/96 ladder carries the page rhythm.",
+    "1":  { "$type": "dimension", "$value": "4px" },
+    "2":  { "$type": "dimension", "$value": "8px" },
+    "3":  { "$type": "dimension", "$value": "12px" },
+    "4":  { "$type": "dimension", "$value": "16px" },
+    "5":  { "$type": "dimension", "$value": "20px" },
+    "6":  { "$type": "dimension", "$value": "24px" },
+    "8":  { "$type": "dimension", "$value": "32px" },
+    "10": { "$type": "dimension", "$value": "40px" },
+    "12": { "$type": "dimension", "$value": "48px" },
+    "16": { "$type": "dimension", "$value": "64px" }
+  },
+  "type": {
+    "$description": "Two faces. Inter carries UI and headings with cv01/ss03/zero alternates on; IBM Plex Mono (standing in for Berkeley Mono) is reserved for instrument metadata - eyebrows, tickers, IDs, column headers. Weights stay in the 400-590 band; the system never bolds.",
+    "family-sans": { "$type": "fontFamily", "$value": "Inter" },
+    "family-mono": { "$type": "fontFamily", "$value": "IBM Plex Mono" },
+    "display-lg":  { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 510, "fontSize": "44px", "lineHeight": "1", "letterSpacing": "-0.022em" } },
+    "display":     { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 510, "fontSize": "32px", "lineHeight": "1.13", "letterSpacing": "-0.022em" } },
+    "title":       { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 510, "fontSize": "20px", "lineHeight": "1.33", "letterSpacing": "-0.012em" } },
+    "heading":     { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 510, "fontSize": "16px", "lineHeight": "1.4", "letterSpacing": "-0.010em" } },
+    "body":        { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 400, "fontSize": "14px", "lineHeight": "1.5", "letterSpacing": "-0.010em" } },
+    "body-sm":     { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 400, "fontSize": "13px", "lineHeight": "1.5", "letterSpacing": "-0.010em" } },
+    "caption":     { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 400, "fontSize": "12px", "lineHeight": "1.4" } },
+    "eyebrow":     { "$type": "typography", "$value": { "fontFamily": "IBM Plex Mono", "fontWeight": 400, "fontSize": "11px", "lineHeight": "1.4", "letterSpacing": "-0.013em", "textCase": "uppercase" } },
+    "num":         { "$type": "typography", "$value": { "fontFamily": "IBM Plex Mono", "fontWeight": 400, "fontSize": "13px", "letterSpacing": "-0.013em" } },
+    "num-lg":      { "$type": "typography", "$value": { "fontFamily": "IBM Plex Mono", "fontWeight": 400, "fontSize": "30px", "lineHeight": "1.1", "letterSpacing": "-0.022em" } }
+  },
+  "shadow": {
+    "$description": "Borders do the work shadows usually would. Only two real shadows exist, plus the inset stack the reference reserves for the lime CTA.",
+    "card-drop":   { "$type": "shadow", "$value": "rgba(0,0,0,0.4) 0px 2px 4px 0px" },
+    "card-ring":   { "$type": "shadow", "$value": "rgb(35,37,42) 0px 0px 0px 1px inset" },
+    "overlay":     { "$type": "shadow", "$value": "rgba(8,9,10,0.6) 0px 4px 32px 0px" }
+  }
+}

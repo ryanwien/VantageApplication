@@ -1,0 +1,499 @@
+/* ============================================================
+   Vantage global stylesheet — the things inline styles cannot do:
+   resets, fonts, scrollbars, focus rings, selection, keyframes.
+
+   Everything here is deliberately low-specificity so component-level
+   inline styles always win. Tokens mirror src/ui/theme.js; when you change
+   a colour there, change it here too (these two are the only places
+   raw hex values are allowed to live).
+   ============================================================ */
+
+/* Inter carries the UI, Archivo the brand marks, Plex Mono the numbers.
+   One request, three families — ordering here matches src/ui/theme.js. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=Archivo:wght@700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --v-base: #08090a;
+  --v-surface: #0f1011;
+  --v-surface-raised: #161718;
+  --v-edge: #23252a;
+  --v-edge-strong: #383b3f;
+  --v-text: #d0d6e0;
+  --v-muted: #8a8f98;
+  --v-faint: #62666d;
+  --v-accent: #e4f222;
+  --v-accent-soft: #cfdb1f;
+  --v-accent-glow: rgba(255,255,255,0.05);
+  --v-live: #eb5757;
+  --v-live-fill: #eb5757;
+  --v-up: #27a644;
+  --v-down: #eb5757;
+
+  /* Three radii, the whole vocabulary: controls, cards, nothing past 12. */
+  --v-r-sm: 6px;
+  --v-r-md: 6px;
+  --v-r-lg: 12px;
+
+  --v-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --v-fast: 150ms;
+  --v-base-dur: 200ms;
+
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--v-base);
+  color: var(--v-text);
+  font-family: 'Inter', -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: -0.010em;
+  /* Grayscale antialiasing keeps light-on-dark text from looking bolded and
+     smeary, which is the single most common giveaway of an unpolished dark UI. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* cv01 / ss03 / zero are the reference's named alternates — the slashed zero
+     is what stops 0 and O reading alike in a column of prices. cv11 keeps the
+     single-storey 'l' that separates it from 'I' and '1'. */
+  font-feature-settings: 'cv01' 1, 'ss03' 1, 'zero' 1, 'cv11' 1;
+  font-optical-sizing: auto;
+  /* NOT optimizeLegibility: it enables discretionary ligatures and measurably
+     slows long lists, and this app renders very long ones. */
+  text-rendering: optimizeSpeed;
+}
+
+/* Display face is for brand marks only — never for running text. */
+.v-display { font-family: 'Archivo', 'Inter', sans-serif; font-weight: 590; letter-spacing: -0.022em; }
+
+/* Numbers keep their own face wherever they appear. */
+.v-num, code, kbd, pre, samp {
+  font-family: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: 0;
+}
+
+/* Numeric inputs get tabular figures too, so a price does not jitter as it is typed. */
+input[inputmode="decimal"], input[inputmode="numeric"], input[type="number"] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* ---------- focus ----------
+   Keyboard users get a clear ring; mouse users get nothing. :focus-visible
+   is what makes that distinction, so never pair it with a blanket :focus rule. */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--v-accent);
+  outline-offset: 2px;
+  border-radius: var(--v-r-sm);
+}
+
+::selection { background: rgba(255,255,255,0.16); color: #ffffff; }
+
+/* ---------- scrollbars ----------
+   Thin and self-effacing until hovered. Firefox gets the standard properties;
+   WebKit/Blink get the pseudo-elements. */
+* { scrollbar-width: thin; scrollbar-color: var(--v-edge-strong) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--v-edge-strong);
+  border-radius: var(--v-r-sm);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: #62666d; background-clip: content-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* ---------- form elements ----------
+   Browsers style these from the OS by default, which is where dark UIs
+   usually spring a white leak. */
+input, textarea, select, button { font: inherit; color: inherit; }
+input::placeholder, textarea::placeholder { color: var(--v-faint); opacity: 1; }
+
+/* Chrome paints a hard blue block over autofilled inputs. There is no property
+   to disable it — the standard workaround is an absurdly long inset shadow that
+   repaints the field, plus text-fill-color for the text itself. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--v-text);
+  -webkit-box-shadow: 0 0 0 1000px #161718 inset;
+  caret-color: var(--v-text);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Hide the spinner on number inputs — price fields with steppers look unfinished. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+button { background: none; border: none; padding: 0; cursor: pointer; }
+
+a { color: var(--v-accent-soft); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ---------- utility interactions ----------
+   Applied by components that want the standard hover/press feel. */
+.v-interactive { transition: background var(--v-fast) var(--v-ease), border-color var(--v-fast) var(--v-ease), color var(--v-fast) var(--v-ease), transform var(--v-fast) var(--v-ease); }
+.v-interactive:hover { border-color: var(--v-edge-strong); }
+.v-interactive:active { transform: translateY(1px); }
+
+.v-lift { transition: transform var(--v-base-dur) var(--v-ease), box-shadow var(--v-base-dur) var(--v-ease), border-color var(--v-base-dur) var(--v-ease); }
+.v-lift:hover { transform: translateY(-2px); box-shadow: rgba(0,0,0,0.4) 0px 2px 4px 0px; border-color: var(--v-edge-strong); }
+
+/* Game-panel header controls — back and close. They are the only way out of a
+   game, so they get the contrast of real controls instead of sitting at faint
+   on a near-black bar, where they were technically present and practically
+   invisible. */
+.v-gamectl { transition: background var(--v-fast) var(--v-ease), border-color var(--v-fast) var(--v-ease), color var(--v-fast) var(--v-ease); }
+.v-gamectl:hover { background: rgba(255,255,255,0.09); border-color: var(--v-edge-strong); color: #ffffff; }
+.v-gamectl:active { transform: translateY(1px); }
+
+/* Row hover for dense tables (watchlist, movers, positions). */
+.v-row { transition: background var(--v-fast) var(--v-ease); }
+.v-row:hover { background: var(--v-surface-raised); }
+
+/* Gradient text for brand marks. Needs all four properties to work across engines. */
+.v-grad-text {
+  background: linear-gradient(135deg, #ffffff 0%, #d0d6e0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ---------- dashboard layout ----------
+   Three columns: watchlist rail · the desk and chart · news/portfolio rail.
+
+   THE BUG THIS FIXES
+   These were fixed tracks (230px 1fr 240px) in an inline style. Below roughly
+   1100px the two rails claimed everything and the centre track — which holds the
+   chart, the AI desk and the chat, i.e. the entire point of the app — computed to
+   literally 0px. Inline styles outrank a stylesheet, so the layout had to move
+   here before any media query could reach it.
+
+   `minmax(0, 1fr)` rather than a bare `1fr`: 1fr floors at the content's
+   min-content width, so one wide table would push the grid past the viewport.
+   minmax(0, …) lets the track shrink and the content scroll inside itself. */
+.v-dash {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr) 240px;
+  gap: 14px;
+  padding: 14px;
+  align-items: start;
+}
+
+.v-dash-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* Tablet: the right rail moves under the main column; the watchlist stays beside it. */
+@media (max-width: 1180px) {
+  .v-dash { grid-template-columns: 210px minmax(0, 1fr); }
+  .v-dash-right { grid-column: 1 / -1; }
+}
+
+/* Phone: one column, and the reading order is rebuilt rather than inherited.
+   The desk leads here as it does at full width: its thread is capped (~36vh)
+   so it no longer costs three screens, and it is the product's front door.
+
+   Within the dashboard the watchlist now precedes the chart. At two columns the
+   chart deserves the lead, but at one column the list is the chart's navigation:
+   putting the chart first shows you whatever was already selected and hides the
+   only means of changing it below 1223px of it. */
+@media (max-width: 860px) {
+  #vantage-main { display: flex; flex-direction: column; }
+  #tour-ticker { order: 1; }
+  #sec-desk    { order: 2; }
+  .v-dash      { order: 3; }
+
+  .v-dash { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 12px; }
+  .v-dash-left  { order: 1; }
+  .v-dash-main  { order: 2; }
+  .v-dash-right { order: 3; grid-column: auto; }
+}
+
+
+/* ---------- aurora ----------
+   A slow, fluid colour field for hero surfaces (the auth gate, the desk header).
+
+   HOW, AND WHY THIS WAY
+   Two blurred blobs on pseudo-elements, drifting via `transform`. The obvious
+   implementation — animating `background-position` on a big radial gradient —
+   repaints the whole layer every frame and is genuinely expensive at full-page
+   size. Transforms are handled by the compositor, so this animates on the GPU
+   and costs almost nothing even behind a scrolling dashboard.
+
+   The parent needs `position: relative` (set here) and clips the blobs itself;
+   `inset: -40%` keeps their blurred edges outside the frame so the wash reaches
+   the corners without a visible seam. */
+.v-aurora { position: relative; isolation: isolate; overflow: hidden; }
+
+.v-aurora > * { position: relative; z-index: 1; }
+
+.v-aurora::before,
+.v-aurora::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  z-index: 0;
+  pointer-events: none;
+  filter: blur(90px);
+  /* Promote to its own layer so the blur is rasterised once, not per frame. */
+  will-change: transform;
+}
+
+/* Cool half: violet + blue. */
+.v-aurora::before {
+  background:
+    radial-gradient(46% 46% at 22% 28%, rgba(208, 214, 224, 0.05), transparent 70%),
+    radial-gradient(40% 40% at 72% 14%, rgba(99, 102, 241, 0.05), transparent 70%);
+  animation: v-drift-cool 26s ease-in-out infinite alternate;
+}
+
+/* Warm half: pink + amber. Lower opacity — warm colours advance visually and
+   will dominate the composition if matched 1:1 with the cool ones. */
+.v-aurora::after {
+  background:
+    radial-gradient(42% 42% at 78% 72%, rgba(255, 255, 255, 0.03), transparent 70%),
+    radial-gradient(38% 38% at 34% 88%, rgba(2, 184, 204, 0.04), transparent 70%);
+  animation: v-drift-warm 34s ease-in-out infinite alternate;
+}
+
+/* Different durations and paths so the two halves never fall into lockstep —
+   that desynchronisation is what makes the field read as fluid rather than as
+   one object sliding around. */
+@keyframes v-drift-cool {
+  from { transform: translate3d(-5%, -3%, 0) scale(1); }
+  50%  { transform: translate3d(4%, 4%, 0) scale(1.14); }
+  to   { transform: translate3d(6%, -4%, 0) scale(1.05); }
+}
+@keyframes v-drift-warm {
+  from { transform: translate3d(4%, 3%, 0) scale(1.08); }
+  50%  { transform: translate3d(-5%, -2%, 0) scale(1); }
+  to   { transform: translate3d(-3%, 5%, 0) scale(1.12); }
+}
+
+/* A quieter variant for surfaces that sit behind real content. */
+.v-aurora-subtle::before { opacity: 0.55; }
+.v-aurora-subtle::after { opacity: 0.42; }
+
+/* ---------- keyframes ---------- */
+@keyframes v-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes v-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes v-pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes v-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.42; } }
+@keyframes v-shimmer { from { background-position: -400px 0; } to { background-position: 400px 0; } }
+@keyframes v-spin { to { transform: rotate(360deg); } }
+
+.v-fade-in { animation: v-fade-in var(--v-base-dur) var(--v-ease) both; }
+.v-rise { animation: v-rise var(--v-base-dur) var(--v-ease) both; }
+.v-pop { animation: v-pop var(--v-base-dur) var(--v-ease) both; }
+.v-pulse { animation: v-pulse 1.6s ease-in-out infinite; }
+.v-spin { animation: v-spin 700ms linear infinite; }
+
+/* Loading placeholder for content that is still fetching. */
+.v-skeleton {
+  background: linear-gradient(90deg, var(--v-surface) 0%, var(--v-surface-raised) 50%, var(--v-surface) 100%);
+  background-size: 800px 100%;
+  animation: v-shimmer 1.4s linear infinite;
+  border-radius: var(--v-r-sm);
+}
+
+/* ---------- blackjack table ----------
+   Cards arrive rather than appear. The motion is the system's own — 200-260ms
+   on the standard curve, no bounce, no spring: a dealer's hand is quick and
+   mechanical. Staggering by index is what makes two cards read as "dealt one
+   after the other" instead of "two divs turned on".
+   Both keyframes are silenced by the prefers-reduced-motion block below. */
+@keyframes v-deal {
+  from { opacity: 0; transform: translate(14px, -22px) rotate(6deg) scale(0.92); }
+  to   { opacity: 1; transform: none; }
+}
+.v-deal { animation: v-deal 260ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+/* The hole card turning over is a flip, not a swap — the one moment in the
+   hand where something is revealed, so it gets its own gesture. */
+@keyframes v-flip {
+  from { transform: rotateY(90deg) scale(0.96); opacity: 0.35; }
+  60%  { transform: rotateY(-8deg) scale(1); opacity: 1; }
+  to   { transform: none; opacity: 1; }
+}
+.v-flip { animation: v-flip 300ms cubic-bezier(0.4, 0, 0.2, 1) both; backface-visibility: hidden; }
+
+/* The result line fades up under the hand instead of snapping in. */
+@keyframes v-settle {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+.v-settle { animation: v-settle 200ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+/* ---------- accessibility ----------
+   Respect the OS setting. Anything decorative stops; nothing becomes unusable. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Section anchors sit below a 56px sticky header. Without this, scrollIntoView
+   parks each section's first line underneath that header. scroll-margin-top is
+   the property that exists precisely for this, so no JS offset maths is needed. */
+#sec-desk, #sec-watchlist, #sec-news, #sec-portfolio, #app-calendar-panel {
+  scroll-margin-top: 72px;
+}
+
+/* Visually hidden but still announced by screen readers. */
+.v-sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* Skip link — the first tab stop on the page, hidden until it has focus. */
+.v-skip-link {
+  position: absolute; top: -100px; left: 12px; z-index: 100;
+  /* Acid lime is a light fill, so the skip link takes near-black text (16:1). */
+  background: var(--v-accent); color: #08090a;
+  padding: 10px 16px; border-radius: var(--v-r-md);
+  transition: top var(--v-fast) var(--v-ease);
+}
+.v-skip-link:focus { top: 12px; text-decoration: none; }
+
+/* ============================================================
+   AI DESK PANEL
+
+   Two layout faults lived here, both from inline styles that no media query
+   could reach.
+
+   1. HEADER. The title and the toolbar each wrapped independently, so once
+      their combined width crossed the container by even a pixel the title
+      broke mid-phrase ("…one model on the / desk") AND the button group shed
+      its last button onto a second row. They now wrap as whole units.
+
+   2. BODY. The response column carried an inline `min-width: 260px`. The
+      moment the space left beside the anchor fell under that, it wrapped to
+      its own line — stranding the anchor in a 208px column with a dead
+      column of empty panel beside it, which is what the screenshot showed.
+   ============================================================ */
+
+.v-deskhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 9px 12px;
+}
+.v-deskhead-title { flex: 1 1 auto; min-width: 0; }
+.v-deskhead-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;   /* the group moves as one; it never sheds a single button */
+}
+
+/* Narrower still: the toolbar needs a full row to itself. Giving the title
+   100% forces the break cleanly, rather than letting the browser choose a
+   split part-way through the button group. */
+@media (max-width: 540px) {
+  .v-deskhead-title { flex: 1 1 100%; }
+  .v-deskhead-tools { margin-left: 0; }
+}
+
+.v-deskrow {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.v-deskrow-anchor { flex: 0 0 auto; }
+/* A flex-basis rather than a min-width: the column may now shrink below its
+   preferred size before it gives up and wraps. */
+.v-deskrow-main { flex: 1 1 240px; min-width: 0; }
+
+/* The ask row: the anchor column lives beside the chat, so the presenter is in
+   view from the composer instead of a scroll of responses above it. */
+.v-askrow { display: flex; gap: 12px; padding: 12px; align-items: flex-start; flex-wrap: wrap; }
+.v-askrow-chat { flex: 1 1 240px; min-width: 0; }
+
+@media (max-width: 760px) {
+  /* Columns do not fit beside the anchor here, so they wrap below it — docked
+     LEFT with the rest of the desk's content, exactly as at full width. (The
+     anchor was centred once; that read as a misrender.) */
+  .v-deskrow { justify-content: flex-start; }
+  .v-deskrow-main { flex: 1 1 100%; }
+  .v-askrow-chat { flex: 1 1 100%; }
+}
+
+/* Toggle switch (src/ui/Toggle.jsx): the input is invisible, so the focus ring
+   must be painted onto the track it controls. */
+.v-toggle input:focus-visible + span {
+  box-shadow: 0 0 0 2px rgba(228, 242, 34, 0.45);
+}
+
+/* ---------- the "alive" layer: quote ticks, menus, presses ----------
+   Every animation here is state-change feedback, not decoration — and all of
+   it is silenced by the prefers-reduced-motion block above. */
+
+/* Prices pulse when they tick: green on an uptick, red on a downtick. */
+@keyframes v-tick-up   { from { background: rgba(39, 166, 68, 0.22); } to { background: transparent; } }
+@keyframes v-tick-down { from { background: rgba(235, 87, 87, 0.22); } to { background: transparent; } }
+.v-tick-up, .v-tick-down { border-radius: 3px; padding: 0 3px; margin: 0 -3px; }
+.v-tick-up   { animation: v-tick-up   0.7s ease-out; }
+.v-tick-down { animation: v-tick-down 0.7s ease-out; }
+
+/* Every enabled button presses in — universal tactility for one rule. */
+button:not(:disabled):active { transform: scale(0.97); }
+
+/* Sparklines draw themselves in when a row first appears. Updates to an
+   already-mounted line just move the points; the draw plays once. */
+.v-spark-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: v-spark-draw 0.9s ease-out forwards; }
+@keyframes v-spark-draw { to { stroke-dashoffset: 0; } }
+
+/* Calendar day cells: hover feedback without another inline handler. */
+.v-calday:hover { background: #161718; }
+
+/* ---------- touch targets ----------
+   The terminal is deliberately dense, but density is a desktop luxury: a 23px
+   glyph button is a coin-toss under a fingertip. On coarse pointers the small
+   icon controls relax to the 44px platform minimum. Real min-sizes rather than
+   an invisible ::after hit-area, because these controls sit in adjacent pairs
+   (prev/next, list/heat) where overlapping phantom targets would steal each
+   other's taps. Desktop is untouched. */
+@media (pointer: coarse) {
+  .v-tap { min-width: 44px; min-height: 44px; }
+}
+
+/* ---------- chart box ----------
+   Heights live here rather than inline so they can respond. P&F needs more room
+   than the line chart because it stacks discrete boxes. */
+.v-chartbox { height: 300px; }
+.v-chartbox.is-pnf { height: 440px; }
+
+/* On a phone the P&F art is width-bound: preserveAspectRatio="meet" scales it to
+   whichever axis runs out first, and at 375px that is always the horizontal one.
+   Measured, the 440px box rendered 314px of columns and left 92px of dead space
+   below them. A shorter box crops nothing — it stops reserving height the
+   artwork was never going to fill. */
+@media (max-width: 860px) {
+  .v-chartbox { height: 200px; }
+  .v-chartbox.is-pnf { height: 260px; }
+}
+
+/* The company's full name is the one droppable item in the chart header on a
+   phone: the ticker is the identity, and you arrived here by tapping that
+   ticker in the watchlist a moment ago. Dropping it lets the price sit up
+   beside the symbol instead of wrapping onto a row of its own. */
+@media (max-width: 860px) {
+  .v-coname { display: none; }
+}

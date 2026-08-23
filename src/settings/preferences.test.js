@@ -28,7 +28,7 @@ describe("loadPrefs", () => {
   });
   it("migrates legacy tape-breaking='off' into notify.breakingNews=false when prefs absent", () => {
     expect(loadPrefs(null, "off").notify.breakingNews).toBe(false);
-    expect(loadPrefs(null, "on").notify.breakingNews).toBe(true);
+    expect(loadPrefs(null, "on").notify.breakingNews).toBe(true); // legacy opt-in still wins over the off default
   });
   it("does not let the legacy flag override an explicit stored pref", () => {
     const p = loadPrefs(JSON.stringify({ notify: { priceTriggers: true, breakingNews: true } }), "off");
@@ -97,10 +97,10 @@ describe("notifyEnabled", () => {
 });
 
 describe("pnfPatterns notify pref", () => {
-  it("defaults on, honors an explicit stored false, works through notifyEnabled", () => {
-    expect(loadPrefs(null).notify.pnfPatterns).toBe(true);
-    expect(loadPrefs(JSON.stringify({ notify: { pnfPatterns: false } })).notify.pnfPatterns).toBe(false);
-    expect(notifyEnabled(loadPrefs(null), "pnfPatterns")).toBe(true);
-    expect(notifyEnabled(loadPrefs(JSON.stringify({ notify: { pnfPatterns: false } })), "pnfPatterns")).toBe(false);
+  it("defaults off, honors an explicit stored true, works through notifyEnabled", () => {
+    expect(loadPrefs(null).notify.pnfPatterns).toBe(false);
+    expect(loadPrefs(JSON.stringify({ notify: { pnfPatterns: true } })).notify.pnfPatterns).toBe(true);
+    expect(notifyEnabled(loadPrefs(null), "pnfPatterns")).toBe(false);
+    expect(notifyEnabled(loadPrefs(JSON.stringify({ notify: { pnfPatterns: true } })), "pnfPatterns")).toBe(true);
   });
 });

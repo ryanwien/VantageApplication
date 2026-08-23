@@ -3,12 +3,23 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
-import { isLocalModel, bannerState, gpuResidency, throughput, snapshotEnabled, restoreEnabled } from "./src/settings/localProof.js";
+import { isLocalModel } from "./src/settings/localProof.js";
 import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled, coerceRefreshMs } from "./src/settings/preferences.js";
 import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, isCloseMatch, missingDimension, namedAbsentColumn } from "./src/datahub/catalog.js";
 import { buildPnF, pnfTargets, visibleWindow, INTRADAY_BOX_PCT } from "./src/pnf/pnf.js";
 import { detectPattern } from "./src/pnf/patterns.js";
 import { CHESS_GLYPH, chessInit, legalMoves, chessApply, gameStatus, inCheck, chessAIMove } from "./src/chess/chess.js";
+import { C, GRAD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, button, panel, field as fieldRecipe, chip } from "./src/ui/theme.js";
+import { passwordCheck, PW_MIN } from "./src/auth/password.js";
+import Sparkline from "./src/ui/Sparkline.jsx";
+import RichText from "./src/ui/RichText.jsx";
+import Toggle, { ToggleGlyph } from "./src/ui/Toggle.jsx";
+import { api, ApiError, tokenStore } from "./src/api/client.js";
+import { AuthProvider, useAuth } from "./src/api/auth-context.jsx";
+import AppShell from "./src/ui/AppShell.jsx";
+import ChatAssistant from "./src/ui/ChatAssistant.jsx";
+import NewsDesk, { sourceColor, toneOf } from "./src/ui/NewsDesk.jsx";
+import VantageMark from "./src/ui/VantageMark.jsx";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -70,22 +81,10 @@ import { CHESS_GLYPH, chessInit, legalMoves, chessApply, gameStatus, inCheck, ch
    ============================================================ */
 
 // ---------- palette ----------
-const C = {
-  bg: "#0B0E14",
-  panel: "#121722",
-  panelEdge: "#1D2433",
-  amber: "#FFB300",
-  amberDim: "#8A6200",
-  text: "#E8EBF2",
-  muted: "#7E879B",
-  faint: "#4A5266",
-  up: "#2FD37A",
-  down: "#F6465D",
-  grid: "#1A2130",
-};
-
-const MONO = "'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace";
-const SANS = "'Archivo', 'Helvetica Neue', Arial, sans-serif";
+// Moved to src/ui/theme.js — see the import at the top of this file. `C`, MONO and
+// SANS keep exactly the names and keys they had, so every inline style below is
+// untouched; the values now come from the design system instead of being hard-coded
+// here. Change a colour there and the whole app follows.
 
 // The origin this page is served from, which is exactly what a local model server has to be told
 // to allow. Verified against a deployed HTTPS build reaching http://localhost:11434: the browser
@@ -112,26 +111,63 @@ const LANG_AI = { en: "English", es: "Spanish", fr: "French", de: "German", pt: 
 const TTS_LANG = { en: "en-US", es: "es-ES", fr: "fr-FR", de: "de-DE", pt: "pt-PT", it: "it-IT" };             // browser TTS BCP-47 codes
 const I18N = {
   es: {
+    "DataHub has no dataset matching \"{term}\".": "DataHub no tiene ningún conjunto de datos que coincida con \"{term}\".",
+    "DataHub had no exact match. Closest dataset: {name}.": "DataHub no encontró una coincidencia exacta. Conjunto de datos más cercano: {name}.",
+    "DataHub match: {name}.": "Coincidencia en DataHub: {name}.",
+    "DataHub match: {name} on {platform}.": "Coincidencia en DataHub: {name} en {platform}.",
+    "DataHub has no schema recorded for {name}.": "DataHub no tiene ningún esquema registrado para {name}.",
+    "DataHub has no owner recorded for {name}.": "DataHub no tiene ningún propietario registrado para {name}.",
+    "DataHub records no downstream datasets for {name}.": "DataHub no registra conjuntos de datos posteriores para {name}.",
+    "DataHub records no upstream datasets for {name}.": "DataHub no registra conjuntos de datos anteriores para {name}.",
+    "DataHub's schema for {name} has no column named \"{col}\".": "El esquema de {name} en DataHub no tiene ninguna columna llamada \"{col}\".",
+    "DataHub lookup failed: {reason}": "La consulta a DataHub falló: {reason}",
+    "ALLOCATION BY VALUE": "ASIGNACIÓN POR VALOR",
+    "DAY RANGE": "RANGO DEL DÍA",
+    "MARKET CLOSED": "MERCADO CERRADO",
+    "ON THE DESK": "EN LA MESA",
+    "last": "último",
+    "last trade": "última operación",
+    "prev close": "cierre ant.",
     "Export": "Exportar", "More": "Más", "Settings": "Ajustes", "sign in": "iniciar sesión",
     "Games": "Juegos", "learn how stocks work": "aprende cómo funcionan las acciones",
     "Ambient sound": "Sonido ambiente", "waves, jungle, space hum…": "olas, jungla, zumbido espacial…",
     "Music": "Música", "background score": "música de fondo",
-    "one model on the desk": "un modelo en la mesa",
     "Type a symbol and press Enter  ·  HELP for commands": "Escribe un símbolo y pulsa Enter  ·  HELP para comandos",
     "OPEN": "ABIERTO", "CLOSED": "CERRADO",
     "standing by": "en espera",
     "voice & anchor settings": "ajustes de voz y presentador", "SET": "SET", "stop reading": "detener lectura", "free": "gratis",
-    "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Haz una pregunta abajo — las respuestas aparecen aquí, y el presentador puede leerlas en directo.",
     "ASK ALL": "PREGUNTAR A TODOS",
-    "Ask the desk anything": "Pregúntale lo que quieras a la mesa", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Las respuestas aparecen aquí y el presentador las lee en directo. Toca una sugerencia — o escribe la tuya abajo.", "Summarize {sym} today": "Resume {sym} hoy", "What's moving today?": "¿Qué se mueve hoy?", "Take me to Robinhood": "Llévame a Robinhood", "What's on Netflix?": "¿Qué hay en Netflix?", "Write a report → PPT": "Escribe un informe → PPT",
+ "Summarize {sym} today": "Resume {sym} hoy", "What's moving today?": "¿Qué se mueve hoy?", "Take me to Robinhood": "Llévame a Robinhood", "What's on Netflix?": "¿Qué hay en Netflix?", "Write a report → PPT": "Escribe un informe → PPT",
     "WATCHLIST": "LISTA DE SEGUIMIENTO", "TOP MOVERS": "MAYORES MOVIMIENTOS", "full chart": "gráfico completo",
     "LINE": "LÍNEA", "not enough movement for a P&F column yet": "aún no hay suficiente movimiento para una columna P&F", "3-box reversal · this session": "reversión de 3 casillas · esta sesión",
     "tracking {price} · box {box} · session range {lo}–{hi}": "siguiendo {price} · casilla {box} · rango de la sesión {lo}–{hi}", "first column at ≥ {up} or < {down}": "primera columna con ≥ {up} o < {down}", "column 2 needs a reversal < {down}": "la columna 2 necesita una reversión < {down}", "column 2 needs a reversal ≥ {up}": "la columna 2 necesita una reversión ≥ {up}",
     "Language": "Idioma",
+    "Desk": "Mesa", "Markets": "Mercados", "News": "Noticias", "Portfolio": "Cartera",
+    "Price alerts": "Alertas de precio", "Getting started": "Primeros pasos",
+    "Live quotes are provided by this server — no key needed on this device.": "Las cotizaciones en vivo las proporciona este servidor — no se necesita clave en este dispositivo.",
+    "Live quotes are not configured on this server.": "Las cotizaciones en vivo no están configuradas en este servidor.",
+    "VIDEO SEARCH": "BÚSQUEDA DE VÍDEO",
+    "Real, embeddable video results are provided by this server — no key needed on this device.": "Los resultados de vídeo reales e insertables los proporciona este servidor — no se necesita clave en este dispositivo.",
+    "Not configured on this server — \"show videos of …\" asks the AI to guess instead.": "No configurado en este servidor — \"muéstrame vídeos de …\" pide a la IA que adivine.",
+    "STREAMING CATALOG": "CATÁLOGO DE STREAMING",
+    "Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.": "Los catálogos de Netflix / Disney+ / Hulu y los tráileres los proporciona este servidor — no se necesita clave en este dispositivo.",
+    "Not configured on this server — public-domain films via \"free movies …\" still play in-desk.": "No configurado en este servidor — las películas de dominio público con \"free movies …\" siguen reproduciéndose en el desk.",
+    "Studio voice is provided by this server — no key needed on this device.": "La voz de estudio la proporciona este servidor — no se necesita clave en este dispositivo.",
+    "Studio voice is not configured on this server.": "La voz de estudio no está configurada en este servidor.",
+    "This server has a studio-voice key set, but the last call to it failed.": "Este servidor tiene configurada una clave de voz de estudio, pero la última llamada falló.",
+    "Loading voices…": "Cargando voces…",
+ "Pick a studio voice in settings": "Elige una voz de estudio en los ajustes",
+    "Video search is not configured on this server, and no key is set in this browser.": "La búsqueda de vídeos no está configurada en este servidor y no hay clave en este navegador.",
+    "The AI desk is part of": "La mesa de IA forma parte de",
+    "not configured": "sin configurar", "Demo mode needs no keys — everything below works right now.": "El modo demo no necesita claves — todo lo de abajo ya funciona.",
+    "AI DESK IS OFF": "LA MESA DE IA ESTÁ APAGADA", "Answers run on this server's model key. Nothing to set up.": "Las respuestas usan la clave de modelo de este servidor. Nada que configurar.", "Answers run on your local model. Nothing leaves this device.": "Las respuestas usan tu modelo local. Nada sale de este dispositivo.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Este servidor aún no tiene una clave de modelo, así que la mesa no puede responder. Todo lo demás funciona.",
+    "This server holds the model key, so the desk can already answer.": "Este servidor guarda la clave del modelo, así que la mesa ya puede responder.",
+    "Read on air": "Leer en directo",
+    "Search": "Buscar",
     "The AI broadcast desk for the markets.": "La mesa de retransmisión con IA para los mercados.",
-    "Create account": "Crear cuenta", "Log in": "Iniciar sesión", "Explore in demo mode →": "Explorar en modo demo →",
+    "Create account": "Crear cuenta", "Log in": "Iniciar sesión",
     "ranked by |Δ%| across your watchlist": "ordenado por |Δ%| en tu lista de seguimiento",
-    'Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"': 'Pregunta sobre {sym}, "take me to Robinhood", o "download excel" / "make a powerpoint" / "write a report and export ppt"',
+    'Ask about {sym} — or tap a suggestion below': 'Pregunta sobre {sym} — o toca una sugerencia',
     // settings tabs + guided tour
     "ACCOUNT": "CUENTA", "START": "INICIO", "DATA": "DATOS", "VOICE": "VOZ", "MEET": "REUNIÓN",
     "exit": "salir", "skip tour": "saltar recorrido", "Back": "Atrás", "Next": "Siguiente", "Done": "Listo",
@@ -139,22 +175,26 @@ const I18N = {
     "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Escribe cualquier símbolo aquí y pulsa Enter para graficarlo. “ADD TSLA” y “DEL TSLA” gestionan tu lista de seguimiento. Los nombres de empresa también funcionan.",
     "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Esta es tu barra de comandos. Escribe un símbolo como Apple o Nvidia y pulsa Enter para graficarlo.",
     "Your anchor — that's me": "Tu presentador — ese soy yo",
-    "I run a live trading day: opening bell, meals, breaks. I read any answer on air. Swap my character, environment, and sounds in settings.": "Dirijo una jornada bursátil en directo: campana de apertura, comidas, descansos. Leo cualquier respuesta en directo. Cambia mi personaje, entorno y sonidos en ajustes.",
-    "That's me, your anchor. I run a live trading day and I can read anything on air.": "Ese soy yo, tu presentador. Dirijo una jornada bursátil en directo y puedo leer cualquier cosa en directo.",
+    "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.": "Leo cada respuesta en directo. Elige entre 22 presentadores y 18 escenarios aquí mismo, cada uno con su propia voz y ambiente sonoro.",
+    "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here.": "Ese soy yo, tu presentador. Veintidós presentadores y dieciocho escenarios para elegir, aquí mismo.",
+    "Switches the interface and my spoken answers between six languages. Your choice is remembered.": "Cambia la interfaz y mis respuestas habladas entre seis idiomas. Tu elección se recuerda.",
+    "Export the session as Word, PowerPoint or Excel. A review step lets you edit everything before it saves.": "Exporta la sesión como Word, PowerPoint o Excel. Un paso de revisión te deja editarlo todo antes de guardar.",
+    "Export your session as Word, PowerPoint or Excel. You can edit everything before it saves.": "Exporta tu sesión como Word, PowerPoint o Excel. Puedes editarlo todo antes de guardar.",
+    "Your watchlist scrolls across the top. Flip DEMO to LIVE in settings for real Finnhub quotes.": "Tu lista de seguimiento se desplaza por la parte superior. Cambia DEMO a LIVE en ajustes para cotizaciones reales de Finnhub.",
+    "Add your events and I announce them on air when they're due. Market events merge in automatically.": "Añade tus eventos y los anuncio en directo cuando llegue su hora. Los eventos de mercado se añaden automáticamente.",
+    "Add events to your calendar and I'll announce them on air when they're due.": "Añade eventos a tu calendario y los anunciaré en directo cuando llegue su hora.",
     "The AI desk": "La mesa de IA",
-    "Ask a question here and I answer in one box, cascading across your models. I also take commands — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Haz una pregunta aquí y respondo en un solo cuadro, en cascada por tus modelos. También acepto comandos — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.",
+    "Ask anything here. I also take commands: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Pregunta lo que quieras aquí. También acepto comandos: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.",
     "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Pregúntame lo que quieras aquí. También entiendo comandos sencillos, como, take me to Robinhood, o, what's on Netflix.",
     "Answers, news & Watch": "Respuestas, noticias y Ver",
-    "Everything lands here in one box — desk answers, the navigator, news, and the streaming catalog. Trailers and public-domain films play right inside.": "Todo aparece aquí en un solo cuadro: respuestas de la mesa, el navegador, noticias y el catálogo de streaming. Los tráileres y las películas de dominio público se reproducen aquí mismo.",
+    "Answers, news, and the streaming catalog land here. Trailers play right inside.": "Las respuestas, las noticias y el catálogo de streaming aparecen aquí. Los tráileres se reproducen dentro.",
     "Answers, news, and the streaming catalog all appear here, in one place.": "Las respuestas, las noticias y el catálogo de streaming aparecen aquí, en un solo lugar.",
     "Ticker tape": "Cinta de cotizaciones",
-    "Your whole watchlist scrolls across the top with live-style movement.": "Toda tu lista de seguimiento se desplaza por la parte superior con movimiento en tiempo real.",
-    "Your watchlist scrolls across the ticker tape, up top.": "Tu lista de seguimiento se desplaza por la cinta de cotizaciones, arriba.",
     "Why setup? (mostly optional)": "¿Por qué configurar? (casi todo opcional)",
-    "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "Vantage funciona por completo en DEMO sin configuración. Lo único que vale la pena añadir es una clave de IA — las respuestas de la mesa vienen de modelos externos (OpenRouter, Claude…) facturados a tu propia cuenta, así que necesitan tu clave. Todo lo demás es opcional: gráficos, calendario, juegos y noticias no necesitan nada. Abre Inicio para pegar esa clave.",
-    "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Aquí tienes por qué existe la configuración. Vantage funciona en demo sin configuración. La única clave que vale la pena añadir es la de la IA — mis respuestas vienen de modelos externos que se facturan a tu propia cuenta, así que necesitan tu clave. Todo lo demás es opcional. Abre Inicio para pegar esa clave. ¡Ese es el recorrido!",
+    "Demo mode needs no setup. AI answers come from external models billed to your account, so they need your key. Open Settings from this menu and paste it under START.": "El modo demo no necesita configuración. Las respuestas de IA vienen de modelos externos facturados a tu cuenta, así que necesitan tu clave. Abre Ajustes desde este menú y pégala en START.",
+    "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Una última cosa. Mis respuestas vienen de modelos externos facturados a tu cuenta, así que necesitan tu clave. Todo lo demás es opcional. ¡Fin del recorrido!",
     // settings footer + MEET tab
-    "Close": "Cerrar", "Applied": "Aplicado", "Apply": "Aplicar",
+    "Close": "Cerrar", "Apply": "Aplicar",
     "Go Live — no setup": "En directo — sin configuración",
     "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Inicia al instante una nueva reunión en una pestaña del navegador (usa la sesión que ya tengas iniciada) y comparte la pantalla de Vantage. Sin claves, sin OAuth.",
     "New Google Meet": "Nueva Google Meet", "New Zoom meeting": "Nueva reunión de Zoom",
@@ -163,15 +203,11 @@ const I18N = {
     "Pin": "Fijar",
     "connected": "conectado", "disconnect": "desconectar",
     // START tab
-    "AI desk": "Mesa de IA", "ready": "listo", "add key ↑": "añadir clave ↑", "Voice": "Voz", "browser": "navegador",
+    "AI desk": "Mesa de IA", "ready": "listo", "Voice": "Voz", "browser": "navegador",
     "Live quotes": "Cotizaciones en directo", "live": "en directo", "demo": "demo", "Real videos": "Vídeos reales",
     "on": "activado", "optional": "opcional", "Streaming": "Streaming", "Calendar": "Calendario", "built-in": "integrado", "Meetings": "Reuniones",
     "You're already set up.": "Ya está todo listo.",
-    "Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:": "Vantage funciona ahora mismo en modo demo — sin claves. Lo único que vale la pena añadir es una clave de IA para que la mesa pueda responderte:",
-    "AI DESK IS ON": "LA MESA DE IA ESTÁ ACTIVA", "TURN ON THE AI DESK — paste one key": "ACTIVA LA MESA DE IA — pega una clave",
-    "One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.": "Una sola clave desbloquea toda la mesa — OpenRouter te da docenas de modelos (GPT, Llama y más) tras una única clave, y es el modelo principal.",
-    "get a key": "obtener una clave",
-    "No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.": "¿Sin clave de IA? La mesa aún no puede responder, pero todo lo demás — gráficos, noticias, juegos, streaming, calendario — funciona sin ella.",
+    "AI DESK IS ON": "LA MESA DE IA ESTÁ ACTIVA",
     "WHAT'S SET UP": "QUÉ ESTÁ CONFIGURADO", "tap to configure": "toca para configurar",
     "tour · demo · missions": "recorrido · demo · misiones", "pick your anchor": "elige tu presentador",
     "skip — I'll explore on my own": "omitir — exploraré por mi cuenta",
@@ -180,61 +216,31 @@ const I18N = {
     "in-app alerts": "alertas en la aplicación", "price triggers": "activadores de precio", "breaking news": "última hora",
     "P&F SIGNALS": "SEÑALES P&F", "P&F signals": "señales P&F", "P&F pattern alerts": "alertas de patrones P&F",
     "color-blind mode (blue/orange + ▲▼)": "modo para daltónicos (azul/naranja + ▲▼)",
-    "privacy mode — blur balances (Shift+P)": "modo privacidad — difuminar saldos (Mayús+P)",
+    "privacy mode — blur balances": "modo privacidad — difuminar saldos",
     "hidden": "oculto",
     "CLOCK TIMEZONE": "ZONA HORARIA DEL RELOJ",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Ajusta el reloj de la cabecera. La insignia de mercado ABIERTO/CERRADO siempre sigue el horario del NYSE (hora del Este).",
     "refresh interval": "intervalo de actualización", "Manual": "Manual", "refresh now": "actualizar ahora",
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "EN DIRECTO",
-    "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "El modo demo ejecuta un motor de mercado de paseo aleatorio con semilla — una sesión simulada reproducible, sin clave ni red.",
-    "FINNHUB API KEY (free tier works)": "CLAVE API DE FINNHUB (el plan gratuito funciona)", "paste key": "pega la clave",
-    "Key is saved on this device and sent only to finnhub.io.": "La clave se guarda en este dispositivo y solo se envía a finnhub.io.",
-    "get a free key": "obtener una clave gratis",
-    "YOUTUBE DATA API KEY": "CLAVE API DE YOUTUBE DATA", "(optional — real, playable video results)": "(opcional — resultados de vídeo reales y reproducibles)",
-    "paste key (AIza…)": "pega la clave (AIza…)", "needs": "requiere",
-    "Without a key, \"show videos of …\" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.": "Sin una clave, \"mostrar vídeos de …\" pide a Claude que adivine vídeos (a menudo no incrustables). Con una, la mesa obtiene resultados reales e incrustables de YouTube.",
-    "enable API": "activar API",
-    "TMDB API KEY": "CLAVE API DE TMDB", "(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)": "(opcional — catálogo de Netflix / Disney+ / Hulu y tráileres en la app)",
-    "paste TMDB API key (v3 auth)": "pega la clave API de TMDB (auth v3)",
-    "Powers \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via \"free movies …\" (no key needed).": "Impulsa \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — bibliotecas reales con carátulas, valoraciones y tráileres en la mesa. La reproducción se abre en el servicio (bloquean la incrustación); las películas de dominio público se reproducen por completo en la mesa con \"free movies …\" (sin clave).",
-    "DAILY BRIEF": "RESUMEN DIARIO", "(auto-download while the app is open)": "(descarga automática mientras la app está abierta)",
-    "at": "a las", "off": "desactivar", "run now": "ejecutar ahora",
-    "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Cada día a las {time}, la mesa redacta un informe de analista sobre {sym} y descarga automáticamente un resumen en {fmt}. Requiere que esta pestaña esté abierta (los navegadores no pueden ejecutarlo cerrada) y una clave de Anthropic para la redacción.",
-    "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Establece una hora para generar y descargar automáticamente un informe con tu marca cada día. Déjalo en blanco para desactivar.",
+    "Demo mode is a seeded random-walk session: reproducible, no key or network needed.": "El modo demo es una sesión de paseo aleatorio con semilla: reproducible, sin clave ni red.",
+ "needs": "requiere",
+    "at": "a las", "off": "desactivar",
     // AI tab
-    "FULLY LOCAL · nothing leaves this device": "TOTALMENTE LOCAL · nada sale de este dispositivo",
-    "CLOUD ENABLED · queries leave this device": "NUBE ACTIVADA · las consultas salen de este dispositivo",
-    "no model enabled": "ningún modelo activado",
-    "telemetry unavailable — is the local server running?": "telemetría no disponible — ¿está el servidor local en ejecución?",
-    "no model loaded": "ningún modelo cargado",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Las respuestas de la mesa de IA requieren {plan}. Los modelos de abajo están desactivados hasta que mejores tu plan (o actives el modo desarrollador en CUENTA).",
-    "{n} models enabled": "{n} modelos activados", "One model at a time": "Un modelo a la vez",
-    "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Usa \"solo este\" para un único modelo, o activa varios — la mesa responde en un solo cuadro, probándolos de arriba abajo y recurriendo al siguiente si uno falla (p. ej. Claude → OpenRouter).",
-    "Auto-fallback to a local model.": "Recurrir automáticamente a un modelo local.",
-    "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Si los modelos de pago fallan (sin créditos, clave incorrecta, sin conexión), la mesa y los informes reintentan automáticamente con tu modelo local (Ollama o LM Studio). Configura uno abajo — establece su BASE URL e inicia el servidor local.",
-    "ACTIVE": "ACTIVO", "use only this": "usar solo este", "BASE URL": "BASE URL", "MODEL": "MODELO",
-    "Run local-only (AMD / ROCm)": "Ejecutar solo en local (AMD / ROCm)", "Switch the desk to local": "Cambiar la mesa a local", "restore previous models": "restaurar modelos anteriores", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic apunta la mesa a tu modelo local de Ollama (localhost:11434) y desactiva todos los modelos en la nube — así todo el agente se ejecuta con inferencia local (p. ej. una GPU AMD Radeon con ROCm), sin claves. También se abre con ?local=1 en la URL.",
+ "use only this": "usar solo este", "BASE URL": "BASE URL", "MODEL": "MODELO",
     "The desk remembers this conversation locally (this device only) so follow-up questions work.": "La mesa recuerda esta conversación localmente (solo en este dispositivo) para que funcionen las preguntas de seguimiento.", "forget conversation": "olvidar conversación", "Desk memory cleared — the conversation is forgotten.": "Memoria de la mesa borrada — la conversación queda olvidada.", "MEMORY": "MEMORIA", "{n} turns remembered on this device": "{n} turnos recordados en este dispositivo", "Memory": "Memoria", "empty": "vacío",
-    "format:": "formato:", "e.g.": "p. ej.", "browse models": "explorar modelos",
-    "detect installed models": "detectar modelos instalados", "Lists the models on your Ollama server — the same set as `ollama list`.": "Lista los modelos en tu servidor Ollama — el mismo conjunto que `ollama list`.",
-    "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo aún no tiene una API alojada oficial — ejecuta un puente local compatible con OpenAI y apunta la BASE URL a él.", "Lumo bridge": "puente Lumo",
+    "format:": "formato:", "e.g.": "p. ej.",
     "API KEY": "CLAVE API",
-    "Local endpoints need CORS enabled to accept requests from this page:": "Los endpoints locales necesitan CORS activado para aceptar solicitudes desde esta página:",
-    "start with": "inicia con", "or": "o", "Developer tab → enable server + turn on CORS": "pestaña Developer → activa el servidor + activa CORS",
-    "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "La ranura de LM Studio funciona con cualquier cosa que hable el formato de chat de OpenAI (llama.cpp, vLLM…).",
+ "or": "o",
     "ANCHOR": "PRESENTADOR", "ENVIRONMENT": "ENTORNO", "BACKGROUND CREW": "EQUIPO DE FONDO",
     "Auto — whoever isn't anchoring": "Auto — quien no esté presentando", "Off — solo broadcast": "Desactivado — transmisión en solitario",
     "VOICE ENGINE": "MOTOR DE VOZ", "BROWSER · free": "NAVEGADOR · gratis",
-    "ELEVENLABS API KEY": "CLAVE API DE ELEVENLABS", "get a key ↗": "obtener una clave ↗",
-    "Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.": "Se guarda solo en memoria, se envía solo a api.elevenlabs.io. Usa eleven_flash_v2_5 para baja latencia — cada lectura consume caracteres de tu cuota.",
-    "ELEVENLABS VOICE": "VOZ DE ELEVENLABS", "Paste a key and hit Apply — voices load automatically.": "Pega una clave y pulsa Aplicar — las voces se cargan automáticamente.",
+    "ELEVENLABS VOICE": "VOZ DE ELEVENLABS",
     "READING SPEED": "VELOCIDAD DE LECTURA", "auto-read the first answer that finishes": "leer automáticamente la primera respuesta que termine",
     "UI click sounds — terminal blips on every button": "sonidos de clic de la interfaz — pitidos de terminal en cada botón", "SOUND VOLUME": "VOLUMEN DEL SONIDO",
     "ambient music": "música ambiental", "your Spotify playlist, docked bottom-right": "tu lista de Spotify, anclada abajo a la derecha",
     "generative synth, ducks under the anchor's voice": "sintetizador generativo, baja bajo la voz del presentador", "MUSIC SOURCE": "FUENTE DE MÚSICA",
-    "SPOTIFY PLAYLIST / ALBUM / TRACK LINK": "ENLACE DE LISTA / ÁLBUM / CANCIÓN DE SPOTIFY",
     "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Sin necesidad de iniciar sesión — activa ♪ y el reproductor se ancla abajo a la derecha. (El reproductor incrustado de Spotify reproduce vistas previas de 30 segundos sin cuenta; las canciones completas suenan automáticamente si ya has iniciado sesión en Spotify en este navegador.)",
-    "Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link.": "Pega un enlace para compartir de Spotify — abre Spotify → cualquier lista/álbum/canción → Compartir → Copiar enlace.",
     "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "OPCIONAL · CONECTA UNA CUENTA PREMIUM PARA CANCIONES COMPLETAS", "FULL PLAYBACK · SPOTIFY PREMIUM": "REPRODUCCIÓN COMPLETA · SPOTIFY PREMIUM",
     "create an app ↗": "crear una app ↗", "● connected — full tracks enabled": "● conectado — canciones completas activadas",
     "Spotify app Client ID": "Client ID de la app de Spotify", "In your Spotify app settings, add this exact Redirect URI:": "En la configuración de tu app de Spotify, añade esta Redirect URI exacta:",
@@ -247,31 +253,65 @@ const I18N = {
     "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "Las mejoras de pago abren el pago seguro de Stripe (modo prueba). Los datos de la tarjeta se introducen en Stripe, nunca aquí.",
     "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "No hay ningún procesador de pagos conectado, así que los planes de pago se desbloquean como simulación — no se pide ninguna tarjeta y no se cobra nada.",
     "Sign out": "Cerrar sesión", "Terms & Privacy accepted": "Términos y Privacidad aceptados", "This account UI is a prototype; see the security note in the code.": "Esta interfaz de cuenta es un prototipo; consulta la nota de seguridad en el código.",
-    "Developer mode (testing).": "Modo desarrollador (pruebas).",
-    "Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production.": "Desbloquea todas las funciones premium sin importar el plan — mesa de IA, datos en vivo, YouTube, TMDB, Spotify y la voz de ElevenLabs. Aún necesitas la clave API de cada función para usarla. No apto para producción.",
-    "also toggles with ?dev=1 in the URL": "también se activa con ?dev=1 en la URL", "DEV MODE ON — all plan gates bypassed": "MODO DEV ACTIVADO — todas las restricciones de plan omitidas",
   },
   fr: {
+    "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
+    "DataHub had no exact match. Closest dataset: {name}.": "DataHub n'a trouvé aucune correspondance exacte. Jeu de données le plus proche : {name}.",
+    "DataHub match: {name}.": "Correspondance DataHub : {name}.",
+    "DataHub match: {name} on {platform}.": "Correspondance DataHub : {name} sur {platform}.",
+    "DataHub has no schema recorded for {name}.": "DataHub n'a aucun schéma enregistré pour {name}.",
+    "DataHub has no owner recorded for {name}.": "DataHub n'a aucun propriétaire enregistré pour {name}.",
+    "DataHub records no downstream datasets for {name}.": "DataHub n'enregistre aucun jeu de données en aval pour {name}.",
+    "DataHub records no upstream datasets for {name}.": "DataHub n'enregistre aucun jeu de données en amont pour {name}.",
+    "DataHub's schema for {name} has no column named \"{col}\".": "Le schéma de {name} dans DataHub ne contient aucune colonne nommée \"{col}\".",
+    "DataHub lookup failed: {reason}": "Échec de la requête DataHub : {reason}",
+    "ALLOCATION BY VALUE": "RÉPARTITION PAR VALEUR",
+    "DAY RANGE": "AMPLITUDE DU JOUR",
+    "MARKET CLOSED": "MARCHÉ FERMÉ",
+    "ON THE DESK": "SUR LE PLATEAU",
+    "last": "dernier",
+    "last trade": "dernière transaction",
+    "prev close": "clôture préc.",
     "Export": "Exporter", "More": "Plus", "Settings": "Réglages", "sign in": "se connecter",
     "Games": "Jeux", "learn how stocks work": "apprenez le fonctionnement des actions",
     "Ambient sound": "Son d'ambiance", "waves, jungle, space hum…": "vagues, jungle, bourdonnement spatial…",
     "Music": "Musique", "background score": "musique de fond",
-    "one model on the desk": "un modèle sur le plateau",
     "Type a symbol and press Enter  ·  HELP for commands": "Saisissez un symbole et appuyez sur Entrée  ·  HELP pour les commandes",
     "OPEN": "OUVERT", "CLOSED": "FERMÉ",
     "standing by": "en attente",
     "voice & anchor settings": "réglages voix et présentateur", "SET": "DÉCOR", "stop reading": "arrêter la lecture", "free": "gratuites",
-    "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Posez une question ci-dessous — les réponses apparaissent ici, et le présentateur peut les lire à l'antenne.",
     "ASK ALL": "TOUT DEMANDER",
-    "Ask the desk anything": "Demandez ce que vous voulez au plateau", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Les réponses apparaissent ici et le présentateur les lit à l'antenne. Touchez une suggestion — ou saisissez la vôtre ci-dessous.", "Summarize {sym} today": "Résumez {sym} aujourd'hui", "What's moving today?": "Qu'est-ce qui bouge aujourd'hui ?", "Take me to Robinhood": "Emmène-moi sur Robinhood", "What's on Netflix?": "Qu'y a-t-il sur Netflix ?", "Write a report → PPT": "Rédiger un rapport → PPT",
+ "Summarize {sym} today": "Résumez {sym} aujourd'hui", "What's moving today?": "Qu'est-ce qui bouge aujourd'hui ?", "Take me to Robinhood": "Emmène-moi sur Robinhood", "What's on Netflix?": "Qu'y a-t-il sur Netflix ?", "Write a report → PPT": "Rédiger un rapport → PPT",
     "WATCHLIST": "LISTE DE SUIVI", "TOP MOVERS": "PLUS FORTES VARIATIONS", "full chart": "graphique complet",
     "LINE": "LIGNE", "not enough movement for a P&F column yet": "pas encore assez de mouvement pour une colonne P&F", "3-box reversal · this session": "retournement de 3 cases · cette séance",
     "tracking {price} · box {box} · session range {lo}–{hi}": "suivi {price} · case {box} · amplitude de la séance {lo}–{hi}", "first column at ≥ {up} or < {down}": "première colonne à ≥ {up} ou < {down}", "column 2 needs a reversal < {down}": "la colonne 2 exige un retournement < {down}", "column 2 needs a reversal ≥ {up}": "la colonne 2 exige un retournement ≥ {up}",
     "Language": "Langue",
+    "Desk": "Plateau", "Markets": "Marchés", "News": "Actualités", "Portfolio": "Portefeuille",
+    "Price alerts": "Alertes de prix", "Getting started": "Premiers pas",
+    "Live quotes are provided by this server — no key needed on this device.": "Les cotations en direct sont fournies par ce serveur — aucune clé requise sur cet appareil.",
+    "Live quotes are not configured on this server.": "Les cotations en direct ne sont pas configurées sur ce serveur.",
+    "VIDEO SEARCH": "RECHERCHE VIDÉO",
+    "Real, embeddable video results are provided by this server — no key needed on this device.": "Les résultats vidéo réels et intégrables sont fournis par ce serveur — aucune clé requise sur cet appareil.",
+    "Not configured on this server — \"show videos of …\" asks the AI to guess instead.": "Non configuré sur ce serveur — « montre des vidéos de … » demande à l'IA de deviner.",
+    "STREAMING CATALOG": "CATALOGUE STREAMING",
+    "Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.": "Les catalogues Netflix / Disney+ / Hulu et les bandes-annonces sont fournis par ce serveur — aucune clé requise sur cet appareil.",
+    "Not configured on this server — public-domain films via \"free movies …\" still play in-desk.": "Non configuré sur ce serveur — les films du domaine public via « free movies … » se lisent toujours dans le desk.",
+    "Studio voice is provided by this server — no key needed on this device.": "La voix studio est fournie par ce serveur — aucune clé requise sur cet appareil.",
+    "Studio voice is not configured on this server.": "La voix studio n'est pas configurée sur ce serveur.",
+    "This server has a studio-voice key set, but the last call to it failed.": "Ce serveur a une clé de voix studio configurée, mais le dernier appel a échoué.",
+    "Loading voices…": "Chargement des voix…",
+ "Pick a studio voice in settings": "Choisissez une voix studio dans les réglages",
+    "Video search is not configured on this server, and no key is set in this browser.": "La recherche vidéo n'est pas configurée sur ce serveur et aucune clé n'est définie dans ce navigateur.",
+    "The AI desk is part of": "Le plateau IA fait partie de",
+    "not configured": "non configuré", "Demo mode needs no keys — everything below works right now.": "Le mode démo ne demande aucune clé — tout ci-dessous fonctionne déjà.",
+    "AI DESK IS OFF": "LE PLATEAU IA EST ÉTEINT", "Answers run on this server's model key. Nothing to set up.": "Les réponses utilisent la clé de modèle de ce serveur. Rien à configurer.", "Answers run on your local model. Nothing leaves this device.": "Les réponses utilisent votre modèle local. Rien ne quitte cet appareil.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Ce serveur n'a pas encore de clé de modèle, le plateau ne peut donc pas répondre. Tout le reste fonctionne.",
+    "This server holds the model key, so the desk can already answer.": "Ce serveur détient la clé du modèle, le plateau peut donc déjà répondre.",
+    "Read on air": "Lire à l'antenne",
+    "Search": "Rechercher",
     "The AI broadcast desk for the markets.": "Le plateau de diffusion IA pour les marchés.",
-    "Create account": "Créer un compte", "Log in": "Se connecter", "Explore in demo mode →": "Explorer en mode démo →",
+    "Create account": "Créer un compte", "Log in": "Se connecter",
     "ranked by |Δ%| across your watchlist": "classé par |Δ%| dans votre liste de suivi",
-    'Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"': 'Posez une question sur {sym}, "take me to Robinhood", ou "download excel" / "make a powerpoint" / "write a report and export ppt"',
+    'Ask about {sym} — or tap a suggestion below': 'Posez une question sur {sym} — ou touchez une suggestion',
     // settings tabs + guided tour
     "ACCOUNT": "COMPTE", "START": "DÉMARRER", "DATA": "DONNÉES", "VOICE": "VOIX", "MEET": "RÉUNION",
     "exit": "quitter", "skip tour": "passer la visite", "Back": "Retour", "Next": "Suivant", "Done": "Terminé",
@@ -279,22 +319,26 @@ const I18N = {
     "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Saisissez ici n'importe quel symbole et appuyez sur Entrée pour l'afficher. « ADD TSLA » et « DEL TSLA » gèrent votre liste de suivi. Les noms d'entreprise fonctionnent aussi.",
     "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Voici votre barre de commande. Saisissez un symbole comme Apple ou Nvidia et appuyez sur Entrée pour l'afficher.",
     "Your anchor — that's me": "Votre présentateur — c'est moi",
-    "I run a live trading day: opening bell, meals, breaks. I read any answer on air. Swap my character, environment, and sounds in settings.": "J'anime une journée de bourse en direct : cloche d'ouverture, repas, pauses. Je lis n'importe quelle réponse à l'antenne. Changez mon personnage, mon décor et mes sons dans les réglages.",
-    "That's me, your anchor. I run a live trading day and I can read anything on air.": "C'est moi, votre présentateur. J'anime une journée de bourse en direct et je peux tout lire à l'antenne.",
+    "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.": "Je lis chaque réponse à l'antenne. Choisissez parmi 22 présentateurs et 18 décors ici même, chacun avec sa voix et son ambiance sonore.",
+    "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here.": "C'est moi, votre présentateur. Vingt-deux présentateurs et dix-huit décors au choix, ici même.",
+    "Switches the interface and my spoken answers between six languages. Your choice is remembered.": "Change l'interface et mes réponses parlées entre six langues. Votre choix est mémorisé.",
+    "Export the session as Word, PowerPoint or Excel. A review step lets you edit everything before it saves.": "Exportez la session en Word, PowerPoint ou Excel. Une étape de révision permet de tout modifier avant l'enregistrement.",
+    "Export your session as Word, PowerPoint or Excel. You can edit everything before it saves.": "Exportez votre session en Word, PowerPoint ou Excel. Vous pouvez tout modifier avant l'enregistrement.",
+    "Your watchlist scrolls across the top. Flip DEMO to LIVE in settings for real Finnhub quotes.": "Votre liste de suivi défile en haut. Passez de DEMO à LIVE dans les réglages pour de vraies cotations Finnhub.",
+    "Add your events and I announce them on air when they're due. Market events merge in automatically.": "Ajoutez vos événements et je les annonce à l'antenne le moment venu. Les événements de marché s'ajoutent automatiquement.",
+    "Add events to your calendar and I'll announce them on air when they're due.": "Ajoutez des événements à votre calendrier et je les annoncerai à l'antenne le moment venu.",
     "The AI desk": "Le plateau IA",
-    "Ask a question here and I answer in one box, cascading across your models. I also take commands — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Posez une question ici et je réponds dans une seule fenêtre, en cascade sur vos modèles. J'accepte aussi des commandes — « take me to Robinhood », « what's on netflix », « write a report and export ppt ».",
+    "Ask anything here. I also take commands: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Posez vos questions ici. J'accepte aussi des commandes : « take me to Robinhood », « what's on netflix », « write a report and export ppt ».",
     "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Demandez-moi ce que vous voulez ici. Je comprends aussi les commandes simples, comme, take me to Robinhood, ou, what's on Netflix.",
     "Answers, news & Watch": "Réponses, actualités et Visionnage",
-    "Everything lands here in one box — desk answers, the navigator, news, and the streaming catalog. Trailers and public-domain films play right inside.": "Tout arrive ici dans une seule fenêtre — réponses du plateau, navigateur, actualités et catalogue de streaming. Les bandes-annonces et films du domaine public se lisent directement à l'intérieur.",
+    "Answers, news, and the streaming catalog land here. Trailers play right inside.": "Les réponses, les actualités et le catalogue de streaming arrivent ici. Les bandes-annonces se lisent directement.",
     "Answers, news, and the streaming catalog all appear here, in one place.": "Les réponses, les actualités et le catalogue de streaming apparaissent tous ici, au même endroit.",
     "Ticker tape": "Bandeau de cotation",
-    "Your whole watchlist scrolls across the top with live-style movement.": "Toute votre liste de suivi défile en haut avec un mouvement en temps réel.",
-    "Your watchlist scrolls across the ticker tape, up top.": "Votre liste de suivi défile sur le bandeau de cotation, en haut.",
     "Why setup? (mostly optional)": "Pourquoi la configuration ? (presque tout est optionnel)",
-    "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "Vantage fonctionne entièrement en DÉMO sans configuration. La seule chose à ajouter est une clé IA — les réponses du plateau proviennent de modèles externes (OpenRouter, Claude…) facturés sur votre propre compte, ils ont donc besoin de votre clé. Tout le reste est optionnel : graphiques, calendrier, jeux et actualités n'ont besoin de rien. Ouvrez Démarrer pour coller cette clé.",
-    "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Voici pourquoi la configuration existe. Vantage fonctionne en démo sans configuration. La seule clé à ajouter est celle de l'IA — mes réponses proviennent de modèles externes facturés sur votre propre compte, ils ont donc besoin de votre clé. Tout le reste est optionnel. Ouvrez Démarrer pour coller cette clé. Et voilà la visite !",
+    "Demo mode needs no setup. AI answers come from external models billed to your account, so they need your key. Open Settings from this menu and paste it under START.": "Le mode démo ne demande aucune configuration. Les réponses IA viennent de modèles externes facturés sur votre compte, il leur faut donc votre clé. Ouvrez Réglages depuis ce menu et collez-la sous START.",
+    "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Une dernière chose. Mes réponses viennent de modèles externes facturés sur votre compte, il leur faut donc votre clé. Tout le reste est optionnel. Fin de la visite !",
     // settings footer + MEET tab
-    "Close": "Fermer", "Applied": "Appliqué", "Apply": "Appliquer",
+    "Close": "Fermer", "Apply": "Appliquer",
     "Go Live — no setup": "En direct — sans configuration",
     "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Démarrez instantanément une nouvelle réunion dans un onglet du navigateur (utilise la session déjà ouverte), puis partagez l'écran de Vantage. Aucune clé, aucun OAuth.",
     "New Google Meet": "Nouveau Google Meet", "New Zoom meeting": "Nouvelle réunion Zoom",
@@ -303,15 +347,11 @@ const I18N = {
     "Pin": "Épingler",
     "connected": "connecté", "disconnect": "déconnecter",
     // START tab
-    "AI desk": "Plateau IA", "ready": "prêt", "add key ↑": "ajouter une clé ↑", "Voice": "Voix", "browser": "navigateur",
+    "AI desk": "Plateau IA", "ready": "prêt", "Voice": "Voix", "browser": "navigateur",
     "Live quotes": "Cotations en direct", "live": "en direct", "demo": "démo", "Real videos": "Vraies vidéos",
     "on": "activé", "optional": "optionnel", "Streaming": "Streaming", "Calendar": "Calendrier", "built-in": "intégré", "Meetings": "Réunions",
     "You're already set up.": "Tout est déjà prêt.",
-    "Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:": "Vantage fonctionne dès maintenant en mode démo — aucune clé requise. La seule chose à ajouter est une clé IA pour que le plateau puisse vraiment vous répondre :",
-    "AI DESK IS ON": "LE PLATEAU IA EST ACTIF", "TURN ON THE AI DESK — paste one key": "ACTIVEZ LE PLATEAU IA — collez une clé",
-    "One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.": "Une seule clé débloque tout le plateau — OpenRouter vous donne des dizaines de modèles (GPT, Llama, et plus) derrière une seule clé, et c'est le modèle principal.",
-    "get a key": "obtenir une clé",
-    "No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.": "Pas de clé IA ? Le plateau ne peut pas encore répondre, mais tout le reste — graphiques, actualités, jeux, streaming, calendrier — fonctionne sans elle.",
+    "AI DESK IS ON": "LE PLATEAU IA EST ACTIF",
     "WHAT'S SET UP": "CE QUI EST CONFIGURÉ", "tap to configure": "touchez pour configurer",
     "tour · demo · missions": "visite · démo · missions", "pick your anchor": "choisissez votre présentateur",
     "skip — I'll explore on my own": "passer — je vais explorer par moi-même",
@@ -320,61 +360,31 @@ const I18N = {
     "in-app alerts": "alertes dans l'application", "price triggers": "seuils de prix", "breaking news": "dernière minute",
     "P&F SIGNALS": "SIGNAUX P&F", "P&F signals": "signaux P&F", "P&F pattern alerts": "alertes de figures P&F",
     "color-blind mode (blue/orange + ▲▼)": "mode daltonien (bleu/orange + ▲▼)",
-    "privacy mode — blur balances (Shift+P)": "mode privé — flouter les soldes (Maj+P)",
+    "privacy mode — blur balances": "mode privé — flouter les soldes",
     "hidden": "masqué",
     "CLOCK TIMEZONE": "FUSEAU HORAIRE DE L'HORLOGE",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Règle l'horloge de l'en-tête. Le badge de marché OUVERT/FERMÉ suit toujours les heures du NYSE (heure de l'Est).",
     "refresh interval": "intervalle d'actualisation", "Manual": "Manuel", "refresh now": "actualiser maintenant",
     "replay tutorial": "revoir le tutoriel", "DEMO": "DÉMO", "LIVE": "EN DIRECT",
-    "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "Le mode démo utilise un moteur de marché à marche aléatoire avec graine — une séance simulée reproductible, sans clé ni réseau.",
-    "FINNHUB API KEY (free tier works)": "CLÉ API FINNHUB (l'offre gratuite suffit)", "paste key": "collez la clé",
-    "Key is saved on this device and sent only to finnhub.io.": "La clé est enregistrée sur cet appareil et envoyée uniquement à finnhub.io.",
-    "get a free key": "obtenir une clé gratuite",
-    "YOUTUBE DATA API KEY": "CLÉ API YOUTUBE DATA", "(optional — real, playable video results)": "(optionnel — résultats vidéo réels et lisibles)",
-    "paste key (AIza…)": "collez la clé (AIza…)", "needs": "nécessite",
-    "Without a key, \"show videos of …\" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.": "Sans clé, \"show videos of …\" demande à Claude de deviner des vidéos (souvent non intégrables). Avec une clé, le plateau récupère de vrais résultats intégrables de YouTube.",
-    "enable API": "activer l'API",
-    "TMDB API KEY": "CLÉ API TMDB", "(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)": "(optionnel — catalogue Netflix / Disney+ / Hulu et bandes-annonces dans l'app)",
-    "paste TMDB API key (v3 auth)": "collez la clé API TMDB (auth v3)",
-    "Powers \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via \"free movies …\" (no key needed).": "Alimente \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — de vraies bibliothèques avec affiches, notes et bandes-annonces sur le plateau. La lecture s'ouvre toujours sur le service (ils bloquent l'intégration) ; les films du domaine public se lisent entièrement sur le plateau via \"free movies …\" (aucune clé requise).",
-    "DAILY BRIEF": "BRIEF QUOTIDIEN", "(auto-download while the app is open)": "(téléchargement automatique tant que l'app est ouverte)",
-    "at": "à", "off": "désactiver", "run now": "lancer maintenant",
-    "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Chaque jour à {time}, le plateau rédige un rapport d'analyste sur {sym} et télécharge automatiquement un brief en {fmt}. Nécessite que cet onglet reste ouvert (les navigateurs ne peuvent pas l'exécuter fermé) et une clé Anthropic pour la rédaction.",
-    "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Définissez une heure pour générer et télécharger automatiquement un rapport à votre marque chaque jour. Laissez vide pour désactiver.",
+    "Demo mode is a seeded random-walk session: reproducible, no key or network needed.": "Le mode démo est une session à marche aléatoire avec graine : reproductible, sans clé ni réseau.",
+ "needs": "nécessite",
+    "at": "à", "off": "désactiver",
     // AI tab
-    "FULLY LOCAL · nothing leaves this device": "ENTIÈREMENT LOCAL · rien ne quitte cet appareil",
-    "CLOUD ENABLED · queries leave this device": "CLOUD ACTIVÉ · les requêtes quittent cet appareil",
-    "no model enabled": "aucun modèle activé",
-    "telemetry unavailable — is the local server running?": "télémétrie indisponible — le serveur local est-il en cours d'exécution ?",
-    "no model loaded": "aucun modèle chargé",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Les réponses du plateau IA nécessitent {plan}. Les modèles ci-dessous sont désactivés jusqu'à ce que vous passiez à l'offre supérieure (ou activiez le mode développeur dans COMPTE).",
-    "{n} models enabled": "{n} modèles activés", "One model at a time": "Un modèle à la fois",
-    "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Utilisez \"only this\" pour un seul modèle, ou activez-en plusieurs — le plateau répond dans une seule fenêtre, en les essayant de haut en bas et en passant au suivant si l'un échoue (par ex. Claude → OpenRouter).",
-    "Auto-fallback to a local model.": "Bascule automatique vers un modèle local.",
-    "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Si les modèles payants échouent (pas de crédits, mauvaise clé, hors ligne), le plateau et les rapports réessaient automatiquement avec votre modèle local (Ollama ou LM Studio). Configurez-en un ci-dessous — définissez sa BASE URL et démarrez le serveur local.",
-    "ACTIVE": "ACTIF", "use only this": "utiliser seulement celui-ci", "BASE URL": "BASE URL", "MODEL": "MODÈLE",
-    "Run local-only (AMD / ROCm)": "Exécuter en local uniquement (AMD / ROCm)", "Switch the desk to local": "Basculer le plateau en local", "restore previous models": "restaurer les modèles précédents", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic pointe le plateau vers votre modèle Ollama local (localhost:11434) et désactive tous les modèles cloud — tout l'agent tourne alors en inférence locale (par ex. un GPU AMD Radeon via ROCm), sans clés. S'ouvre aussi avec ?local=1 dans l'URL.",
+ "use only this": "utiliser seulement celui-ci", "BASE URL": "BASE URL", "MODEL": "MODÈLE",
     "The desk remembers this conversation locally (this device only) so follow-up questions work.": "Le plateau mémorise cette conversation localement (uniquement sur cet appareil) pour que les questions de suivi fonctionnent.", "forget conversation": "oublier la conversation", "Desk memory cleared — the conversation is forgotten.": "Mémoire du plateau effacée — la conversation est oubliée.", "MEMORY": "MÉMOIRE", "{n} turns remembered on this device": "{n} tours mémorisés sur cet appareil", "Memory": "Mémoire", "empty": "vide",
-    "format:": "format :", "e.g.": "par ex.", "browse models": "parcourir les modèles",
-    "detect installed models": "détecter les modèles installés", "Lists the models on your Ollama server — the same set as `ollama list`.": "Liste les modèles sur votre serveur Ollama — le même ensemble que `ollama list`.",
-    "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo n'a pas encore d'API hébergée officielle — exécutez un pont local compatible OpenAI et faites pointer la BASE URL dessus.", "Lumo bridge": "pont Lumo",
+    "format:": "format :", "e.g.": "par ex.",
     "API KEY": "CLÉ API",
-    "Local endpoints need CORS enabled to accept requests from this page:": "Les points de terminaison locaux ont besoin de CORS activé pour accepter les requêtes de cette page :",
-    "start with": "démarrez avec", "or": "ou", "Developer tab → enable server + turn on CORS": "onglet Developer → activez le serveur + activez CORS",
-    "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "L'emplacement LM Studio fonctionne avec tout ce qui parle le format de chat OpenAI (llama.cpp, vLLM…).",
+ "or": "ou",
     "ANCHOR": "PRÉSENTATEUR", "ENVIRONMENT": "ENVIRONNEMENT", "BACKGROUND CREW": "ÉQUIPE EN FOND",
     "Auto — whoever isn't anchoring": "Auto — celui qui ne présente pas", "Off — solo broadcast": "Désactivé — diffusion en solo",
     "VOICE ENGINE": "MOTEUR VOCAL", "BROWSER · free": "NAVIGATEUR · gratuit",
-    "ELEVENLABS API KEY": "CLÉ API ELEVENLABS", "get a key ↗": "obtenir une clé ↗",
-    "Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.": "Conservée uniquement en mémoire, envoyée seulement à api.elevenlabs.io. Utilise eleven_flash_v2_5 pour une faible latence — chaque lecture consomme des caractères de votre quota.",
-    "ELEVENLABS VOICE": "VOIX ELEVENLABS", "Paste a key and hit Apply — voices load automatically.": "Collez une clé et cliquez sur Appliquer — les voix se chargent automatiquement.",
+    "ELEVENLABS VOICE": "VOIX ELEVENLABS",
     "READING SPEED": "VITESSE DE LECTURE", "auto-read the first answer that finishes": "lire automatiquement la première réponse terminée",
     "UI click sounds — terminal blips on every button": "sons de clic de l'interface — bips de terminal sur chaque bouton", "SOUND VOLUME": "VOLUME DU SON",
     "ambient music": "musique d'ambiance", "your Spotify playlist, docked bottom-right": "votre playlist Spotify, ancrée en bas à droite",
     "generative synth, ducks under the anchor's voice": "synthé génératif, s'atténue sous la voix du présentateur", "MUSIC SOURCE": "SOURCE MUSICALE",
-    "SPOTIFY PLAYLIST / ALBUM / TRACK LINK": "LIEN PLAYLIST / ALBUM / TITRE SPOTIFY",
     "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Aucune connexion requise — activez ♪ et le lecteur s'ancre en bas à droite. (Le lecteur intégré de Spotify diffuse des extraits de 30 secondes sans compte ; les titres complets se lisent automatiquement si vous êtes déjà connecté à Spotify dans ce navigateur.)",
-    "Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link.": "Collez un lien de partage Spotify — ouvrez Spotify → n'importe quelle playlist/album/titre → Partager → Copier le lien.",
     "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "FACULTATIF · CONNECTEZ UN COMPTE PREMIUM POUR LES TITRES COMPLETS", "FULL PLAYBACK · SPOTIFY PREMIUM": "LECTURE COMPLÈTE · SPOTIFY PREMIUM",
     "create an app ↗": "créer une app ↗", "● connected — full tracks enabled": "● connecté — titres complets activés",
     "Spotify app Client ID": "Client ID de l'app Spotify", "In your Spotify app settings, add this exact Redirect URI:": "Dans les paramètres de votre app Spotify, ajoutez cette Redirect URI exacte :",
@@ -387,31 +397,65 @@ const I18N = {
     "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "Les mises à niveau payantes ouvrent le paiement sécurisé de Stripe (mode test). Les informations de carte sont saisies sur Stripe, jamais ici.",
     "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "Aucun processeur de paiement n'est connecté, donc les offres payantes sont débloquées en simulation — aucune carte n'est demandée et rien n'est facturé.",
     "Sign out": "Se déconnecter", "Terms & Privacy accepted": "Conditions et confidentialité acceptées", "This account UI is a prototype; see the security note in the code.": "Cette interface de compte est un prototype ; voir la note de sécurité dans le code.",
-    "Developer mode (testing).": "Mode développeur (test).",
-    "Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production.": "Débloque toutes les fonctionnalités premium quel que soit le forfait — bureau IA, données en direct, YouTube, TMDB, Spotify et la voix ElevenLabs. Vous avez toujours besoin de la clé API propre à chaque fonctionnalité pour l'utiliser. Pas pour la production.",
-    "also toggles with ?dev=1 in the URL": "s'active aussi avec ?dev=1 dans l'URL", "DEV MODE ON — all plan gates bypassed": "MODE DEV ACTIVÉ — toutes les restrictions d'offre contournées",
   },
   de: {
+    "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
+    "DataHub had no exact match. Closest dataset: {name}.": "DataHub fand keine exakte Übereinstimmung. Nächstgelegener Datensatz: {name}.",
+    "DataHub match: {name}.": "DataHub-Treffer: {name}.",
+    "DataHub match: {name} on {platform}.": "DataHub-Treffer: {name} auf {platform}.",
+    "DataHub has no schema recorded for {name}.": "DataHub hat für {name} kein Schema hinterlegt.",
+    "DataHub has no owner recorded for {name}.": "DataHub hat für {name} keinen Eigentümer hinterlegt.",
+    "DataHub records no downstream datasets for {name}.": "DataHub verzeichnet für {name} keine nachgelagerten Datensätze.",
+    "DataHub records no upstream datasets for {name}.": "DataHub verzeichnet für {name} keine vorgelagerten Datensätze.",
+    "DataHub's schema for {name} has no column named \"{col}\".": "Das Schema von {name} in DataHub hat keine Spalte namens \"{col}\".",
+    "DataHub lookup failed: {reason}": "DataHub-Abfrage fehlgeschlagen: {reason}",
+    "ALLOCATION BY VALUE": "AUFTEILUNG NACH WERT",
+    "DAY RANGE": "TAGESSPANNE",
+    "MARKET CLOSED": "MARKT GESCHLOSSEN",
+    "ON THE DESK": "AM PULT",
+    "last": "letzter",
+    "last trade": "letzter Handel",
+    "prev close": "Vortagesschluss",
     "Export": "Exportieren", "More": "Mehr", "Settings": "Einstellungen", "sign in": "anmelden",
     "Games": "Spiele", "learn how stocks work": "lerne, wie Aktien funktionieren",
     "Ambient sound": "Umgebungston", "waves, jungle, space hum…": "Wellen, Dschungel, Weltraumbrummen…",
     "Music": "Musik", "background score": "Hintergrundmusik",
-    "one model on the desk": "ein Modell am Pult",
     "Type a symbol and press Enter  ·  HELP for commands": "Symbol eingeben und Enter drücken  ·  HELP für Befehle",
     "OPEN": "OFFEN", "CLOSED": "GESCHLOSSEN",
     "standing by": "bereit",
     "voice & anchor settings": "Stimme & Moderator-Einstellungen", "SET": "KULISSE", "stop reading": "Vorlesen stoppen", "free": "kostenlos",
-    "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Stellen Sie unten eine Frage — Antworten erscheinen hier, und der Moderator kann jede davon vorlesen.",
     "ASK ALL": "ALLE FRAGEN",
-    "Ask the desk anything": "Frag das Pult alles", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Antworten erscheinen hier und der Moderator liest sie auf Sendung vor. Tippe einen Vorschlag an — oder schreibe unten deinen eigenen.", "Summarize {sym} today": "Fasse {sym} heute zusammen", "What's moving today?": "Was bewegt sich heute?", "Take me to Robinhood": "Bring mich zu Robinhood", "What's on Netflix?": "Was läuft auf Netflix?", "Write a report → PPT": "Bericht schreiben → PPT",
+ "Summarize {sym} today": "Fasse {sym} heute zusammen", "What's moving today?": "Was bewegt sich heute?", "Take me to Robinhood": "Bring mich zu Robinhood", "What's on Netflix?": "Was läuft auf Netflix?", "Write a report → PPT": "Bericht schreiben → PPT",
     "WATCHLIST": "BEOBACHTUNGSLISTE", "TOP MOVERS": "GRÖSSTE BEWEGUNGEN", "full chart": "vollständiges Diagramm",
     "LINE": "LINIE", "not enough movement for a P&F column yet": "noch nicht genug Bewegung für eine P&F-Spalte", "3-box reversal · this session": "3-Box-Umkehr · diese Sitzung",
     "tracking {price} · box {box} · session range {lo}–{hi}": "verfolge {price} · Box {box} · Sitzungsspanne {lo}–{hi}", "first column at ≥ {up} or < {down}": "erste Spalte ab ≥ {up} oder < {down}", "column 2 needs a reversal < {down}": "Spalte 2 braucht eine Umkehr < {down}", "column 2 needs a reversal ≥ {up}": "Spalte 2 braucht eine Umkehr ≥ {up}",
     "Language": "Sprache",
+    "Desk": "Pult", "Markets": "Märkte", "News": "Nachrichten", "Portfolio": "Portfolio",
+    "Price alerts": "Preisalarme", "Getting started": "Erste Schritte",
+    "Live quotes are provided by this server — no key needed on this device.": "Live-Kurse liefert dieser Server — kein Schlüssel auf diesem Gerät nötig.",
+    "Live quotes are not configured on this server.": "Live-Kurse sind auf diesem Server nicht eingerichtet.",
+    "VIDEO SEARCH": "VIDEOSUCHE",
+    "Real, embeddable video results are provided by this server — no key needed on this device.": "Echte, einbettbare Videoergebnisse liefert dieser Server — kein Schlüssel auf diesem Gerät nötig.",
+    "Not configured on this server — \"show videos of …\" asks the AI to guess instead.": "Auf diesem Server nicht eingerichtet — „zeig Videos von …“ lässt stattdessen die KI raten.",
+    "STREAMING CATALOG": "STREAMING-KATALOG",
+    "Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.": "Netflix- / Disney+- / Hulu-Kataloge und Trailer liefert dieser Server — kein Schlüssel auf diesem Gerät nötig.",
+    "Not configured on this server — public-domain films via \"free movies …\" still play in-desk.": "Auf diesem Server nicht eingerichtet — gemeinfreie Filme über „free movies …“ laufen weiter im Desk.",
+    "Studio voice is provided by this server — no key needed on this device.": "Die Studio-Stimme liefert dieser Server — kein Schlüssel auf diesem Gerät nötig.",
+    "Studio voice is not configured on this server.": "Die Studio-Stimme ist auf diesem Server nicht eingerichtet.",
+    "This server has a studio-voice key set, but the last call to it failed.": "Auf diesem Server ist ein Studio-Stimmen-Schlüssel hinterlegt, aber der letzte Aufruf ist fehlgeschlagen.",
+    "Loading voices…": "Stimmen werden geladen…",
+ "Pick a studio voice in settings": "Wähle in den Einstellungen eine Studiostimme",
+    "Video search is not configured on this server, and no key is set in this browser.": "Die Videosuche ist auf diesem Server nicht eingerichtet und in diesem Browser ist kein Schlüssel hinterlegt.",
+    "The AI desk is part of": "Das KI-Pult gehört zu",
+    "not configured": "nicht eingerichtet", "Demo mode needs no keys — everything below works right now.": "Der Demo-Modus braucht keine Schlüssel — alles unten funktioniert schon.",
+    "AI DESK IS OFF": "KI-PULT IST AUS", "Answers run on this server's model key. Nothing to set up.": "Antworten laufen über den Modellschlüssel dieses Servers. Nichts einzurichten.", "Answers run on your local model. Nothing leaves this device.": "Antworten laufen über dein lokales Modell. Nichts verlässt dieses Gerät.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Auf diesem Server ist noch kein Modellschlüssel hinterlegt, das Pult kann also nicht antworten. Alles andere funktioniert.",
+    "This server holds the model key, so the desk can already answer.": "Dieser Server hält den Modellschlüssel, das Pult kann also schon antworten.",
+    "Read on air": "Live vorlesen",
+    "Search": "Suchen",
     "The AI broadcast desk for the markets.": "Das KI-Broadcast-Pult für die Märkte.",
-    "Create account": "Konto erstellen", "Log in": "Anmelden", "Explore in demo mode →": "Im Demo-Modus erkunden →",
+    "Create account": "Konto erstellen", "Log in": "Anmelden",
     "ranked by |Δ%| across your watchlist": "sortiert nach |Δ%| in Ihrer Beobachtungsliste",
-    'Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"': 'Fragen zu {sym}, "take me to Robinhood", oder "download excel" / "make a powerpoint" / "write a report and export ppt"',
+    'Ask about {sym} — or tap a suggestion below': 'Fragen zu {sym} — oder tippe unten auf einen Vorschlag',
     // settings tabs + guided tour
     "ACCOUNT": "KONTO", "START": "START", "DATA": "DATEN", "VOICE": "STIMME", "MEET": "MEETING",
     "exit": "beenden", "skip tour": "Tour überspringen", "Back": "Zurück", "Next": "Weiter", "Done": "Fertig",
@@ -419,22 +463,26 @@ const I18N = {
     "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Geben Sie hier ein beliebiges Kürzel ein und drücken Sie Enter, um es zu charten. „ADD TSLA“ und „DEL TSLA“ verwalten Ihre Beobachtungsliste. Firmennamen funktionieren auch.",
     "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Das ist Ihre Befehlsleiste. Geben Sie ein Kürzel wie Apple oder Nvidia ein und drücken Sie Enter, um es zu charten.",
     "Your anchor — that's me": "Ihr Moderator — das bin ich",
-    "I run a live trading day: opening bell, meals, breaks. I read any answer on air. Swap my character, environment, and sounds in settings.": "Ich moderiere einen Live-Handelstag: Eröffnungsglocke, Mahlzeiten, Pausen. Ich lese jede Antwort auf Sendung vor. Ändern Sie meine Figur, Umgebung und Klänge in den Einstellungen.",
-    "That's me, your anchor. I run a live trading day and I can read anything on air.": "Das bin ich, Ihr Moderator. Ich moderiere einen Live-Handelstag und kann alles auf Sendung vorlesen.",
+    "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.": "Ich lese jede Antwort auf Sendung vor. Wähle hier aus 22 Moderatoren und 18 Kulissen, jede mit eigener Stimme und eigenem Klang.",
+    "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here.": "Das bin ich, dein Moderator. Zweiundzwanzig Moderatoren und achtzehn Kulissen zur Auswahl, direkt hier.",
+    "Switches the interface and my spoken answers between six languages. Your choice is remembered.": "Stellt die Oberfläche und meine gesprochenen Antworten auf sechs Sprachen um. Deine Wahl wird gespeichert.",
+    "Export the session as Word, PowerPoint or Excel. A review step lets you edit everything before it saves.": "Exportiere die Sitzung als Word, PowerPoint oder Excel. Ein Prüfschritt lässt dich vorher alles bearbeiten.",
+    "Export your session as Word, PowerPoint or Excel. You can edit everything before it saves.": "Exportiere deine Sitzung als Word, PowerPoint oder Excel. Du kannst vorher alles bearbeiten.",
+    "Your watchlist scrolls across the top. Flip DEMO to LIVE in settings for real Finnhub quotes.": "Deine Beobachtungsliste läuft oben durch. Stelle in den Einstellungen von DEMO auf LIVE für echte Finnhub-Kurse.",
+    "Add your events and I announce them on air when they're due. Market events merge in automatically.": "Füge deine Termine hinzu und ich melde sie auf Sendung, wenn sie fällig sind. Markttermine kommen automatisch dazu.",
+    "Add events to your calendar and I'll announce them on air when they're due.": "Trag Termine in deinen Kalender ein und ich melde sie auf Sendung, wenn sie fällig sind.",
     "The AI desk": "Das KI-Pult",
-    "Ask a question here and I answer in one box, cascading across your models. I also take commands — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Stellen Sie hier eine Frage und ich antworte in einem Feld, kaskadierend über Ihre Modelle. Ich nehme auch Befehle entgegen — „take me to Robinhood“, „what's on netflix“, „write a report and export ppt“.",
+    "Ask anything here. I also take commands: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Frag hier, was du willst. Ich verstehe auch Befehle: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.",
     "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Fragen Sie mich hier alles. Ich verstehe auch einfache Befehle, wie, take me to Robinhood, oder, what's on Netflix.",
     "Answers, news & Watch": "Antworten, Nachrichten & Ansehen",
-    "Everything lands here in one box — desk answers, the navigator, news, and the streaming catalog. Trailers and public-domain films play right inside.": "Alles landet hier in einem Feld — Pult-Antworten, der Navigator, Nachrichten und der Streaming-Katalog. Trailer und gemeinfreie Filme laufen direkt darin.",
+    "Answers, news, and the streaming catalog land here. Trailers play right inside.": "Antworten, Nachrichten und der Streaming-Katalog landen hier. Trailer laufen direkt hier.",
     "Answers, news, and the streaming catalog all appear here, in one place.": "Antworten, Nachrichten und der Streaming-Katalog erscheinen alle hier, an einem Ort.",
     "Ticker tape": "Kursband",
-    "Your whole watchlist scrolls across the top with live-style movement.": "Ihre gesamte Beobachtungsliste läuft oben mit Live-Bewegung durch.",
-    "Your watchlist scrolls across the ticker tape, up top.": "Ihre Beobachtungsliste läuft oben über das Kursband.",
     "Why setup? (mostly optional)": "Warum einrichten? (meist optional)",
-    "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "Vantage läuft vollständig in der DEMO ohne Einrichtung. Das Einzige, was sich lohnt, ist ein KI-Schlüssel — die Antworten des Pults stammen von externen Modellen (OpenRouter, Claude…), die Ihrem eigenen Konto berechnet werden, sie brauchen also Ihren Schlüssel. Alles andere ist optional: Charts, Kalender, Spiele und Nachrichten brauchen nichts. Öffnen Sie Start, um diesen einen Schlüssel einzufügen.",
-    "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Hier ist, warum es die Einrichtung gibt. Vantage funktioniert in der Demo ohne Einrichtung. Der einzige Schlüssel, der sich lohnt, ist der für die KI — meine Antworten stammen von externen Modellen, die Ihrem eigenen Konto berechnet werden, sie brauchen also Ihren Schlüssel. Alles andere ist optional. Öffnen Sie Start, um diesen einen Schlüssel einzufügen. Das war die Tour!",
+    "Demo mode needs no setup. AI answers come from external models billed to your account, so they need your key. Open Settings from this menu and paste it under START.": "Der Demo-Modus braucht keine Einrichtung. KI-Antworten kommen von externen Modellen auf deine Rechnung, sie brauchen also deinen Schlüssel. Öffne die Einstellungen über dieses Menü und füge ihn unter START ein.",
+    "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Noch etwas. Meine Antworten kommen von externen Modellen auf deine Rechnung, sie brauchen also deinen Schlüssel. Alles andere ist optional. Das war die Tour!",
     // settings footer + MEET tab
-    "Close": "Schließen", "Applied": "Übernommen", "Apply": "Übernehmen",
+    "Close": "Schließen", "Apply": "Übernehmen",
     "Go Live — no setup": "Live gehen — ohne Einrichtung",
     "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Starten Sie sofort ein neues Meeting in einem Browser-Tab (nutzt Ihre bestehende Anmeldung) und teilen Sie dann den Vantage-Bildschirm. Keine Schlüssel, kein OAuth.",
     "New Google Meet": "Neues Google Meet", "New Zoom meeting": "Neues Zoom-Meeting",
@@ -443,15 +491,11 @@ const I18N = {
     "Pin": "Anheften",
     "connected": "verbunden", "disconnect": "trennen",
     // START tab
-    "AI desk": "KI-Pult", "ready": "bereit", "add key ↑": "Schlüssel hinzufügen ↑", "Voice": "Stimme", "browser": "Browser",
+    "AI desk": "KI-Pult", "ready": "bereit", "Voice": "Stimme", "browser": "Browser",
     "Live quotes": "Live-Kurse", "live": "live", "demo": "Demo", "Real videos": "Echte Videos",
     "on": "an", "optional": "optional", "Streaming": "Streaming", "Calendar": "Kalender", "built-in": "integriert", "Meetings": "Meetings",
     "You're already set up.": "Sie sind bereits startklar.",
-    "Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:": "Vantage läuft gerade jetzt im Demo-Modus — keine Schlüssel nötig. Das Einzige, was sich lohnt, ist ein KI-Schlüssel, damit das Pult Ihnen tatsächlich antworten kann:",
-    "AI DESK IS ON": "DAS KI-PULT IST AN", "TURN ON THE AI DESK — paste one key": "KI-PULT EINSCHALTEN — einen Schlüssel einfügen",
-    "One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.": "Ein Schlüssel schaltet das ganze Pult frei — OpenRouter gibt Ihnen Dutzende Modelle (GPT, Llama und mehr) hinter einem einzigen Schlüssel, und es ist das Hauptmodell.",
-    "get a key": "Schlüssel holen",
-    "No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.": "Kein KI-Schlüssel? Das Pult kann noch nicht antworten, aber alles andere — Charts, Nachrichten, Spiele, Streaming, Kalender — funktioniert auch ohne ihn.",
+    "AI DESK IS ON": "DAS KI-PULT IST AN",
     "WHAT'S SET UP": "WAS EINGERICHTET IST", "tap to configure": "zum Konfigurieren tippen",
     "tour · demo · missions": "Tour · Demo · Missionen", "pick your anchor": "Moderator wählen",
     "skip — I'll explore on my own": "überspringen — ich erkunde selbst",
@@ -460,61 +504,31 @@ const I18N = {
     "in-app alerts": "In-App-Benachrichtigungen", "price triggers": "Preisauslöser", "breaking news": "Eilmeldungen",
     "P&F SIGNALS": "P&F-SIGNALE", "P&F signals": "P&F-Signale", "P&F pattern alerts": "P&F-Muster-Benachrichtigungen",
     "color-blind mode (blue/orange + ▲▼)": "Modus für Farbenblindheit (Blau/Orange + ▲▼)",
-    "privacy mode — blur balances (Shift+P)": "Privatsphärenmodus — Salden verwischen (Umschalt+P)",
+    "privacy mode — blur balances": "Privatsphärenmodus — Salden verwischen",
     "hidden": "ausgeblendet",
     "CLOCK TIMEZONE": "ZEITZONE DER UHR",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Stellt die Kopfzeilen-Uhr ein. Das OFFEN/GESCHLOSSEN-Abzeichen folgt immer den NYSE-Zeiten (Eastern).",
     "refresh interval": "Aktualisierungsintervall", "Manual": "Manuell", "refresh now": "jetzt aktualisieren",
     "replay tutorial": "Tutorial wiederholen", "DEMO": "DEMO", "LIVE": "LIVE",
-    "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "Der Demo-Modus nutzt eine Random-Walk-Markt-Engine mit festem Startwert — eine reproduzierbare simulierte Sitzung, ohne Schlüssel oder Netzwerk.",
-    "FINNHUB API KEY (free tier works)": "FINNHUB-API-SCHLÜSSEL (kostenlose Stufe genügt)", "paste key": "Schlüssel einfügen",
-    "Key is saved on this device and sent only to finnhub.io.": "Der Schlüssel wird auf diesem Gerät gespeichert und nur an finnhub.io gesendet.",
-    "get a free key": "kostenlosen Schlüssel holen",
-    "YOUTUBE DATA API KEY": "YOUTUBE-DATA-API-SCHLÜSSEL", "(optional — real, playable video results)": "(optional — echte, abspielbare Videoergebnisse)",
-    "paste key (AIza…)": "Schlüssel einfügen (AIza…)", "needs": "erfordert",
-    "Without a key, \"show videos of …\" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.": "Ohne Schlüssel bittet \"show videos of …\" Claude, Videos zu erraten (oft nicht einbettbar). Mit Schlüssel holt das Pult echte einbettbare Ergebnisse von YouTube.",
-    "enable API": "API aktivieren",
-    "TMDB API KEY": "TMDB-API-SCHLÜSSEL", "(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)": "(optional — Netflix / Disney+ / Hulu-Katalog + Trailer in der App)",
-    "paste TMDB API key (v3 auth)": "TMDB-API-Schlüssel einfügen (v3-Auth)",
-    "Powers \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via \"free movies …\" (no key needed).": "Treibt \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" an — echte Bibliotheken mit Postern, Bewertungen und Trailern im Pult. Die Wiedergabe öffnet sich weiterhin beim Dienst (Einbettung wird blockiert); gemeinfreie Filme laufen vollständig im Pult über \"free movies …\" (kein Schlüssel nötig).",
-    "DAILY BRIEF": "TÄGLICHER BRIEFING", "(auto-download while the app is open)": "(automatischer Download, solange die App offen ist)",
-    "at": "um", "off": "aus", "run now": "jetzt ausführen",
-    "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Jeden Tag um {time} verfasst das Pult einen Analystenbericht zu {sym} und lädt automatisch ein {fmt}-Briefing herunter. Erfordert, dass dieser Tab geöffnet ist (Browser können es nicht geschlossen ausführen) und einen Anthropic-Schlüssel für den Text.",
-    "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Legen Sie eine Uhrzeit fest, um täglich automatisch einen Bericht mit Ihrer Marke zu erstellen und herunterzuladen. Leer lassen zum Deaktivieren.",
+    "Demo mode is a seeded random-walk session: reproducible, no key or network needed.": "Der Demo-Modus ist eine geseedete Random-Walk-Sitzung: reproduzierbar, ohne Schlüssel und Netz.",
+ "needs": "erfordert",
+    "at": "um", "off": "aus",
     // AI tab
-    "FULLY LOCAL · nothing leaves this device": "VOLLSTÄNDIG LOKAL · nichts verlässt dieses Gerät",
-    "CLOUD ENABLED · queries leave this device": "CLOUD AKTIVIERT · Anfragen verlassen dieses Gerät",
-    "no model enabled": "kein Modell aktiviert",
-    "telemetry unavailable — is the local server running?": "Telemetrie nicht verfügbar — läuft der lokale Server?",
-    "no model loaded": "kein Modell geladen",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "KI-Pult-Antworten erfordern {plan}. Die Modelle unten sind deaktiviert, bis Sie upgraden (oder den Entwicklermodus in KONTO aktivieren).",
-    "{n} models enabled": "{n} Modelle aktiviert", "One model at a time": "Ein Modell zur Zeit",
-    "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Verwenden Sie \"only this\" für ein einzelnes Modell oder aktivieren Sie mehrere — das Pult antwortet in einem Feld, probiert sie von oben nach unten durch und wechselt zum nächsten, wenn eines fehlschlägt (z. B. Claude → OpenRouter).",
-    "Auto-fallback to a local model.": "Automatischer Rückgriff auf ein lokales Modell.",
-    "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Wenn kostenpflichtige Modelle fehlschlagen (keine Credits, falscher Schlüssel, offline), versuchen das Pult und die Berichte es automatisch erneut mit Ihrem lokalen Modell (Ollama oder LM Studio). Konfigurieren Sie unten eines — legen Sie seine BASE URL fest und starten Sie den lokalen Server.",
-    "ACTIVE": "AKTIV", "use only this": "nur dieses verwenden", "BASE URL": "BASE URL", "MODEL": "MODELL",
-    "Run local-only (AMD / ROCm)": "Nur lokal ausführen (AMD / ROCm)", "Switch the desk to local": "Pult auf lokal umstellen", "restore previous models": "vorherige Modelle wiederherstellen", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Ein Klick richtet das Pult auf dein lokales Ollama-Modell (localhost:11434) und schaltet alle Cloud-Modelle ab — der gesamte Agent läuft dann mit lokaler Inferenz (z. B. einer AMD-Radeon-GPU über ROCm), ohne Schlüssel. Öffnet sich auch mit ?local=1 in der URL.",
+ "use only this": "nur dieses verwenden", "BASE URL": "BASE URL", "MODEL": "MODELL",
     "The desk remembers this conversation locally (this device only) so follow-up questions work.": "Das Pult merkt sich dieses Gespräch lokal (nur auf diesem Gerät), damit Anschlussfragen funktionieren.", "forget conversation": "Gespräch vergessen", "Desk memory cleared — the conversation is forgotten.": "Pult-Gedächtnis gelöscht — das Gespräch ist vergessen.", "MEMORY": "GEDÄCHTNIS", "{n} turns remembered on this device": "{n} Runden auf diesem Gerät gespeichert", "Memory": "Gedächtnis", "empty": "leer",
-    "format:": "Format:", "e.g.": "z. B.", "browse models": "Modelle durchsuchen",
-    "detect installed models": "installierte Modelle erkennen", "Lists the models on your Ollama server — the same set as `ollama list`.": "Listet die Modelle auf deinem Ollama-Server — dieselbe Menge wie `ollama list`.",
-    "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo hat noch keine offizielle gehostete API — betreiben Sie eine lokale OpenAI-kompatible Brücke und richten Sie die BASE URL darauf aus.", "Lumo bridge": "Lumo-Brücke",
+    "format:": "Format:", "e.g.": "z. B.",
     "API KEY": "API-SCHLÜSSEL",
-    "Local endpoints need CORS enabled to accept requests from this page:": "Lokale Endpunkte benötigen aktiviertes CORS, um Anfragen von dieser Seite zu akzeptieren:",
-    "start with": "starten mit", "or": "oder", "Developer tab → enable server + turn on CORS": "Developer-Tab → Server aktivieren + CORS einschalten",
-    "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "Der LM-Studio-Slot funktioniert mit allem, das das OpenAI-Chat-Format spricht (llama.cpp, vLLM…).",
+ "or": "oder",
     "ANCHOR": "MODERATOR", "ENVIRONMENT": "UMGEBUNG", "BACKGROUND CREW": "HINTERGRUND-TEAM",
     "Auto — whoever isn't anchoring": "Auto — wer gerade nicht moderiert", "Off — solo broadcast": "Aus — Solo-Sendung",
     "VOICE ENGINE": "SPRACH-ENGINE", "BROWSER · free": "BROWSER · kostenlos",
-    "ELEVENLABS API KEY": "ELEVENLABS-API-SCHLÜSSEL", "get a key ↗": "Schlüssel holen ↗",
-    "Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.": "Nur im Speicher gehalten, nur an api.elevenlabs.io gesendet. Nutzt eleven_flash_v2_5 für geringe Latenz — jede Vorlesung verbraucht Kontingent-Zeichen.",
-    "ELEVENLABS VOICE": "ELEVENLABS-STIMME", "Paste a key and hit Apply — voices load automatically.": "Schlüssel einfügen und Anwenden drücken — Stimmen laden automatisch.",
+    "ELEVENLABS VOICE": "ELEVENLABS-STIMME",
     "READING SPEED": "LESEGESCHWINDIGKEIT", "auto-read the first answer that finishes": "die erste fertige Antwort automatisch vorlesen",
     "UI click sounds — terminal blips on every button": "UI-Klickgeräusche — Terminal-Pieptöne bei jedem Button", "SOUND VOLUME": "TON-LAUTSTÄRKE",
     "ambient music": "Hintergrundmusik", "your Spotify playlist, docked bottom-right": "deine Spotify-Playlist, angedockt unten rechts",
     "generative synth, ducks under the anchor's voice": "generativer Synth, senkt sich unter die Stimme des Moderators", "MUSIC SOURCE": "MUSIKQUELLE",
-    "SPOTIFY PLAYLIST / ALBUM / TRACK LINK": "SPOTIFY-PLAYLIST- / ALBUM- / TITEL-LINK",
     "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Keine Anmeldung nötig — schalte ♪ ein und der Player dockt unten rechts an. (Spotifys Embed spielt 30-Sekunden-Vorschauen ohne Konto; vollständige Titel laufen automatisch, wenn du in diesem Browser bereits bei Spotify angemeldet bist.)",
-    "Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link.": "Füge einen Spotify-Freigabelink ein — öffne Spotify → beliebige Playlist/Album/Titel → Teilen → Link kopieren.",
     "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "OPTIONAL · PREMIUM-KONTO FÜR VOLLSTÄNDIGE TITEL VERBINDEN", "FULL PLAYBACK · SPOTIFY PREMIUM": "VOLLSTÄNDIGE WIEDERGABE · SPOTIFY PREMIUM",
     "create an app ↗": "App erstellen ↗", "● connected — full tracks enabled": "● verbunden — vollständige Titel aktiviert",
     "Spotify app Client ID": "Client-ID der Spotify-App", "In your Spotify app settings, add this exact Redirect URI:": "Füge in den Einstellungen deiner Spotify-App genau diese Redirect-URI hinzu:",
@@ -527,53 +541,91 @@ const I18N = {
     "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "Kostenpflichtige Upgrades öffnen den sicheren Checkout von Stripe (Testmodus). Kartendaten werden bei Stripe eingegeben, niemals hier.",
     "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "Es ist kein Zahlungsdienstleister verbunden, daher werden kostenpflichtige Tarife als Simulation freigeschaltet — es wird keine Karte verlangt und nichts berechnet.",
     "Sign out": "Abmelden", "Terms & Privacy accepted": "AGB & Datenschutz akzeptiert", "This account UI is a prototype; see the security note in the code.": "Diese Konto-Oberfläche ist ein Prototyp; siehe den Sicherheitshinweis im Code.",
-    "Developer mode (testing).": "Entwicklermodus (Test).",
-    "Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production.": "Schaltet alle Premium-Funktionen unabhängig vom Tarif frei — KI-Desk, Live-Daten, YouTube, TMDB, Spotify und die ElevenLabs-Stimme. Du brauchst weiterhin den eigenen API-Schlüssel jeder Funktion, um sie tatsächlich zu nutzen. Nicht für den Produktivbetrieb.",
-    "also toggles with ?dev=1 in the URL": "lässt sich auch mit ?dev=1 in der URL umschalten", "DEV MODE ON — all plan gates bypassed": "DEV-MODUS AN — alle Tarifsperren umgangen",
   },
   pt: {
+    "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
+    "DataHub had no exact match. Closest dataset: {name}.": "O DataHub não encontrou uma correspondência exata. Conjunto de dados mais próximo: {name}.",
+    "DataHub match: {name}.": "Correspondência no DataHub: {name}.",
+    "DataHub match: {name} on {platform}.": "Correspondência no DataHub: {name} em {platform}.",
+    "DataHub has no schema recorded for {name}.": "O DataHub não tem nenhum esquema registado para {name}.",
+    "DataHub has no owner recorded for {name}.": "O DataHub não tem nenhum proprietário registado para {name}.",
+    "DataHub records no downstream datasets for {name}.": "O DataHub não regista conjuntos de dados a jusante para {name}.",
+    "DataHub records no upstream datasets for {name}.": "O DataHub não regista conjuntos de dados a montante para {name}.",
+    "DataHub's schema for {name} has no column named \"{col}\".": "O esquema de {name} no DataHub não tem nenhuma coluna chamada \"{col}\".",
+    "DataHub lookup failed: {reason}": "A consulta ao DataHub falhou: {reason}",
+    "ALLOCATION BY VALUE": "ALOCAÇÃO POR VALOR",
+    "DAY RANGE": "INTERVALO DO DIA",
+    "MARKET CLOSED": "MERCADO FECHADO",
+    "ON THE DESK": "NA MESA",
+    "last": "último",
+    "last trade": "última negociação",
+    "prev close": "fecho ant.",
     "Export": "Exportar", "More": "Mais", "Settings": "Definições", "sign in": "iniciar sessão",
     "Games": "Jogos", "learn how stocks work": "aprenda como as ações funcionam",
     "Ambient sound": "Som ambiente", "waves, jungle, space hum…": "ondas, selva, zumbido espacial…",
     "Music": "Música", "background score": "música de fundo",
-    "one model on the desk": "um modelo na mesa",
     "Type a symbol and press Enter  ·  HELP for commands": "Escreva um símbolo e prima Enter  ·  HELP para comandos",
     "OPEN": "ABERTO", "CLOSED": "FECHADO",
     "standing by": "em espera",
     "voice & anchor settings": "definições de voz e apresentador", "SET": "CENÁRIO", "stop reading": "parar leitura", "free": "grátis",
-    "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Faça uma pergunta abaixo — as respostas aparecem aqui, e o apresentador pode lê-las ao vivo.",
     "ASK ALL": "PERGUNTAR A TODOS",
-    "Ask the desk anything": "Pergunte à mesa o que quiser", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "As respostas aparecem aqui e o apresentador lê-as ao vivo. Toque numa sugestão — ou escreva a sua abaixo.", "Summarize {sym} today": "Resumir {sym} hoje", "What's moving today?": "O que está a mover-se hoje?", "Take me to Robinhood": "Leva-me ao Robinhood", "What's on Netflix?": "O que há na Netflix?", "Write a report → PPT": "Escrever um relatório → PPT",
+ "Summarize {sym} today": "Resumir {sym} hoje", "What's moving today?": "O que está a mover-se hoje?", "Take me to Robinhood": "Leva-me ao Robinhood", "What's on Netflix?": "O que há na Netflix?", "Write a report → PPT": "Escrever um relatório → PPT",
     "WATCHLIST": "LISTA DE ACOMPANHAMENTO", "TOP MOVERS": "MAIORES VARIAÇÕES", "full chart": "gráfico completo",
     "LINE": "LINHA", "not enough movement for a P&F column yet": "ainda não há movimento suficiente para uma coluna P&F", "3-box reversal · this session": "reversão de 3 caixas · esta sessão",
     "tracking {price} · box {box} · session range {lo}–{hi}": "acompanhando {price} · caixa {box} · intervalo da sessão {lo}–{hi}", "first column at ≥ {up} or < {down}": "primeira coluna com ≥ {up} ou < {down}", "column 2 needs a reversal < {down}": "a coluna 2 precisa de uma reversão < {down}", "column 2 needs a reversal ≥ {up}": "a coluna 2 precisa de uma reversão ≥ {up}",
     "Language": "Idioma",
+    "Desk": "Mesa", "Markets": "Mercados", "News": "Notícias", "Portfolio": "Carteira",
+    "Price alerts": "Alertas de preço", "Getting started": "Primeiros passos",
+    "Live quotes are provided by this server — no key needed on this device.": "As cotações em tempo real são fornecidas por este servidor — nenhuma chave é necessária neste dispositivo.",
+    "Live quotes are not configured on this server.": "As cotações em tempo real não estão configuradas neste servidor.",
+    "VIDEO SEARCH": "PESQUISA DE VÍDEO",
+    "Real, embeddable video results are provided by this server — no key needed on this device.": "Resultados de vídeo reais e incorporáveis são fornecidos por este servidor — nenhuma chave é necessária neste dispositivo.",
+    "Not configured on this server — \"show videos of …\" asks the AI to guess instead.": "Não configurado neste servidor — \"mostra vídeos de …\" pede à IA para adivinhar.",
+    "STREAMING CATALOG": "CATÁLOGO DE STREAMING",
+    "Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.": "Os catálogos Netflix / Disney+ / Hulu e os trailers são fornecidos por este servidor — nenhuma chave é necessária neste dispositivo.",
+    "Not configured on this server — public-domain films via \"free movies …\" still play in-desk.": "Não configurado neste servidor — filmes de domínio público via \"free movies …\" continuam a tocar no desk.",
+    "Studio voice is provided by this server — no key needed on this device.": "A voz de estúdio é fornecida por este servidor — nenhuma chave é necessária neste dispositivo.",
+    "Studio voice is not configured on this server.": "A voz de estúdio não está configurada neste servidor.",
+    "This server has a studio-voice key set, but the last call to it failed.": "Este servidor tem uma chave de voz de estúdio configurada, mas a última chamada falhou.",
+    "Loading voices…": "A carregar vozes…",
+ "Pick a studio voice in settings": "Escolhe uma voz de estúdio nas definições",
+    "Video search is not configured on this server, and no key is set in this browser.": "A pesquisa de vídeos não está configurada neste servidor e não há chave neste navegador.",
+    "The AI desk is part of": "A mesa de IA faz parte de",
+    "not configured": "não configurado", "Demo mode needs no keys — everything below works right now.": "O modo demo não precisa de chaves — tudo abaixo já funciona.",
+    "AI DESK IS OFF": "A MESA DE IA ESTÁ DESLIGADA", "Answers run on this server's model key. Nothing to set up.": "As respostas usam a chave de modelo deste servidor. Nada para configurar.", "Answers run on your local model. Nothing leaves this device.": "As respostas usam o teu modelo local. Nada sai deste dispositivo.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Este servidor ainda não tem uma chave de modelo, por isso a mesa não consegue responder. Tudo o resto funciona.",
+    "This server holds the model key, so the desk can already answer.": "Este servidor guarda a chave do modelo, por isso a mesa já consegue responder.",
+    "Read on air": "Ler em direto",
+    "Search": "Pesquisar",
     "The AI broadcast desk for the markets.": "A mesa de transmissão com IA para os mercados.",
-    "Create account": "Criar conta", "Log in": "Iniciar sessão", "Explore in demo mode →": "Explorar no modo demo →",
+    "Create account": "Criar conta", "Log in": "Iniciar sessão",
     "ranked by |Δ%| across your watchlist": "ordenado por |Δ%| na sua lista de acompanhamento",
-    'Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"': 'Pergunte sobre {sym}, "take me to Robinhood", ou "download excel" / "make a powerpoint" / "write a report and export ppt"',
+    'Ask about {sym} — or tap a suggestion below': 'Pergunte sobre {sym} — ou toque numa sugestão',
     "ACCOUNT": "CONTA", "START": "INÍCIO", "DATA": "DADOS", "VOICE": "VOZ", "MEET": "REUNIÃO",
     "exit": "sair", "skip tour": "ignorar visita", "Back": "Voltar", "Next": "Seguinte", "Done": "Concluído",
     "Command bar": "Barra de comandos",
     "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Escreva aqui qualquer símbolo e prima Enter para o representar no gráfico. “ADD TSLA” e “DEL TSLA” gerem a sua lista de acompanhamento. Nomes de empresas também funcionam.",
     "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Esta é a sua barra de comandos. Escreva um símbolo como Apple ou Nvidia e prima Enter para o representar no gráfico.",
     "Your anchor — that's me": "O seu apresentador — sou eu",
-    "I run a live trading day: opening bell, meals, breaks. I read any answer on air. Swap my character, environment, and sounds in settings.": "Conduzo um dia de negociação ao vivo: sino de abertura, refeições, pausas. Leio qualquer resposta ao vivo. Troque a minha personagem, o ambiente e os sons nas definições.",
-    "That's me, your anchor. I run a live trading day and I can read anything on air.": "Sou eu, o seu apresentador. Conduzo um dia de negociação ao vivo e posso ler qualquer coisa ao vivo.",
+    "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.": "Leio cada resposta no ar. Escolhe entre 22 apresentadores e 18 cenários aqui mesmo, cada um com a sua voz e ambiente sonoro.",
+    "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here.": "Esse sou eu, o teu apresentador. Vinte e dois apresentadores e dezoito cenários à escolha, aqui mesmo.",
+    "Switches the interface and my spoken answers between six languages. Your choice is remembered.": "Muda a interface e as minhas respostas faladas entre seis idiomas. A tua escolha fica guardada.",
+    "Export the session as Word, PowerPoint or Excel. A review step lets you edit everything before it saves.": "Exporta a sessão como Word, PowerPoint ou Excel. Um passo de revisão deixa-te editar tudo antes de guardar.",
+    "Export your session as Word, PowerPoint or Excel. You can edit everything before it saves.": "Exporta a tua sessão como Word, PowerPoint ou Excel. Podes editar tudo antes de guardar.",
+    "Your watchlist scrolls across the top. Flip DEMO to LIVE in settings for real Finnhub quotes.": "A tua lista de seguimento desliza no topo. Muda DEMO para LIVE nas definições para cotações reais da Finnhub.",
+    "Add your events and I announce them on air when they're due. Market events merge in automatically.": "Adiciona os teus eventos e eu anuncio-os no ar quando chegar a hora. Os eventos de mercado juntam-se automaticamente.",
+    "Add events to your calendar and I'll announce them on air when they're due.": "Adiciona eventos ao teu calendário e eu anuncio-os no ar quando chegar a hora.",
     "The AI desk": "A mesa de IA",
-    "Ask a question here and I answer in one box, cascading across your models. I also take commands — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Faça uma pergunta aqui e respondo numa só caixa, em cascata pelos seus modelos. Também aceito comandos — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.",
+    "Ask anything here. I also take commands: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Pergunta o que quiseres aqui. Também aceito comandos: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.",
     "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Pergunte-me o que quiser aqui. Também compreendo comandos simples, como, take me to Robinhood, ou, what's on Netflix.",
     "Answers, news & Watch": "Respostas, notícias e Ver",
-    "Everything lands here in one box — desk answers, the navigator, news, and the streaming catalog. Trailers and public-domain films play right inside.": "Tudo chega aqui numa só caixa — respostas da mesa, o navegador, notícias e o catálogo de streaming. Os trailers e os filmes de domínio público são reproduzidos aqui mesmo.",
+    "Answers, news, and the streaming catalog land here. Trailers play right inside.": "As respostas, as notícias e o catálogo de streaming aparecem aqui. Os trailers reproduzem-se aqui dentro.",
     "Answers, news, and the streaming catalog all appear here, in one place.": "As respostas, as notícias e o catálogo de streaming aparecem todos aqui, num só lugar.",
     "Ticker tape": "Fita de cotações",
-    "Your whole watchlist scrolls across the top with live-style movement.": "Toda a sua lista de acompanhamento desliza no topo com movimento em tempo real.",
-    "Your watchlist scrolls across the ticker tape, up top.": "A sua lista de acompanhamento desliza pela fita de cotações, no topo.",
     "Why setup? (mostly optional)": "Porquê configurar? (quase tudo opcional)",
-    "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "O Vantage funciona totalmente em DEMO sem configuração. A única coisa que vale a pena adicionar é uma chave de IA — as respostas da mesa vêm de modelos externos (OpenRouter, Claude…) faturados à sua própria conta, por isso precisam da sua chave. Tudo o resto é opcional: gráficos, calendário, jogos e notícias não precisam de nada. Abra Início para colar essa chave.",
-    "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Eis porque existe a configuração. O Vantage funciona em demo sem configuração. A única chave que vale a pena adicionar é a da IA — as minhas respostas vêm de modelos externos faturados à sua própria conta, por isso precisam da sua chave. Tudo o resto é opcional. Abra Início para colar essa chave. E esta foi a visita!",
+    "Demo mode needs no setup. AI answers come from external models billed to your account, so they need your key. Open Settings from this menu and paste it under START.": "O modo demo não precisa de configuração. As respostas de IA vêm de modelos externos faturados à tua conta, por isso precisam da tua chave. Abre as Definições neste menu e cola-a em START.",
+    "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Uma última coisa. As minhas respostas vêm de modelos externos faturados à tua conta, por isso precisam da tua chave. Tudo o resto é opcional. Fim da visita!",
     // settings footer + MEET tab
-    "Close": "Fechar", "Applied": "Aplicado", "Apply": "Aplicar",
+    "Close": "Fechar", "Apply": "Aplicar",
     "Go Live — no setup": "Ao vivo — sem configuração",
     "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Inicie instantaneamente uma nova reunião num separador do navegador (usa a sessão que já tem iniciada) e depois partilhe o ecrã do Vantage. Sem chaves, sem OAuth.",
     "New Google Meet": "Novo Google Meet", "New Zoom meeting": "Nova reunião Zoom",
@@ -582,15 +634,11 @@ const I18N = {
     "Pin": "Fixar",
     "connected": "ligado", "disconnect": "desligar",
     // START tab
-    "AI desk": "Mesa de IA", "ready": "pronto", "add key ↑": "adicionar chave ↑", "Voice": "Voz", "browser": "navegador",
+    "AI desk": "Mesa de IA", "ready": "pronto", "Voice": "Voz", "browser": "navegador",
     "Live quotes": "Cotações ao vivo", "live": "ao vivo", "demo": "demo", "Real videos": "Vídeos reais",
     "on": "ligado", "optional": "opcional", "Streaming": "Streaming", "Calendar": "Calendário", "built-in": "integrado", "Meetings": "Reuniões",
     "You're already set up.": "Já está tudo pronto.",
-    "Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:": "O Vantage funciona agora mesmo em modo demo — sem chaves. A única coisa que vale a pena adicionar é uma chave de IA para que a mesa possa responder-lhe:",
-    "AI DESK IS ON": "A MESA DE IA ESTÁ ATIVA", "TURN ON THE AI DESK — paste one key": "ATIVE A MESA DE IA — cole uma chave",
-    "One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.": "Uma só chave desbloqueia toda a mesa — o OpenRouter dá-lhe dezenas de modelos (GPT, Llama e mais) por trás de uma única chave, e é o modelo principal.",
-    "get a key": "obter uma chave",
-    "No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.": "Sem chave de IA? A mesa ainda não pode responder, mas tudo o resto — gráficos, notícias, jogos, streaming, calendário — funciona sem ela.",
+    "AI DESK IS ON": "A MESA DE IA ESTÁ ATIVA",
     "WHAT'S SET UP": "O QUE ESTÁ CONFIGURADO", "tap to configure": "toque para configurar",
     "tour · demo · missions": "visita · demo · missões", "pick your anchor": "escolha o seu apresentador",
     "skip — I'll explore on my own": "ignorar — vou explorar sozinho",
@@ -599,61 +647,31 @@ const I18N = {
     "in-app alerts": "alertas no aplicativo", "price triggers": "gatilhos de preço", "breaking news": "última hora",
     "P&F SIGNALS": "SINAIS P&F", "P&F signals": "sinais P&F", "P&F pattern alerts": "alertas de padrões P&F",
     "color-blind mode (blue/orange + ▲▼)": "modo para daltônicos (azul/laranja + ▲▼)",
-    "privacy mode — blur balances (Shift+P)": "modo privacidade — desfocar saldos (Shift+P)",
+    "privacy mode — blur balances": "modo privacidade — desfocar saldos",
     "hidden": "oculto",
     "CLOCK TIMEZONE": "FUSO HORÁRIO DO RELÓGIO",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Define o relógio do cabeçalho. O crachá de mercado ABERTO/FECHADO segue sempre o horário da NYSE (hora do Leste).",
     "refresh interval": "intervalo de atualização", "Manual": "Manual", "refresh now": "atualizar agora",
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "AO VIVO",
-    "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "O modo demo usa um motor de mercado de passeio aleatório com semente — uma sessão simulada reproduzível, sem chave nem rede.",
-    "FINNHUB API KEY (free tier works)": "CHAVE API FINNHUB (o plano gratuito funciona)", "paste key": "cole a chave",
-    "Key is saved on this device and sent only to finnhub.io.": "A chave é guardada neste dispositivo e enviada apenas para finnhub.io.",
-    "get a free key": "obter uma chave gratuita",
-    "YOUTUBE DATA API KEY": "CHAVE API YOUTUBE DATA", "(optional — real, playable video results)": "(opcional — resultados de vídeo reais e reproduzíveis)",
-    "paste key (AIza…)": "cole a chave (AIza…)", "needs": "requer",
-    "Without a key, \"show videos of …\" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.": "Sem uma chave, \"show videos of …\" pede ao Claude para adivinhar vídeos (muitas vezes não incorporáveis). Com uma, a mesa obtém resultados reais e incorporáveis do YouTube.",
-    "enable API": "ativar API",
-    "TMDB API KEY": "CHAVE API TMDB", "(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)": "(opcional — catálogo Netflix / Disney+ / Hulu e trailers na app)",
-    "paste TMDB API key (v3 auth)": "cole a chave API TMDB (auth v3)",
-    "Powers \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via \"free movies …\" (no key needed).": "Alimenta \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — bibliotecas reais com cartazes, classificações e trailers na mesa. A reprodução abre sempre no serviço (bloqueiam a incorporação); os filmes de domínio público reproduzem-se por completo na mesa via \"free movies …\" (sem chave).",
-    "DAILY BRIEF": "RESUMO DIÁRIO", "(auto-download while the app is open)": "(descarga automática enquanto a app está aberta)",
-    "at": "às", "off": "desativar", "run now": "executar agora",
-    "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Todos os dias às {time}, a mesa redige um relatório de analista sobre {sym} e descarrega automaticamente um resumo em {fmt}. Requer que este separador esteja aberto (os navegadores não o executam fechado) e uma chave Anthropic para a redação.",
-    "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Defina uma hora para gerar e descarregar automaticamente um relatório com a sua marca todos os dias. Deixe em branco para desativar.",
+    "Demo mode is a seeded random-walk session: reproducible, no key or network needed.": "O modo demo é uma sessão de passeio aleatório com semente: reproduzível, sem chave nem rede.",
+ "needs": "requer",
+    "at": "às", "off": "desativar",
     // AI tab
-    "FULLY LOCAL · nothing leaves this device": "TOTALMENTE LOCAL · nada sai deste dispositivo",
-    "CLOUD ENABLED · queries leave this device": "NUVEM ATIVADA · as consultas saem deste dispositivo",
-    "no model enabled": "nenhum modelo ativado",
-    "telemetry unavailable — is the local server running?": "telemetria indisponível — o servidor local está em execução?",
-    "no model loaded": "nenhum modelo carregado",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "As respostas da mesa de IA requerem {plan}. Os modelos abaixo estão desativados até fazer o upgrade (ou ativar o modo programador em CONTA).",
-    "{n} models enabled": "{n} modelos ativados", "One model at a time": "Um modelo de cada vez",
-    "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Use \"only this\" para um único modelo, ou ative vários — a mesa responde numa só caixa, testando-os de cima para baixo e recorrendo ao seguinte se um falhar (por ex. Claude → OpenRouter).",
-    "Auto-fallback to a local model.": "Recorrer automaticamente a um modelo local.",
-    "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Se os modelos pagos falharem (sem créditos, chave errada, offline), a mesa e os relatórios tentam novamente com o seu modelo local (Ollama ou LM Studio) automaticamente. Configure um abaixo — defina a BASE URL e inicie o servidor local.",
-    "ACTIVE": "ATIVO", "use only this": "usar apenas este", "BASE URL": "BASE URL", "MODEL": "MODELO",
-    "Run local-only (AMD / ROCm)": "Executar apenas local (AMD / ROCm)", "Switch the desk to local": "Mudar a mesa para local", "restore previous models": "restaurar modelos anteriores", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Um clique aponta a mesa para o teu modelo local do Ollama (localhost:11434) e desliga todos os modelos na nuvem — assim todo o agente corre com inferência local (por ex. uma GPU AMD Radeon via ROCm), sem chaves. Também abre com ?local=1 no URL.",
+ "use only this": "usar apenas este", "BASE URL": "BASE URL", "MODEL": "MODELO",
     "The desk remembers this conversation locally (this device only) so follow-up questions work.": "A mesa lembra esta conversa localmente (apenas neste dispositivo) para que as perguntas de seguimento funcionem.", "forget conversation": "esquecer conversa", "Desk memory cleared — the conversation is forgotten.": "Memória da mesa limpa — a conversa foi esquecida.", "MEMORY": "MEMÓRIA", "{n} turns remembered on this device": "{n} turnos lembrados neste dispositivo", "Memory": "Memória", "empty": "vazio",
-    "format:": "formato:", "e.g.": "por ex.", "browse models": "explorar modelos",
-    "detect installed models": "detetar modelos instalados", "Lists the models on your Ollama server — the same set as `ollama list`.": "Lista os modelos no teu servidor Ollama — o mesmo conjunto que `ollama list`.",
-    "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "O Proton Lumo ainda não tem uma API alojada oficial — execute uma ponte local compatível com OpenAI e aponte a BASE URL para ela.", "Lumo bridge": "ponte Lumo",
+    "format:": "formato:", "e.g.": "por ex.",
     "API KEY": "CHAVE API",
-    "Local endpoints need CORS enabled to accept requests from this page:": "Os endpoints locais precisam de CORS ativado para aceitar pedidos desta página:",
-    "start with": "inicie com", "or": "ou", "Developer tab → enable server + turn on CORS": "separador Developer → ative o servidor + ative CORS",
-    "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "A ranhura do LM Studio funciona com qualquer coisa que fale o formato de chat da OpenAI (llama.cpp, vLLM…).",
+ "or": "ou",
     "ANCHOR": "APRESENTADOR", "ENVIRONMENT": "AMBIENTE", "BACKGROUND CREW": "EQUIPA DE FUNDO",
     "Auto — whoever isn't anchoring": "Auto — quem não estiver a apresentar", "Off — solo broadcast": "Desligado — transmissão a solo",
     "VOICE ENGINE": "MOTOR DE VOZ", "BROWSER · free": "NAVEGADOR · grátis",
-    "ELEVENLABS API KEY": "CHAVE API DA ELEVENLABS", "get a key ↗": "obter uma chave ↗",
-    "Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.": "Guardada apenas em memória, enviada só para api.elevenlabs.io. Usa eleven_flash_v2_5 para baixa latência — cada leitura consome caracteres da tua quota.",
-    "ELEVENLABS VOICE": "VOZ DA ELEVENLABS", "Paste a key and hit Apply — voices load automatically.": "Cola uma chave e clica em Aplicar — as vozes carregam automaticamente.",
+    "ELEVENLABS VOICE": "VOZ DA ELEVENLABS",
     "READING SPEED": "VELOCIDADE DE LEITURA", "auto-read the first answer that finishes": "ler automaticamente a primeira resposta que terminar",
     "UI click sounds — terminal blips on every button": "sons de clique da interface — bips de terminal em cada botão", "SOUND VOLUME": "VOLUME DO SOM",
     "ambient music": "música ambiente", "your Spotify playlist, docked bottom-right": "a tua playlist do Spotify, ancorada em baixo à direita",
     "generative synth, ducks under the anchor's voice": "sintetizador generativo, baixa sob a voz do apresentador", "MUSIC SOURCE": "FONTE DE MÚSICA",
-    "SPOTIFY PLAYLIST / ALBUM / TRACK LINK": "LIGAÇÃO DE PLAYLIST / ÁLBUM / FAIXA DO SPOTIFY",
     "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Sem necessidade de iniciar sessão — ativa ♪ e o leitor ancora em baixo à direita. (O leitor incorporado do Spotify reproduz pré-visualizações de 30 segundos sem conta; as faixas completas tocam automaticamente se já tiveres sessão iniciada no Spotify neste navegador.)",
-    "Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link.": "Cola uma ligação de partilha do Spotify — abre o Spotify → qualquer playlist/álbum/faixa → Partilhar → Copiar ligação.",
     "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "OPCIONAL · LIGA UMA CONTA PREMIUM PARA FAIXAS COMPLETAS", "FULL PLAYBACK · SPOTIFY PREMIUM": "REPRODUÇÃO COMPLETA · SPOTIFY PREMIUM",
     "create an app ↗": "criar uma app ↗", "● connected — full tracks enabled": "● ligado — faixas completas ativadas",
     "Spotify app Client ID": "Client ID da app do Spotify", "In your Spotify app settings, add this exact Redirect URI:": "Nas definições da tua app do Spotify, adiciona esta Redirect URI exata:",
@@ -666,53 +684,91 @@ const I18N = {
     "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "As melhorias pagas abrem o checkout seguro do Stripe (modo de teste). Os dados do cartão são introduzidos no Stripe, nunca aqui.",
     "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "Não há nenhum processador de pagamentos ligado, por isso os planos pagos são desbloqueados como simulação — não é pedido nenhum cartão e nada é cobrado.",
     "Sign out": "Terminar sessão", "Terms & Privacy accepted": "Termos e Privacidade aceites", "This account UI is a prototype; see the security note in the code.": "Esta interface de conta é um protótipo; consulta a nota de segurança no código.",
-    "Developer mode (testing).": "Modo de programador (teste).",
-    "Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production.": "Desbloqueia todas as funcionalidades premium independentemente do plano — mesa de IA, dados em direto, YouTube, TMDB, Spotify e a voz da ElevenLabs. Continuas a precisar da chave API de cada funcionalidade para a usar. Não é para produção.",
-    "also toggles with ?dev=1 in the URL": "também alterna com ?dev=1 no URL", "DEV MODE ON — all plan gates bypassed": "MODO DEV LIGADO — todas as restrições de plano ignoradas",
   },
   it: {
+    "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
+    "DataHub had no exact match. Closest dataset: {name}.": "DataHub non ha trovato una corrispondenza esatta. Set di dati più vicino: {name}.",
+    "DataHub match: {name}.": "Corrispondenza DataHub: {name}.",
+    "DataHub match: {name} on {platform}.": "Corrispondenza DataHub: {name} su {platform}.",
+    "DataHub has no schema recorded for {name}.": "DataHub non ha alcuno schema registrato per {name}.",
+    "DataHub has no owner recorded for {name}.": "DataHub non ha alcun proprietario registrato per {name}.",
+    "DataHub records no downstream datasets for {name}.": "DataHub non registra set di dati a valle per {name}.",
+    "DataHub records no upstream datasets for {name}.": "DataHub non registra set di dati a monte per {name}.",
+    "DataHub's schema for {name} has no column named \"{col}\".": "Lo schema di {name} in DataHub non ha alcuna colonna chiamata \"{col}\".",
+    "DataHub lookup failed: {reason}": "Ricerca su DataHub non riuscita: {reason}",
+    "ALLOCATION BY VALUE": "RIPARTIZIONE PER VALORE",
+    "DAY RANGE": "RANGE DEL GIORNO",
+    "MARKET CLOSED": "MERCATO CHIUSO",
+    "ON THE DESK": "IN POSTAZIONE",
+    "last": "ultimo",
+    "last trade": "ultima operazione",
+    "prev close": "chius. prec.",
     "Export": "Esporta", "More": "Altro", "Settings": "Impostazioni", "sign in": "accedi",
     "Games": "Giochi", "learn how stocks work": "scopri come funzionano le azioni",
     "Ambient sound": "Suono ambientale", "waves, jungle, space hum…": "onde, giungla, ronzio spaziale…",
     "Music": "Musica", "background score": "musica di sottofondo",
-    "one model on the desk": "un modello alla scrivania",
     "Type a symbol and press Enter  ·  HELP for commands": "Digita un simbolo e premi Invio  ·  HELP per i comandi",
     "OPEN": "APERTO", "CLOSED": "CHIUSO",
     "standing by": "in attesa",
     "voice & anchor settings": "impostazioni voce e conduttore", "SET": "SET", "stop reading": "ferma lettura", "free": "gratis",
-    "Ask a question below — answers appear here, and the anchor can read any of them on air.": "Fai una domanda qui sotto — le risposte appaiono qui, e il conduttore può leggerle in diretta.",
     "ASK ALL": "CHIEDI A TUTTI",
-    "Ask the desk anything": "Chiedi qualsiasi cosa alla postazione", "Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.": "Le risposte appaiono qui e il conduttore le legge in diretta. Tocca uno spunto — o scrivi il tuo qui sotto.", "Summarize {sym} today": "Riassumi {sym} oggi", "What's moving today?": "Cosa si muove oggi?", "Take me to Robinhood": "Portami su Robinhood", "What's on Netflix?": "Cosa c'è su Netflix?", "Write a report → PPT": "Scrivi un report → PPT",
+ "Summarize {sym} today": "Riassumi {sym} oggi", "What's moving today?": "Cosa si muove oggi?", "Take me to Robinhood": "Portami su Robinhood", "What's on Netflix?": "Cosa c'è su Netflix?", "Write a report → PPT": "Scrivi un report → PPT",
     "WATCHLIST": "LISTA DI OSSERVAZIONE", "TOP MOVERS": "MAGGIORI VARIAZIONI", "full chart": "grafico completo",
     "LINE": "LINEA", "not enough movement for a P&F column yet": "movimento ancora insufficiente per una colonna P&F", "3-box reversal · this session": "inversione a 3 caselle · questa sessione",
     "tracking {price} · box {box} · session range {lo}–{hi}": "seguendo {price} · casella {box} · intervallo della sessione {lo}–{hi}", "first column at ≥ {up} or < {down}": "prima colonna a ≥ {up} o < {down}", "column 2 needs a reversal < {down}": "la colonna 2 richiede un'inversione < {down}", "column 2 needs a reversal ≥ {up}": "la colonna 2 richiede un'inversione ≥ {up}",
     "Language": "Lingua",
+    "Desk": "Postazione", "Markets": "Mercati", "News": "Notizie", "Portfolio": "Portafoglio",
+    "Price alerts": "Avvisi di prezzo", "Getting started": "Primi passi",
+    "Live quotes are provided by this server — no key needed on this device.": "Le quotazioni live sono fornite da questo server — nessuna chiave necessaria su questo dispositivo.",
+    "Live quotes are not configured on this server.": "Le quotazioni live non sono configurate su questo server.",
+    "VIDEO SEARCH": "RICERCA VIDEO",
+    "Real, embeddable video results are provided by this server — no key needed on this device.": "I risultati video reali e incorporabili sono forniti da questo server — nessuna chiave necessaria su questo dispositivo.",
+    "Not configured on this server — \"show videos of …\" asks the AI to guess instead.": "Non configurato su questo server — \"mostrami video di …\" chiede all'IA di indovinare.",
+    "STREAMING CATALOG": "CATALOGO STREAMING",
+    "Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.": "I cataloghi Netflix / Disney+ / Hulu e i trailer sono forniti da questo server — nessuna chiave necessaria su questo dispositivo.",
+    "Not configured on this server — public-domain films via \"free movies …\" still play in-desk.": "Non configurato su questo server — i film di pubblico dominio via \"free movies …\" continuano a riprodursi nel desk.",
+    "Studio voice is provided by this server — no key needed on this device.": "La voce da studio è fornita da questo server — nessuna chiave necessaria su questo dispositivo.",
+    "Studio voice is not configured on this server.": "La voce da studio non è configurata su questo server.",
+    "This server has a studio-voice key set, but the last call to it failed.": "Questo server ha una chiave per la voce da studio configurata, ma l'ultima chiamata è fallita.",
+    "Loading voices…": "Caricamento voci…",
+ "Pick a studio voice in settings": "Scegli una voce studio nelle impostazioni",
+    "Video search is not configured on this server, and no key is set in this browser.": "La ricerca video non è configurata su questo server e non c'è alcuna chiave in questo browser.",
+    "The AI desk is part of": "La postazione IA fa parte di",
+    "not configured": "non configurato", "Demo mode needs no keys — everything below works right now.": "La modalità demo non richiede chiavi — tutto qui sotto funziona già.",
+    "AI DESK IS OFF": "LA POSTAZIONE IA È SPENTA", "Answers run on this server's model key. Nothing to set up.": "Le risposte usano la chiave del modello di questo server. Niente da configurare.", "Answers run on your local model. Nothing leaves this device.": "Le risposte usano il tuo modello locale. Nulla lascia questo dispositivo.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Questo server non ha ancora una chiave del modello, quindi la postazione non può rispondere. Tutto il resto funziona.",
+    "This server holds the model key, so the desk can already answer.": "Questo server conserva la chiave del modello, quindi la postazione può già rispondere.",
+    "Read on air": "Leggi in onda",
+    "Search": "Cerca",
     "The AI broadcast desk for the markets.": "La postazione di trasmissione IA per i mercati.",
-    "Create account": "Crea account", "Log in": "Accedi", "Explore in demo mode →": "Esplora in modalità demo →",
+    "Create account": "Crea account", "Log in": "Accedi",
     "ranked by |Δ%| across your watchlist": "ordinato per |Δ%| nella tua lista di osservazione",
-    'Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"': 'Chiedi di {sym}, "take me to Robinhood", oppure "download excel" / "make a powerpoint" / "write a report and export ppt"',
+    'Ask about {sym} — or tap a suggestion below': 'Chiedi di {sym} — o tocca un suggerimento',
     "ACCOUNT": "ACCOUNT", "START": "INIZIO", "DATA": "DATI", "VOICE": "VOCE", "MEET": "RIUNIONE",
     "exit": "esci", "skip tour": "salta il tour", "Back": "Indietro", "Next": "Avanti", "Done": "Fatto",
     "Command bar": "Barra dei comandi",
     "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Digita qui un simbolo qualsiasi e premi Invio per rappresentarlo nel grafico. “ADD TSLA” e “DEL TSLA” gestiscono la tua lista di osservazione. Funzionano anche i nomi delle aziende.",
     "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Questa è la tua barra dei comandi. Digita un simbolo come Apple o Nvidia e premi Invio per rappresentarlo nel grafico.",
     "Your anchor — that's me": "Il tuo conduttore — sono io",
-    "I run a live trading day: opening bell, meals, breaks. I read any answer on air. Swap my character, environment, and sounds in settings.": "Conduco una giornata di borsa in diretta: campanella di apertura, pasti, pause. Leggo qualsiasi risposta in diretta. Cambia il mio personaggio, l'ambiente e i suoni nelle impostazioni.",
-    "That's me, your anchor. I run a live trading day and I can read anything on air.": "Sono io, il tuo conduttore. Conduco una giornata di borsa in diretta e posso leggere qualsiasi cosa in diretta.",
+    "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.": "Leggo ogni risposta in onda. Scegli tra 22 conduttori e 18 scenografie proprio qui, ognuna con voce e suono propri.",
+    "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here.": "Sono io, il tuo conduttore. Ventidue conduttori e diciotto scenografie tra cui scegliere, proprio qui.",
+    "Switches the interface and my spoken answers between six languages. Your choice is remembered.": "Cambia l'interfaccia e le mie risposte vocali tra sei lingue. La scelta viene ricordata.",
+    "Export the session as Word, PowerPoint or Excel. A review step lets you edit everything before it saves.": "Esporta la sessione in Word, PowerPoint o Excel. Un passaggio di revisione permette di modificare tutto prima del salvataggio.",
+    "Export your session as Word, PowerPoint or Excel. You can edit everything before it saves.": "Esporta la tua sessione in Word, PowerPoint o Excel. Puoi modificare tutto prima del salvataggio.",
+    "Your watchlist scrolls across the top. Flip DEMO to LIVE in settings for real Finnhub quotes.": "La tua lista di titoli scorre in alto. Passa da DEMO a LIVE nelle impostazioni per quotazioni reali Finnhub.",
+    "Add your events and I announce them on air when they're due. Market events merge in automatically.": "Aggiungi i tuoi eventi e li annuncio in onda quando è il momento. Gli eventi di mercato si aggiungono automaticamente.",
+    "Add events to your calendar and I'll announce them on air when they're due.": "Aggiungi eventi al tuo calendario e li annuncerò in onda quando sarà il momento.",
     "The AI desk": "La postazione IA",
-    "Ask a question here and I answer in one box, cascading across your models. I also take commands — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Fai una domanda qui e rispondo in un unico riquadro, a cascata sui tuoi modelli. Accetto anche comandi — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.",
+    "Ask anything here. I also take commands: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Chiedimi qualsiasi cosa qui. Accetto anche comandi: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.",
     "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Chiedimi qualsiasi cosa qui. Capisco anche comandi semplici, come, take me to Robinhood, oppure, what's on Netflix.",
     "Answers, news & Watch": "Risposte, notizie e Guarda",
-    "Everything lands here in one box — desk answers, the navigator, news, and the streaming catalog. Trailers and public-domain films play right inside.": "Tutto arriva qui in un unico riquadro — risposte della postazione, il navigatore, notizie e il catalogo di streaming. Trailer e film di pubblico dominio si riproducono proprio qui.",
+    "Answers, news, and the streaming catalog land here. Trailers play right inside.": "Risposte, notizie e il catalogo streaming arrivano qui. I trailer si riproducono all'interno.",
     "Answers, news, and the streaming catalog all appear here, in one place.": "Le risposte, le notizie e il catalogo di streaming appaiono tutti qui, in un unico posto.",
     "Ticker tape": "Nastro delle quotazioni",
-    "Your whole watchlist scrolls across the top with live-style movement.": "L'intera lista di osservazione scorre in alto con un movimento in tempo reale.",
-    "Your watchlist scrolls across the ticker tape, up top.": "La tua lista di osservazione scorre sul nastro delle quotazioni, in alto.",
     "Why setup? (mostly optional)": "Perché configurare? (quasi tutto opzionale)",
-    "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.": "Vantage funziona completamente in DEMO senza configurazione. L'unica cosa che vale la pena aggiungere è una chiave IA — le risposte della postazione provengono da modelli esterni (OpenRouter, Claude…) addebitati sul tuo account, quindi serve la tua chiave. Tutto il resto è opzionale: grafici, calendario, giochi e notizie non richiedono nulla. Apri Inizio per incollare quella chiave.",
-    "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!": "Ecco perché esiste la configurazione. Vantage funziona in demo senza configurazione. L'unica chiave che vale la pena aggiungere è quella dell'IA — le mie risposte provengono da modelli esterni addebitati sul tuo account, quindi serve la tua chiave. Tutto il resto è opzionale. Apri Inizio per incollare quella chiave. E questo era il tour!",
+    "Demo mode needs no setup. AI answers come from external models billed to your account, so they need your key. Open Settings from this menu and paste it under START.": "La modalità demo non richiede configurazione. Le risposte IA vengono da modelli esterni fatturati sul tuo conto, quindi serve la tua chiave. Apri le Impostazioni da questo menu e incollala sotto START.",
+    "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Un'ultima cosa. Le mie risposte vengono da modelli esterni fatturati sul tuo conto, quindi serve la tua chiave. Tutto il resto è facoltativo. Fine del tour!",
     // settings footer + MEET tab
-    "Close": "Chiudi", "Applied": "Applicato", "Apply": "Applica",
+    "Close": "Chiudi", "Apply": "Applica",
     "Go Live — no setup": "Vai in diretta — nessuna configurazione",
     "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Avvia all'istante una nuova riunione in una scheda del browser (usa la sessione con cui hai già effettuato l'accesso), poi condividi lo schermo di Vantage. Nessuna chiave, nessun OAuth.",
     "New Google Meet": "Nuovo Google Meet", "New Zoom meeting": "Nuova riunione Zoom",
@@ -721,15 +777,11 @@ const I18N = {
     "Pin": "Fissa",
     "connected": "connesso", "disconnect": "disconnetti",
     // START tab
-    "AI desk": "Postazione IA", "ready": "pronto", "add key ↑": "aggiungi chiave ↑", "Voice": "Voce", "browser": "browser",
+    "AI desk": "Postazione IA", "ready": "pronto", "Voice": "Voce", "browser": "browser",
     "Live quotes": "Quotazioni in diretta", "live": "in diretta", "demo": "demo", "Real videos": "Video reali",
     "on": "attivo", "optional": "opzionale", "Streaming": "Streaming", "Calendar": "Calendario", "built-in": "integrato", "Meetings": "Riunioni",
     "You're already set up.": "Sei già pronto.",
-    "Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:": "Vantage funziona già adesso in modalità demo — nessuna chiave necessaria. L'unica cosa che vale la pena aggiungere è una chiave IA perché la postazione possa risponderti davvero:",
-    "AI DESK IS ON": "LA POSTAZIONE IA È ATTIVA", "TURN ON THE AI DESK — paste one key": "ATTIVA LA POSTAZIONE IA — incolla una chiave",
-    "One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.": "Una sola chiave sblocca l'intera postazione — OpenRouter ti offre decine di modelli (GPT, Llama e altri) dietro un'unica chiave, ed è il modello principale.",
-    "get a key": "ottieni una chiave",
-    "No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.": "Nessuna chiave IA? La postazione non può ancora rispondere, ma tutto il resto — grafici, notizie, giochi, streaming, calendario — funziona senza.",
+    "AI DESK IS ON": "LA POSTAZIONE IA È ATTIVA",
     "WHAT'S SET UP": "COSA È CONFIGURATO", "tap to configure": "tocca per configurare",
     "tour · demo · missions": "tour · demo · missioni", "pick your anchor": "scegli il tuo conduttore",
     "skip — I'll explore on my own": "salta — esplorerò da solo",
@@ -738,61 +790,31 @@ const I18N = {
     "in-app alerts": "avvisi nell'app", "price triggers": "soglie di prezzo", "breaking news": "ultima ora",
     "P&F SIGNALS": "SEGNALI P&F", "P&F signals": "segnali P&F", "P&F pattern alerts": "avvisi di pattern P&F",
     "color-blind mode (blue/orange + ▲▼)": "modalità per daltonici (blu/arancione + ▲▼)",
-    "privacy mode — blur balances (Shift+P)": "modalità privacy — sfoca i saldi (Maiusc+P)",
+    "privacy mode — blur balances": "modalità privacy — sfoca i saldi",
     "hidden": "nascosto",
     "CLOCK TIMEZONE": "FUSO ORARIO DELL'OROLOGIO",
     "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Imposta l'orologio dell'intestazione. Il badge di mercato APERTO/CHIUSO segue sempre gli orari del NYSE (ora orientale).",
     "refresh interval": "intervallo di aggiornamento", "Manual": "Manuale", "refresh now": "aggiorna ora",
     "replay tutorial": "rivedi il tutorial", "DEMO": "DEMO", "LIVE": "IN DIRETTA",
-    "Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.": "La modalità demo usa un motore di mercato a passeggiata casuale con seme — una sessione simulata riproducibile, senza chiave né rete.",
-    "FINNHUB API KEY (free tier works)": "CHIAVE API FINNHUB (il piano gratuito funziona)", "paste key": "incolla la chiave",
-    "Key is saved on this device and sent only to finnhub.io.": "La chiave viene salvata su questo dispositivo e inviata solo a finnhub.io.",
-    "get a free key": "ottieni una chiave gratuita",
-    "YOUTUBE DATA API KEY": "CHIAVE API YOUTUBE DATA", "(optional — real, playable video results)": "(opzionale — risultati video reali e riproducibili)",
-    "paste key (AIza…)": "incolla la chiave (AIza…)", "needs": "richiede",
-    "Without a key, \"show videos of …\" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.": "Senza chiave, \"show videos of …\" chiede a Claude di indovinare i video (spesso non incorporabili). Con una, la postazione ottiene risultati reali e incorporabili da YouTube.",
-    "enable API": "abilita API",
-    "TMDB API KEY": "CHIAVE API TMDB", "(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)": "(opzionale — catalogo Netflix / Disney+ / Hulu e trailer nell'app)",
-    "paste TMDB API key (v3 auth)": "incolla la chiave API TMDB (auth v3)",
-    "Powers \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via \"free movies …\" (no key needed).": "Alimenta \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — librerie reali con locandine, valutazioni e trailer nella postazione. La riproduzione si apre sempre sul servizio (bloccano l'incorporazione); i film di pubblico dominio si riproducono per intero nella postazione tramite \"free movies …\" (nessuna chiave).",
-    "DAILY BRIEF": "BRIEFING GIORNALIERO", "(auto-download while the app is open)": "(download automatico mentre l'app è aperta)",
-    "at": "alle", "off": "disattiva", "run now": "esegui ora",
-    "Each day at {time}, the desk writes an analyst report on {sym} and downloads a {fmt} brief automatically. Requires this tab to be open (browsers can't run it closed) and an Anthropic key for the write-up.": "Ogni giorno alle {time}, la postazione redige un rapporto d'analisi su {sym} e scarica automaticamente un brief in {fmt}. Richiede che questa scheda resti aperta (i browser non possono eseguirlo da chiusa) e una chiave Anthropic per la stesura.",
-    "Set a time to auto-generate and download a branded report each day. Leave blank to disable.": "Imposta un orario per generare e scaricare automaticamente ogni giorno un rapporto con il tuo marchio. Lascia vuoto per disattivare.",
+    "Demo mode is a seeded random-walk session: reproducible, no key or network needed.": "La modalità demo è una sessione random-walk con seed: riproducibile, senza chiave né rete.",
+ "needs": "richiede",
+    "at": "alle", "off": "disattiva",
     // AI tab
-    "FULLY LOCAL · nothing leaves this device": "COMPLETAMENTE LOCALE · nulla lascia questo dispositivo",
-    "CLOUD ENABLED · queries leave this device": "CLOUD ATTIVO · le richieste lasciano questo dispositivo",
-    "no model enabled": "nessun modello attivato",
-    "telemetry unavailable — is the local server running?": "telemetria non disponibile — il server locale è in esecuzione?",
-    "no model loaded": "nessun modello caricato",
     "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Le risposte della postazione IA richiedono {plan}. I modelli qui sotto sono disattivati finché non esegui l'upgrade (o attivi la modalità sviluppatore in ACCOUNT).",
-    "{n} models enabled": "{n} modelli attivati", "One model at a time": "Un modello alla volta",
-    "Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).": "Usa \"only this\" per un singolo modello, oppure attivane diversi — la postazione risponde in un unico riquadro, provandoli dall'alto in basso e passando al successivo se uno fallisce (es. Claude → OpenRouter).",
-    "Auto-fallback to a local model.": "Ripiego automatico su un modello locale.",
-    "If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.": "Se i modelli a pagamento falliscono (niente crediti, chiave errata, offline), la postazione e i rapporti riprovano automaticamente sul tuo modello locale (Ollama o LM Studio). Configurane uno qui sotto — imposta la sua BASE URL e avvia il server locale.",
-    "ACTIVE": "ATTIVO", "use only this": "usa solo questo", "BASE URL": "BASE URL", "MODEL": "MODELLO",
-    "Run local-only (AMD / ROCm)": "Esegui solo in locale (AMD / ROCm)", "Switch the desk to local": "Passa la postazione a locale", "restore previous models": "ripristina modelli precedenti", "One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.": "Un clic punta la postazione al tuo modello Ollama locale (localhost:11434) e disattiva tutti i modelli cloud — così l'intero agente gira con inferenza locale (es. una GPU AMD Radeon via ROCm), senza chiavi. Si apre anche con ?local=1 nell'URL.",
+ "use only this": "usa solo questo", "BASE URL": "BASE URL", "MODEL": "MODELLO",
     "The desk remembers this conversation locally (this device only) so follow-up questions work.": "La postazione ricorda questa conversazione localmente (solo su questo dispositivo) così le domande di seguito funzionano.", "forget conversation": "dimentica conversazione", "Desk memory cleared — the conversation is forgotten.": "Memoria della postazione cancellata — la conversazione è dimenticata.", "MEMORY": "MEMORIA", "{n} turns remembered on this device": "{n} turni memorizzati su questo dispositivo", "Memory": "Memoria", "empty": "vuoto",
-    "format:": "formato:", "e.g.": "es.", "browse models": "sfoglia i modelli",
-    "detect installed models": "rileva i modelli installati", "Lists the models on your Ollama server — the same set as `ollama list`.": "Elenca i modelli sul tuo server Ollama — lo stesso insieme di `ollama list`.",
-    "Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.": "Proton Lumo non ha ancora un'API ospitata ufficiale — esegui un bridge locale compatibile con OpenAI e punta la BASE URL su di esso.", "Lumo bridge": "bridge Lumo",
+    "format:": "formato:", "e.g.": "es.",
     "API KEY": "CHIAVE API",
-    "Local endpoints need CORS enabled to accept requests from this page:": "Gli endpoint locali necessitano di CORS abilitato per accettare richieste da questa pagina:",
-    "start with": "avvia con", "or": "o", "Developer tab → enable server + turn on CORS": "scheda Developer → abilita il server + attiva CORS",
-    "The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).": "Lo slot LM Studio funziona con qualsiasi cosa parli il formato chat di OpenAI (llama.cpp, vLLM…).",
+ "or": "o",
     "ANCHOR": "CONDUTTORE", "ENVIRONMENT": "AMBIENTE", "BACKGROUND CREW": "TROUPE DI SOTTOFONDO",
     "Auto — whoever isn't anchoring": "Auto — chi non sta conducendo", "Off — solo broadcast": "Off — trasmissione in solitaria",
     "VOICE ENGINE": "MOTORE VOCALE", "BROWSER · free": "BROWSER · gratis",
-    "ELEVENLABS API KEY": "CHIAVE API ELEVENLABS", "get a key ↗": "ottieni una chiave ↗",
-    "Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.": "Conservata solo in memoria, inviata solo a api.elevenlabs.io. Usa eleven_flash_v2_5 per bassa latenza — ogni lettura consuma caratteri della tua quota.",
-    "ELEVENLABS VOICE": "VOCE ELEVENLABS", "Paste a key and hit Apply — voices load automatically.": "Incolla una chiave e premi Applica — le voci si caricano automaticamente.",
+    "ELEVENLABS VOICE": "VOCE ELEVENLABS",
     "READING SPEED": "VELOCITÀ DI LETTURA", "auto-read the first answer that finishes": "leggi automaticamente la prima risposta completata",
     "UI click sounds — terminal blips on every button": "suoni di clic dell'interfaccia — bip da terminale su ogni pulsante", "SOUND VOLUME": "VOLUME AUDIO",
     "ambient music": "musica d'ambiente", "your Spotify playlist, docked bottom-right": "la tua playlist Spotify, ancorata in basso a destra",
     "generative synth, ducks under the anchor's voice": "synth generativo, si abbassa sotto la voce del conduttore", "MUSIC SOURCE": "SORGENTE MUSICALE",
-    "SPOTIFY PLAYLIST / ALBUM / TRACK LINK": "LINK PLAYLIST / ALBUM / BRANO SPOTIFY",
     "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Nessun accesso necessario — attiva ♪ e il player si ancora in basso a destra. (L'embed di Spotify riproduce anteprime di 30 secondi senza account; i brani completi partono automaticamente se hai già effettuato l'accesso a Spotify in questo browser.)",
-    "Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link.": "Incolla un link di condivisione Spotify — apri Spotify → qualsiasi playlist/album/brano → Condividi → Copia link.",
     "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "OPZIONALE · COLLEGA UN ACCOUNT PREMIUM PER I BRANI COMPLETI", "FULL PLAYBACK · SPOTIFY PREMIUM": "RIPRODUZIONE COMPLETA · SPOTIFY PREMIUM",
     "create an app ↗": "crea un'app ↗", "● connected — full tracks enabled": "● collegato — brani completi attivati",
     "Spotify app Client ID": "Client ID dell'app Spotify", "In your Spotify app settings, add this exact Redirect URI:": "Nelle impostazioni della tua app Spotify, aggiungi esattamente questa Redirect URI:",
@@ -805,9 +827,6 @@ const I18N = {
     "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "Gli upgrade a pagamento aprono il checkout sicuro di Stripe (modalità test). I dati della carta si inseriscono su Stripe, mai qui.",
     "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "Nessun elaboratore di pagamenti è collegato, quindi i piani a pagamento vengono sbloccati come simulazione — non viene chiesta alcuna carta e non viene addebitato nulla.",
     "Sign out": "Esci", "Terms & Privacy accepted": "Termini e Privacy accettati", "This account UI is a prototype; see the security note in the code.": "Questa interfaccia dell'account è un prototipo; vedi la nota di sicurezza nel codice.",
-    "Developer mode (testing).": "Modalità sviluppatore (test).",
-    "Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production.": "Sblocca ogni funzione premium indipendentemente dal piano — desk IA, dati in tempo reale, YouTube, TMDB, Spotify e la voce ElevenLabs. Serve comunque la chiave API di ciascuna funzione per usarla davvero. Non per la produzione.",
-    "also toggles with ?dev=1 in the URL": "si attiva anche con ?dev=1 nell'URL", "DEV MODE ON — all plan gates bypassed": "MODALITÀ DEV ATTIVA — tutti i blocchi di piano ignorati",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -861,6 +880,22 @@ function b64url(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+// The logo, drawn on a canvas. Geometry is copied from src/ui/VantageMark.jsx
+// because canvas cannot render React — if one changes, change both.
+function drawVantageMark(ctx, x, y, size, tile = "#161718", ink = "#ffffff", dot = "#e4f222", edge = "#383b3f") {
+  const s = size / 32;
+  ctx.save();
+  ctx.translate(x, y); ctx.scale(s, s);
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(0.75, 0.75, 30.5, 30.5, 7.25); else ctx.rect(0.75, 0.75, 30.5, 30.5);
+  ctx.fillStyle = tile; ctx.fill();
+  ctx.strokeStyle = edge; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.strokeStyle = ink; ctx.lineWidth = 3.1; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.beginPath(); ctx.moveTo(8, 10); ctx.lineTo(16, 23); ctx.lineTo(24, 10); ctx.stroke();
+  ctx.beginPath(); ctx.arc(24, 10, 2.8, 0, Math.PI * 2); ctx.fillStyle = dot; ctx.fill();
+  ctx.restore();
+}
+
 // VANTAGE wordmark badge (PNG data URL) for branding exported documents — built once, cached
 let _logoCache = null;
 function makeLogoDataUrl() {
@@ -871,10 +906,10 @@ function makeLogoDataUrl() {
   const ctx = cvs.getContext("2d");
   const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); };
   ctx.fillStyle = C.panel; rr(2, 2, W - 4, H - 4, 16); ctx.fill();
-  ctx.strokeStyle = C.amber; ctx.lineWidth = 2; rr(2, 2, W - 4, H - 4, 16); ctx.stroke();
-  ctx.fillStyle = C.amber; ctx.font = "bold 36px Arial, sans-serif"; ctx.fillText("VANTAGE", 24, 54);
-  [[C.up, 22], [C.down, 34], [C.up, 15], [C.up, 28]].forEach((b, i) => { ctx.fillStyle = b[0]; ctx.fillRect(206 + i * 14, 52 - b[1], 9, b[1]); });
-  ctx.fillStyle = C.muted; ctx.font = "12px monospace"; ctx.fillText("MARKET INTELLIGENCE", 26, 80);
+  ctx.strokeStyle = C.edgeStrong; ctx.lineWidth = 2; rr(2, 2, W - 4, H - 4, 16); ctx.stroke();
+  drawVantageMark(ctx, 24, 24, 48);
+  ctx.fillStyle = C.textStrong; ctx.font = "510 34px Inter, Arial, sans-serif"; ctx.fillText("VANTAGE", 88, 54);
+  ctx.fillStyle = C.muted; ctx.font = "12px monospace"; ctx.fillText("MARKET INTELLIGENCE", 90, 77);
   _logoCache = cvs.toDataURL("image/png");
   return _logoCache;
 }
@@ -959,6 +994,17 @@ const pct = (n) => (n == null || isNaN(n) ? "—" : `${n >= 0 ? "+" : ""}${n.toF
 // Turn a raw transport error ("HTTP 429", "Ollama HTTP 404 — model not found") into plain
 // language before it ever reaches the screen. Keeps any human detail after the em dash and
 // strips the bare status code, so users never see "HTTP 500" etc.
+// Our backend answers every failure with { error: "<a written reason>" }. Code
+// that throws the bare status instead discards that, and humanizeError is then
+// left guessing from a number: a REJECTED API KEY comes out as "the service is
+// temporarily unavailable", which is wrong in the one way that matters — it
+// tells you to wait when the thing actually needs fixing.
+async function serverError(r, label) {
+  let detail = "";
+  try { detail = (await r.clone().json())?.error || ""; } catch { /* not JSON — fall back to the code */ }
+  return new Error(detail || `${label} HTTP ${r.status}`);
+}
+
 const humanizeError = (input) => {
   let s = String(input?.message ?? input ?? "").trim();
   if (!s) return "something went wrong — try again";
@@ -975,25 +1021,31 @@ const humanizeError = (input) => {
 };
 
 // ---------- Finnhub (live mode) ----------
-async function fetchQuote(sym, key) {
-  const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${key}`);
+// Without a key of its own the browser asks our backend, which holds one. The
+// direct call put the key in a URL query string — visible in devtools and
+// recorded by every proxy and access log the request crossed.
+async function fetchQuote(sym) {
+  const r = await fetch(`/api/quote?symbol=${encodeURIComponent(sym)}`);
   if (!r.ok) {
     const e = new Error(
-      r.status === 429 ? "HTTP 429 — Finnhub rate limit (free tier is ~60 calls/min; add your own key in settings → DATA)"
-      : (r.status === 401 || r.status === 403) ? `HTTP ${r.status} — invalid Finnhub key`
+      r.status === 429 ? "HTTP 429 — quote rate limit reached, try again shortly"
+      : r.status === 503 ? "HTTP 503 — live quotes are not configured on this server"
       : `HTTP ${r.status}`);
     e.status = r.status;
     throw e;
   }
   const q = await r.json();
-  if (q.c === 0 && q.pc === 0) throw new Error("Unknown symbol");
-  return q; // {c,d,dp,h,l,o,pc,t}
+  // The proxy answers { quotes: { SYM: {...} } }; Finnhub answers the quote flat.
+  const flat = q?.quotes ? q.quotes[sym.toUpperCase()] : q;
+  if (flat?.error) throw new Error(flat.error === "unknown" ? "Unknown symbol" : `Quote failed (${flat.error})`);
+  if (!flat || (flat.c === 0 && flat.pc === 0)) throw new Error("Unknown symbol");
+  return flat; // {c,d,dp,h,l,o,pc,t}
 }
 // Resolve a typed company NAME to its ticker via Finnhub's symbol search (e.g. "coca cola" → "KO").
-// Prefers a clean US common-stock symbol (skips foreign ".XX" listings). Returns null on miss/no key.
-async function finnhubSearch(query, key) {
+// Prefers a clean US common-stock symbol (skips foreign ".XX" listings). Returns null on miss.
+async function finnhubSearch(query) {
   try {
-    const r = await fetch(`https://finnhub.io/api/v1/search?q=${encodeURIComponent(query)}&token=${key}`);
+    const r = await fetch(`/api/symbol-search?q=${encodeURIComponent(query)}`);
     if (!r.ok) return null;
     const d = await r.json();
     const clean = (d.result || []).filter(x => x.symbol && !x.symbol.includes(".") && /^[A-Z][A-Z0-9]{0,5}$/.test(x.symbol));
@@ -1028,6 +1080,56 @@ const CHARACTERS = [
   { id: "marlowe", name: "Marlowe", skin: "#B9A9A0", hairColor: "#20201F", hair: "short", suit: "#2E2E30", shirt: "#D8D8D8", tieBase: true, hat: "noir" },
   { id: "vivienne", name: "Vivienne", skin: "#CDB8AE", hairColor: "#20201F", hair: "long", suit: "#2E2E30", shirt: "#D8D8D8", tieBase: false, earrings: true, hat: "noir" },
 ];
+
+// What Vantage is, in the product's own words. One constant, because two places
+// need the identical answer: the desk-handled intent and the system prompt. A
+// model left to describe the app on its own invents a different product every
+// time it is asked, which is the one thing an app's account of itself must not do.
+const VANTAGE_ABOUT =
+  "The application currently in use appears to be a simulated trading platform that displays live market data, " +
+  "allowing users to analyze stock performance, price changes, and percentage changes in real time. It provides a " +
+  "snapshot of various stocks, including their opening, high, low, and previous close prices, enabling traders and " +
+  "analysts to assess market trends and make informed observations.";
+
+// "How's your day?" answered from the session the anchor is actually presenting —
+// whether the bell has rung, which way the tape is leaning, what it is watching.
+// A model asked this invents a mood and a workday it never had; the desk knows both.
+function anchorDayLine({ name, open, sym, chgPct }) {
+  const who = name || "the desk";
+  const dir = chgPct == null ? null : chgPct > 0.4 ? "up" : chgPct < -0.4 ? "down" : "flat";
+  // Two phrasings per direction: mid-session the tape is happening TO the anchor,
+  // after the close it is something the anchor is looking back at. Reusing one
+  // clause for both is what produces "one of those sessions on the last print".
+  const live =
+    dir === "up" ? `${sym} is green, so the mood in here is decent` :
+    dir === "down" ? `${sym} is red, so it's one of those sessions` :
+    dir === "flat" ? `${sym} is barely moving, which makes for a quiet one` :
+    "the tape is still waking up";
+  const closed =
+    dir === "up" ? `${sym} finished green, which is a pleasant way to end it` :
+    dir === "down" ? `${sym} closed red — one of those days` :
+    dir === "flat" ? `${sym} went nowhere all session` :
+    "the tape has nothing to say yet";
+  const cap = (t) => `${t[0].toUpperCase()}${t.slice(1)}`;
+  return open
+    ? `Good, thanks — ${who} here, mid-session with the bell already rung. ${cap(live)}. What can I look at for you?`
+    : `Quiet one — ${who} here, and the market is closed, so I'm on the overnight desk. ${cap(closed)}. Ask me anything while it's calm.`;
+}
+
+// A greeting gets a greeting back, plus the one thing the person needs next:
+// what is on the desk and how to change it. Answering "hi" with a market
+// analysis is the fastest way to make an assistant feel like a search box.
+function anchorGreeting({ name, open, hour, sym, said }) {
+  const who = name || "the desk";
+  // If they said which part of the day it is, say it back. The clock here is the
+  // browser's, not theirs — answering "good morning" with "Evening" is the desk
+  // correcting someone about where they are standing.
+  const timeOfDay = said
+    ? said[0].toUpperCase() + said.slice(1).toLowerCase()
+    : hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening";
+  const state = open ? "we're mid-session" : "the market's closed, so it's quiet up here";
+  return `${timeOfDay} — ${who} here, and ${state}. ${sym} is up front: ask me anything about it, or type another symbol in the bar above to switch.`;
+}
 
 // all-caps words that look like tickers but aren't, for intent parsing
 const CAPS_STOP = new Set(["I", "A", "GO", "TO", "ON", "OF", "THE", "AND", "OR", "ADD", "DEL", "HELP", "TD", "AI", "ETF", "USD", "US", "CEO", "IPO", "PE", "EPS", "YTD", "NEWS"]);
@@ -1140,16 +1242,29 @@ const tzAbbrev = (tz, when) => {
 };
 
 // Spotlight coach-marks: each step highlights a REAL element (by id) and the anchor narrates `say`.
+// Flash a value's background the moment it changes — green uptick, red downtick.
+// The key remount is what restarts the CSS animation; the render-time memo keeps
+// each direction attached to the value that caused it, however often the parent
+// re-renders in between ticks.
+function TickFlash({ value, children }) {
+  const last = useRef({ value, dir: null });
+  if (last.current.value !== value && value != null) {
+    last.current = { value, dir: last.current.value == null || value > last.current.value ? "up" : "down" };
+  }
+  const dir = last.current.dir;
+  return <span key={String(value)} className={dir ? `v-tick-${dir}` : undefined}>{children}</span>;
+}
+
 const TOUR_STEPS = [
   { target: "tour-symbol", title: "Command bar", body: "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.", say: "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it." },
-  { target: "tour-anchor", title: "Your anchor — that's me", body: "I run a live trading day and read any answer on air. Pick from 22 anchors and 18 environments right here — news desks, a wizard tower, film-noir, a haunted manor, even a robot in a cyber core. Each anchor has its own voice, and every set its own soundscape.", say: "That's me, your anchor. Pick from twenty-two anchors and eighteen environments right here — each with its own voice and soundscape." },
-  { target: "tour-lang", title: "Speak your language", body: "Switch the whole interface — and my spoken answers — between English, Spanish, French, German, Portuguese and Italian. Your choice is remembered next time.", say: "Switch the whole app, and my answers, into any of six languages right here." },
-  { target: "tour-ask", title: "The AI desk", body: "Ask a question here and I answer in one box, cascading across your models. I also take commands — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.", say: "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix." },
-  { target: "tour-response", title: "Answers, news & Watch", body: "Everything lands here in one box — desk answers, the navigator, news, and the streaming catalog. Trailers and public-domain films play right inside.", say: "Answers, news, and the streaming catalog all appear here, in one place." },
-  { target: "tour-export", title: "Export & edit anything", body: "Download the whole session as Word, PowerPoint or Excel — all built inside Vantage, no server. A Review & Edit step lets you fix every number, headline and slide before it saves.", say: "Download your session as Word, PowerPoint or Excel — and a review step lets you edit everything before it saves." },
-  { target: "tour-ticker", title: "Ticker tape", body: "Your whole watchlist scrolls across the top with live-style movement. Flip DEMO to LIVE in settings to stream real Finnhub quotes — that choice now sticks between visits.", say: "Your watchlist scrolls across the ticker tape. Switch to live Finnhub quotes in settings and it stays live." },
-  { target: "app-calendar-panel", title: "Market calendar", body: "Add your own events — the moment one is due, I break in with an on-air reminder. Upcoming market events are merged in automatically.", say: "Add events to your calendar, and I'll break in with an on-air reminder the moment they're due." },
-  { target: "tour-settings", title: "Why setup? (mostly optional)", body: "Vantage runs fully in DEMO with zero setup. The one thing worth adding is an AI key — the desk's answers come from external models (OpenRouter, Claude…) billed to your own account, so they need your key. Everything else is optional: charts, calendar, games and news need nothing. Open Start to paste that one key.", say: "Here's why setup exists. Vantage works in demo with zero setup. The one key worth adding is for the A.I. — my answers come from external models that bill to your own account, so they need your key. Everything else is optional. Open Start to paste that one key. That's the tour!" },
+  { target: "tour-anchor", title: "Your anchor — that's me", body: "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.", say: "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here." },
+  { target: "tour-lang", title: "Speak your language", body: "Switches the interface and my spoken answers between six languages. Your choice is remembered.", say: "Switch the whole app, and my answers, into any of six languages right here." },
+  { target: "tour-ask", title: "The AI desk", body: "Ask anything here. I also take commands: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.", say: "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix." },
+  { target: "tour-response", title: "Answers, news & Watch", body: "Answers, news, and the streaming catalog land here. Trailers play right inside.", say: "Answers, news, and the streaming catalog all appear here, in one place." },
+  { target: "tour-export", title: "Export & edit anything", body: "Export the session as Word, PowerPoint or Excel. A review step lets you edit everything before it saves.", say: "Export your session as Word, PowerPoint or Excel. You can edit everything before it saves." },
+  { target: "tour-ticker", title: "Ticker tape", body: "Your watchlist scrolls across the top. Flip DEMO to LIVE in settings for real Finnhub quotes.", say: "Your watchlist scrolls across the ticker tape. Switch to live Finnhub quotes in settings and it stays live." },
+  { target: "app-calendar-panel", title: "Market calendar", body: "Add your events and I announce them on air when they're due. Market events merge in automatically.", say: "Add events to your calendar and I'll announce them on air when they're due." },
+  { target: "tour-settings", title: "Why setup? (mostly optional)", body: "Demo mode needs no setup. AI answers come from external models billed to your account, so they need your key. Open Settings from this menu and paste it under START.", say: "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!" },
 ];
 
 // Interactive missions: auto-check as the user performs each real action.
@@ -1162,13 +1277,14 @@ const MISSIONS = [
   { id: "export", label: "Export a report", hint: "“download excel”" },
 ];
 
-// Setup guide shown in onboarding — what each key does, if it's required, and where to get it.
+// Setup guide shown in onboarding. Every provider key lives on the server, so
+// this is a tour of what the desk can do — there is nothing to paste.
 const SETUP_STEPS = [
-  { icon: "🤖", name: "AI desk answers", need: "needed for answers", req: true, what: "The anchor's answers come from an external AI model that bills to your own account — so it needs your key. Without one, everything else still works; the desk just can't answer.", how: "Paste a free OpenRouter key in Settings → START. One key covers dozens of models.", url: "https://openrouter.ai/keys", link: "get OpenRouter key ↗" },
-  { icon: "📈", name: "Live market prices", need: "optional", what: "Swaps the demo random-walk market for real-time quotes.", how: "Settings → DATA → switch to LIVE, paste a free Finnhub key.", url: "https://finnhub.io/register", link: "get Finnhub key ↗" },
-  { icon: "🎬", name: "Streaming catalog", need: "optional", what: "Adds real Netflix / Disney+ / Hulu libraries and in-desk trailers.", how: "Settings → DATA → TMDB API key.", url: "https://www.themoviedb.org/settings/api", link: "get free TMDB key ↗" },
-  { icon: "📰", name: "Real video results", need: "optional", what: "Pulls actual embeddable YouTube clips instead of AI guesses.", how: "Settings → DATA → YouTube Data API key.", url: "https://console.cloud.google.com/apis/credentials", link: "get YouTube key ↗" },
-  { icon: "🎙️", name: "Studio voice", need: "optional", what: "The browser voice works instantly; ElevenLabs sounds broadcast-grade.", how: "Settings → VOICE → ElevenLabs key.", url: "https://elevenlabs.io/app/settings/api-keys", link: "get ElevenLabs key ↗" },
+  { icon: "🤖", name: "AI desk answers", need: "server-provided", req: true, what: "Answers stream from the model desk this server hosts — no key, no account with a model vendor.", how: "Nothing to set up. The status board in Settings → START shows it live." },
+  { icon: "📈", name: "Live market prices", need: "server-provided", what: "Swaps the demo random-walk market for real-time quotes.", how: "Settings → DATA → switch to LIVE." },
+  { icon: "🎬", name: "Streaming catalog", need: "server-provided", what: "Real Netflix / Disney+ / Hulu libraries and in-desk trailers.", how: "Ask \"what's on netflix\" — on whenever the server provides it." },
+  { icon: "📰", name: "Real video results", need: "server-provided", what: "Real, playable YouTube results instead of AI guesses.", how: "Ask \"show videos of …\" — on whenever the server provides it." },
+  { icon: "🎙️", name: "Studio voice", need: "optional", what: "The browser voice works instantly; the studio voice sounds broadcast-grade.", how: "Settings → VOICE → ELEVENLABS." },
 ];
 
 // friendly label for a calendar event's start time
@@ -1417,15 +1533,15 @@ function ChessGame({ onCheer, onWin, sfx }) {
   const capLabel = (arr) => arr.map(t => CHESS_GLYPH[t]).join(" ");
   const modeBtn = (ai, label) => (
     <button onClick={() => reset(ai)}
-      style={{ background: vsAI === ai ? "rgba(255,179,0,0.16)" : "transparent", border: `1px solid ${vsAI === ai ? C.amber : C.panelEdge}`, color: vsAI === ai ? C.amber : C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "4px 9px", cursor: "pointer" }}>{label}</button>
+      style={{ background: vsAI === ai ? "rgba(255,255,255,0.09)" : "transparent", border: `1px solid ${vsAI === ai ? C.accent : C.panelEdge}`, color: vsAI === ai ? C.accentText : C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "4px 9px", cursor: "pointer" }}>{label}</button>
   );
   return (
-    <div style={{ padding: 12, fontFamily: MONO, display: "flex", flexDirection: "column", gap: 10 }}>
+    <div style={{ padding: 12, fontFamily: SANS, display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <span style={{ display: "flex", gap: 5 }}>{modeBtn(true, "vs Computer")}{modeBtn(false, "2 Player")}</span>
-        <button onClick={() => reset()} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>new game ↻</button>
+        <button onClick={() => reset()} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>new game ↻</button>
       </div>
-      <div style={{ fontSize: 12, fontWeight: 700, textAlign: "center", color: winner ? (winner === "draw" ? C.amber : winner === "w" ? C.up : C.down) : turn === "w" ? C.up : C.down }}>{status}</div>
+      <div style={{ fontSize: 12, fontWeight: 510, textAlign: "center", color: winner ? (winner === "draw" ? C.warn : winner === "w" ? C.up : C.down) : turn === "w" ? C.up : C.down }}>{status}</div>
       <div style={{ position: "relative", width: "100%", maxWidth: 320, aspectRatio: "1 / 1", display: "grid", gridTemplateColumns: "repeat(8, 1fr)", border: `1px solid ${C.panelEdge}`, alignSelf: "center", opacity: (vsAI && turn === "b" && !winner) ? 0.75 : 1 }}>
         {board.map((row, r) => row.map((p, c) => {
           const light = (r + c) % 2 === 0;
@@ -1437,11 +1553,12 @@ function ChessGame({ onCheer, onWin, sfx }) {
             <button key={`${r}-${c}`} onClick={() => clickSquare(r, c)}
               style={{
                 position: "relative", border: "none", cursor: winner ? "default" : "pointer", padding: 0,
-                background: isSel ? "rgba(255,179,0,0.5)" : inDanger ? "rgba(255,77,109,0.45)" : light ? "#2A3346" : "#1A2233",
+                background: light ? "#23252a" : "#161718",
+                boxShadow: isSel ? "inset 0 0 0 2px #e4f222" : inDanger ? "inset 0 0 0 2px #eb5757" : "none",
                 display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
               }}>
-              {p && <span style={{ fontSize: 22, color: p.s === "w" ? "#3FE08A" : "#FF6B7A", textShadow: "0 1px 2px rgba(0,0,0,0.6)", opacity: inFlight ? 0 : 1 }}>{CHESS_GLYPH[p.t]}</span>}
-              {isTarget && <span style={{ position: "absolute", width: p ? "82%" : 12, height: p ? "82%" : 12, borderRadius: p ? 6 : "50%", boxSizing: "border-box", border: p ? `2px solid ${C.amber}` : "none", background: p ? "transparent" : "rgba(255,179,0,0.55)" }} />}
+              {p && <span style={{ fontSize: 22, color: p.s === "w" ? C.up : C.down, textShadow: "0 1px 2px rgba(0,0,0,0.6)", opacity: inFlight ? 0 : 1 }}>{CHESS_GLYPH[p.t]}</span>}
+              {isTarget && <span style={{ position: "absolute", width: p ? "82%" : 10, height: p ? "82%" : 10, borderRadius: p ? 6 : "50%", boxSizing: "border-box", border: p ? `2px solid ${C.accent}` : "none", background: p ? "transparent" : C.accent }} />}
             </button>
           );
         }))}
@@ -1512,7 +1629,7 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         g.addColorStop(0, "#0E1420"); g.addColorStop(1, "#0B0E14");
         ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
         // accent bands across the set wall
-        ctx.fillStyle = "rgba(255,179,0,0.05)";
+        ctx.fillStyle = "rgba(255,255,255,0.05)";
         ctx.fillRect(0, 40, W, 3); ctx.fillRect(0, 46, W, 1);
         // wall screen, upper right, live mood chart
         ctx.fillStyle = "#080C13"; ctx.fillRect(128, 10, 54, 36);
@@ -1528,8 +1645,9 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         // station logo panel, upper left — size the pill to the measured text so it never overflows
         ctx.font = "700 9px monospace";
         const logoW = ctx.measureText("VANTAGE").width;
-        ctx.fillStyle = "rgba(255,179,0,0.10)"; ctx.fillRect(10, 14, logoW + 12, 15);
-        ctx.fillStyle = C.amber; ctx.textBaseline = "middle"; ctx.fillText("VANTAGE", 16, 22); ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = "rgba(255,255,255,0.10)"; ctx.fillRect(10, 13, logoW + 26, 17);
+        drawVantageMark(ctx, 13, 15, 13);
+        ctx.fillStyle = C.textStrong; ctx.textBaseline = "middle"; ctx.fillText("VANTAGE", 30, 22); ctx.textBaseline = "alphabetic";
         // rim lights
         ctx.fillStyle = "rgba(232,235,242,0.03)";
         ctx.fillRect(0, 0, 6, H); ctx.fillRect(W - 6, 0, 6, H);
@@ -1548,7 +1666,7 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
             const x = 6 + i * 30 * sc + row * 12;
             ctx.fillStyle = "#101623"; ctx.fillRect(x, y, 22 * sc, 14 * sc);
             const lit = Math.sin(i * 3.7 + row * 2.1 + t / 1400) > 0;
-            ctx.fillStyle = lit ? "rgba(47,211,122,0.30)" : "rgba(246,70,93,0.30)";
+            ctx.fillStyle = lit ? "rgba(39,166,68,0.30)" : "rgba(235,87,87,0.30)";
             ctx.fillRect(x + 3 * sc, y + 2 * sc, 16 * sc, 7 * sc);
           }
         }
@@ -1575,7 +1693,7 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
           }
         }
         // rooftop beacon
-        ctx.fillStyle = (reduced || Math.sin(t / 500) > 0) ? "rgba(246,70,93,0.8)" : "rgba(246,70,93,0.15)";
+        ctx.fillStyle = (reduced || Math.sin(t / 500) > 0) ? "rgba(235,87,87,0.8)" : "rgba(235,87,87,0.15)";
         ctx.fillRect(52, 96, 2, 2);
       } else if (env === "server") {
         ctx.fillStyle = "#0A0D13"; ctx.fillRect(0, 0, W, H);
@@ -1587,7 +1705,7 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
             const uy = 18 + u * 12;
             ctx.fillStyle = "#121826"; ctx.fillRect(rx + 3, uy, 30, 8);
             const led = reduced ? 0.5 : Math.sin(rack * 5.1 + u * 3.3 + t / (300 + u * 40));
-            ctx.fillStyle = led > 0.3 ? "rgba(47,211,122,0.8)" : led < -0.5 ? "rgba(255,179,0,0.7)" : "rgba(74,82,102,0.5)";
+            ctx.fillStyle = led > 0.3 ? "rgba(39,166,68,0.8)" : led < -0.5 ? "rgba(235,87,87,0.7)" : "rgba(74,82,102,0.5)";
             ctx.fillRect(rx + 27, uy + 2.5, 3, 3);
           }
         }
@@ -1628,7 +1746,7 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         ctx.fillStyle = "#1C1714";
         for (let ry = 0; ry < H; ry += 20) for (let rx = 0; rx < W; rx += 20) { ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx + 10, ry + 10); ctx.lineTo(rx, ry + 20); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(rx + 20, ry); ctx.lineTo(rx + 10, ry + 10); ctx.lineTo(rx + 20, ry + 20); ctx.closePath(); ctx.fill(); }
         const on = reduced || Math.sin(t / 700) > -0.3;
-        ctx.fillStyle = on ? "rgba(246,70,93,0.9)" : "rgba(246,70,93,0.25)"; ctx.fillRect(58, 10, 74, 16);
+        ctx.fillStyle = on ? "#D0121F" : "rgba(208,18,31,0.28)"; ctx.fillRect(58, 10, 74, 16);
         ctx.fillStyle = on ? "#fff" : "rgba(255,255,255,0.4)"; ctx.font = "bold 9px monospace"; ctx.fillText("ON AIR", 74, 22);
       } else if (env === "reef") {
         const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#0A3A55"); g.addColorStop(1, "#062435");
@@ -1884,8 +2002,8 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       const cx = W / 2, cy = 84 + bob;
 
       const glow = ctx.createRadialGradient(cx, cy + 30, 10, cx, cy + 30, 110);
-      glow.addColorStop(0, "rgba(255,179,0,0.08)");
-      glow.addColorStop(1, "rgba(255,179,0,0)");
+      glow.addColorStop(0, "rgba(255,255,255,0.06)");
+      glow.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
 
       // ---- background crew member (drawn first = furthest away) ----
@@ -2480,9 +2598,10 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
 
         // ---- themed headgear: drawn last so it frames the animated face (visors stay translucent) ----
         if (ch.hat === "podcast") {
-          // boom mic angled up to the mouth
-          ctx.strokeStyle = "#20262F"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
-          ctx.beginPath(); ctx.moveTo(cx - 42, hy + 42); ctx.lineTo(cx - 16, hy + 22); ctx.stroke();
+          // boom mic: hinged on the LEFT EARCUP (cx-33, ends hy+14), curving to the
+          // mouth — a boom that starts in mid-air reads as a floating stick
+          ctx.strokeStyle = "#3A4150"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+          ctx.beginPath(); ctx.moveTo(cx - 33, hy + 13); ctx.quadraticCurveTo(cx - 35, hy + 23, cx - 18, hy + 22); ctx.stroke();
           ctx.fillStyle = "#2A303C"; ctx.beginPath(); ctx.ellipse(cx - 15, hy + 21, 6, 7, 0.3, 0, Math.PI * 2); ctx.fill();
           ctx.fillStyle = "rgba(255,255,255,0.10)"; ctx.beginPath(); ctx.ellipse(cx - 16, hy + 19, 2, 3, 0.3, 0, Math.PI * 2); ctx.fill();
         } else if (ch.hat === "knight") {
@@ -2542,12 +2661,37 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
           ctx.strokeStyle = "rgba(255,255,255,0.35)"; ctx.lineWidth = 1.4; // glare
           for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + side * 13 - 4, eyeY - 2); ctx.lineTo(cx + side * 13 + 1, eyeY + 3); ctx.stroke(); }
         } else if (ch.hat === "explorer") {
-          // adventurer's tan fedora
+          // Adventurer's tan fedora. The head is 38 tall, so a crown topping out
+          // at hy-42 left four pixels of hat above the skull and a brim sitting
+          // at eyebrow level — a bowl clamped over the ears, not a hat. The brim
+          // rides the forehead now and the crown has somewhere to go.
           const tan = "#8A6A3E", tanD = "#5E4626";
-          ctx.fillStyle = tanD; ctx.beginPath(); ctx.ellipse(cx, hy - 12, 44, 11, 0, 0, Math.PI * 2); ctx.fill(); // brim
-          ctx.fillStyle = tan; ctx.beginPath(); ctx.moveTo(cx - 26, hy - 12); ctx.quadraticCurveTo(cx - 24, hy - 40, cx, hy - 42); ctx.quadraticCurveTo(cx + 24, hy - 40, cx + 26, hy - 12); ctx.closePath(); ctx.fill(); // crown
-          ctx.strokeStyle = tanD; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, hy - 40); ctx.lineTo(cx, hy - 22); ctx.stroke(); // dent
-          ctx.fillStyle = "#3A2A18"; ctx.fillRect(cx - 26, hy - 18, 52, 5); // band
+          const crown = () => {
+            ctx.beginPath();
+            ctx.moveTo(cx - 27, hy - 21);
+            ctx.quadraticCurveTo(cx - 28, hy - 50, cx - 13, hy - 56);
+            ctx.quadraticCurveTo(cx, hy - 58, cx + 13, hy - 56);
+            ctx.quadraticCurveTo(cx + 28, hy - 50, cx + 27, hy - 21);
+            ctx.closePath();
+          };
+          ctx.fillStyle = tanD; ctx.beginPath(); ctx.ellipse(cx, hy - 22, 46, 9, 0, 0, Math.PI * 2); ctx.fill(); // brim
+          ctx.fillStyle = tan; crown(); ctx.fill();
+          // The band is clipped to the crown. Drawn as a bare rect it overhangs
+          // the curve and reads as a bar laid across the hat rather than a band
+          // wrapped around it — square ends poking into the brim on both sides.
+          ctx.save(); crown(); ctx.clip();
+          ctx.fillStyle = "#3A2A18"; ctx.fillRect(cx - 30, hy - 33, 60, 8);
+          ctx.fillStyle = "#2A1E11"; ctx.fillRect(cx - 30, hy - 26, 60, 2);
+          ctx.restore();
+          // A fedora is pinched either side of the front of the crown. The old
+          // single full-height centre line read as a seam down the hat.
+          ctx.strokeStyle = tanD; ctx.lineWidth = 2; ctx.lineCap = "round";
+          for (const side of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(cx + side * 9, hy - 55);
+            ctx.quadraticCurveTo(cx + side * 8, hy - 48, cx + side * 10, hy - 42);
+            ctx.stroke();
+          }
         } else if (ch.hat === "horror") {
           // vampire: a tall standing collar behind the head. Short-haired variant gets slicked
           // hair + a widow's peak; the long-haired variant keeps its own flowing hair (drawn earlier).
@@ -2567,23 +2711,66 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
           ctx.strokeStyle = "#6E1420"; ctx.lineWidth = 2; // red inner lining
           for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + side * 24, hy - 22); ctx.quadraticCurveTo(cx + side * 30, hy + 8, cx + side * 12, hy + 32); ctx.stroke(); }
         } else if (ch.hat === "cowboy") {
-          // wide-brim western hat with a pinched crown + star pin
+          // Wide-brim western hat, cattleman crease, star pin on the band.
+          // Same two faults the explorer had: a crown topping out six pixels
+          // above a 38-tall head, and a band drawn as a bare rect that overhung
+          // the crown's curve. The brim also sat at eyebrow level; a stetson is
+          // worn ON the head, and its brim turns UP at the sides — which is what
+          // separates it from a fedora at this size.
           const tan = "#9A7B4A", tanD = "#6B5230";
-          ctx.fillStyle = tanD; ctx.beginPath(); ctx.moveTo(cx - 50, hy - 10); ctx.quadraticCurveTo(cx, hy - 2, cx + 50, hy - 10); ctx.quadraticCurveTo(cx, hy - 20, cx - 50, hy - 10); ctx.closePath(); ctx.fill(); // brim
-          ctx.fillStyle = tan; ctx.beginPath(); ctx.moveTo(cx - 22, hy - 12); ctx.quadraticCurveTo(cx - 20, hy - 44, cx, hy - 44); ctx.quadraticCurveTo(cx + 20, hy - 44, cx + 22, hy - 12); ctx.closePath(); ctx.fill(); // crown
-          ctx.strokeStyle = tanD; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx - 9, hy - 42); ctx.lineTo(cx - 8, hy - 22); ctx.moveTo(cx + 9, hy - 42); ctx.lineTo(cx + 8, hy - 22); ctx.stroke(); // side pinches
-          ctx.fillStyle = "#3A2A18"; ctx.fillRect(cx - 22, hy - 18, 44, 5); // band
-          ctx.fillStyle = "#C9A24B"; ctx.beginPath(); ctx.arc(cx, hy - 15, 2, 0, Math.PI * 2); ctx.fill(); // star pin
+          const crown = () => {
+            ctx.beginPath();
+            ctx.moveTo(cx - 25, hy - 20);
+            ctx.quadraticCurveTo(cx - 26, hy - 50, cx - 12, hy - 55);
+            ctx.quadraticCurveTo(cx, hy - 57, cx + 12, hy - 55);
+            ctx.quadraticCurveTo(cx + 26, hy - 50, cx + 25, hy - 20);
+            ctx.closePath();
+          };
+          ctx.fillStyle = tanD; ctx.beginPath(); // brim: ends ride higher than the middle, so it reads as upturned
+          ctx.moveTo(cx - 52, hy - 26); ctx.quadraticCurveTo(cx, hy - 12, cx + 52, hy - 26);
+          ctx.quadraticCurveTo(cx, hy - 32, cx - 52, hy - 26); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = tan; crown(); ctx.fill();
+          ctx.save(); crown(); ctx.clip();
+          ctx.fillStyle = "#3A2A18"; ctx.fillRect(cx - 30, hy - 33, 60, 8); // band, clipped to the crown
+          ctx.fillStyle = "#2A1E11"; ctx.fillRect(cx - 30, hy - 26, 60, 2);
+          ctx.restore();
+          ctx.strokeStyle = tanD; ctx.lineWidth = 2; ctx.lineCap = "round"; // cattleman crease: centre dent + two side pinches
+          ctx.beginPath(); ctx.moveTo(cx, hy - 56); ctx.lineTo(cx, hy - 44); ctx.stroke();
+          for (const side of [-1, 1]) {
+            ctx.beginPath(); ctx.moveTo(cx + side * 11, hy - 53);
+            ctx.quadraticCurveTo(cx + side * 10, hy - 47, cx + side * 12, hy - 42); ctx.stroke();
+          }
+          ctx.fillStyle = "#C9A24B"; // star pin on the band
+          ctx.beginPath();
+          for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? 1.6 : 3.6; ctx.lineTo(cx + Math.cos(a) * rr, hy - 29 + Math.sin(a) * rr); }
+          ctx.closePath(); ctx.fill();
         } else if (ch.hat === "noir") {
-          // rakishly tilted detective fedora + brim shadow across the eyes
+          // Rakishly tilted detective fedora + brim shadow across the eyes.
+          // The crown was 34 tall on a 38-tall head and the brim's underside
+          // reached the eyes, so the whole hat read as a bowler pulled down to
+          // the brows. Raised and given a crown, with the band clipped to it.
           ctx.save(); ctx.translate(cx, hy - 6); ctx.rotate(-0.14);
           const dk = "#26262A", dkD = "#141416";
-          ctx.fillStyle = dkD; ctx.beginPath(); ctx.ellipse(0, -8, 44, 10, 0, 0, Math.PI * 2); ctx.fill(); // brim
-          ctx.fillStyle = dk; ctx.beginPath(); ctx.moveTo(-24, -8); ctx.quadraticCurveTo(-22, -38, 0, -40); ctx.quadraticCurveTo(22, -38, 24, -8); ctx.closePath(); ctx.fill(); // crown
-          ctx.strokeStyle = dkD; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -38); ctx.lineTo(0, -20); ctx.stroke(); // dent
-          ctx.fillStyle = "#0C0C0E"; ctx.fillRect(-24, -14, 48, 5); // band
+          const crown = () => {
+            ctx.beginPath();
+            ctx.moveTo(-25, -17);
+            ctx.quadraticCurveTo(-26, -46, -12, -51);
+            ctx.quadraticCurveTo(0, -53, 12, -51);
+            ctx.quadraticCurveTo(26, -46, 25, -17);
+            ctx.closePath();
+          };
+          ctx.fillStyle = dkD; ctx.beginPath(); ctx.ellipse(0, -18, 45, 9, 0, 0, Math.PI * 2); ctx.fill(); // brim
+          ctx.fillStyle = dk; crown(); ctx.fill();
+          ctx.save(); crown(); ctx.clip();
+          ctx.fillStyle = "#0C0C0E"; ctx.fillRect(-30, -29, 60, 8); // band, clipped to the crown
           ctx.restore();
-          ctx.fillStyle = "rgba(0,0,0,0.30)"; ctx.beginPath(); ctx.ellipse(cx, eyeY, 22, 8, 0, 0, Math.PI * 2); ctx.fill(); // brim shadow
+          ctx.strokeStyle = dkD; ctx.lineWidth = 2; ctx.lineCap = "round"; // teardrop pinch at the front of the crown
+          for (const side of [-1, 1]) {
+            ctx.beginPath(); ctx.moveTo(side * 9, -50);
+            ctx.quadraticCurveTo(side * 8, -44, side * 10, -38); ctx.stroke();
+          }
+          ctx.restore();
+          ctx.fillStyle = "rgba(0,0,0,0.30)"; ctx.beginPath(); ctx.ellipse(cx, eyeY - 4, 22, 7, 0, 0, Math.PI * 2); ctx.fill(); // brim shadow
         }
       }
       ctx.restore(); // end head transform
@@ -2648,7 +2835,7 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
       <canvas ref={cvsRef} style={{ width: 190, height: 230 }} aria-label={`Desk anchor: ${ch.name}`} />
-      <div style={{ fontFamily: MONO, fontSize: 10, color: talking ? C.amber : C.faint, letterSpacing: "0.1em", textAlign: "center", minHeight: 14 }}>
+      <div style={{ fontFamily: SANS, fontSize: 10, color: talking ? C.live : C.faint, letterSpacing: "-0.010em", textAlign: "center", minHeight: 14 }}>
         {talking ? `● ON AIR — ${ch.name} reading ${speakerLabel || ""}` : `${ch.name.toUpperCase()} · ${t("standing by")}`}
       </div>
     </div>
@@ -2662,7 +2849,7 @@ function VideoFrame({ id, title }) {
   const watch = `https://www.youtube.com/watch?v=${id}`;
   const ytLink = (label, pos) => (
     <a href={watch} target="_blank" rel="noopener noreferrer"
-      style={{ position: "absolute", ...pos, zIndex: 2, background: "rgba(0,0,0,0.78)", color: "#fff", fontFamily: MONO, fontSize: 10, padding: "3px 8px", borderRadius: 4, textDecoration: "none" }}>
+      style={{ position: "absolute", ...pos, zIndex: 2, background: "rgba(0,0,0,0.78)", color: "#fff", fontFamily: MONO, fontSize: 12, padding: "3px 8px", borderRadius: R.sm, textDecoration: "none" }}>
       {label}
     </a>
   );
@@ -2757,43 +2944,43 @@ function BlackjackGame({ onCheer, onWin }) {
   const newHand = () => { setPhase("bet"); setPlayer([]); setDealer([]); setResult(null); };
 
   const hideHole = phase === "player";                 // dealer's 2nd card stays down until the player stands
-  const card = (c, key, hidden) => (
-    <div key={key} style={{ width: 34, height: 48, borderRadius: 5, border: `1px solid ${hidden ? C.amber : "#C7CEDB"}`, flexShrink: 0,
-      background: hidden ? "#1A2233" : "#EDEFF4", color: hidden ? C.amber : (c.s === "♥" || c.s === "♦" ? "#C0392B" : "#141821"),
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontWeight: 700 }}>
+  const card = (c, key, hidden, delay = 0, flip = false) => (
+    <div key={key} className={flip ? "v-flip" : "v-deal"} style={{ animationDelay: `${delay}ms`, width: 34, height: 48, borderRadius: R.xs, border: `1px solid ${hidden ? C.edgeStrong : "#C7CEDB"}`, flexShrink: 0,
+      background: hidden ? "#161718" : "#EDEFF4", color: hidden ? C.faint : (c.s === "♥" || c.s === "♦" ? "#C0392B" : "#141821"),
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontWeight: 510 }}>
       {hidden ? <span style={{ fontSize: 18 }}>★</span> : <><span style={{ fontSize: 12 }}>{c.r}</span><span style={{ fontSize: 14 }}>{c.s}</span></>}
     </div>
   );
   const btn = (label, on, kind = "primary") => (
     <button onClick={on} style={kind === "primary"
-      ? { background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontWeight: 700, fontSize: 12, padding: "9px 18px", cursor: "pointer" }
-      : { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 12, padding: "9px 14px", cursor: "pointer" }}>{label}</button>
+      ? { background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 510, fontSize: 12, padding: "9px 18px", cursor: "pointer" }
+      : { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, padding: "9px 14px", cursor: "pointer" }}>{label}</button>
   );
-  const resultCol = result ? (result.kind === "win" ? C.up : result.kind === "lose" ? C.down : C.amber) : C.muted;
+  const resultCol = result ? (result.kind === "win" ? C.up : result.kind === "lose" ? C.down : C.text) : C.muted;
   const broke = bankroll < 10;
   return (
     <div style={{ padding: 14, fontFamily: MONO, display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
-        <span style={{ color: C.text }}>💰 Bankroll: <b style={{ color: C.amber }}>${bankroll}</b></span>
+        <span style={{ color: C.text }}>💰 Bankroll: <b style={{ color: broke ? C.down : C.textStrong }}>${bankroll}</b></span>
         <span style={{ color: C.muted }}>bet ${bet}</span>
       </div>
 
       {/* dealer */}
       <div>
-        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: C.faint, marginBottom: 4 }}>DEALER {phase !== "bet" && !hideHole ? `· ${bjValue(dealer)}` : ""}</div>
+        <div style={{ fontSize: 10, letterSpacing: "-0.010em", color: C.faint, marginBottom: 4 }}>DEALER {phase !== "bet" && !hideHole ? `· ${bjValue(dealer)}` : ""}</div>
         <div style={{ display: "flex", gap: 6, minHeight: 48 }}>
-          {dealer.map((c, i) => card(c, `d${i}`, hideHole && i === 1))}
+          {dealer.map((c, i) => card(c, `d${i}${hideHole && i === 1 ? "-back" : ""}`, hideHole && i === 1, i * 90, i === 1 && !hideHole))}
         </div>
       </div>
       {/* player */}
       <div>
-        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: C.faint, marginBottom: 4 }}>YOU {player.length ? `· ${bjValue(player)}` : ""}</div>
+        <div style={{ fontSize: 10, letterSpacing: "-0.010em", color: C.faint, marginBottom: 4 }}>YOU {player.length ? `· ${bjValue(player)}` : ""}</div>
         <div style={{ display: "flex", gap: 6, minHeight: 48 }}>
-          {player.map((c, i) => card(c, `p${i}`, false))}
+          {player.map((c, i) => card(c, `p${i}`, false, i * 90))}
         </div>
       </div>
 
-      {result && <div style={{ fontSize: 13, fontWeight: 700, color: resultCol }}>{result.text}</div>}
+      {result && <div className="v-settle" style={{ fontSize: 13, fontWeight: 510, color: resultCol }}>{result.text}</div>}
 
       {/* controls */}
       {phase === "bet" && (
@@ -2817,9 +3004,6 @@ function BlackjackGame({ onCheer, onWin }) {
         <div style={{ display: "flex", gap: 8 }}>{btn(broke ? "Out of chips" : "New hand ↻", broke ? () => {} : newHand)}</div>
       )}
 
-      <div style={{ fontSize: 10, color: C.faint, lineHeight: 1.5 }}>
-        Get closer to 21 than the dealer without going over. Face cards = 10, Ace = 1 or 11. Dealer draws to 17. Blackjack pays 3:2.
-      </div>
     </div>
   );
 }
@@ -2830,9 +3014,9 @@ function BlackjackGame({ onCheer, onWin }) {
 // Self-contained (canvas + rAF); sim state lives in a ref so the loop never restarts on render.
 const AW_W = 560, AW_H = 300;
 const AW_BOTS = {
-  day:    { name: "Day-Trader",  cost: 14, hp: 24, dmg: 6,  range: 26, speed: 48, rate: 0.55, r: 7,  color: "#2FD37A", blurb: "fast, cheap, fragile — swarm and rush" },
-  index:  { name: "Index-Fund",  cost: 28, hp: 92, dmg: 4,  range: 22, speed: 22, rate: 0.9,  r: 11, color: "#4DA3FF", blurb: "tanky, slow — soaks damage, holds the line" },
-  sniper: { name: "Sniper",      cost: 24, hp: 12, dmg: 22, range: 96, speed: 32, rate: 1.5,  r: 6,  color: "#C9A24B", blurb: "long range, high burst — melts tanks, dies fast" },
+  day:    { name: "Day-Trader",  cost: 14, hp: 24, dmg: 6,  range: 26, speed: 48, rate: 0.55, r: 7,  color: "#ffffff", blurb: "fast, cheap, fragile — swarm and rush" },
+  index:  { name: "Index-Fund",  cost: 28, hp: 92, dmg: 4,  range: 22, speed: 22, rate: 0.9,  r: 11, color: "#02b8cc", blurb: "tanky, slow — soaks damage, holds the line" },
+  sniper: { name: "Sniper",      cost: 24, hp: 12, dmg: 22, range: 96, speed: 32, rate: 1.5,  r: 6,  color: "#6366f1", blurb: "long range, high burst — melts tanks, dies fast" },
 };
 const AW_STANCES = [
   { id: "aggressive", label: "Aggressive", hint: "push the enemy server" },
@@ -2914,25 +3098,25 @@ function awStep(sim, dt, youStance) {
 }
 // render one frame: grid + dashed center line, both servers (with HP bars), shot tracers, then units
 function awDraw(ctx, sim) {
-  ctx.fillStyle = "#0B0E14"; ctx.fillRect(0, 0, AW_W, AW_H);
-  ctx.strokeStyle = "#141B27"; ctx.lineWidth = 1;
+  ctx.fillStyle = "#0f1011"; ctx.fillRect(0, 0, AW_W, AW_H);
+  ctx.strokeStyle = "#161718"; ctx.lineWidth = 1;
   for (let x = 0; x <= AW_W; x += 28) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, AW_H); ctx.stroke(); }
   for (let y = 0; y <= AW_H; y += 28) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(AW_W, y); ctx.stroke(); }
-  ctx.strokeStyle = "#1D2433"; ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.moveTo(AW_W / 2, 0); ctx.lineTo(AW_W / 2, AW_H); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = "#23252a"; ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.moveTo(AW_W / 2, 0); ctx.lineTo(AW_W / 2, AW_H); ctx.stroke(); ctx.setLineDash([]);
   const base = (x, color, hp) => {
     ctx.fillStyle = color; ctx.globalAlpha = 0.85; ctx.fillRect(x - 10, AW_H / 2 - 42, 20, 84); ctx.globalAlpha = 1;
     ctx.fillStyle = "#0009"; ctx.fillRect(x - 15, AW_H / 2 - 56, 30, 5);
     ctx.fillStyle = color; ctx.fillRect(x - 15, AW_H / 2 - 56, 30 * Math.max(0, hp) / 200, 5);
   };
-  base(sim.you.baseX, "#2FD37A", sim.you.baseHp);
-  base(sim.cpu.baseX, "#F6465D", sim.cpu.baseHp);
-  for (const tr of sim.tracers) { ctx.strokeStyle = `rgba(201,162,75,${Math.max(0, tr.life / 0.12) * 0.8})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(tr.x1, tr.y1); ctx.lineTo(tr.x2, tr.y2); ctx.stroke(); }
+  base(sim.you.baseX, "#27a644", sim.you.baseHp);
+  base(sim.cpu.baseX, "#eb5757", sim.cpu.baseHp);
+  for (const tr of sim.tracers) { ctx.strokeStyle = `rgba(208,214,224,${Math.max(0, tr.life / 0.12) * 0.8})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(tr.x1, tr.y1); ctx.lineTo(tr.x2, tr.y2); ctx.stroke(); }
   for (const u of sim.units) {
     const b = AW_BOTS[u.type];
-    ctx.beginPath(); ctx.arc(u.x, u.y, b.r, 0, Math.PI * 2); ctx.fillStyle = b.color; ctx.fill();
-    ctx.lineWidth = 2; ctx.strokeStyle = u.side === "you" ? "#EAFBF1" : "#2A0E12"; ctx.stroke();
-    ctx.fillStyle = "#000A"; ctx.fillRect(u.x - b.r, u.y - b.r - 5, b.r * 2, 3);
-    ctx.fillStyle = u.side === "you" ? "#2FD37A" : "#F6465D"; ctx.fillRect(u.x - b.r, u.y - b.r - 5, b.r * 2 * Math.max(0, u.hp) / u.maxHp, 3);
+    ctx.beginPath(); ctx.arc(u.x, u.y, b.r, 0, Math.PI * 2); ctx.fillStyle = u.side === "you" ? "#27a644" : "#eb5757"; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = b.color; ctx.stroke();
+    ctx.fillStyle = "rgba(8,9,10,0.7)"; ctx.fillRect(u.x - b.r, u.y - b.r - 5, b.r * 2, 3);
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(u.x - b.r, u.y - b.r - 5, b.r * 2 * Math.max(0, u.hp) / u.maxHp, 3);
   }
 }
 // Algorithm Wars UI: a canvas + rAF render loop over the sim (engine functions above), with deploy
@@ -2977,25 +3161,25 @@ function AlgoWarsGame({ onWin, onCheer }) {
   const reset = () => { wonRef.current = false; simRef.current = newSim(); setOver(null); setStance("balanced"); };
   const deploy = (type) => { awDeploy(simRef.current, "you", type); };
   const cap = hud.youCap;
-  const btn = { fontFamily: MONO, fontSize: 11, borderRadius: 5, padding: "8px 10px", cursor: "pointer" };
+  const btn = { fontFamily: MONO, fontSize: 12, borderRadius: R.sm, padding: "8px 10px", cursor: "pointer" };
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {/* HUD */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: MONO, fontSize: 11, flexWrap: "wrap", gap: 8 }}>
-        <span style={{ color: "#2FD37A" }}>▮ YOU · server {hud.youBase}/200 · {hud.youN} bots</span>
-        <span style={{ color: C.amber }}>⚡ capital {cap}</span>
-        <span style={{ color: "#F6465D" }}>ENEMY · server {hud.cpuBase}/200 · {hud.cpuN} bots · {hud.cpuStance} ▮</span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: MONO, fontSize: 12, flexWrap: "wrap", gap: 8 }}>
+        <span style={{ color: C.up }}>▮ YOU · server {hud.youBase}/200 · {hud.youN} bots</span>
+        <span style={{ color: C.textStrong }}>⚡ capital {cap}</span>
+        <span style={{ color: C.down }}>ENEMY · server {hud.cpuBase}/200 · {hud.cpuN} bots · {hud.cpuStance} ▮</span>
       </div>
       {/* battlefield */}
       <div style={{ position: "relative", width: "100%", maxWidth: AW_W, alignSelf: "center" }}>
-        <canvas ref={canvasRef} width={AW_W} height={AW_H} style={{ width: "100%", height: "auto", display: "block", borderRadius: 8, border: `1px solid ${C.panelEdge}` }} />
+        <canvas ref={canvasRef} width={AW_W} height={AW_H} style={{ width: "100%", height: "auto", display: "block", borderRadius: R.md, border: `1px solid ${C.panelEdge}` }} />
         {over && (
-          <div style={{ position: "absolute", inset: 0, background: "rgba(5,8,13,0.82)", borderRadius: 8, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
-            <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: 24, color: over === "you" ? C.up : C.down }}>
+            <div style={{ position: "absolute", inset: 0, background: "rgba(8,9,10,0.86)", borderRadius: R.md, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
+            <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 24, color: over === "you" ? C.up : C.down }}>
               {over === "you" ? "🏆 MARKET DOMINATED" : "💥 ALGORITHMS CRUSHED"}
             </div>
             <div style={{ fontFamily: MONO, fontSize: 12, color: C.muted }}>{over === "you" ? "Your bots took the enemy server." : "The enemy overran your server."}</div>
-            <button onClick={reset} style={{ ...btn, background: C.amber, border: "none", color: "#141414", fontWeight: 700, padding: "9px 18px" }}>Rematch ↻</button>
+            <button onClick={reset} style={{ ...btn, background: C.accentPress, border: "none", color: C.textOnAccent, fontWeight: 510, padding: "9px 18px" }}>Rematch ↻</button>
           </div>
         )}
       </div>
@@ -3005,26 +3189,26 @@ function AlgoWarsGame({ onWin, onCheer }) {
           const afford = cap >= b.cost;
           return (
             <button key={id} onClick={() => deploy(id)} disabled={!afford || !!over} title={b.blurb}
-              style={{ ...btn, flex: 1, minWidth: 120, textAlign: "left", background: afford ? "#111827" : "#0D121C", border: `1px solid ${afford ? b.color : C.panelEdge}`, color: afford ? C.text : C.faint, opacity: over ? 0.5 : 1 }}>
-              <div style={{ fontWeight: 700, color: afford ? b.color : C.faint }}>{b.name} <span style={{ color: C.amber, fontWeight: 400 }}>⚡{b.cost}</span></div>
-              <div style={{ fontSize: 9, color: C.faint, marginTop: 2, lineHeight: 1.4 }}>{b.blurb}</div>
+              style={{ ...btn, flex: 1, minWidth: 120, textAlign: "left", background: afford ? "#161718" : "#0f1011", border: `1px solid ${afford ? C.edgeStrong : C.panelEdge}`, color: afford ? C.text : C.faint, opacity: over ? 0.5 : 1 }}>
+              <div style={{ fontWeight: 510, color: afford ? b.color : C.faint }}>{b.name} <span style={{ color: afford ? C.muted : C.faint, fontWeight: 400 }}>⚡{b.cost}</span></div>
+              <div style={{ fontSize: 10, color: C.faint, marginTop: 2, lineHeight: 1.4 }}>{b.blurb}</div>
             </button>
           );
         })}
       </div>
       {/* stance = live AI re-scripting */}
       <div>
-        <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", color: C.faint, marginBottom: 5 }}>YOUR ARMY LOGIC — flip it live to counter the enemy</div>
+        <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, marginBottom: 5 }}>YOUR ARMY LOGIC — flip it live to counter the enemy</div>
         <div style={{ display: "flex", gap: 6 }}>
           {AW_STANCES.map(s => (
             <button key={s.id} onClick={() => setStance(s.id)} title={s.hint}
-              style={{ ...btn, flex: 1, background: stance === s.id ? "rgba(255,179,0,0.16)" : "transparent", border: `1px solid ${stance === s.id ? C.amber : C.panelEdge}`, color: stance === s.id ? C.amber : C.muted, fontWeight: 600 }}>
+              style={{ ...btn, flex: 1, background: stance === s.id ? "rgba(255,255,255,0.09)" : "transparent", border: `1px solid ${stance === s.id ? C.accent : C.panelEdge}`, color: stance === s.id ? C.accentText : C.muted, fontWeight: 510 }}>
               {s.label}
             </button>
           ))}
         </div>
       </div>
-      <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, lineHeight: 1.6 }}>
+      <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint, lineHeight: 1.6 }}>
         Capital regenerates over time — spend it to deploy bots that auto-march and fight. Destroy the enemy server. Counter-play: Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers. The enemy adapts its logic — so adapt yours.
       </div>
     </div>
@@ -3071,63 +3255,89 @@ function AppCalendar({ extra = [] }) {
   const shift = (delta) => setYm(({ y, m }) => { const nm = m + delta; return { y: y + Math.floor(nm / 12) - (nm < 0 ? 1 : 0), m: ((nm % 12) + 12) % 12 }; });
   const add = () => { const t = title.trim(); if (!t) return; setEvents(evs => [...evs, { id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, date: sel, time, title: t }]); setTitle(""); setTime(""); };
   const del = (id) => setEvents(evs => evs.filter(e => e.id !== id));
+  const upcoming = [
+    ...events.map(e => ({ ...e, kind: "user" })),
+    ...extra.map(e => ({ ...e, kind: "market" })),
+  ].filter(e => e.date >= todayKey)
+    .sort((a, b) => a.date === b.date ? (a.time || "99").localeCompare(b.time || "99") : a.date.localeCompare(b.date))
+    .slice(0, 5);
+  const jump = (key) => { const [y, m] = String(key).split("-").map(Number); setYm({ y, m: m - 1 }); setSel(key); };
   const pretty = (key) => { const [y, m, d] = key.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" }); };
-  const navBtn = { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 12, padding: "2px 9px", cursor: "pointer" };
+  const navBtn = { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, padding: "2px 9px", cursor: "pointer" };
 
   return (
-    <div style={{ padding: 10 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <button onClick={() => shift(-1)} aria-label="Previous month" style={navBtn}>‹</button>
-        <button onClick={() => { setYm({ y: now.getFullYear(), m: now.getMonth() }); setSel(todayKey); }} title="Jump to today"
-          style={{ background: "transparent", border: "none", color: C.text, fontFamily: MONO, fontSize: 11, cursor: "pointer" }}>{CAL_MON[ym.m]} {ym.y}</button>
-        <button onClick={() => shift(1)} aria-label="Next month" style={navBtn}>›</button>
+    <div style={{ padding: 14, display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-start" }}>
+      {/* month grid — capped, so a wide panel gets an agenda instead of giant squares */}
+      <div style={{ flex: "1 1 300px", maxWidth: 420, minWidth: "min(236px, 100%)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <button onClick={() => shift(-1)} aria-label="Previous month" className="v-tap" style={navBtn}>‹</button>
+          <button onClick={() => { setYm({ y: now.getFullYear(), m: now.getMonth() }); setSel(todayKey); }} title="Jump to today"
+            style={{ background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 13, fontWeight: 510, cursor: "pointer" }}>{CAL_MON[ym.m]} {ym.y}</button>
+          <button onClick={() => shift(1)} aria-label="Next month" className="v-tap" style={navBtn}>›</button>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
+          {CAL_DOW.map((d, i) => <div key={i} style={{ textAlign: "center", fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>{d}</div>)}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
+          {cells.map((d, i) => {
+            if (d == null) return <div key={i} />;
+            const key = calKey(ym.y, ym.m, d);
+            const isToday = key === todayKey, isSel = key === sel;
+            const hasUser = userDays.has(key), hasMkt = mktDays.has(key);
+            return (
+              <button key={i} onClick={() => setSel(key)} className="v-calday" style={{
+                height: 36, display: "flex", alignItems: "center", justifyContent: "center", position: "relative",
+                background: isSel ? "rgba(255,255,255,0.10)" : "transparent",
+                border: `1px solid ${isToday ? C.accent : "transparent"}`, borderRadius: R.sm, cursor: "pointer",
+                fontFamily: SANS, fontSize: 12, color: isSel ? C.accentText : C.text, padding: 0,
+              }}>
+                {d}
+                {(hasUser || hasMkt) && (
+                  <span style={{ position: "absolute", bottom: 3, display: "flex", gap: 2 }}>
+                    {hasUser && <span style={{ width: 4, height: 4, borderRadius: "50%", background: isSel ? C.accent : C.up }} />}
+                    {hasMkt && <span style={{ width: 4, height: 4, borderRadius: "50%", background: C.amber }} />}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 2 }}>
-        {CAL_DOW.map((d, i) => <div key={i} style={{ textAlign: "center", fontFamily: MONO, fontSize: 8, color: C.faint }}>{d}</div>)}
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
-        {cells.map((d, i) => {
-          if (d == null) return <div key={i} />;
-          const key = calKey(ym.y, ym.m, d);
-          const isToday = key === todayKey, isSel = key === sel;
-          const hasUser = userDays.has(key), hasMkt = mktDays.has(key);
-          return (
-            <button key={i} onClick={() => setSel(key)} style={{
-              aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center", position: "relative",
-              background: isSel ? "rgba(255,179,0,0.18)" : "transparent",
-              border: `1px solid ${isToday ? C.amber : "transparent"}`, borderRadius: 4, cursor: "pointer",
-              fontFamily: MONO, fontSize: 10, color: isSel ? C.amber : C.text, padding: 0,
-            }}>
-              {d}
-              {(hasUser || hasMkt) && (
-                <span style={{ position: "absolute", bottom: 3, display: "flex", gap: 2 }}>
-                  {hasUser && <span style={{ width: 4, height: 4, borderRadius: "50%", background: isSel ? C.amber : C.up }} />}
-                  {hasMkt && <span style={{ width: 4, height: 4, borderRadius: "50%", background: C.amber }} />}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-      <div style={{ marginTop: 10, borderTop: `1px solid ${C.panelEdge}`, paddingTop: 8 }}>
-        <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", color: C.faint, marginBottom: 6 }}>{pretty(sel)}{sel === todayKey ? " · today" : ""}</div>
-        {dayEvents.length === 0 && <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginBottom: 4 }}>No events yet.</div>}
+
+      {/* agenda — the selected day, the add form, and what's coming */}
+      <div style={{ flex: "1 1 260px", minWidth: "min(236px, 100%)" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
+          <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 13, color: C.text }}>{pretty(sel)}</span>
+          {sel === todayKey && <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.accentText, border: `1px solid ${C.accent}`, borderRadius: R.pill, padding: "1px 7px" }}>TODAY</span>}
+        </div>
+        {dayEvents.length === 0 && <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint, marginBottom: 6 }}>No events.</div>}
         {dayEvents.map((e, i) => (
-          <div key={e.id || `m${i}`} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0" }}>
-            <span style={{ fontFamily: MONO, fontSize: 9, color: C.amber, minWidth: 56 }}>{e.time ? to12h(e.time) : (e.kind === "market" ? "📊" : "—")}</span>
-            <span style={{ fontFamily: MONO, fontSize: 11, color: e.kind === "market" ? C.amber : C.text, flex: 1, lineHeight: 1.3 }}>{e.title}</span>
-            {e.kind === "user"
-              ? <button onClick={() => del(e.id)} aria-label="Delete event" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 11 }}>✕</button>
-              : <span title="Market event" style={{ fontFamily: MONO, fontSize: 9, color: C.faint }}>mkt</span>}
+          <div key={e.id || `m${i}`} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
+            <span style={{ fontFamily: MONO, fontSize: 12, color: e.time ? C.accentText : C.faint, border: `1px solid ${C.panelEdge}`, borderRadius: R.xs, padding: "2px 6px", minWidth: 58, textAlign: "center" }}>{e.time ? to12h(e.time) : (e.kind === "market" ? "market" : "all day")}</span>
+            <span style={{ fontFamily: SANS, fontSize: 12, color: e.kind === "market" ? C.amber : C.text, flex: 1, lineHeight: 1.35 }}>{e.title}</span>
+            {e.kind === "user" && <button onClick={() => del(e.id)} aria-label="Delete event" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 11 }}>✕</button>}
           </div>
         ))}
-        <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+        <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
           <input value={time} onChange={e => setTime(e.target.value)} type="time" aria-label="Event time"
-            style={{ width: 92, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 10, padding: "5px 4px" }} />
-          <input value={title} onChange={e => setTitle(e.target.value)} onKeyDown={e => e.key === "Enter" && add()} placeholder="add event…" aria-label="Event title"
-            style={{ flex: 1, minWidth: 0, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, padding: "5px 6px" }} />
-          <button onClick={add} aria-label="Add event" style={{ background: C.amber, border: "none", color: "#141414", borderRadius: 4, fontFamily: MONO, fontSize: 14, fontWeight: 700, padding: "0 11px", cursor: "pointer" }}>+</button>
+            style={{ width: 96, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "7px 6px" }} />
+          <input value={title} onChange={e => setTitle(e.target.value)} onKeyDown={e => e.key === "Enter" && add()} placeholder="Add an event…" aria-label="Event title"
+            style={{ flex: 1, minWidth: 0, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, padding: "7px 8px" }} />
+          <button onClick={add} aria-label="Add event" style={{ background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, letterSpacing: "-0.010em", padding: "0 12px", cursor: "pointer", whiteSpace: "nowrap" }}>+ Add</button>
         </div>
+        {upcoming.length > 0 && (
+          <div style={{ marginTop: 14, borderTop: `1px solid ${C.panelEdge}`, paddingTop: 10 }}>
+            <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, marginBottom: 4 }}>UPCOMING</div>
+            {upcoming.map((e, i) => (
+              <button key={e.id || `u${i}`} onClick={() => jump(e.date)} className="v-row"
+                style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "5px 6px", margin: "0 -6px", background: "transparent", border: "none", borderRadius: R.sm, cursor: "pointer", textAlign: "left" }}>
+                <span style={{ fontFamily: MONO, fontSize: 12, color: C.muted, minWidth: 78 }}>{calPretty(e.date)}</span>
+                <span style={{ fontFamily: MONO, fontSize: 12, color: e.time ? C.accentText : C.faint, minWidth: 52 }}>{e.time ? to12h(e.time) : "—"}</span>
+                <span style={{ fontFamily: SANS, fontSize: 12, color: e.kind === "market" ? C.amber : C.text, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.title}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -3179,14 +3389,14 @@ const LEGAL_VERSION = "2026-07-14";
 const LEGAL_TERMS = [
   "Vantage is a market-information and entertainment dashboard. It is NOT financial advice, and nothing shown here is a recommendation to buy or sell any security.",
   "Market data may be delayed, simulated, or inaccurate. Do not rely on it for trading decisions.",
-  "Any API keys you enter (Finnhub, OpenRouter, TMDB, etc.) are stored only in your own browser's localStorage and are sent only to those providers' APIs — never to us.",
+  "Any API keys you enter yourself are stored only in your own browser's localStorage and are sent only to those providers' APIs. When the desk runs on this server's own model key instead, your question is sent to our backend, which forwards it to the model provider.",
   "This build may include a simulated subscription flow. Unless a real Stripe checkout is explicitly presented, no payment is taken and any paid plan is unlocked for demonstration only.",
   "The software is provided “as is”, without warranty of any kind. Use it at your own risk.",
 ];
 const LEGAL_PRIVACY = [
   "Your account (email, display name, chosen plan, and agreement timestamp) is stored locally in your browser. If you run the optional backend, it is also stored there in a gitignored file.",
   "Passwords are never stored in plain text — they are salted and hashed before storage.",
-  "We do not sell your data or embed third-party trackers. External requests go only to the market/AI/media APIs whose keys you provide.",
+  "We do not sell your data or embed third-party trackers. Market, media and AI requests go to this app's backend, which holds the provider keys, relays each request to the provider, and records AI runs for quota accounting. A model key you add yourself (e.g. Claude, OpenAI) is sent only to that provider.",
 ];
 
 // ---- password hashing (Layer 1, client-side) ----
@@ -3222,18 +3432,114 @@ async function backendReachable() {
   } catch { return false; }
 }
 
+
+// ============================================================
+//  Auth form primitives
+//
+//  These exist because the gate previously leaned on placeholders alone. A
+//  placeholder disappears the moment you type, which is precisely when someone
+//  wants to check what they are filling in, and it leaves a screen reader with a
+//  field that announces nothing once it has a value. So: real labels, real error
+//  slots, and a submit path that goes through a real <form> so password managers
+//  recognise the flow and offer to save the credential.
+// ============================================================
+
+// A labelled field with a slot for its error or hint.
+function AuthField({ id, label, error, hint, children }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <label htmlFor={id} style={{ ...TYPE.label, color: C.muted }}>{label}</label>
+      {children}
+      {error
+        ? <span role="alert" style={{ ...TYPE.caption, fontSize: 12, color: C.down }}>{error}</span>
+        : hint
+          ? <span style={{ ...TYPE.caption, fontSize: 12, color: C.faint }}>{hint}</span>
+          : null}
+    </div>
+  );
+}
+
+// Password input with a reveal toggle and a Caps Lock warning.
+//
+// The toggle is not a nicety: a masked field you cannot check is the main reason
+// people mistype a password, and on the local path a mistyped password at signup
+// is unrecoverable. Caps Lock gets its own warning for the same reason — it is
+// the most common cause of "my password suddenly stopped working".
+function AuthPasswordField({ id, value, onChange, autoComplete, placeholder, invalid, onBlur }) {
+  const [shown, setShown] = useState(false);
+  const [caps, setCaps] = useState(false);
+  const readCaps = (e) => { try { setCaps(!!(e.getModifierState && e.getModifierState("CapsLock"))); } catch { /* not every event carries modifier state */ } };
+  return (
+    <>
+      <div style={{ position: "relative", display: "flex" }}>
+        <input
+          id={id} type={shown ? "text" : "password"} value={value} placeholder={placeholder}
+          autoComplete={autoComplete} aria-invalid={invalid ? "true" : undefined}
+          onChange={e => onChange(e.target.value)}
+          onKeyDown={readCaps} onKeyUp={readCaps}
+          onBlur={e => { setCaps(false); if (onBlur) onBlur(e); }}
+          style={{ ...fieldRecipe({ invalid }), fontSize: 14, paddingRight: 74 }}
+        />
+        <button
+          type="button" onClick={() => setShown(v => !v)} aria-pressed={shown}
+          aria-label={shown ? "Hide password" : "Show password"}
+          style={{
+            position: "absolute", right: 5, top: "50%", transform: "translateY(-50%)",
+            ...button("quiet", "sm"), padding: "5px 9px", color: C.accentText, fontWeight: 510,
+          }}>
+          {shown ? "Hide" : "Show"}
+        </button>
+      </div>
+      {caps && (
+        <span role="status" style={{ ...TYPE.caption, fontSize: 12, color: C.warn, display: "flex", alignItems: "center", gap: 5 }}>
+          <span aria-hidden="true">⇪</span> Caps Lock is on
+        </span>
+      )}
+    </>
+  );
+}
+
+// Four segments rather than a percentage bar: a continuous bar invites people to
+// chase 100%, which is not a thing that exists. Segments read as "you have
+// cleared this many", and the line underneath says what to do next.
+function PasswordStrength({ result }) {
+  const tone = result.score >= 3 ? C.up : result.score === 2 ? C.warn : C.down;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ display: "flex", gap: 4 }} aria-hidden="true">
+        {[0, 1, 2, 3].map(i => (
+          <span key={i} style={{
+            flex: 1, height: 3, borderRadius: R.pill,
+            background: i < result.score ? tone : C.edgeStrong,
+            transition: `background ${MOTION.base} ${MOTION.ease}`,
+          }} />
+        ))}
+      </div>
+      <span role="status" style={{ ...TYPE.caption, fontSize: 12, color: result.blocking ? C.down : tone }}>
+        {result.blocking || `Password strength: ${result.label}`}
+      </span>
+    </div>
+  );
+}
+
 // ============================================================
 //  AuthScreen — the sign-in / sign-up / plan / legal gate (Layer 1 client flow,
 //  automatically upgraded to the backend when it is reachable). Self-contained: its
 //  own hooks keep new state out of the giant MarketDashboard component. Calls
-//  onAuthed(account) when the user is in, or onGuest() to explore the demo unwalled.
+//  onAuthed(account) when the user is in.
 // ============================================================
-function AuthScreen({ onAuthed, onGuest }) {
+function AuthScreen({ onAuthed }) {
   const { t } = useI18n();
   const [step, setStep] = useState("welcome");     // welcome | login | signup | plan | legal
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  // Errors stay hidden until a field has been left or the form submitted once —
+  // shouting "invalid email" at someone who has typed two characters is noise.
+  const [touched, setTouched] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
   const [plan, setPlan] = useState("free");
   const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -3247,7 +3553,7 @@ function AuthScreen({ onAuthed, onGuest }) {
   // Ask the backend which social providers are configured (needs their OAuth app + the backend running).
   useEffect(() => {
     if (!useBackend) return; let ok = true;
-    fetch("/api/auth/providers").then(r => r.ok ? r.json() : {}).then(j => ok && setSocialProviders(j || {})).catch(() => {});
+    api.auth.providers().then(j => ok && setSocialProviders(j || {})).catch(() => { /* no backend → no social buttons */ });
     return () => { ok = false; };
   }, [useBackend]);
   // "Continue with …" buttons. Social sign-in is a full-page redirect to the provider and back.
@@ -3255,29 +3561,49 @@ function AuthScreen({ onAuthed, onGuest }) {
   const socialBlock = (socialProviders.google || socialProviders.yahoo) ? (
     <div style={{ display: "grid", gap: 8 }}>
       {socialProviders.google && (
-        <button style={{ ...primaryBtn(), background: "#fff", color: "#1a1a1a", border: "1px solid #dadce0" }}
-          onClick={() => { window.location.href = "/api/auth/oauth/google/login"; }}>Continue with Google</button>
+        <button type="button" style={{ ...primaryBtn(), background: "#fff", color: "#1a1a1a", border: "1px solid #dadce0", boxShadow: SHADOW.sm }}
+          onClick={() => { window.location.href = api.auth.oauthUrl("google"); }}>Continue with Google</button>
       )}
       {socialProviders.yahoo && (
-        <button style={{ ...primaryBtn(), background: "#5f01d1", color: "#fff" }}
-          onClick={() => { window.location.href = "/api/auth/oauth/yahoo/login"; }}>Continue with Yahoo</button>
+        <button type="button" style={{ ...primaryBtn(), background: "#5f01d1", color: "#fff", boxShadow: SHADOW.sm }}
+          onClick={() => { window.location.href = api.auth.oauthUrl("yahoo"); }}>Continue with Yahoo</button>
       )}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "2px 0" }}>
-        <div style={{ flex: 1, height: 1, background: C.panelEdge }} /><span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>or</span><div style={{ flex: 1, height: 1, background: C.panelEdge }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0" }}>
+        <div style={{ flex: 1, height: 1, background: C.edge }} /><span style={{ ...TYPE.eyebrowSm, color: C.faint }}>or</span><div style={{ flex: 1, height: 1, background: C.edge }} />
       </div>
     </div>
   ) : null;
 
   const emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
 
+  // Moving between steps is always a fresh start for validation state, so an
+  // error left on the login form does not greet you on the signup form.
+  const go = (next) => { setErr(""); setSubmitted(false); setTouched({}); setShowRecovery(false); setStep(next); };
+  const touch = (k) => setTouched(v => ({ ...v, [k]: true }));
+  const revealed = (k) => submitted || !!touched[k];
+
+  const emailErr = revealed("email") && !emailOk
+    ? (email.trim() ? "That doesn't look like an email address." : "Enter your email address.")
+    : "";
+  const loginPwErr = revealed("password") && !password ? "Enter your password." : "";
+  // Only signup is held to the policy: accounts created under the old
+  // six-character rule must still be able to log in.
+  const pw = passwordCheck(password, { email });
+  const confirmErr = revealed("confirm") && confirm !== password
+    ? (confirm ? "The two passwords don't match." : "Re-enter your password to confirm.")
+    : "";
+  const signupReady = emailOk && pw.ok && confirm === password;
+
   // ---- LOG IN ----
   async function doLogin() {
+    setSubmitted(true);
+    if (!emailOk || !password) return;   // the inline errors now explain why
     setErr(""); setBusy(true);
     try {
       if (useBackend) {
-        const r = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email.trim().toLowerCase(), password }) });
-        const j = await r.json();
-        if (!r.ok) throw new Error(j.error || "Login failed");
+        // Goes through the REST client, which normalises the error, stores the
+        // session token and lower-cases the email in one place.
+        const j = await api.auth.login({ email, password });
         onAuthed({ email: j.email, name: j.name, plan: j.plan, token: j.token, backend: true });
         return;
       }
@@ -3292,14 +3618,16 @@ function AuthScreen({ onAuthed, onGuest }) {
 
   // ---- CREATE ACCOUNT (after plan + legal) ----
   async function doSignup() {
+    // The password was typed two steps ago, so re-run the gate at the moment the
+    // account is actually created rather than trusting the route taken to get here.
+    if (!emailOk) { setErr("Enter a valid email address."); go("signup"); return; }
+    if (!pw.ok) { setErr(pw.blocking); go("signup"); return; }
+    if (confirm !== password) { setErr("The two passwords don't match."); go("signup"); return; }
     setErr(""); setBusy(true);
     try {
       const em = email.trim().toLowerCase();
       if (useBackend) {
-        const r = await fetch("/api/auth/signup", { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: em, name: name.trim(), password, plan, legalVersion: LEGAL_VERSION }) });
-        const j = await r.json();
-        if (!r.ok) throw new Error(j.error || "Sign-up failed");
+        const j = await api.auth.signup({ email: em, name: name.trim(), password, plan, legalVersion: LEGAL_VERSION });
         onAuthed({ email: j.email, name: j.name, plan: j.plan, token: j.token, backend: true });
         return;
       }
@@ -3312,24 +3640,37 @@ function AuthScreen({ onAuthed, onGuest }) {
     } catch (e) { setErr(humanizeError(e)); } finally { setBusy(false); }
   }
 
-  // shared field styling
-  const field = { width: "100%", boxSizing: "border-box", padding: "11px 12px", background: "#0B0E14", border: `1px solid ${C.panelEdge}`, borderRadius: 8, color: C.text, fontFamily: MONO, fontSize: 13, outline: "none" };
-  const primaryBtn = (extra = {}) => ({ width: "100%", padding: "12px", background: C.amber, color: "#0B0E14", border: "none", borderRadius: 8, fontFamily: SANS, fontWeight: 700, fontSize: 14, cursor: "pointer", ...extra });
-  const ghostBtn = { background: "transparent", border: "none", color: C.amber, fontFamily: MONO, fontSize: 12, cursor: "pointer", textDecoration: "underline" };
-  const errBox = err ? <div style={{ background: "rgba(255,90,90,0.12)", border: "1px solid rgba(255,90,90,0.4)", color: "#ff8a8a", borderRadius: 8, padding: "9px 11px", fontFamily: MONO, fontSize: 11.5, lineHeight: 1.5 }}>{err}</div> : null;
+  // Shared control styling, taken from the design system so the gate is visibly
+  // the same product as the dashboard behind it. (Named `inputStyle` rather than
+  // `field` because `field` is the imported recipe this is built from.)
+  const inputStyle = { ...fieldRecipe(), fontSize: 14 };
+  const formCol = { display: "flex", flexDirection: "column", gap: 14 };
+  const primaryBtn = (extra = {}) => ({ ...button("primary", "lg", { full: true }), ...extra });
+  const ghostBtn = { ...button("quiet", "sm"), color: C.accentSoft, textDecoration: "underline", padding: 0 };
+  const errBox = err ? (
+    <div role="alert" style={{ background: C.downSoft, border: "1px solid rgba(235,87,87,0.4)", color: "#f28080", borderRadius: R.md, padding: "10px 12px", ...TYPE.bodySm, fontSize: 13, lineHeight: 1.5 }}>{err}</div>
+  ) : null;
 
+  // .v-aurora (global.css) drifts a slow colour field behind the card. The inline
+  // GRAD.aurora stays as the static base underneath it, so the surface is never
+  // flat black for the frame before the blobs paint — and so reduced-motion users
+  // still get the wash rather than nothing at all.
   return (
-    <div style={{ minHeight: "100vh", background: `radial-gradient(1200px 600px at 50% -10%, #16324a55, transparent), ${C.bg}`, color: C.text, fontFamily: SANS, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Archivo:wght@500;600;800&display=swap');`}</style>
-      <div style={{ width: step === "plan" ? 860 : 420, maxWidth: "96vw", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 14, boxShadow: "0 30px 80px rgba(0,0,0,0.6)", overflow: "hidden" }}>
+    <div className="v-aurora" style={{ minHeight: "100vh", background: `${GRAD.aurora}, ${C.base}`, color: C.text, fontFamily: SANS, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div className="v-rise" style={{ width: step === "plan" ? 880 : 428, maxWidth: "96vw", background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.xl, boxShadow: SHADOW.xl, overflow: "hidden" }}>
 
-        {/* header / brand */}
-        <div style={{ padding: "22px 26px 14px", borderBottom: `1px solid ${C.panelEdge}` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ width: 30, height: 30, borderRadius: 7, background: C.amber, color: "#0B0E14", display: "grid", placeItems: "center", fontWeight: 800, fontFamily: SANS }}>V</span>
+        {/* header / brand — the gradient mark is the same one the app header uses,
+            so the gate reads as the front door of this product rather than a
+            generic login screen. */}
+        <div style={{ padding: "24px 28px 18px", borderBottom: `1px solid ${C.edge}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+            <VantageMark size={34} />
             <div>
-              <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: 18, letterSpacing: 0.3 }}>VANTAGE</div>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>{useBackend ? "secured by server" : "runs on this device"}</div>
+              <div className="v-grad-text" style={{ fontFamily: DISPLAY, fontWeight: 510, fontSize: 20, letterSpacing: "-0.025em" }}>VANTAGE</div>
+              <div style={{ ...TYPE.eyebrowSm, color: C.faint, marginTop: 3, display: "flex", alignItems: "center", gap: 5 }}>
+                <span aria-hidden="true" style={{ width: 5, height: 5, borderRadius: "50%", background: useBackend ? C.up : C.faint }} />
+                {useBackend ? "secured by server" : "runs on this device"}
+              </div>
             </div>
           </div>
         </div>
@@ -3338,64 +3679,141 @@ function AuthScreen({ onAuthed, onGuest }) {
 
           {/* ---------- WELCOME ---------- */}
           {step === "welcome" && (<>
-            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20 }}>{t("The AI broadcast desk for the markets.")}</div>
-            <div style={{ fontFamily: MONO, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>Create a free account to save your watchlist, portfolio and plan. It takes a moment and works entirely on this device.</div>
+            <div style={{ ...TYPE.title }}>{t("The AI broadcast desk for the markets.")}</div>
+            {/* The old copy promised "works entirely on this device" unconditionally,
+                which stops being true the moment the optional backend is running.
+                Say which one it actually is. */}
+            <div style={{ ...TYPE.body, fontSize: 13, color: C.muted }}>
+              Create a free account to save your watchlist, portfolio and plan.
+              {useBackend
+                ? " Your account is held on the server you are connected to."
+                : " It takes a moment and works entirely on this device — nothing leaves your browser."}
+            </div>
             {socialBlock}
-            <button style={primaryBtn()} onClick={() => { setErr(""); setStep("signup"); }}>{t("Create account")}</button>
-            <button style={{ ...primaryBtn(), background: "transparent", color: C.text, border: `1px solid ${C.panelEdge}` }} onClick={() => { setErr(""); setStep("login"); }}>{t("Log in")}</button>
-            {/* The gate is skippable on purpose: a first-time visitor (or a judge opening a
-                hosted link) gets the whole dashboard without signing up. An account only
-                adds a saved plan — watchlist, portfolio and settings persist either way. */}
-            {onGuest && (
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <button style={ghostBtn} onClick={onGuest}>{t("Explore in demo mode →")}</button>
-              </div>
-            )}
+            <button style={primaryBtn()} onClick={() => go("signup")}>{t("Create account")}</button>
+            <button style={{ ...primaryBtn(), background: "transparent", color: C.text, border: `1px solid ${C.edge}` }} onClick={() => go("login")}>{t("Log in")}</button>
           </>)}
 
           {/* ---------- LOG IN ---------- */}
-          {step === "login" && (<>
-            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 18 }}>Welcome back</div>
-            {errBox}
-            {socialBlock}
-            <input style={field} type="email" placeholder="Email" value={email} autoComplete="username" onChange={e => setEmail(e.target.value)} />
-            <input style={field} type="password" placeholder="Password" value={password} autoComplete="current-password" onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && emailOk && password && doLogin()} />
-            <button style={primaryBtn({ opacity: busy || !emailOk || !password ? 0.6 : 1 })} disabled={busy || !emailOk || !password} onClick={doLogin}>{busy ? "Signing in…" : "Log in"}</button>
-            <div style={{ display: "flex", justifyContent: "flex-start", fontFamily: MONO, fontSize: 11, color: C.faint }}>
-              <button style={ghostBtn} onClick={() => { setErr(""); setStep("signup"); }}>Create account</button>
-            </div>
-          </>)}
+          {/* A real <form>, not a div of inputs: it is what makes Enter submit from
+              any field, what lets a password manager recognise the credential pair
+              and offer to save it, and what browsers autofill reliably. The submit
+              button is deliberately NOT disabled — a dead button explains nothing,
+              so submitting an incomplete form reveals the inline errors instead. */}
+          {step === "login" && (
+            <form style={formCol} noValidate onSubmit={e => { e.preventDefault(); doLogin(); }}>
+              <div style={{ ...TYPE.title, fontSize: 17 }}>Welcome back</div>
+              {errBox}
+              {socialBlock}
+
+              <AuthField id="login-email" label="Email" error={emailErr}>
+                <input id="login-email" style={{ ...inputStyle, ...(emailErr ? { borderColor: C.danger } : null) }}
+                  type="email" inputMode="email" placeholder="you@example.com" value={email}
+                  autoComplete="username" aria-invalid={emailErr ? "true" : undefined}
+                  onChange={e => setEmail(e.target.value)} onBlur={() => touch("email")} />
+              </AuthField>
+
+              <AuthField id="login-password" label="Password" error={loginPwErr}>
+                <AuthPasswordField id="login-password" value={password} onChange={setPassword}
+                  autoComplete="current-password" placeholder="Your password"
+                  invalid={!!loginPwErr} onBlur={() => touch("password")} />
+              </AuthField>
+
+              <button type="submit" style={primaryBtn({ opacity: busy ? 0.6 : 1 })} disabled={busy}>
+                {busy ? "Signing in…" : "Log in"}
+              </button>
+
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                <button type="button" style={ghostBtn} onClick={() => go("signup")}>Create account</button>
+                <button type="button" style={{ ...ghostBtn, color: C.faint }} aria-expanded={showRecovery}
+                  onClick={() => setShowRecovery(v => !v)}>Forgot password?</button>
+              </div>
+
+              {/* No fake "we sent you a link". There is no mail service in this
+                  build, and inventing one would strand people waiting on an email
+                  that never arrives. Say what is true and what they can do. */}
+              {showRecovery && (
+                <div style={{ ...TYPE.bodySm, fontSize: 13, color: C.muted, background: C.surfaceSunken, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: "11px 13px", lineHeight: 1.55 }}>
+                  {useBackend
+                    ? "This build has no password-reset email. Whoever runs the server can reset it for you directly."
+                    : "Your account lives only in this browser — there is no server to send a reset link from, and the password was stored as a salted hash that cannot be read back. If you cannot recall it, create a new account: your watchlist, portfolio and settings are saved separately and will still be here."}
+                </div>
+              )}
+            </form>
+          )}
 
           {/* ---------- SIGN UP (credentials) ---------- */}
-          {step === "signup" && (<>
-            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 18 }}>Create your account</div>
-            {errBox}
-            {socialBlock}
-            <input style={field} placeholder="Display name (optional)" value={name} onChange={e => setName(e.target.value)} />
-            <input style={field} type="email" placeholder="Email" value={email} autoComplete="username" onChange={e => setEmail(e.target.value)} />
-            <input style={field} type="password" placeholder="Password (min 6 characters)" value={password} autoComplete="new-password" onChange={e => setPassword(e.target.value)} />
-            <button style={primaryBtn({ opacity: !emailOk || password.length < 6 ? 0.6 : 1 })} disabled={!emailOk || password.length < 6} onClick={() => { setErr(""); setStep("plan"); }}>Continue → choose a plan</button>
-            {socialProviders.google && <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, textAlign: "center", lineHeight: 1.5 }}>Proton has no "sign in with Proton" — just sign up with your Proton email above.</div>}
-            <div style={{ display: "flex", justifyContent: "flex-start", fontFamily: MONO, fontSize: 11, color: C.faint }}>
-              <button style={ghostBtn} onClick={() => { setErr(""); setStep("login"); }}>I already have an account</button>
-            </div>
-          </>)}
+          {step === "signup" && (
+            <form style={formCol} noValidate onSubmit={e => {
+              e.preventDefault();
+              setSubmitted(true);
+              if (signupReady) { setErr(""); setSubmitted(false); setTouched({}); setStep("plan"); }
+            }}>
+              <div style={{ ...TYPE.title, fontSize: 17 }}>Create your account</div>
+              {errBox}
+              {socialBlock}
+
+              <AuthField id="signup-name" label="Display name" hint="Optional — what the anchor calls you on air.">
+                <input id="signup-name" style={inputStyle} placeholder="Alex" value={name}
+                  autoComplete="name" onChange={e => setName(e.target.value)} />
+              </AuthField>
+
+              <AuthField id="signup-email" label="Email" error={emailErr}>
+                <input id="signup-email" style={{ ...inputStyle, ...(emailErr ? { borderColor: C.danger } : null) }}
+                  type="email" inputMode="email" placeholder="you@example.com" value={email}
+                  autoComplete="username" aria-invalid={emailErr ? "true" : undefined}
+                  onChange={e => setEmail(e.target.value)} onBlur={() => touch("email")} />
+              </AuthField>
+
+              <AuthField id="signup-password" label="Password">
+                <AuthPasswordField id="signup-password" value={password} onChange={setPassword}
+                  autoComplete="new-password" placeholder={`At least ${PW_MIN} characters`}
+                  invalid={revealed("newpw") && !pw.ok} onBlur={() => touch("newpw")} />
+                {(password || revealed("newpw")) && <PasswordStrength result={pw} />}
+              </AuthField>
+
+              {/* Asked for twice on purpose. Without a reset path, a typo here is
+                  not an inconvenience — it is a permanently locked account. */}
+              <AuthField id="signup-confirm" label="Confirm password" error={confirmErr}
+                hint={!confirmErr && confirm && confirm === password ? "Passwords match." : ""}>
+                <AuthPasswordField id="signup-confirm" value={confirm} onChange={setConfirm}
+                  autoComplete="new-password" placeholder="Type it again"
+                  invalid={!!confirmErr} onBlur={() => touch("confirm")} />
+              </AuthField>
+
+              <button type="submit" style={primaryBtn()}>Continue → choose a plan</button>
+
+              {socialProviders.google && (
+                <div style={{ ...TYPE.caption, fontSize: 11, color: C.faint, textAlign: "center" }}>
+                  Proton has no "sign in with Proton" — just sign up with your Proton email above.
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                <button type="button" style={ghostBtn} onClick={() => go("login")}>I already have an account</button>
+              </div>
+            </form>
+          )}
 
           {/* ---------- PLAN PICKER ---------- */}
           {step === "plan" && (<>
-            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20, textAlign: "center" }}>Choose your plan</div>
-            <div style={{ fontFamily: MONO, fontSize: 11, color: C.faint, textAlign: "center", marginTop: -6 }}>You can change or cancel anytime. Paid plans are simulated in this build unless a real checkout appears.</div>
+            <div style={{ ...TYPE.title, textAlign: "center" }}>Choose your plan</div>
+            <div style={{ ...TYPE.caption, color: C.faint, textAlign: "center", marginTop: -6 }}>You can change or cancel anytime. Paid plans are simulated in this build unless a real checkout appears.</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 12, marginTop: 4 }}>
               {PLANS.map(p => {
                 const on = plan === p.id;
                 return (
-                  <button key={p.id} onClick={() => setPlan(p.id)} style={{ textAlign: "left", cursor: "pointer", background: on ? "#0B0E14" : "transparent", border: `2px solid ${on ? C.amber : C.panelEdge}`, borderRadius: 12, padding: 16, display: "flex", flexDirection: "column", gap: 8, position: "relative" }}>
-                    {p.featured && <span style={{ position: "absolute", top: -10, right: 12, background: C.amber, color: "#0B0E14", fontFamily: MONO, fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 999 }}>POPULAR</span>}
-                    <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 15 }}>{p.label}</div>
-                    <div style={{ fontFamily: SANS }}><span style={{ fontSize: 24, fontWeight: 800 }}>{p.price}</span><span style={{ fontFamily: MONO, fontSize: 11, color: C.faint }}> {p.cadence}</span></div>
-                    <div style={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, lineHeight: 1.5 }}>{p.tagline}</div>
-                    <div style={{ height: 1, background: C.panelEdge, margin: "2px 0" }} />
-                    {p.perks.map((k, i) => <div key={i} style={{ fontFamily: MONO, fontSize: 10.5, color: C.text, display: "flex", gap: 6, lineHeight: 1.5 }}><span style={{ color: C.up }}>✓</span>{k}</div>)}
+                  <button key={p.id} onClick={() => setPlan(p.id)} style={{ textAlign: "left", cursor: "pointer", background: on ? "#161718" : "transparent", border: `2px solid ${on ? C.accent : C.panelEdge}`, borderRadius: R.lg, padding: 16, display: "flex", flexDirection: "column", gap: 8, position: "relative" }}>
+                    {p.featured && <span style={{ position: "absolute", top: -10, right: 12, background: C.textStrong, color: C.bg, ...TYPE.eyebrowSm, fontWeight: 510, padding: "3px 8px", borderRadius: R.pill }}>POPULAR</span>}
+                    <div style={{ ...TYPE.subhead, fontSize: 15, fontWeight: 510 }}>{p.label}</div>
+                    {/* The price is the one number here, so it keeps the numeric face
+                        and the cadence rides alongside it in prose. */}
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                      <span style={{ ...TYPE.numLg, fontSize: 24, fontWeight: 510 }}>{p.price}</span>
+                      <span style={{ ...TYPE.caption, color: C.faint }}>{p.cadence}</span>
+                    </div>
+                    <div style={{ ...TYPE.caption, color: C.muted }}>{p.tagline}</div>
+                    <div style={{ height: 1, background: C.edge, margin: "2px 0" }} />
+                    {p.perks.map((k, i) => <div key={i} style={{ ...TYPE.caption, color: C.text, display: "flex", gap: 7, lineHeight: 1.5 }}><span style={{ color: C.up, flex: "0 0 auto" }}>✓</span>{k}</div>)}
                   </button>
                 );
               })}
@@ -3408,21 +3826,23 @@ function AuthScreen({ onAuthed, onGuest }) {
 
           {/* ---------- LEGAL AGREEMENT ---------- */}
           {step === "legal" && (<>
-            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 18 }}>Before you start</div>
+            <div style={{ ...TYPE.title, fontSize: 17 }}>Before you start</div>
             <div style={{ display: "flex", gap: 6 }}>
               {["terms", "privacy"].map(t => (
-                <button key={t} onClick={() => setLegalTab(t)} style={{ flex: 1, padding: "7px 0", background: legalTab === t ? C.panelEdge : "transparent", border: `1px solid ${C.panelEdge}`, borderRadius: 7, color: legalTab === t ? C.text : C.faint, fontFamily: MONO, fontSize: 11, fontWeight: 600, cursor: "pointer", textTransform: "uppercase", letterSpacing: 0.5 }}>{t === "terms" ? "Terms" : "Privacy"}</button>
+                <button key={t} onClick={() => setLegalTab(t)} style={{ flex: 1, padding: "7px 0", background: legalTab === t ? C.panelEdge : "transparent", border: `1px solid ${C.panelEdge}`, borderRadius: 7, color: legalTab === t ? C.text : C.faint, fontFamily: SANS, fontSize: 11, fontWeight: 510, cursor: "pointer", textTransform: "uppercase", letterSpacing: 0.5 }}>{t === "terms" ? "Terms" : "Privacy"}</button>
               ))}
             </div>
-            <div style={{ maxHeight: 200, overflowY: "auto", background: "#0B0E14", border: `1px solid ${C.panelEdge}`, borderRadius: 8, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ maxHeight: 200, overflowY: "auto", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
               {(legalTab === "terms" ? LEGAL_TERMS : LEGAL_PRIVACY).map((line, i) => (
-                <div key={i} style={{ fontFamily: MONO, fontSize: 11, color: C.muted, lineHeight: 1.6, display: "flex", gap: 8 }}><span style={{ color: C.faint }}>{i + 1}.</span>{line}</div>
+                <div key={i} style={{ ...TYPE.bodySm, fontSize: 13, color: C.muted, display: "flex", gap: 9 }}>
+                  <span style={{ ...TYPE.numSm, color: C.faint, flex: "0 0 auto" }}>{i + 1}.</span>{line}
+                </div>
               ))}
-              <div style={{ fontFamily: MONO, fontSize: 9.5, color: C.faint, marginTop: 2 }}>Version {LEGAL_VERSION}</div>
+              <div style={{ ...TYPE.caption, fontSize: 11, color: C.faint, marginTop: 2 }}>Version {LEGAL_VERSION}</div>
             </div>
             {errBox}
-            <label style={{ display: "flex", alignItems: "flex-start", gap: 9, cursor: "pointer", fontFamily: MONO, fontSize: 11.5, color: C.text, lineHeight: 1.5 }}>
-              <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} style={{ marginTop: 2, width: 16, height: 16, accentColor: C.amber, flex: "0 0 auto" }} />
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 9, cursor: "pointer", ...TYPE.bodySm, fontSize: 13, color: C.text }}>
+              <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} style={{ marginTop: 2, width: 16, height: 16, accentColor: C.accent, flex: "0 0 auto" }} />
               <span>I have read and agree to the Terms of Use and Privacy Policy, and I understand Vantage is not financial advice.</span>
             </label>
             <div style={{ display: "flex", gap: 10 }}>
@@ -3462,7 +3882,7 @@ function PnFChart({ columns, boxSize, up, down }) {
     // bi === top + 1 sits at y=0 (the SVG's top edge) — a label there clips above the viewBox,
     // so skip it and keep just the gridline; every other rung has room to render its label.
     if (bi % labelEvery === 0 && bi !== top + 1) {
-      kids.push(<text key={`t${bi}`} x={cols.length * CELL + 6} y={y + 3.5} fill={C.faint} fontSize="9" fontFamily={MONO}>{fmt(bi * boxSize)}</text>);
+      kids.push(<text key={`t${bi}`} x={cols.length * CELL + 6} y={y + 3.5} fill={C.faint} fontSize="10" fontFamily={MONO}>{fmt(bi * boxSize)}</text>);
     }
   }
   cols.forEach((col, ci) => {
@@ -3489,14 +3909,15 @@ function PnFChart({ columns, boxSize, up, down }) {
 // ============================================================
 function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const { lang, setLang, t } = useI18n();               // UI translation + AI-answer language
-  const [accountMenu, setAccountMenu] = useState(false); // header account dropdown open?
   const [billingCfg, setBillingCfg] = useState(null);    // Stripe availability (Layer 3), probed on demand
   const [billingBusy, setBillingBusy] = useState("");    // plan id mid-checkout, for button state
   const [agentPrefs, setAgentPrefs] = useState(null);     // server-stored opt-in scheduled briefing settings
   const [agentBusy, setAgentBusy] = useState(false);
 
   // ---- developer / testing mode: bypass ALL plan gates so every premium feature is testable now ----
-  // Turn on via ?dev=1 in the URL, or the toggle in settings → ACCOUNT. Persisted per-browser.
+  // Turn on via ?dev=1 in the URL (or ?local=…). Persisted per-browser. There is
+  // deliberately no switch for it in settings: a control that unlocks every paid
+  // feature is not a preference, and it read as one sitting in the ACCOUNT tab.
   // Clearly a testing aid — it only lifts the PLAN check; real keys are still required to actually work.
   const [devMode, setDevMode] = useState(() => {
     try { return localStorage.getItem("tape-dev-mode") === "1" || new URLSearchParams(window.location.search).has("dev"); } catch { return false; }
@@ -3512,19 +3933,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // Returns null when the feature is unlocked (by plan or dev mode). Safe to render inline in any tab.
   const lockChip = (feature) => planAllows(feature) ? null : (
     <span onClick={() => setSettingsTab("account")} title={`Unlock with ${planFor(feature)} — click to upgrade`}
-      style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", color: C.amber, background: "rgba(255,179,0,0.10)", border: `1px solid ${C.amber}`, borderRadius: 3, padding: "1px 6px", cursor: "pointer", whiteSpace: "nowrap" }}>
+      style={{ fontFamily: MONO, textTransform: "none", fontSize: 12, fontWeight: 510, letterSpacing: "-0.013em", color: C.accentText, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.accent}`, borderRadius: R.xs, padding: "1px 6px", cursor: "pointer", whiteSpace: "nowrap" }}>
       🔒 {planFor(feature)}
     </span>
   );
 
-  // mode + Finnhub key persist across reloads, so choosing LIVE once sticks (no re-toggling in settings)
-  const FINNHUB_DEFAULT = "d99u7s9r01qh9urlps6gd99u7s9r01qh9urlps70";
-  const loadFinnhubKey = () => { try { return window.localStorage.getItem("tape-finnhub-key") || FINNHUB_DEFAULT; } catch { return FINNHUB_DEFAULT; } };
   const [mode, setMode] = useState(() => { try { return window.localStorage.getItem("tape-mode") === "live" ? "live" : "demo"; } catch { return "demo"; } }); // 'demo' | 'live'
-  const [apiKey, setApiKey] = useState(loadFinnhubKey);
-  const [keyDraft, setKeyDraft] = useState(loadFinnhubKey);
+  // Every provider key lives on the server now (see server/index.js). The browser
+  // holds none; these gates read GET /api/status to learn which desks are lit.
+  const [meetStatus, setMeetStatus] = useState(null);   // null until the backend answers
+  const quotesReady = !!meetStatus?.quotes?.configured;
+  const canSearchVideos = !!meetStatus?.youtube?.configured;
+  const canBrowseCatalog = !!meetStatus?.tmdb?.configured;
+  const canUseStudioVoice = !!meetStatus?.eleven?.configured;
   const [showSettings, setShowSettings] = useState(false);
   const [settingsTab, setSettingsTab] = useState("quick");
+  const openPaletteRef = useRef(null); // AppShell parks its palette opener here so the command bar can host the trigger
   // ---- persisted prefs (Settings Bundle B): one object at localStorage["tape-prefs"], migrating the
   // legacy localStorage["tape-breaking"] flag on first load. See src/settings/preferences.js. ----
   const [prefs, setPrefs] = useState(() => {
@@ -3535,17 +3959,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   useEffect(() => {
     try { window.localStorage.setItem("tape-prefs", JSON.stringify(prefs)); } catch { /* storage full/blocked */ }
   }, [prefs]);
-  // Privacy mode hotkey: Shift+P toggles prefs.privacy, ignored while typing so a capital P in the
-  // ticker box or a chat field doesn't blur the screen.
-  useEffect(() => {
-    const onKey = (e) => {
-      const tag = (e.target && e.target.tagName) || "";
-      if (tag === "INPUT" || tag === "TEXTAREA" || e.target?.isContentEditable) return;
-      if (e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && (e.key === "P" || e.key === "p")) { e.preventDefault(); setPref("privacy", !prefs.privacy); }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [prefs.privacy]);
 
   // flat: C.muted (not C.faint) — matches the zero-case color the old numeric dirColor(n) used,
   // so prefDirColor/dirColorN reproduce the exact default palette in non-colorblind mode.
@@ -3562,7 +3975,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // totals, per-position P&L/%, and $ amounts with priv(...) wherever they render.
   const privacyStyle = prefs.privacy ? { filter: "blur(8px)", userSelect: "none" } : null;
   const priv = (node) => <span style={privacyStyle} aria-label={prefs.privacy ? t("hidden") : undefined}>{node}</span>;
-  const [justApplied, setJustApplied] = useState(false);
   const [watchlist, setWatchlist] = useState(UNIVERSE.slice(0, 8).map(u => u.sym));
   const [selected, setSelected] = useState("AMD");
   const [cmd, setCmd] = useState("");
@@ -3573,9 +3985,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [liveErr, setLiveErr] = useState("");
   const [liveBad, setLiveBad] = useState({});         // sym -> true when Finnhub doesn't recognize it
   const tickRef = useRef(null);
-  // remember the DEMO/LIVE choice and the Finnhub key so the app reopens where you left it
+  // remember the DEMO/LIVE choice so the app reopens where you left it
   useEffect(() => { try { window.localStorage.setItem("tape-mode", mode); } catch { /* storage blocked */ } }, [mode]);
-  useEffect(() => { try { if (apiKey) window.localStorage.setItem("tape-finnhub-key", apiKey); else window.localStorage.removeItem("tape-finnhub-key"); } catch { /* storage blocked */ } }, [apiKey]);
 
   // any symbol works in demo mode: unknown tickers get a deterministic synthetic session
   const ensureDemoSymbol = useCallback((sym) => {
@@ -3611,7 +4022,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     { id: "openrouter", label: "OpenRouter", kind: "openai", baseUrl: "https://openrouter.ai/api/v1", model: "openai/gpt-4o-mini", apiKey: "", needsKey: true, enabled: true },
     { id: "claude", label: "Claude", kind: "claude", baseUrl: "https://api.anthropic.com/v1", model: "claude-sonnet-4-5", apiKey: "", needsKey: true, enabled: false },
     { id: "openai", label: "OpenAI", kind: "openai", baseUrl: "https://api.openai.com/v1", model: "gpt-4o-mini", apiKey: "", needsKey: true, enabled: false },
-    { id: "gemini", label: "Gemini", kind: "gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta", model: "gemini-2.0-flash", apiKey: "", needsKey: true, enabled: false },
+    { id: "gemini", label: "Gemini", kind: "gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta", model: "gemini-3.6-flash", apiKey: "", needsKey: true, enabled: false },
   ];
   const [aiModels, setAiModels] = useState(() => {
     // restore saved per-model config (enabled, apiKey, model, baseUrl) so keys survive refreshes
@@ -3659,21 +4070,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     else window.localStorage?.removeItem?.("tape-anthropic-key");
   }, [anthropicApiKey]);
   // when a cloud model (Claude) fails — no credits, bad key, offline — automatically retry on a local model
-  const [fallbackLocal, setFallbackLocal] = useState(() =>
-    (typeof window === "undefined") ? true : window.localStorage.getItem("tape-fallback-local") !== "off");
-  useEffect(() => { window.localStorage?.setItem?.("tape-fallback-local", fallbackLocal ? "on" : "off"); }, [fallbackLocal]);
-  // detect the models installed on the local Ollama server (same list as `ollama list`) so the user
-  // can pick one instead of typing an id that might not be pulled.
-  const [ollamaTags, setOllamaTags] = useState([]);
-  const [ollamaTagErr, setOllamaTagErr] = useState("");
-  // captures the enabled-flags snapshot right before the local-only preset is applied, so the
-  // restore button can undo it. Never holds apiKey values — see snapshotEnabled().
-  const [preDemoSnapshot, setPreDemoSnapshot] = useState(null);
 
   // ---- local multi-turn memory: the desk remembers the conversation, on this device only ----
   // Stored as [{role:"user"|"assistant", content}] so follow-ups like "what about its risks?"
   // resolve against earlier turns. Never sent anywhere except to the model the user picked.
   const DESK_MEMORY_MAX = 12; // last 6 exchanges
+  const CHAT_KEEP = 60;       // transcript turns kept across a reload (~30 exchanges)
   const deskMemoryRef = useRef(null);
   // deskMemoryRef is a ref, so mutating it does not re-render; this state mirrors its length
   // at each assignment site so the settings UI can display a live turn count.
@@ -3696,31 +4098,122 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     setMemoryTurns(0);
     try { localStorage.removeItem("tape-desk-memory"); } catch { /* ok */ }
   }, []);
-  const detectOllama = useCallback(async () => {
-    const om = aiModels.find(m => m.id === "ollama");
-    const base = (om?.baseUrl || "http://localhost:11434").replace(/\/$/, "");
-    try {
-      const r = await fetch(`${base}/api/tags`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const j = await r.json();
-      const names = (j.models || []).map(m => m.name).filter(Boolean);
-      setOllamaTags(names);
-      setOllamaTagErr(names.length ? "" : "no models installed — run: ollama pull llama3.1");
-    } catch {
-      setOllamaTags([]);
-      // A wildcard origin is the simplest reliable fix (localhost ≠ 127.0.0.1 to a browser, so an
-      // exact-origin allow-list often mismatches). Keep this calm — it's a setup hint, not an error.
-      // Off a local origin no CORS setting can help, so say what actually works instead.
-      // A failed fetch can't distinguish "not installed" from "running but not allowing this
-      // origin", so cover both. Naming this page's origin is what makes the hint copy-pasteable.
-      setOllamaTagErr(`Ollama isn't reachable at ${base} from this page. If it's running, restart it allowing this origin:  OLLAMA_ORIGINS=${PAGE_ORIGIN} ollama serve  (or use *). If it isn't installed yet: https://ollama.com/download`);
-    }
-  }, [aiModels]);
   const [aiQuestion, setAiQuestion] = useState("");
   const [aiResponses, setAiResponses] = useState({}); // id -> {status:'idle'|'running'|'done'|'error', text, ms}
   const [lastAsked, setLastAsked] = useState("");
 
-  const live = mode === "live" && apiKey && planAllows("finnhub"); // plan-gated: live data needs Pro Desk
+  // ---- chat thread ----
+  // The conversation transcript rendered by <ChatAssistant>. `aiResponses` remains
+  // the engine — it holds the live, per-model streaming state — and this is the
+  // human-readable history built from it. Keeping the two separate means the
+  // existing ask/fallback machinery is untouched; we only mirror it into turns.
+  // Restored from the last session. A conversation that evaporates on refresh is
+  // not a conversation — and this dashboard reloads often (live-mode switches,
+  // key changes). Only the last CHAT_KEEP turns survive: the thread is a
+  // transcript, not an archive, and localStorage is a shared budget with the
+  // watchlist, portfolio and calendar.
+  const [chatThread, setChatThread] = useState(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem("tape-chat") || "[]");
+      if (!Array.isArray(saved)) return [];
+      const seen = new Set();
+      let rekey = 0;
+      return saved.slice(-CHAT_KEEP).map(m => {
+        let id = m.id || `x${++rekey}`;
+        while (seen.has(id)) id = `x${++rekey}`;
+        seen.add(id);
+        return id === m.id ? m : { ...m, id };
+      });
+    } catch { return []; }
+  });
+  // Both counters are seeded from whatever was restored, NOT from zero.
+  //
+  // Bubble ids are `${prefix}${turn}` and syncChatBubble() patches a bubble by
+  // id — that is how a streaming answer updates in place instead of appending a
+  // bubble per token. Restarting the counters after a reload therefore does not
+  // merely duplicate React keys: the first new answer finds the restored bubble
+  // with the same id and overwrites it, so asking a question silently rewrites
+  // an old one. Continuing the sequence past the restored high-water mark is
+  // what makes "patch by id" safe across a reload.
+  const seedSeq = (thread, prefixes) => thread.reduce((max, m) => {
+    const hit = /^([a-z])(\d+)$/.exec(m.id || "");
+    return hit && prefixes.includes(hit[1]) ? Math.max(max, +hit[2]) : max;
+  }, 0);
+  const chatTurnRef = useRef(0);   // monotonic id source for question/answer turns
+  const deskSeqRef = useRef(0);    // separate id source for desk-authored receipts
+  const seededRef = useRef(false);
+  if (!seededRef.current) {
+    seededRef.current = true;
+    chatTurnRef.current = seedSeq(chatThread, ["u", "a", "n"]);
+    deskSeqRef.current = seedSeq(chatThread, ["d"]);
+  }
+
+  // `widget` holds React elements, which do not survive JSON — and a turn still
+  // running would come back frozen mid-answer with a cursor that never resolves.
+  // Strip both on the way out.
+  useEffect(() => {
+    try {
+      const keep = chatThread
+        .filter(m => m.status !== "running")
+        .slice(-CHAT_KEEP)
+        .map(({ widget, ...rest }) => rest);
+      window.localStorage.setItem("tape-chat", JSON.stringify(keep));
+    } catch { /* quota or private mode — the thread simply will not persist */ }
+  }, [chatThread]);
+
+  // Every desk-handled intent still has to answer in the thread. Without this the
+  // app does the thing — opens the game room, builds the file, pulls up the
+  // calendar — while the transcript shows a question nobody replied to, which
+  // reads as the assistant ignoring you even though it obeyed. `kind: "action"`
+  // renders it as a receipt, so a thing the app did is never mistaken for a
+  // thing a model said.
+  // A desk-handled intent that answers in prose rather than announcing an
+  // action. deskReply's bubble is the "⚙ doing a thing" style; this one is an
+  // answer, so it reads — and can be read on air — like any other answer.
+  const pushDeskAnswer = useCallback((text) => {
+    if (!text) return;
+    setChatThread(t => [...t, { id: `a${chatTurnRef.current}`, role: "assistant", text }]);
+  }, []);
+
+  const deskReply = useCallback((text) => {
+    if (!text) return;
+    deskSeqRef.current += 1;
+    setChatThread(t => [...t, { id: `d${deskSeqRef.current}`, role: "assistant", kind: "action", text }]);
+  }, []);
+
+  // Mirror a live response into the transcript. The bubble's id is derived from the
+  // current turn number, so a streaming update patches the same bubble while the
+  // next question creates a fresh one. Desk-handled intents (exports, games) never
+  // write a response and therefore correctly produce no assistant bubble at all.
+  const syncChatBubble = useCallback((prefix, r) => {
+    if (!r) return;
+    const id = `${prefix}${chatTurnRef.current}`;
+    const meta = r.status === "running" ? undefined : [
+      r.stopped && "stopped",
+      r.via && `${r.via}${r.model ? ` · ${r.model}` : ""}`,
+      r.ms != null && `${r.ms} ms`,
+      r.tried?.length && `fell back from ${r.tried.join(" · ")}`,
+    ].filter(Boolean).join("  ·  ") || undefined;
+
+    setChatThread(t => {
+      const msg = {
+        id, role: "assistant",
+        text: r.text || "",
+        status: r.status,
+        error: r.status === "error",
+        sources: r.links?.length ? r.links.map(l => ({ title: l.label || l.title, url: l.url || l.href })) : undefined,
+        meta,
+      };
+      const i = t.findIndex(m => m.id === id);
+      if (i === -1) return [...t, msg];
+      const next = t.slice(); next[i] = msg; return next;
+    });
+  }, []);
+
+  useEffect(() => { syncChatBubble("a", aiResponses.desk); }, [aiResponses.desk, syncChatBubble]);
+  useEffect(() => { syncChatBubble("n", aiResponses.nav); }, [aiResponses.nav, syncChatBubble]);
+
+  const live = mode === "live" && quotesReady && planAllows("finnhub"); // plan-gated: live data needs Pro Desk
 
   // ---- demo ticking: advance the session ----
   useEffect(() => {
@@ -3755,33 +4248,43 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const pollLive = useCallback(async () => {
     if (!live) return false;
     const syms = [...new Set([selected, ...watchlist])];
-    let hit429 = false;
+    // ONE batched request per tick — the proxy fans out to Finnhub server-side
+    // (/api/quote?symbols=, up to 25). Polling per symbol counted 8 rate-limit
+    // hits for one refresh and drained the per-IP quota in minutes.
+    let r;
+    try { r = await fetch(`/api/quote?symbols=${syms.map(encodeURIComponent).join(",")}`); }
+    catch (e) { setLiveErr(humanizeError(e)); return false; }
+    if (r.status === 429) { setLiveErr("live feed is busy — easing off automatically."); return true; }
+    if (!r.ok) { setLiveErr(r.status === 503 ? "live quotes are not configured on this server" : `HTTP ${r.status}`); return false; }
+    let quotes = {};
+    try { quotes = (await r.json())?.quotes || {}; } catch { return false; }
+    const now = new Date();
+    const stamp = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+    let firstErr = "";
     for (const s of syms) {
-      try {
-        const q = await fetchQuote(s, apiKey);
-        setLiveQuotes(p => ({ ...p, [s]: q }));
-        setLiveTape(p => {
-          const arr = [...(p[s] || [])];
-          const now = new Date();
-          arr.push({ t: `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`, i: arr.length, price: q.c });
-          return { ...p, [s]: arr.slice(-500) };
-        });
-        setLiveErr("");
-        setLiveBad(p => { if (!p[s]) return p; const n = { ...p }; delete n[s]; return n; });
-      } catch (e) {
-        setLiveErr(`${s}: ${humanizeError(e)}`);
-        if (/unknown symbol/i.test(e.message)) {
+      const q = quotes[s];
+      if (!q) continue;
+      if (q.error) {
+        if (q.error === "unknown") {
           // Finnhub says it's not a real ticker → drop it from the watchlist and move off it if selected
           setLiveBad(p => (p[s] ? p : { ...p, [s]: true }));
           setWatchlist(w => w.filter(x => x !== s));
           setSelected(sel => (sel === s ? (watchlist.find(x => x !== s) || "SPY") : sel));
-        }
-        if (e.status === 429) { setLiveErr("live feed is busy (free data tier) — easing off automatically. Add your own Finnhub key in settings → DATA for higher limits."); hit429 = true; break; } // stop hammering this cycle
+          if (!firstErr) firstErr = `${s}: unknown symbol`;
+        } else if (!firstErr) firstErr = `${s}: quote failed (${q.error})`;
+        continue;
       }
-      await new Promise(r => setTimeout(r, 1100)); // ~1 req/sec keeps the free tier under its limit
+      setLiveQuotes(p => ({ ...p, [s]: q }));
+      setLiveTape(p => {
+        const arr = [...(p[s] || [])];
+        arr.push({ t: stamp, i: arr.length, price: q.c });
+        return { ...p, [s]: arr.slice(-500) };
+      });
+      setLiveBad(p => { if (!p[s]) return p; const n = { ...p }; delete n[s]; return n; });
     }
-    return hit429;
-  }, [live, apiKey, watchlist, selected]);
+    setLiveErr(firstErr);
+    return false;
+  }, [live, watchlist, selected]);
 
   // Self-scheduling poll: exponential backoff on 429 (the shared demo key is easily rate-limited),
   // plus a much slower cadence when the market is closed — quotes aren't moving, so don't burn the quota.
@@ -3830,9 +4333,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }, [live, liveQuotes, selected]);
   useEffect(() => { liveStaleRef.current = !!liveStale; }, [liveStale]);
 
-  // ---- panel visibility ----
-  const [panels, setPanels] = useState({ tape: true, watchlist: true, movers: true, news: true, calendar: true, portfolio: true, pnf: true });
+  // ---- panel visibility (persisted — a trimmed layout should survive a reload) ----
+  const [panels, setPanels] = useState(() => {
+    const defaults = { tape: true, watchlist: true, movers: true, news: true, calendar: true, portfolio: true, pnf: true };
+    try {
+      const saved = JSON.parse(window.localStorage.getItem("tape-panels") || "null");
+      return saved && typeof saved === "object" ? { ...defaults, ...saved } : defaults;
+    } catch { return defaults; }
+  });
   const togglePanel = (k) => setPanels(p => ({ ...p, [k]: !p[k] }));
+  useEffect(() => {
+    try { window.localStorage.setItem("tape-panels", JSON.stringify(panels)); } catch { /* storage full/blocked */ }
+  }, [panels]);
 
   // ---- tutorial + onboarding system (hub → spotlight tour / auto-demo / missions) ----
   // First launch only: once dismissed (skip, or picking a path), it stays gone. Replay
@@ -3849,7 +4361,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [missionsOpen, setMissionsOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
   // is at least one AI model usable right now? drives the tour/demo when nothing's set up yet
-  const aiReady = () => planAllows("ai") && aiModels.some(m => m.enabled && ((m.kind === "ollama" || /localhost|127\.0\.0\.1/.test(m.baseUrl || "")) || (m.kind === "claude" ? !!anthropicApiKey.trim() : !!(m.apiKey || "").trim())));
+  // The desk is on if THIS server holds a model key, or if the user brought one
+  // of their own. A server-held key is the normal path now — the browser never
+  // sees it, so there is nothing to paste and nothing to leak.
+  const serverAiReady = () => !!meetStatus?.ai?.configured;
+  const aiReady = () => planAllows("ai") && (serverAiReady() || aiModels.some(m => m.enabled && ((m.kind === "ollama" || /localhost|127.0.0.1/.test(m.baseUrl || "")) || (m.kind === "claude" ? !!anthropicApiKey.trim() : !!(m.apiKey || "").trim()))));
   const [missionsDone, setMissionsDone] = useState(() => {
     try { return new Set(JSON.parse(window.localStorage.getItem("tape-missions") || "[]")); } catch { return new Set(); }
   });
@@ -3881,23 +4397,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [voiceEngine, setVoiceEngine] = useState("browser"); // 'browser' | 'elevenlabs'
   // plan-gated: ElevenLabs needs Trading Floor. If the plan drops below it, fall back to free browser TTS.
   useEffect(() => { if (voiceEngine === "elevenlabs" && !planAllows("elevenlabs")) setVoiceEngine("browser"); }, [voiceEngine, planAllows]);
-  const getStoredElevenKey = () => {
-    const envKey = import.meta?.env?.VITE_ELEVENLABS_KEY || "";
-    if (typeof window === "undefined") return envKey;
-    return window.localStorage.getItem("tape-eleven-key") || envKey;
-  };
-  const [elevenKey, setElevenKey] = useState(() => getStoredElevenKey());
-  const [elevenKeyDraft, setElevenKeyDraft] = useState(() => getStoredElevenKey());
-  const getStoredYouTubeKey = () => {
-    const envKey = import.meta?.env?.VITE_YOUTUBE_KEY || "";
-    if (typeof window === "undefined") return envKey;
-    return window.localStorage.getItem("tape-youtube-key") || envKey;
-  };
-  const [youtubeKey, setYoutubeKey] = useState(() => getStoredYouTubeKey());
-  const [youtubeKeyDraft, setYoutubeKeyDraft] = useState(() => getStoredYouTubeKey());
-  // TMDB (free) — powers the in-app streaming catalog: Netflix/Disney+/Hulu libraries + trailers
-  const [tmdbKey, setTmdbKey] = useState(() => (typeof window !== "undefined" && window.localStorage.getItem("tape-tmdb-key")) || "");
-  useEffect(() => { if (tmdbKey) window.localStorage?.setItem?.("tape-tmdb-key", tmdbKey); else window.localStorage?.removeItem?.("tape-tmdb-key"); }, [tmdbKey]);
   const [elevenVoices, setElevenVoices] = useState([]);
   const [elevenVoiceId, setElevenVoiceId] = useState("");
   const [elevenErr, setElevenErr] = useState("");
@@ -3938,34 +4437,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     return () => { window.removeEventListener("pointerdown", prime); window.removeEventListener("keydown", prime); };
   }, []);
 
-  const persistElevenKey = useCallback((value) => {
-    const cleaned = value.trim();
-    setElevenKey(cleaned);
-    setElevenKeyDraft(cleaned);
-    if (typeof window !== "undefined") {
-      if (cleaned) window.localStorage.setItem("tape-eleven-key", cleaned);
-      else window.localStorage.removeItem("tape-eleven-key");
-    }
-  }, []);
 
-  useEffect(() => {
-    if (elevenKey) {
-      window.localStorage?.setItem?.("tape-eleven-key", elevenKey);
-    } else {
-      window.localStorage?.removeItem?.("tape-eleven-key");
-    }
-  }, [elevenKey]);
-
-  useEffect(() => {
-    if (youtubeKey) window.localStorage?.setItem?.("tape-youtube-key", youtubeKey);
-    else window.localStorage?.removeItem?.("tape-youtube-key");
-  }, [youtubeKey]);
-
-  const loadElevenVoices = useCallback(async (key) => {
-    if (!key) return;
+  const loadElevenVoices = useCallback(async () => {   // eslint-disable-line -- effect below owns the trigger
     try {
-      const r = await fetch("https://api.elevenlabs.io/v1/voices", { headers: { "xi-api-key": key } });
-      if (!r.ok) throw new Error(`HTTP ${r.status} — check the key`);
+      const r = await fetch("/api/voices");
+      if (!r.ok) throw await serverError(r, "Studio voices");
       const data = await r.json();
       const vs = (data.voices || []).map(v => ({ id: v.voice_id, name: v.name }));
       setElevenVoices(vs);
@@ -3976,60 +4452,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       setElevenVoices([]);
     }
   }, []);
+  // The list is the server's (its key, its account), so fetch it when the studio
+  // engine is selected and the server reports the desk lit — no paste-then-Apply.
+  useEffect(() => {
+    if (voiceEngine === "elevenlabs" && canUseStudioVoice && elevenVoices.length === 0) loadElevenVoices();
+  }, [voiceEngine, canUseStudioVoice, elevenVoices.length, loadElevenVoices]);
 
   // key tester: distinguishes "bad key" from "this environment blocks external APIs"
-  const [keyTests, setKeyTests] = useState({});
-  const testKey = useCallback(async (kind) => {
-    setKeyTests(p => ({ ...p, [kind]: "testing…" }));
-    const fail = (msg) => setKeyTests(p => ({ ...p, [kind]: msg }));
-    const ok = () => setKeyTests(p => ({ ...p, [kind]: "✓ key works" }));
-    try {
-      let r;
-      if (kind === "finnhub") {
-        const k = (keyDraft || apiKey || "").trim();
-        if (!k) return fail("no key entered");
-        r = await fetch(`https://finnhub.io/api/v1/quote?symbol=AAPL&token=${encodeURIComponent(k)}`);
-      } else if (kind === "eleven") {
-        const k = (elevenKeyDraft || elevenKey || "").trim();
-        if (!k) return fail("no key entered");
-        r = await fetch("https://api.elevenlabs.io/v1/voices", { headers: { "xi-api-key": k } });
-      } else if (kind === "youtube") {
-        const k = (youtubeKeyDraft || youtubeKey || "").trim();
-        if (!k) return fail("no key entered");
-        r = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=stocks&key=${encodeURIComponent(k)}`);
-      } else if (kind === "claude") {
-        const k = anthropicApiKey.trim();
-        if (!k) return fail("no key entered");
-        const base = (aiModels.find(x => x.id === "claude")?.baseUrl || "https://api.anthropic.com/v1").replace(/\/$/, "");
-        r = await fetch(`${base}/models`, {
-          headers: { "x-api-key": k, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
-        });
-      } else {
-        const m = aiModels.find(x => x.id === kind);
-        if (!m?.apiKey) return fail("no key entered");
-        r = kind === "gemini"
-          ? await fetch(`${m.baseUrl.replace(/\/$/, "")}/models?key=${encodeURIComponent(m.apiKey)}`)
-          : await fetch(`${m.baseUrl.replace(/\/$/, "")}/models`, { headers: { Authorization: `Bearer ${m.apiKey}` } });
-      }
-      if (r.ok) return ok();
-      fail(r.status === 401 || r.status === 403 ? "✗ key rejected — double-check it" : r.status === 429 ? "✗ service busy — try again shortly" : "✗ couldn't verify the key");
-    } catch {
-      fail("✗ blocked — this preview can't reach external APIs; works when deployed (see tape-backend.js)");
-    }
-  }, [keyDraft, apiKey, elevenKeyDraft, elevenKey, youtubeKeyDraft, youtubeKey, anthropicApiKey, aiModels]);
-  const TestBtn = ({ kind }) => (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-      <button onClick={() => testKey(kind)}
-        style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "3px 10px", cursor: "pointer" }}>
-        test key
-      </button>
-      {keyTests[kind] && (
-        <span style={{ fontFamily: MONO, fontSize: 10, color: keyTests[kind].startsWith("✓") ? C.up : keyTests[kind] === "testing…" ? C.muted : C.down }}>
-          {keyTests[kind]}
-        </span>
-      )}
-    </span>
-  );
 
   useEffect(() => {
     const load = () => {
@@ -4060,18 +4489,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }, []);
 
   const speakEleven = useCallback(async (id, text) => {
-    if (!elevenKey || !elevenVoiceId) { setCmdMsg("Add an ElevenLabs key and pick a voice in settings"); return; }
+    if (!canUseStudioVoice || !elevenVoiceId) { setCmdMsg(t("Pick a studio voice in settings")); return; }
     try {
       setSpeakingId(id);
       const r = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${elevenVoiceId}/stream?output_format=mp3_44100_128`,
+        "/api/tts",
         {
           method: "POST",
-          headers: { "xi-api-key": elevenKey, "Content-Type": "application/json" },
-          body: JSON.stringify({ text, model_id: "eleven_flash_v2_5" }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, voiceId: elevenVoiceId }),
         }
       );
-      if (!r.ok) throw new Error(`ElevenLabs HTTP ${r.status}${r.status === 401 ? " — bad key" : r.status === 429 ? " — quota/rate limit" : ""}`);
+      if (!r.ok) throw await serverError(r, "ElevenLabs");
       const blob = await r.blob();
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
@@ -4100,7 +4529,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       analyserRef.current = null;
       setSpeakingId(cur => (cur === id ? null : cur));
     }
-  }, [elevenKey, elevenVoiceId, speechRate]);
+  }, [elevenVoiceId, speechRate]);
 
   const speak = useCallback((id, text) => {
     if (!text?.trim()) return;
@@ -4412,11 +4841,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // ambient music source: the built-in synth, or a Spotify playlist embed
   const [musicSource, setMusicSource] = useState(() =>
     (typeof window !== "undefined" && window.localStorage.getItem("tape-music-source")) || "synth"); // 'synth' | 'spotify'
-  const [spotifyUri, setSpotifyUri] = useState(() =>
-    (typeof window !== "undefined" && window.localStorage.getItem("tape-spotify-uri")) ||
-    "https://open.spotify.com/playlist/37i9dQZF1DWWQRwui0ExPn"); // Lofi Beats — a calm default
+  const [spotifyUri, setSpotifyUri] = useState("https://open.spotify.com/playlist/37i9dQZF1DWWQRwui0ExPn"); // Lofi Beats — the no-backend fallback
   useEffect(() => { window.localStorage?.setItem?.("tape-music-source", musicSource); }, [musicSource]);
-  useEffect(() => { window.localStorage?.setItem?.("tape-spotify-uri", spotifyUri); }, [spotifyUri]);
+  // Adopt the server's playlist as soon as /api/status answers.
+  const servedPlaylist = meetStatus?.music?.playlist;
+  useEffect(() => { if (servedPlaylist) setSpotifyUri(servedPlaylist); }, [servedPlaylist]);
 
   // ---- Spotify OAuth (PKCE) + Web Playback SDK: real full-track playback for Premium accounts ----
   const [spotifyClientId, setSpotifyClientId] = useState(() =>
@@ -4831,6 +5260,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   });
   useEffect(() => { try { window.localStorage.setItem("tape-chartmode", chartMode); } catch { /* private */ } }, [chartMode]);
 
+  // Overlay toggles for the line chart. Off by default — overlays are an
+  // analyst's tool, and the first impression of the chart should be the tape.
+  const [chartSMA, setChartSMA] = useState(() => {
+    try { return window.localStorage.getItem("tape-chart-sma") === "1"; } catch { return false; }
+  });
+  useEffect(() => { try { window.localStorage.setItem("tape-chart-sma", chartSMA ? "1" : "0"); } catch { /* private */ } }, [chartSMA]);
+  // watchlist rendering: rows with sparklines, or a heat grid
+  const [wlView, setWlView] = useState(() => {
+    try { return window.localStorage.getItem("tape-wl-view") === "heat" ? "heat" : "list"; } catch { return "list"; }
+  });
+  useEffect(() => { try { window.localStorage.setItem("tape-wl-view", wlView); } catch { /* private */ } }, [wlView]);
+  const [chartHL, setChartHL] = useState(() => {
+    try { return window.localStorage.getItem("tape-chart-hl") === "1"; } catch { return false; }
+  });
+  useEffect(() => { try { window.localStorage.setItem("tape-chart-hl", chartHL ? "1" : "0"); } catch { /* private */ } }, [chartHL]);
+
   const chartData = useMemo(() => {
     if (live) return liveTape[selected] || [];
     const st = demoMkt[selected];
@@ -4865,6 +5310,32 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     return [+lo.toFixed(2), +hi.toFixed(2)];
   }, [chartData, selectedRow]);
 
+  // SMA rides in the same rows as the price so recharts plots both off one
+  // data array. A rolling sum, not a window-slice per point: the tape is
+  // hundreds of bars re-computed on every tick.
+  const SMA_N = 20;
+  const chartPlot = useMemo(() => {
+    if (!chartSMA || chartData.length < SMA_N) return chartData;
+    let sum = 0;
+    return chartData.map((d, i) => {
+      sum += d.price;
+      if (i >= SMA_N) sum -= chartData[i - SMA_N].price;
+      return i >= SMA_N - 1 ? { ...d, sma: +(sum / SMA_N).toFixed(4) } : d;
+    });
+  }, [chartData, chartSMA]);
+  // Compare mode: a second symbol on the same chart. Both tapes are normalized
+  // to % change over the shared window — two price scales can't share one axis.
+  const [chartVs, setChartVs] = useState(null);
+  useEffect(() => { if (chartVs === selected) setChartVs(null); }, [chartVs, selected]);
+
+  const sessionHL = useMemo(() => {
+    if (!chartHL || chartData.length < 2) return null;
+    const ys = chartData.map(d => d.price).filter(Number.isFinite);
+    if (ys.length < 2) return null;
+    const hi = Math.max(...ys), lo = Math.min(...ys);
+    return hi - lo > 1e-9 ? { hi, lo } : null;   // a frozen tape has no meaningful extremes
+  }, [chartData, chartHL]);
+
   // Spotify dock enter/exit animation: stay mounted briefly on close so the slide-out can play
   const [spotifyRender, setSpotifyRender] = useState(false);
   const [spotifyClosing, setSpotifyClosing] = useState(false);
@@ -4889,14 +5360,27 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     if (!t) return null;
     const upKey = t.toUpperCase();
     const tickerish = /^[A-Za-z]{1,5}$/.test(t);
-    const validate = async (c) => { if (!(live && apiKey)) return true; try { await fetchQuote(c, apiKey); return true; } catch { return false; } };
+    const validate = async (c) => { if (!live) return true; try { await fetchQuote(c); return true; } catch { return false; } };
     let cand = SYMBOL_ALIASES[upKey] || null;                    // 1. known company name / alias
     if (!cand && tickerish && t === upKey) cand = upKey;         // 2. ALL-CAPS 1-5 letters = a ticker
     if (cand && await validate(cand)) return cand;
-    if (apiKey) { const hit = await finnhubSearch(t, apiKey); if (hit && await validate(hit)) return hit; } // 3. name search
+    if (quotesReady) { const hit = await finnhubSearch(t); if (hit && await validate(hit)) return hit; } // 3. name search
     if (!live && tickerish) return upKey;                        // 4. demo: allow a synthesized ticker
     return null;                                                  // unrecognized → reject
-  }, [live, apiKey]);
+  }, [live, quotesReady]);
+
+  // The lookup half of the command bar, callable with an explicit query so the
+  // The palette can chart symbols through the exact same pipeline.
+  const chartQuery = async (query, isAdd = false) => {
+    setCmdMsg(`Looking up “${query}”…`);
+    const t = await resolveTyped(query);
+    if (!t) { setCmdMsg(`“${query}” not recognized.`); return; } // reject, no dead entry
+    if (!live && !demoMkt[t]) ensureDemoSymbol(t);
+    if (!watchlist.includes(t)) setWatchlist(w => [...w, t]);
+    setSelected(t);
+    setCmdMsg(isAdd ? `Added ${t} to watchlist` : (live ? "" : `${t} — demo data`));
+    completeMission("chart");
+  };
 
   const runCmd = async () => {
     const raw = cmd.trim();
@@ -4909,14 +5393,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     }
     const isAdd = up.startsWith("ADD ");
     const query = isAdd ? raw.slice(4).trim() : raw;
-    setCmd(""); setCmdMsg(`Looking up “${query}”…`);
-    const t = await resolveTyped(query);
-    if (!t) { setCmdMsg(`“${query}” isn't a recognized symbol or company — not added.`); return; } // reject, no dead entry
-    if (!live && !demoMkt[t]) ensureDemoSymbol(t);
-    if (!watchlist.includes(t)) setWatchlist(w => [...w, t]);
-    setSelected(t);
-    setCmdMsg(isAdd ? `Added ${t} to watchlist` : (live ? "" : `${t} — synthesized demo session (switch to live in settings for real quotes)`));
-    completeMission("chart");
+    setCmd("");
+    await chartQuery(query, isAdd);
   };
 
   // ---- AI desk: build context + fan out to every enabled model ----
@@ -4987,7 +5465,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     else if (mode === "bullbear") speak("school", `${i === 0 ? "Bull or Bear! " : ""}Here's the news: ${BULLBEAR_ROUNDS[i].headline} Bullish, or bearish?`);
     else if (mode === "ticker") speak("school", `${i === 0 ? "Ticker Match! " : ""}Which symbol is ${TICKER_ROUNDS[i].company}?`);
   }, [speak]);
-  const openGames = useCallback(() => { setGameOn(true); setGameMode("menu"); stopSpeak(); setCmdMsg("🎮 Game room — pick a game, the anchor will host."); }, [stopSpeak]);
+  const openGames = useCallback(() => { setGameOn(true); setGameMode("menu"); stopSpeak(); }, [stopSpeak]);
   const startMode = useCallback((mode) => {
     setGameMode(mode); setGameStep(0); setGameChoice(null); setGameScore(0);
     setGamePhase(mode === "school" ? "teach" : "quiz");
@@ -5001,7 +5479,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     else if (gameMode === "bullbear") { const R = BULLBEAR_ROUNDS[gameStep]; correct = i === (R.bullish ? 0 : 1); explain = R.why; }
     else { const R = TICKER_ROUNDS[gameStep]; correct = i === R.answer; explain = `${R.company} trades as ${R.options[R.answer]}.`; }
     if (correct) { setGameScore(s => s + 1); triggerAnchor("cheer", { label: "CORRECT! ✓" }); }
-    speak("school", (correct ? "Correct! " : "Not quite. ") + explain);
+    speak("school", explain);
   }, [gameMode, gameStep, triggerAnchor, speak]);
   const gameNext = useCallback(() => {
     setGameChoice(null);
@@ -5022,7 +5500,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // Backend calls are per-user: send the session token (Bearer) so the server scopes
   // OAuth tokens / meetings / calendar to THIS account. Empty for guests & local accounts.
   const authHdr = useMemo(() => (account?.token ? { Authorization: `Bearer ${account.token}` } : {}), [account?.token]);
-  const [meetStatus, setMeetStatus] = useState(null);   // {zoom:{configured,connected}, google:{...}} or null if backend is down — feeds the calendar auto-load + START chip; the MEET tab itself is zero-setup only
   // ---- Google Calendar: upcoming events shown in a dashboard panel ----
   const [calEvents, setCalEvents] = useState(null);     // null = not loaded, [] = none, [...] = events
   const [calErr, setCalErr] = useState("");
@@ -5048,7 +5525,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   useEffect(() => { if (gcalEmail) window.localStorage?.setItem?.("tape-gcal-email", gcalEmail); else window.localStorage?.removeItem?.("tape-gcal-email"); }, [gcalEmail]);
   const gcalEmbedUrl = (email) => {
     const tz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return "America/New_York"; } })();
-    const p = new URLSearchParams({ src: email, mode: "AGENDA", ctz: tz, showTitle: "0", showPrint: "0", showTabs: "0", showCalendars: "0", showTz: "0", bgcolor: "#0B0E14" });
+    const p = new URLSearchParams({ src: email, mode: "AGENDA", ctz: tz, showTitle: "0", showPrint: "0", showTabs: "0", showCalendars: "0", showTz: "0", bgcolor: "#ffffff" });
     return `https://calendar.google.com/calendar/embed?${p.toString()}`;
   };
   // an "active meeting" you can pin (paste the link a Go-Live tab created) — kept across reloads, shown as a live badge
@@ -5066,7 +5543,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const host = new URL(url).hostname.replace(/^www\./, "");
       if (!trusted && NO_EMBED.some(h => host === h || host.endsWith("." + h))) {
         window.open(url, "_blank", "noopener");
-        setCmdMsg(`${title} can't run embedded (broker security) — opened in a new tab. Use “📈 chart in-app” to stay inside Vantage.`);
+        setCmdMsg(`${title} blocks embedding — opened in a new tab.`);
         return;
       }
     } catch { /* not a URL — fall through to the panel */ }
@@ -5085,22 +5562,32 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [breakingAlert, setBreakingAlert] = useState(null); // { id, text, source }
   const breakingSeenRef = useRef(new Set());
   const breakingTimerRef = useRef(null);
-  const pushBreaking = useCallback((text, source) => {
-    const id = Date.now();
+  // One break-in per minute. Every alert is sound + on-air speech, and the P&F
+  // sweep alone runs every 3s — without a floor, a churning demo tape turns the
+  // desk into a siren. force (price alerts, calendar reminders) bypasses the
+  // cooldown: the user scheduled those themselves. Returns whether it aired, so
+  // a suppressed caller can defer instead of dropping the alert.
+  const lastBreakRef = useRef(0);
+  const pushBreaking = useCallback((text, source, { force = false } = {}) => {
+    const now = Date.now();
+    if (!force && now - lastBreakRef.current < 60000) return false;
+    lastBreakRef.current = now;
+    const id = now;
     setBreakingAlert({ id, text, source });
     playBreakingSfx();
     speak("breaking", `This just in. ${text}.`);
     clearTimeout(breakingTimerRef.current);
     breakingTimerRef.current = setTimeout(() => setBreakingAlert(a => (a && a.id === id ? null : a)), 16000);
+    return true;
   }, [speak, playBreakingSfx]);
   const runBreakingCheck = useCallback(async () => {
     if (!notifyEnabled(prefs, "breakingNews")) return;
     const { day, mins } = etNow();
     const marketOpen = day >= 1 && day <= 5 && mins >= 570 && mins < 960; // 9:30–16:00 ET weekdays
     if (!live || !marketOpen) return; // only during genuine live trading — live data AND market open (not demo, not after hours)
-    if (live && apiKey) { // real market wire from Finnhub
+    if (live) { // real market wire, through the server's key
       try {
-        const r = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${apiKey}`);
+        const r = await fetch("/api/market-news");
         if (r.ok) {
           const arr = await r.json();
           const fresh = (Array.isArray(arr) ? arr : []).find(n => n.headline && !breakingSeenRef.current.has(n.id || n.headline));
@@ -5118,7 +5605,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         pushBreaking(`${mover.sym} ${mover.chgPct >= 0 ? "surges" : "slides"} ${Math.abs(mover.chgPct).toFixed(1)}% ${mover.chgPct >= 0 ? "higher" : "lower"} in the session`, "market tape");
       }
     }
-  }, [prefs.notify.breakingNews, live, apiKey, selected, watchlist, getRow, pushBreaking]);
+  }, [prefs.notify.breakingNews, live, selected, watchlist, getRow, pushBreaking]);
   useEffect(() => {
     if (!notifyEnabled(prefs, "breakingNews")) { setBreakingAlert(null); return; }
     const first = setTimeout(runBreakingCheck, 9000);   // one shortly after load
@@ -5138,7 +5625,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       for (const e of evs) {
         if (e && e.date === todayKey && e.time === hhmm && !calRemindedRef.current.has(e.id)) {
           calRemindedRef.current.add(e.id);
-          pushBreaking(`Calendar reminder — ${e.title}${e.time ? ` at ${to12h(e.time)}` : ""}`, "calendar");
+          pushBreaking(`Calendar reminder — ${e.title}${e.time ? ` at ${to12h(e.time)}` : ""}`, "calendar", { force: true });
         }
       }
     };
@@ -5224,6 +5711,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     const st = demoMkt[sym];
     return st ? st.bars.slice(0, st.cursor + 1).map(b => b.price) : [];
   }, [live, liveTape, demoMkt]);
+  const comparePlot = useMemo(() => {
+    if (!chartVs || chartVs === selected || chartMode !== "line") return null;
+    const bCloses = getCloses(chartVs);
+    if (chartData.length < 2 || bCloses.length < 2) return null;
+    const n = Math.min(chartData.length, bCloses.length);
+    const aw = chartData.slice(chartData.length - n), bw = bCloses.slice(bCloses.length - n);
+    const a0 = aw[0].price, b0 = bw[0];
+    if (!(a0 > 0) || !(b0 > 0)) return null;
+    return aw.map((d, i) => ({ t: d.t, base: +((d.price / a0 - 1) * 100).toFixed(3), vs: +((bw[i] / b0 - 1) * 100).toFixed(3) }));
+  }, [chartVs, selected, chartMode, chartData, getCloses]);
   const pnfCheckRef = useRef(() => {});
   pnfCheckRef.current = () => {
     const syms = [...new Set([selected, ...watchlist])];
@@ -5235,9 +5732,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const prev = pnfSeenRef.current[sym];
       const wantsAnnounce = pat && prev !== undefined && pat.id !== prev;
       if (wantsAnnounce && !announced && notifyEnabled(prefs, "pnfPatterns")) {
-        announced = true;
-        pushBreaking(`${sym} just printed a ${pat.name} on the point-and-figure chart`, "P&F scan");
-        pnfSeenRef.current[sym] = pat.id;
+        if (pushBreaking(`${sym} just printed a ${pat.name} on the point-and-figure chart`, "P&F scan")) {
+          announced = true;
+          pnfSeenRef.current[sym] = pat.id;
+        }
+        // else: the break-in cooldown suppressed it — keep prev, a later sweep retries
       } else if (wantsAnnounce && announced && notifyEnabled(prefs, "pnfPatterns")) {
         // capped this sweep — keep prev so the next sweep announces it instead of dropping it
       } else {
@@ -5260,7 +5759,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [marketEvents, setMarketEvents] = useState([]);
   const fetchMarketEvents = useCallback(async () => {
     const syms = [...new Set([selected, ...watchlist])];
-    if (!(live && apiKey)) {
+    if (!live) {
       setResp("nav", { status: "done", nav: true, text: "📊 Live earnings dates need Finnhub — settings → DATA → switch to LIVE. (Ask me about a specific stock any time.)" });
       speak("nav", "Earnings dates need live market data. Switch to live in settings to see the market calendar.");
       return;
@@ -5268,7 +5767,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     try {
       const f = (d) => d.toISOString().slice(0, 10);
       const from = new Date(), to = new Date(Date.now() + 21 * 864e5);
-      const r = await fetch(`https://finnhub.io/api/v1/calendar/earnings?from=${f(from)}&to=${f(to)}&token=${apiKey}`);
+      const r = await fetch(`/api/earnings?from=${f(from)}&to=${f(to)}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const j = await r.json();
       const rows = (j.earningsCalendar || []).filter(e => syms.includes(e.symbol));
@@ -5286,7 +5785,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         speak("nav", "No earnings on your watchlist in the next three weeks.");
       }
     } catch (e) { setResp("nav", { status: "error", nav: true, text: `Couldn't load market events — ${humanizeError(e)}` }); }
-  }, [live, apiKey, selected, watchlist, speak]);
+  }, [live, selected, watchlist, speak]);
 
   // ---- portfolio: holdings with live P&L; the anchor can brief it ----
   const [deskPortfolio, setDeskPortfolio] = useState(false); // show the portfolio inside the desk response box
@@ -5434,13 +5933,25 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false); // AI-desk header "⋯ More" dropdown (games / ambient / music)
+
+  // Export/More behave like real menus: any press outside their wrapper — or
+  // Escape — dismisses them, same as the account menu in the header.
+  useEffect(() => {
+    if (!showExportMenu && !showMoreMenu) return;
+    const closeAll = () => { setShowExportMenu(false); setShowMoreMenu(false); };
+    const onDown = (e) => { if (!e.target.closest?.("[data-deskmenu]")) closeAll(); };
+    const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); closeAll(); } };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [showExportMenu, showMoreMenu]);
   // shared style for the AI-desk header toolbar buttons — one consistent look, amber when active
   const deskBtn = (active) => ({
     display: "flex", alignItems: "center", gap: 6,
-    background: active ? "rgba(255,179,0,0.14)" : "transparent",
-    border: `1px solid ${active ? C.amber : C.panelEdge}`,
-    color: active ? C.amber : C.muted,
-    borderRadius: 5, fontFamily: MONO, fontSize: 10, letterSpacing: "0.04em",
+    background: active ? "rgba(255,255,255,0.08)" : "transparent",
+    border: `1px solid ${active ? C.accent : C.panelEdge}`,
+    color: active ? C.accentText : C.muted,
+    borderRadius: 5, fontFamily: SANS, fontWeight: 510, fontSize: 11, letterSpacing: "-0.010em",
     padding: "5px 11px", cursor: "pointer", whiteSpace: "nowrap",
     transition: "border-color .12s, color .12s, background .12s",
   });
@@ -5464,32 +5975,37 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     if (checkout) { u.searchParams.delete("checkout"); u.searchParams.delete("plan"); window.history.replaceState({}, "", u.toString()); }
   }, [authHdr, onChangePlan]);
   // load provider status whenever the Meetings tab is opened
+  // Ask once on mount too. This response also says whether the server holds the
+  // model key, and aiReady gates the composer — not just the Meetings tab, so
+  // waiting until someone opens Meetings left the desk believing it was off.
+  useEffect(() => { refreshMeetStatus(); }, [refreshMeetStatus]);
+
+  // ---- migration: purge provider keys this browser used to hold ----
+  // Every proxied provider's key now lives on the server, and the states that
+  // read these localStorage entries are gone — a leftover copy is pure liability
+  // with no reader. Runs every load; removing an absent entry is a no-op.
+  // Claude and OpenAI-direct still call their own APIs, so their keys stay.
+  useEffect(() => {
+    const stale = ["tape-finnhub-key", "tape-eleven-key", "tape-youtube-key", "tape-tmdb-key", "tape-server-keys-migrated"];
+    let dropped = 0;
+    try {
+      for (const k of stale) if (window.localStorage.getItem(k) != null) { window.localStorage.removeItem(k); dropped++; }
+    } catch { /* private mode */ }
+    // OpenRouter + Gemini ride the server now; blank any stored copy in the saved model config.
+    // The desk also speaks through the server's OpenRouter, full stop: the model-picker UI is
+    // gone, so any other entry it left enabled would be a switch stuck on with no reachable off.
+    // (?local=1 keeps working as the developer escape hatch and skips the pin.)
+    let localDemo = false;
+    try { localDemo = new URLSearchParams(window.location.search).has("local"); } catch { /* ignore */ }
+    setAiModels(ms => ms.map(m => ({
+      ...m,
+      apiKey: (m.id === "openrouter" || m.id === "gemini") ? "" : m.apiKey,
+      ...(localDemo ? {} : { enabled: m.id === "openrouter" }),
+    })));
+    if (dropped) console.info(`[vantage] ${dropped} stored provider key entr${dropped === 1 ? "y" : "ies"} removed — the server holds the keys now.`);
+  }, []);
   useEffect(() => { if (showSettings && settingsTab === "meetings") refreshMeetStatus(); }, [showSettings, settingsTab, refreshMeetStatus]);
 
-  // ---- inference telemetry: poll Ollama's /api/ps for which local model is loaded, how much
-  // sits in VRAM, and (once a question has been asked) tok/s. Only while the settings dialog is
-  // open on the MODELS tab — no background polling. Ollama never reports GPU vendor, so neither
-  // does this strip — see src/settings/localProof.js.
-  const [psInfo, setPsInfo] = useState(null); // { models: [...] } | "unavailable" | null
-  useEffect(() => {
-    if (!showSettings || settingsTab !== "models") return;
-    const local = pickLocalModel();
-    if (!local || local.kind !== "ollama") { setPsInfo(null); return; }
-    const base = (local.baseUrl || "http://localhost:11434").replace(/\/$/, "");
-    let alive = true;
-    const poll = async () => {
-      try {
-        const r = await fetch(`${base}/api/ps`);
-        const j = await r.json();
-        if (alive) setPsInfo(j && Array.isArray(j.models) ? j : { models: [] });
-      } catch {
-        if (alive) setPsInfo("unavailable"); // Ollama down or CORS-blocked
-      }
-    };
-    poll();
-    const id = setInterval(poll, 4000);
-    return () => { alive = false; clearInterval(id); };
-  }, [showSettings, settingsTab, aiModels]);
 
   // ---- billing (Layer 3): probe Stripe availability when the ACCOUNT tab opens ----
   // If the backend has Stripe keys, paid upgrades route through Stripe's hosted checkout.
@@ -5694,6 +6210,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const buildPrompt = (question) =>
     `You are one of several analysts on a trading desk answering the same question side by side. Be concise: 2-4 sentences, no preamble. Never give personalized financial advice; frame observations analytically.${lang !== "en" ? ` Respond entirely in ${LANG_AI[lang]}.` : ""}\n` +
     `Earlier turns of this conversation may precede this message — use them to resolve follow-ups (pronouns, "what about its risks?").\n\n` +
+    `If you are asked what this application is, answer with exactly this and nothing else: "${VANTAGE_ABOUT}"\n\n` +
     `The market snapshot below is this dashboard's own data — treat it as the live tape when it is real quotes, or as a hypothetical scenario (say so briefly) when it is simulated demo data.\n` +
     `For questions about current or recent real-world events — "this week in the market", latest news, a company's recent moves — use web search to ground your answer in up-to-date facts, and don't confuse the simulated snapshot with the real market.\n\n` +
     `Market snapshot (JSON):\n${JSON.stringify(buildMarketContext())}\n\nQuestion: ${question}`;
@@ -5724,7 +6241,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const generateWrittenReport = useCallback(async () => {
     // write via the enabled models in order (OpenRouter is primary) — cascades on error, like the desk.
     const isLocal = (m) => m.kind === "ollama" || /localhost|127\.0\.0\.1/.test(m.baseUrl || "");
-    const usable = !planAllows("ai") ? [] : aiModels.filter(m => m.enabled && (isLocal(m) || (m.kind === "claude" ? !!anthropicApiKey.trim() : (m.needsKey ? !!(m.apiKey && m.apiKey.trim()) : true))));
+    // OpenRouter and Gemini are keyed by the server, so "enabled" is all they need here.
+    const serverKeyed = (m) => (m.id === "openrouter" && !!meetStatus?.ai?.configured) || (m.id === "gemini" && !!meetStatus?.gemini?.configured);
+    const usable = !planAllows("ai") ? [] : aiModels.filter(m => m.enabled && (isLocal(m) || serverKeyed(m) || (m.kind === "claude" ? !!anthropicApiKey.trim() : (m.needsKey ? !!(m.apiKey && m.apiKey.trim()) : true))));
     if (!usable.length) { setExportMsg("✗ Enable a model with a key (OpenRouter, Claude…) or a local model to write a report"); return null; }
     setReportBusy(true);
     const ctx = JSON.stringify(buildMarketContext());
@@ -5762,7 +6281,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     } finally {
       setReportBusy(false);
     }
-  }, [aiModels, anthropicApiKey, selected, buildMarketContext, getClaudeBaseUrl, getAnthropicHeaders]);
+  }, [aiModels, anthropicApiKey, meetStatus, selected, buildMarketContext, getClaudeBaseUrl, getAnthropicHeaders]);
 
   // Detect an export request typed into the MAIN desk bar — "download excel", "make a powerpoint",
   // "write a report and export the ppt". Returns {fmt, wantReport} or null (so askDesk can short-circuit).
@@ -5914,11 +6433,26 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }
 
   async function askOpenAICompat(m, prompt, signal, onToken, history = []) {
-    const r = await fetch(`${m.baseUrl.replace(/\/$/, "")}/chat/completions`, {
+    // A cloud model with no key of its own goes through our own backend, which
+    // holds the OpenRouter key — a key shipped to the browser is a published key.
+    // The backend replies with the same OpenAI-shaped SSE, so every line below
+    // this point is identical either way.
+    // When this server holds a key, it WINS over anything left in the browser.
+    // Preferring a stored key meant a stale one from before the backend existed
+    // silently kept talking to the provider direct — with the UI claiming the
+    // opposite — which is precisely the leak the proxy exists to close.
+    // Scoped to OpenRouter because that is precisely what the backend proxies.
+    // needsKey was too broad: OpenAI-direct ships a bare model id ("gpt-4o-mini")
+    // that OpenRouter cannot resolve, and Claude/Gemini never reach this function
+    // at all. When this server holds a key it WINS over anything in the browser —
+    // preferring a stored key is how a stale one silently kept calling the
+    // provider direct while the UI claimed otherwise.
+    const viaServer = m.id === "openrouter"; // OpenRouter rides the server's key, always
+    const r = await fetch(viaServer ? "/api/ai/chat" : `${m.baseUrl.replace(/\/$/, "")}/chat/completions`, {
       method: "POST", signal,
       headers: {
         "Content-Type": "application/json",
-        ...(m.apiKey ? { Authorization: `Bearer ${m.apiKey}` } : {}),
+        ...(viaServer ? authHdr : (m.apiKey ? { Authorization: `Bearer ${m.apiKey}` } : {})),
       },
       body: JSON.stringify({ model: m.model, stream: true, messages: [...history, { role: "user", content: prompt }] }),
     });
@@ -6034,19 +6568,25 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   };
 
   async function askGemini(m, prompt, signal, onToken, history = []) {
-    if (!m.apiKey) throw new Error("Add a Gemini API key in settings (aistudio.google.com/apikey)");
+    // No key of its own? Our backend holds one and speaks the same streaming
+    // shape, so the SSE parser below is untouched.
+    // Gemini rides the server's key, always.
     const r = await fetch(
-      `${m.baseUrl.replace(/\/$/, "")}/models/${m.model}:streamGenerateContent?alt=sse&key=${encodeURIComponent(m.apiKey)}`,
+      "/api/ai/gemini",
       {
         method: "POST", signal,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [
+        body: JSON.stringify({ model: m.model, contents: [
           ...history.map(h => ({ role: h.role === "assistant" ? "model" : "user", parts: [{ text: h.content }] })),
           { role: "user", parts: [{ text: prompt }] },
         ] }),
       }
     );
-    if (!r.ok) throw new Error(`HTTP ${r.status}${r.status === 400 || r.status === 403 ? " — check the API key" : r.status === 429 ? " — rate limited" : ""}`);
+    if (!r.ok) {
+      let msg = "";
+      try { msg = (await r.json())?.error || ""; } catch { /* keep status */ }
+      throw new Error(msg || `HTTP ${r.status}${r.status === 429 ? " — rate limited" : ""}`);
+    }
     const reader = r.body.getReader();
     const dec = new TextDecoder();
     let buf = "";
@@ -6082,13 +6622,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const browseCatalog = useCallback(async (svc, kind = "movie") => {
     setCatalogPick(null);
     if (!planAllows("tmdb")) { setCatalog({ service: svc, kind, loading: false, items: [], error: `Streaming catalog is a ${planFor("tmdb")} feature — upgrade in settings → ACCOUNT.` }); return; }
-    const key = tmdbKey.trim();
-    if (!key) { setCatalog({ service: svc, kind, loading: false, items: [], error: "Add a free TMDB API key in settings → DATA to browse libraries in-app." }); return; }
+    if (!canBrowseCatalog) { setCatalog({ service: svc, kind, loading: false, items: [], error: "The streaming catalog isn't configured on this server." }); return; }
     setCatalog({ service: svc, kind, loading: true, items: [] });
     try {
-      const url = `https://api.themoviedb.org/3/discover/${kind}?api_key=${encodeURIComponent(key)}&with_watch_providers=${svc.tmdb}&watch_region=US&sort_by=popularity.desc&language=en-US&page=1`;
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`HTTP ${r.status}${r.status === 401 ? " — check the TMDB key" : ""}`);
+      const r = await fetch(`/api/tmdb/discover?kind=${kind}&provider=${svc.tmdb}&region=US`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const d = await r.json();
       const items = (d.results || []).slice(0, 12).map(m => ({
         id: m.id, kind, title: m.title || m.name, rating: m.vote_average,
@@ -6098,17 +6636,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       }));
       setCatalog({ service: svc, kind, loading: false, items });
     } catch (e) { setCatalog({ service: svc, kind, loading: false, items: [], error: humanizeError(e) }); }
-  }, [tmdbKey, planAllows]);
+  }, [canBrowseCatalog, planAllows]);
   const browsePopular = useCallback(async (kind = "movie") => {
     setCatalogPick(null);
     if (!planAllows("tmdb")) { setCatalog({ popular: true, kind, loading: false, items: [], error: `Streaming catalog is a ${planFor("tmdb")} feature — upgrade in settings → ACCOUNT.` }); return; }
-    const key = tmdbKey.trim();
-    if (!key) { setCatalog({ popular: true, kind, loading: false, items: [], error: "Add a free TMDB API key in settings → DATA to browse popular titles." }); return; }
+    if (!canBrowseCatalog) { setCatalog({ popular: true, kind, loading: false, items: [], error: "The streaming catalog isn't configured on this server." }); return; }
     setCatalog({ popular: true, kind, loading: true, items: [] });
     try {
-      const url = `https://api.themoviedb.org/3/trending/${kind}/week?api_key=${encodeURIComponent(key)}&language=en-US`;
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`HTTP ${r.status}${r.status === 401 ? " — check the TMDB key" : ""}`);
+      const r = await fetch(`/api/tmdb/trending?kind=${kind}`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const d = await r.json();
       const items = (d.results || []).slice(0, 12).map(m => ({
         id: m.id, kind, title: m.title || m.name, rating: m.vote_average,
@@ -6118,12 +6654,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       }));
       setCatalog({ popular: true, kind, loading: false, items });
     } catch (e) { setCatalog({ popular: true, kind, loading: false, items: [], error: humanizeError(e) }); }
-  }, [tmdbKey, planAllows]);
+  }, [canBrowseCatalog, planAllows]);
   const playTrailer = useCallback(async (item, svc) => {
     if (!planAllows("tmdb")) return; // plan-gated: TMDB trailers need Pro Desk
-    const key = tmdbKey.trim(); if (!key) return;
+    if (!canBrowseCatalog) return;
     try {
-      const r = await fetch(`https://api.themoviedb.org/3/${item.kind}/${item.id}/videos?api_key=${encodeURIComponent(key)}&language=en-US`);
+      const r = await fetch(`/api/tmdb/videos?kind=${item.kind}&id=${item.id}`);
       const d = await r.json();
       const vids = (d.results || []).filter(v => v.site === "YouTube");
       const t = vids.find(v => v.type === "Trailer") || vids.find(v => v.type === "Teaser") || vids[0];
@@ -6131,7 +6667,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       if (t) setPlayer({ id: t.key, title: `${item.title} — Trailer`, channel: svc?.name || "Trailer", url: `https://www.youtube.com/watch?v=${t.key}` });
       else setPlayer({ id: null, title: `${item.title} — Trailer`, channel: svc?.name || "", brief: "No trailer on file — use the search link to find it.", url: `https://www.youtube.com/results?search_query=${encodeURIComponent(item.title + " trailer")}` });
     } catch { /* trailer is a bonus */ }
-  }, [tmdbKey, completeMission]);
+  }, [canBrowseCatalog, completeMission]);
   const browseArchive = useCallback(async (query) => {
     setCatalog({ archive: true, loading: true, items: [], query });
     try {
@@ -6204,24 +6740,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // ---- YouTube Data API: real, embeddable search results (no hallucinated IDs) ----
   const searchYouTube = useCallback(async (query, max = 3) => {
     if (!planAllows("youtube")) return []; // plan-gated: real video results need Pro Desk
-    const key = youtubeKey.trim();
-    if (!key) return [];
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=${max}&q=${encodeURIComponent(query)}&key=${key}`;
-    const r = await fetch(url);
+    const r = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}&max=${max}`);
+    // Video search simply not being configured is not an error worth surfacing —
+    // the desk just has no clips to show.
+    if (r.status === 503) return [];
     if (!r.ok) {
       let msg = `HTTP ${r.status}`;
-      try { const j = await r.json(); if (j.error?.message) msg = j.error.message; } catch { /* keep status */ }
+      try { const j = await r.json(); msg = j.error?.message || (typeof j.error === "string" ? j.error : msg); } catch { /* keep status */ }
       throw new Error(msg);
     }
     const data = await r.json();
-    const decode = (s) => (s || "").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"');
-    return (data.items || []).filter(it => it.id?.videoId).map(it => ({
-      id: it.id.videoId,
-      title: decode(it.snippet?.title) || query,
-      channel: it.snippet?.channelTitle || "YouTube",
-      url: `https://www.youtube.com/watch?v=${it.id.videoId}`,
-    }));
-  }, [youtubeKey, planAllows]);
+    return Array.isArray(data.videos) ? data.videos : [];
+  }, [planAllows]);
 
   // Claude with live web search — the accurate path (real URLs)
   const newsViaClaude = useCallback(async () => {
@@ -6263,27 +6793,42 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     return parsed;
   }, [selected]);
 
+  // Three sources, tried cheapest-and-most-real first:
+  //   1. the Vantage backend's /api/news (REST; server-side Finnhub key)
+  //   2. Finnhub company-news, direct REST with the user's own key
+  //   3. AI web search (the original path — the only one that needs no keys/backend)
   const fetchNews = useCallback(async () => {
     setNewsBusy(true); setNewsErr("");
     try {
-      // pick a fallback model: any enabled/usable model that isn't direct-Claude (which needs the Anthropic key)
-      const isLocal = (m) => m.kind === "ollama" || /localhost|127\.0\.0\.1/.test(m.baseUrl || "");
-      const usable = (m) => m.id !== "claude" && (isLocal(m) || (m.needsKey ? !!(m.apiKey && m.apiKey.trim()) : true));
-      const cand = aiModels.filter(usable);
-      const fb = cand.find(m => m.enabled) || cand[0] || null;
+      let parsed = null;
 
-      let parsed;
-      if (anthropicApiKey.trim()) {
-        try { parsed = await newsViaClaude(); }
-        catch (e) { if (!fb) throw e; parsed = await newsViaModel(fb); } // Claude failed (401/credits) → other model
-      } else if (fb) {
-        parsed = await newsViaModel(fb);
-      } else {
-        throw new Error("Add an Anthropic API key, or enable another model (OpenRouter/OpenAI/local), to load news.");
+      try {
+        const j = await api.news(selected, { timeout: 6000 });
+        if (j?.news?.length) parsed = { news: j.news, videos: [] };
+      } catch { /* backend offline or unconfigured — normal, fall through */ }
+
+
+      if (!parsed) {
+        // pick a fallback model: any enabled/usable model that isn't direct-Claude (which needs the Anthropic key)
+        const isLocal = (m) => m.kind === "ollama" || /localhost|127\.0\.0\.1/.test(m.baseUrl || "");
+        const usable = (m) => m.id !== "claude" && (isLocal(m)
+          || (m.id === "openrouter" && !!meetStatus?.ai?.configured) || (m.id === "gemini" && !!meetStatus?.gemini?.configured)
+          || (m.needsKey ? !!(m.apiKey && m.apiKey.trim()) : true));
+        const cand = aiModels.filter(usable);
+        const fb = cand.find(m => m.enabled) || cand[0] || null;
+
+        if (anthropicApiKey.trim()) {
+          try { parsed = await newsViaClaude(); }
+          catch (e) { if (!fb) throw e; parsed = await newsViaModel(fb); } // Claude failed (401/credits) → other model
+        } else if (fb) {
+          parsed = await newsViaModel(fb);
+        } else {
+          throw new Error("Add an Anthropic API key, or enable another model (OpenRouter/OpenAI/local), to load news.");
+        }
       }
 
       // real embeddable videos from the YouTube Data API always win, if a key is set
-      if (youtubeKey.trim()) {
+      if (canSearchVideos) {
         try { const vids = await searchYouTube(`${selected} stock`, 3); if (vids.length) parsed.videos = vids; } catch { /* keep model list */ }
       }
       setNews(parsed); setNewsFor(selected);
@@ -6292,17 +6837,47 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     } finally {
       setNewsBusy(false);
     }
-  }, [selected, youtubeKey, searchYouTube, anthropicApiKey, aiModels, newsViaClaude, newsViaModel]);
+  }, [selected, canSearchVideos, searchYouTube, anthropicApiKey, aiModels, meetStatus, newsViaClaude, newsViaModel]);
 
   // always hand the browser a valid, openable URL — fall back to a Google search if a model omitted/mangled one
   const newsHref = (n) => (n?.url && /^https?:\/\//.test(n.url)) ? n.url : `https://www.google.com/search?q=${encodeURIComponent(`${newsFor || selected} ${n?.title || ""}`.trim())}`;
+
+  // Read the loaded headlines on air, in the voice of the current anchor. Lifted
+  // out of the news panel's JSX so NewsDesk can stay presentational and simply
+  // call back when the "Read on air" button is pressed.
+  const broadcastNews = useCallback(() => {
+    const stories = news?.news || [];
+    if (!stories.length) return;
+    const anchorName = CHARACTERS.find(c => c.id === characterId)?.name || "the desk";
+    const script = `This is ${anchorName} with the ${newsFor} brief. ` +
+      stories.map((n, i) => `Story ${i + 1}, from ${n.source}: ${n.title}.`).join(" ") +
+      " That's the tape. Back to you.";
+    speak("broadcast", script);
+  }, [news, newsFor, characterId, speak]);
+
+  // One story on air, without sitting through the whole bulletin.
+  // Keyed by title (stable under news filtering) so the UI can show WHICH
+  // story is on air; pressing the same story again stops the read.
+  const readStory = (n) => {
+    if (!n?.title) return;
+    const sid = `story:${n.title}`;
+    if (speakingId === sid) { stopSpeak(); return; }
+    const anchorName = CHARACTERS.find(c => c.id === characterId)?.name || "the desk";
+    speak(sid, `${anchorName} here with one from ${n.source || "the wire"}: ${n.title}.`);
+  };
+  // Hand one headline to the AI. Goes through askDesk so it lands in the chat
+  // thread as a normal turn — streamed answer, read-aloud, retry, all included.
+  const askStory = (n) => {
+    if (!n?.title) return;
+    askDesk(`From ${n.source || "the wire"}: "${n.title}" — what does this headline mean for ${newsFor || selected}?`);
+  };
 
   // ---- desk video concierge: find coverage, open the theater, brief on air ----
   const findDeskVideo = useCallback(async (topic) => {
     setResp("nav", { status: "running", nav: true, links: [], videos: [], text: `Searching video coverage of ${topic}…` });
     try {
       // Preferred path: real, embeddable results straight from YouTube — no guessed IDs, no black boxes
-      if (youtubeKey.trim()) {
+      if (canSearchVideos) {
         const videos = await searchYouTube(topic, 3);
         if (videos.length === 0) throw new Error(`No YouTube videos found for ${topic} — try different wording`);
         setResp("nav", { status: "done", nav: true, links: [], videos, text: `Video coverage of ${topic}:` });
@@ -6313,7 +6888,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         return;
       }
       // Fallback (no YouTube key): ask Claude to suggest videos — IDs are probed before embedding
-      if (!anthropicApiKey.trim()) throw new Error("Add a YouTube Data API key in settings (or an Anthropic key) to enable video search.");
+      if (!anthropicApiKey.trim()) throw new Error(t("Video search is not configured on this server, and no key is set in this browser."));
       const r = await fetch(`${getClaudeBaseUrl()}/messages`, {
         method: "POST",
         headers: getAnthropicHeaders(),
@@ -6343,7 +6918,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     } catch (e) {
       setResp("nav", { status: "error", nav: true, links: [], videos: [], text: humanizeError(e) });
     }
-  }, [speak, youtubeKey, searchYouTube]);
+  }, [speak, canSearchVideos, searchYouTube]);
 
   // DataHub catalog questions. Honesty rule: if the catalog has no answer we say so —
   // we never let the model invent schemas, owners, or lineage.
@@ -6366,17 +6941,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
     try {
       const hit = firstSearchHit(await call("search", { term: intent.term }));
-      if (!hit) { fail(t("DataHub has no dataset matching") + ` "${intent.term}".`); return; }
+      if (!hit) { fail(t('DataHub has no dataset matching "{term}".').replace("{term}", intent.term)); return; }
 
       // DataHub's search is fuzzy — it can return a near-match even when nothing really
       // matches. Never attribute facts to a near-match without saying so: disclose it in
       // both what's shown/spoken and what's fed to the model, so the desk never implies
       // the query resolved cleanly when it didn't.
       const closeMatch = isCloseMatch(intent.term, hit.name);
-      const disclosure = closeMatch ? "" : t("DataHub had no exact match. Closest dataset:") + " " + hit.name + ". ";
+      const disclosure = closeMatch ? "" : t("DataHub had no exact match. Closest dataset: {name}.").replace("{name}", hit.name) + " ";
 
       if (intent.kind === "search") {
-        const text = disclosure + t("DataHub match:") + ` ${hit.name}${hit.platform ? ` on ${hit.platform}` : ""}.`;
+        const text = disclosure + (hit.platform
+          ? t("DataHub match: {name} on {platform}.").replace("{name}", hit.name).replace("{platform}", hit.platform)
+          : t("DataHub match: {name}.").replace("{name}", hit.name));
         setResp("desk", { status: "done", text, ms: ms(), via: "DataHub", model: "catalog", tried: [] });
         rememberTurn(q, text);
         if (autoSpeak) speak("desk", text);
@@ -6398,11 +6975,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       // level finer: a model handed a full schema will still invent a type for a column that
       // isn't there, so state the absence and keep the model out.
       const absentCol = (intent.kind === "schema" && !missing) ? namedAbsentColumn(q, summary) : null;
-      const absence = missing === "schema" ? t("DataHub has no schema recorded for") + ` ${hit.name}.`
-        : missing === "owners" ? t("DataHub has no owner recorded for") + ` ${hit.name}.`
+      const absence = missing === "schema" ? t("DataHub has no schema recorded for {name}.").replace("{name}", hit.name)
+        : missing === "owners" ? t("DataHub has no owner recorded for {name}.").replace("{name}", hit.name)
         : missing === "lineage" ? (direction === "DOWNSTREAM"
-            ? t("DataHub records no downstream datasets for") : t("DataHub records no upstream datasets for")) + ` ${hit.name}.`
-        : absentCol ? `${t("DataHub's schema for")} ${hit.name} ${t("has no column named")} "${absentCol}".`
+            ? t("DataHub records no downstream datasets for {name}.") : t("DataHub records no upstream datasets for {name}.")).replace("{name}", hit.name)
+        : absentCol ? t("DataHub's schema for {name} has no column named \"{col}\".").replace("{name}", hit.name).replace("{col}", absentCol)
         : "";
 
       // What the viewer sees is narrowed to the dimension they asked about — answering
@@ -6469,15 +7046,47 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       if (acc) rememberTurn(q, acc);
       if (autoSpeak && acc) speak("desk", acc);
     } catch (e) {
-      fail(t("DataHub lookup failed:") + ` ${humanizeError(e)}`);
+      fail(t("DataHub lookup failed: {reason}").replace("{reason}", humanizeError(e)));
     }
   };
+
+  // Stopping an answer in flight. The fan-out below already builds an
+  // AbortController per model attempt; this holds the live one so the user can
+  // reach it, and the cancel flag stops the loop from politely cascading to the
+  // next model — which is the opposite of what "stop" means.
+  const askAbortRef = useRef(null);
+  const askCancelRef = useRef(false);
+  const stopAsk = useCallback(() => {
+    askCancelRef.current = true;
+    try { askAbortRef.current?.abort(); } catch { /* already settled */ }
+    stopSpeak();
+  }, [stopSpeak]);
+
+  // The export pipeline reports through `exportMsg`, which rendered in a strip
+  // below the chat — detached from the request that caused it. Mirror its
+  // terminal states into the thread so "make a powerpoint" is answered where it
+  // was asked. Only ✓/✗ are mirrored; the interim "Building…" lines would add a
+  // bubble per progress update.
+  const lastExportRef = useRef("");
+  useEffect(() => {
+    if (!exportMsg || !/^[✓✗]/.test(exportMsg)) return;
+    if (lastExportRef.current === exportMsg) return;
+    lastExportRef.current = exportMsg;
+    deskReply(exportMsg);
+  }, [exportMsg, deskReply]);
 
   const askDesk = (override) => {
     const q = (typeof override === "string" ? override : aiQuestion).trim();
     if (!q) return;
     setLastAsked(q);
     setAiQuestion("");
+
+    // Open a new turn in the transcript. Bumping the counter first means any
+    // response this question produces lands in its own bubble rather than
+    // overwriting the previous answer.
+    chatTurnRef.current += 1;
+    setChatThread(t => [...t, { id: `u${chatTurnRef.current}`, role: "user", text: q }]);
+    askCancelRef.current = false;   // a new question clears any previous stop
     stopSpeak();
     // Prime browser TTS INSIDE this click/Enter gesture: speaking a silent utterance now grants the
     // user-activation the later streamed sentences need, since those fire after the network response.
@@ -6490,18 +7099,59 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       } catch { /* ignore */ }
     }
 
+    // "What is Vantage?" is answered by the product, not by a model — see
+    // VANTAGE_ABOUT for why.
+    if (/\b(what|what's|whats|tell me about|explain)\b.{0,26}\b(vantage|this (app|application|platform|tool|site|thing)|am i (looking at|using))\b/i.test(q) || /^\s*(about|what is this)\s*\??\s*$/i.test(q)) {
+      pushDeskAnswer(VANTAGE_ABOUT);
+      return; // desk-handled — no model fan-out
+    }
+
+    // "hi" / "good morning": greet back, then point at what's on the desk.
+    if (/^\s*(?:hi|hey|hello|hiya|howdy|yo|sup|good\s+(?:morning|afternoon|evening))(?:\s+(?:there|desk|vantage|anchor|\w+))?\s*[!,.?]*$/i.test(q)) {
+      pushDeskAnswer(anchorGreeting({
+        name: CHARACTERS.find(c => c.id === characterId)?.name,
+        open: (() => { const { day, mins } = etNow(); return day >= 1 && day <= 5 && mins >= 570 && mins < 960; })(),
+        hour: new Date().getHours(),
+        sym: selected,
+        said: (/\b(morning|afternoon|evening)\b/i.exec(q) || [])[1] || null,
+      }));
+      return; // desk-handled — no model fan-out
+    }
+
+    // "How's your day?" — the anchor answers in character, from the real session.
+    if (/^\s*how(?:'s|s)?\s*(?:is|was|are|'re|re)?\s*(?:your|ur|the)?\s*(?:day|morning|afternoon|evening|shift|session)\b/i.test(q) || /\bhow\s+(?:are|r)\s+(?:you|u)(?:\s+(?:feeling|doing|holding\s+up|today|tonight))?\s*[?!.]*$/i.test(q) || /\bhow(?:'s|s)?\s+(?:is\s+)?it\s+going\b|\bhow\s+goes\s+it\b|\bhow\s+you\s+(?:feeling|doing)\b/i.test(q)) {
+      const row = getRow(selected);
+      pushDeskAnswer(anchorDayLine({
+        name: CHARACTERS.find(c => c.id === characterId)?.name,
+        open: (() => { const { day, mins } = etNow(); return day >= 1 && day <= 5 && mins >= 570 && mins < 960; })(),
+        sym: selected,
+        chgPct: row?.chgPct ?? null,
+      }));
+      return; // desk-handled — no model fan-out
+    }
+
     // export intent runs first: "download excel", "make a powerpoint", "write a report and export ppt"
     const ex = matchExport(q);
-    if (ex) { runExportCmd(ex); return; } // desk-handled — build the file, no model fan-out
+    if (ex) {
+      deskReply(ex.wantReport
+        ? `Writing the analyst report, then exporting it as ${(ex.fmt || "docx").toUpperCase()}. The preview opens when it's ready.`
+        : `Opening the ${(ex.fmt || "docx").toUpperCase()} export preview — review it there, then download.`);
+      runExportCmd(ex); return; // desk-handled — build the file, no model fan-out
+    }
 
     // DataHub catalog intent: schema / owners / lineage questions answered from the live catalog
     const dhIntent = detectCatalogIntent(q);
     if (dhIntent) { runCatalogQuery(q, dhIntent); return; } // desk-handled — no market model fan-out
 
     // Games: "play a game", "games" → the menu; "teach me / tutorial / how do stocks work" → straight to Stock School
-    if (/\b(games?|play (a )?game|arcade|game room)\b/i.test(q)) { openGames(); return; }
+    if (/\b(games?|play (a )?game|arcade|game room)\b/i.test(q)) {
+      openGames();
+      deskReply("🎮 Game room is open — pick a game and I'll host it from the desk.");
+      return;
+    }
     if (/\b(stock school|teach me|tutorial|how (do|does) stocks?|learn (how|to invest|stocks|the basics))\b/i.test(q)) {
       setGameOn(true); startMode("school");
+      deskReply("🎓 Starting Stock School. I'll walk you through the basics on the desk — ask me anything mid-lesson.");
       return; // desk-handled — the anchor takes over teaching
     }
 
@@ -6509,11 +7159,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     const cueReq = matchAnchorCue(q);
     if (cueReq) {
       triggerAnchor(cueReq.type, cueReq);
-      setCmdMsg(
+      const cueLine =
         cueReq.type === "bell" ? `🔔 ${cueReq.label === "CLOSING BELL" ? "Closing" : "Opening"} bell!` :
         cueReq.type === "break" ? "☕ Anchor is taking a quick break." :
-        `🍽 Anchor is having ${cueReq.meal}.`
-      );
+        `🍽 Anchor is having ${cueReq.meal}.`;
+      setCmdMsg(cueLine);
+      deskReply(cueLine);
       return; // desk-handled — no model fan-out
     }
 
@@ -6522,7 +7173,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const dollar = q.match(/\$([A-Za-z]{1,5})\b/);
       const caps = (q.match(/\b[A-Z]{1,5}\b/g) || []).find(c => c.length >= 2 && !CAPS_STOP.has(c));
       const aliased = aliasFromText(q);
-      openChart(dollar ? resolveSym(dollar[1]) : aliased || (caps ? resolveSym(caps) : selected));
+      const chartSym = dollar ? resolveSym(dollar[1]) : aliased || (caps ? resolveSym(caps) : selected);
+      openChart(chartSym);
+      deskReply(`📈 Opened the full ${chartSym} chart.`);
       return; // desk-handled
     }
 
@@ -6557,6 +7210,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     // portfolio intent: "brief my portfolio", "how are my positions", "my holdings"
     if (/\b(my )?(portfolio|positions|holdings)\b/i.test(q) || /how('?s| is| are) my (portfolio|positions|holdings|investments)\b/i.test(q)) {
       briefPortfolio();
+      deskReply(positions.length
+        ? `💼 Your portfolio is on the desk — ${positions.length} position${positions.length === 1 ? "" : "s"}, ${portTotals.pnl >= 0 ? "up" : "down"} ${fmt(Math.abs(portTotals.pnl))} (${portTotals.pnlPct >= 0 ? "+" : ""}${portTotals.pnlPct.toFixed(2)}%).`
+        : "💼 Your portfolio is empty — add a symbol, share count and cost below and I'll track it from then on.");
       return; // desk-handled
     }
 
@@ -6570,6 +7226,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       || /what('?s| is| do i have)\b[^?]*\b(calendar|schedule|agenda|coming up|going on today|planned)\b/i.test(q)
       || /\bdo i have (any )?(events?|meetings?|plans|appointments?)\b/i.test(q)) {
       openCalendar();
+      deskReply("▦ Your calendar is open on the desk — I've read out what's coming up.");
       return; // desk-handled
     }
 
@@ -6579,6 +7236,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       if (cat.archive) browseArchive(cat.query);
       else if (cat.popular) browsePopular(cat.kind);
       else browseCatalog(cat.svc, cat.kind);
+      deskReply(
+        cat.archive ? `🎞 Searching the public-domain archive for "${cat.query}" — results appear on the desk.`
+        : cat.popular ? `🍿 Pulling this week's trending ${cat.kind === "tv" ? "shows" : "movies"}.`
+        : `🍿 Browsing ${cat.svc?.name || "the catalog"} — ${cat.kind === "tv" ? "shows" : "movies"} on the desk.`);
       return; // desk-handled
     }
 
@@ -6621,30 +7282,50 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
     const prompt = buildPrompt(q);
     // plan-gated: the AI desk needs Pro Desk. Treat all models as disabled below the required plan.
-    if (!planAllows("ai")) { setCmdMsg(`AI desk answers are a ${planFor("ai")} feature — upgrade in settings → ACCOUNT.`); return; }
+    if (!planAllows("ai")) {
+      const line = `AI desk answers are a ${planFor("ai")} feature — upgrade in settings → ACCOUNT. Everything else I do (charts, exports, navigation, your calendar) works on any plan.`;
+      setCmdMsg(line); deskReply(line); return;
+    }
     const enabled = aiModels.filter(m => m.enabled);
     // The user's own configured models take precedence. Only fall back to Vantage's hosted Gemini
     // when a signed-in (backend) user hasn't enabled a usable model of their own — otherwise a local
     // Ollama / LM Studio model (or a keyed cloud model) would be silently bypassed by the hosted desk.
-    const hasOwnModel = enabled.some(m => isLocalModel(m) || (m.apiKey || "").trim() || (m.kind === "claude" && anthropicApiKey.trim()));
-    const hostedAi = !!(account?.backend && account?.token) && !hasOwnModel;
+    // The hosted route also has to EXIST (status.hosted): without that gate, a signed-in user whose
+    // /api/status hadn't answered yet was sent to an unconfigured Vertex route and shown its error.
+    const hasOwnModel = enabled.some(m => isLocalModel(m)
+      || (m.id === "openrouter" && !!meetStatus?.ai?.configured) || (m.id === "gemini" && !!meetStatus?.gemini?.configured)
+      || (m.apiKey || "").trim() || (m.kind === "claude" && anthropicApiKey.trim()));
+    const hostedAi = !!(account?.backend && account?.token) && !hasOwnModel && !!meetStatus?.hosted?.configured;
     if (hostedAi) {
       completeMission("ask");
       setAiResponses(p => (p.nav ? { nav: p.nav } : {}));
       const t0 = performance.now();
       setResp("desk", { status: "running", text: "", ms: null, via: "Vantage hosted AI", model: "Gemini on Vertex AI", tried: [] });
+      const hostedCtrl = new AbortController();
+      askAbortRef.current = hostedCtrl;
       fetch("/api/ai/brief", {
         method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${account.token}` },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt }), signal: hostedCtrl.signal,
       }).then(async r => {
         const j = await r.json(); if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
         setResp("desk", { status: "done", text: j.text, ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", model: j.model || "Gemini", tried: [] });
         if (j.text) rememberTurn(q, j.text);
         if (autoSpeak && j.text) speak("desk", j.text);
-      }).catch(e => setResp("desk", { status: "error", text: humanizeError(e), ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", tried: [] }));
+      }).catch(e => {
+        // A user-initiated stop is not a failure, and showing it as a red error
+        // bubble would be the app blaming itself for doing what it was told.
+        if (askCancelRef.current) {
+          setResp("desk", { status: "done", stopped: true, ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", tried: [] });
+          return;
+        }
+        setResp("desk", { status: "error", text: humanizeError(e), ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", tried: [] });
+      });
       return;
     }
-    if (enabled.length === 0) { setCmdMsg("Enable at least one model in the AI desk config"); return; }
+    if (enabled.length === 0) {
+      const line = t("This server has no model key configured yet, so the desk can't answer. Everything else works.");
+      setCmdMsg(line); deskReply(line); return;
+    }
     completeMission("ask");
 
     // ONE answer box: try enabled models in order; the first that answers wins. If one errors
@@ -6674,7 +7355,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const t0 = performance.now();
       const errors = [];
       for (const m of enabled) {
+        if (askCancelRef.current) break;   // stopped between models — do not start another
         const ctrl = new AbortController();
+        askAbortRef.current = ctrl;        // the one the stop button reaches
         const timeout = setTimeout(() => ctrl.abort(), 60000);
         let acc = "", voiceOn = false;
         setResp("desk", { status: "running", text: "", ms: null, via: m.label, model: m.model, tried: errors.slice() });
@@ -6695,10 +7378,23 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         } catch (e) {
           clearTimeout(timeout);
           if (voiceOn) stopSpeak();
+          // Cancelling aborts the same signal a timeout would, so the abort has
+          // to be attributed before it is treated as this model failing —
+          // otherwise "stop" cascades to the next model, which is the one thing
+          // a stop button must never do.
+          if (askCancelRef.current) {
+            setResp("desk", {
+              status: "done", stopped: true, ms: Math.round(performance.now() - t0),
+              via: m.label, model: m.model, tried: errors.slice(),
+              ...(acc.trim() ? {} : { text: "Stopped before an answer came back." }),
+            });
+            return;
+          }
           errors.push(`${m.label}: ${friendly(m, e)}`);
           setResp("desk", { status: "running", text: "", ms: null, via: null, tried: errors.slice() }); // reset for the next model
         }
       }
+      if (askCancelRef.current) return;
       setResp("desk", { status: "error", ms: Math.round(performance.now() - t0), text: `All models failed — ${errors.join(" · ")}`, tried: errors.slice() });
     })();
   };
@@ -6744,11 +7440,522 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const enabledCount = aiModels.filter(m => m.enabled).length;
 
   const chgDir = selectedRow?.chg > 0 ? "up" : selectedRow?.chg < 0 ? "down" : "flat";
-  const accent = selectedRow?.chg == null ? C.amber : prefDirColor(selectedRow?.chg > 0 ? "up" : "down");
+  const accent = selectedRow?.chg == null ? C.accent : prefDirColor(selectedRow?.chg > 0 ? "up" : "down");
 
   // ---- ticker tape items (doubled for seamless loop) ----
   const tapeRows = watchlist.map(getRow).filter(Boolean);
   const tape = [...tapeRows, ...tapeRows];
+
+
+  // ============================================================
+  //  App shell wiring — navigation sections, header clock and market status.
+  //  The shell itself (src/ui/AppShell.jsx) is presentational; everything it
+  //  needs to render is derived here, where the dashboard's state already lives.
+  // ============================================================
+
+  // Clock shows the user's chosen timezone; OPEN/CLOSED always tracks NYSE
+  // (Eastern) hours regardless of what the clock is set to.
+  const shellClock = useMemo(
+    () => new Intl.DateTimeFormat("en-US", { timeZone: clockTz, hour: "2-digit", minute: "2-digit", hour12: true }).format(clockNow),
+    [clockNow, clockTz],
+  );
+  const marketOpen = useMemo(() => {
+    const { day, mins } = etNow();
+    return day >= 1 && day <= 5 && mins >= 570 && mins < 960;   // 9:30–16:00 ET, weekdays
+  }, [clockNow]);
+
+  // The destinations the primary nav offers. `panel` names the panel that must be
+  // switched on before scrolling, so navigating to a hidden section reveals it
+  // rather than silently doing nothing.
+  const NAV_SECTIONS = useMemo(() => [
+    // Labels go through t(); `keywords` stay English on purpose — they are
+    // palette search terms, not display text.
+    { id: "desk", label: t("Desk"), icon: "◈", anchor: "sec-desk", keywords: ["ai", "anchor", "broadcast", "assistant", "chat"] },
+    { id: "watchlist", label: t("Markets"), icon: "▤", anchor: "sec-watchlist", panel: "watchlist", keywords: ["chart", "symbols", "quotes", "tape"] },
+    { id: "news", label: t("News"), icon: "▧", anchor: "sec-news", panel: "news", keywords: ["headlines", "video", "coverage", "stories"] },
+    { id: "portfolio", label: t("Portfolio"), icon: "◧", anchor: "sec-portfolio", panel: "portfolio", keywords: ["positions", "holdings", "pnl", "gains"] },
+    { id: "calendar", label: t("Calendar"), icon: "▦", anchor: "app-calendar-panel", panel: "calendar", keywords: ["events", "earnings", "schedule"] },
+  ], [t]);
+
+  const [activeSection, setActiveSection] = useState("desk");
+
+  // While a click-driven smooth scroll is travelling it crosses every section in
+  // between, and the scroll-spy below would flicker the nav through each one. This
+  // suppresses the spy until the animation settles.
+  const spyLockRef = useRef(0);
+  // A clicked destination stays selected until the user genuinely scrolls away
+  // from where the navigation landed. The time lock above only covers the
+  // travel; without the pin, the spy re-labels the click the moment the scroll
+  // settles wherever its own rule disagrees with the clicked section — which
+  // happens whenever two sections start at nearly the same offset.
+  const spyPinRef = useRef(null);
+
+  // A click-driven navigation is pushed into history, so Back walks the sections
+  // you visited. Silent navigations (deep-link arrival, popstate) skip the push —
+  // the URL is already correct, and pushing again would corrupt the history the
+  // user is trying to traverse.
+  const navigateSection = useCallback((section, opts = {}) => {
+    if (!section) return;
+    setActiveSection(section.id);
+    spyLockRef.current = Date.now() + 900;
+    if (!opts.silent && window.location.hash !== `#${section.id}`) {
+      try { window.history.pushState(null, "", `#${section.id}`); } catch { /* sandboxed iframe */ }
+    }
+    // Reveal the panel first if it is toggled off, then scroll. The scroll is
+    // deferred a frame so the element exists by the time we look for it.
+    if (section.panel) setPanels(p => (p[section.panel] ? p : { ...p, [section.panel]: true }));
+    requestAnimationFrame(() => {
+      const el = document.getElementById(section.anchor);
+      if (!el) return;
+      // ~72px is where scroll-margin puts a section top once it lands under the
+      // sticky header; precision doesn't matter, the pin has 150px of slack.
+      spyPinRef.current = { id: section.id, y: el.getBoundingClientRect().top + window.scrollY - 72 };
+      el.scrollIntoView({ behavior: opts.instant ? "auto" : "smooth", block: "start" });
+      // Arrival is asserted for ~2s, not checked once: the dashboard keeps
+      // growing for a moment after mount as data seeds panels, which moves the
+      // target, aborts in-flight smooth scrolls, and lets the scroll-spy
+      // mislabel the hash mid-settle. Each tick either confirms we're there or
+      // finishes the trip instantly. The loop halts the moment the pin is gone —
+      // the spy clears it when the user genuinely scrolls away, so a user who
+      // changes their mind is never yanked back. The last tick restores the
+      // hash if the spy overwrote it while the layout was still moving.
+      let settleChecks = 0;
+      const settle = window.setInterval(() => {
+        settleChecks += 1;
+        const pin = spyPinRef.current;
+        const el2 = document.getElementById(section.anchor);
+        if (!pin || pin.id !== section.id || !el2) { window.clearInterval(settle); return; }
+        if (Math.abs(el2.getBoundingClientRect().top - 72) > 160) {
+          el2.scrollIntoView({ block: "start" });
+          spyPinRef.current = { id: section.id, y: window.scrollY };
+        }
+        if (settleChecks >= 4) {
+          window.clearInterval(settle);
+          setActiveSection(section.id);
+          const want = `#${section.id}`;
+          if (window.location.hash !== want) {
+            try { window.history.replaceState(window.history.state, "", want); } catch { /* sandboxed iframe */ }
+          }
+        }
+      }, 500);
+    });
+  }, []);
+
+  // ---- URL ↔ section sync ----
+  // #news, #portfolio… deep-link into the dashboard: a reload lands back in the
+  // section it left, a copied link opens on the right section for whoever gets
+  // it, and Back/Forward move between sections. The hash carries section ids
+  // ("news"), never element ids ("sec-news") — that gap is what stops the
+  // browser's native jump-to-anchor from firing before the panel-reveal logic
+  // has run, which matters when the target panel is currently toggled off.
+  useEffect(() => {
+    const byHash = () => {
+      const id = window.location.hash.slice(1);
+      // An empty hash is the launch URL — that means the first section. An
+      // unknown hash (e.g. the #vantage-main skip-link target) is not ours.
+      return id ? NAV_SECTIONS.find(sec => sec.id === id) : NAV_SECTIONS[0];
+    };
+    // The browser's own scroll restoration would race the scroll below on every
+    // Back/Forward, with the two landing in different places. History moves are
+    // owned here for as long as the dashboard is mounted.
+    const prevRestoration = window.history.scrollRestoration;
+    try { window.history.scrollRestoration = "manual"; } catch { /* older browsers */ }
+    if (window.location.hash.length > 1) {
+      const sec = byHash();
+      if (sec) navigateSection(sec, { silent: true, instant: true });
+    }
+    const onPop = () => {
+      const sec = byHash();
+      if (sec) navigateSection(sec, { silent: true, instant: true });
+    };
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      try { window.history.scrollRestoration = prevRestoration || "auto"; } catch { /* older browsers */ }
+    };
+  }, [NAV_SECTIONS, navigateSection]);
+
+  // ---- scroll-spy ----
+  // Without this the nav only ever tells the truth immediately after a click: scroll
+  // by hand and it keeps claiming you are wherever you last clicked. An
+  // IntersectionObserver is the right tool — a scroll listener would run on every
+  // frame of every scroll, which is exactly what this app does not need.
+  useEffect(() => {
+    const select = (id) => {
+      setActiveSection(prev => (prev === id ? prev : id));
+      // replaceState, not pushState: hand-scrolling across five sections must
+      // not cost five Back presses. The launch URL stays bare until you leave
+      // the first section, so nobody acquires a hash just by opening the app.
+      const want = `#${id}`;
+      if (window.location.hash !== want && !(id === NAV_SECTIONS[0].id && !window.location.hash)) {
+        try { window.history.replaceState(window.history.state, "", want); } catch { /* sandboxed iframe */ }
+      }
+    };
+
+    // Once the page can scroll no further, the trailing sections can never reach
+    // the observation band, so "topmost visible" stops being the right answer and
+    // "last one actually on screen" becomes it.
+    const atBottom = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+    const selectTrailing = () => {
+      for (let i = NAV_SECTIONS.length - 1; i >= 0; i--) {
+        const el = document.getElementById(NAV_SECTIONS[i].anchor);
+        if (!el) continue;
+        const r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight && r.bottom > 0) { select(NAV_SECTIONS[i].id); return; }
+      }
+    };
+
+    const io = new IntersectionObserver(() => {
+      if (Date.now() < spyLockRef.current) return;         // a programmatic scroll is in flight
+      const pin = spyPinRef.current;
+      if (pin) {
+        if (Math.abs(window.scrollY - pin.y) < 150) return;   // still where the click landed
+        spyPinRef.current = null;                              // the user has moved on — resume tracking
+      }
+      // The bottom rule has to be checked here too, not only in the scroll handler:
+      // the observer callback lands *after* that handler and would otherwise
+      // overwrite its answer a moment later.
+      if (atBottom()) { selectTrailing(); return; }
+      // You are "in" the last section whose top has passed the reading line just
+      // under the sticky header. Computed from live rects rather than the
+      // observer's entries: entries only report what crossed the band, and a tall
+      // section stays "intersecting" for its entire height — the old
+      // "topmost visible" rule sat on Desk for a thousand pixels of scroll
+      // because of exactly that. The observer's job is reduced to saying WHEN to
+      // re-measure; five getBoundingClientRect calls per crossing is nothing.
+      const LINE = 140;
+      let winner = null;
+      for (const sec of NAV_SECTIONS) {
+        const el = document.getElementById(sec.anchor);
+        if (el && el.getBoundingClientRect().top <= LINE) winner = sec;   // later tops overwrite: last one past the line wins
+      }
+      select((winner || NAV_SECTIONS[0]).id);
+    }, {
+      // A thin band around the reading line, not the old top-40% slab: section
+      // edges crossing this neighbourhood are the only moments the answer above
+      // can change, so they are the only moments worth a callback.
+      rootMargin: "-70px 0px -78% 0px",
+      threshold: 0,
+    });
+
+    // Observation is re-checked on a slow tick rather than captured once: five
+    // getElementById calls every 1.5s is free, and it means a section that
+    // mounts late — or is re-created by React — is picked up instead of the
+    // spy silently watching detached nodes for the rest of the session.
+    const observed = new Set();
+    const observeAll = () => {
+      for (const sec of NAV_SECTIONS) {
+        const el = document.getElementById(sec.anchor);
+        if (el && !observed.has(el)) { observed.add(el); io.observe(el); }
+      }
+    };
+    observeAll();
+    const heal = window.setInterval(observeAll, 1500);
+
+    // Passive listener that does nothing at all until the very end of the page,
+    // where it hands the last visible section to the nav.
+    const onScroll = () => {
+      if (Date.now() < spyLockRef.current) return;
+      if (atBottom()) selectTrailing();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => { io.disconnect(); window.clearInterval(heal); window.removeEventListener("scroll", onScroll); };
+    // `panels` is a dependency because toggling one adds or removes an anchor
+    // (the healer would also catch it, a re-run just catches it sooner).
+  }, [NAV_SECTIONS, panels]);
+
+  // ---- Escape ----
+  // Escape only. There are no hotkeys: this ships on mobile and the web, where
+  // a keys-to-learn layer is undiscoverable and mostly unreachable.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      // Ordered by what the user actually sees on top (z-index), not by hand:
+      // tour 70 > setup 61 > export/embed/tutorial 60 > missions 55 >
+      // settings 51. Exactly one surface closes per press.
+      const stack = [
+        [tourMode, endSpotlight],
+        [setupOpen, () => setSetupOpen(false)],
+        [exportDraft, () => setExportDraft(null)],
+        [embed, () => setEmbed(null)],
+        [showTutorial, () => setShowTutorial(false)],
+        [missionsOpen, () => setMissionsOpen(false)],
+        [showSettings, () => setShowSettings(false)],
+      ];
+      stack.find(([open]) => open)?.[1]();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tourMode, endSpotlight, exportDraft, setupOpen, showSettings, missionsOpen, embed, showTutorial]);
+
+  // Extra palette entries beyond the nav destinations, which AppShell adds itself.
+  const shellCommands = useMemo(() => [
+    { id: "cmd:settings", label: "Open settings", icon: "⚙", group: "Action", keywords: ["keys", "api", "preferences", "config"], run: () => { setSettingsTab("quick"); setShowSettings(true); } },
+    { id: "cmd:account", label: "Account & plan", icon: "◆", group: "Action", keywords: ["billing", "subscription", "upgrade"], run: () => { setSettingsTab("account"); setShowSettings(true); } },
+    { id: "cmd:news", label: `Load news for ${selected}`, icon: "📰", group: "Action", keywords: ["headlines", "search"], run: () => { setPanels(p => ({ ...p, news: true })); fetchNews(); } },
+    { id: "cmd:export-xlsx", label: "Export to Excel", icon: "📊", group: "Export", keywords: ["xlsx", "spreadsheet", "download"], run: () => openExportPreview("xlsx") },
+    { id: "cmd:export-docx", label: "Export to Word", icon: "📄", group: "Export", keywords: ["docx", "document", "download"], run: () => openExportPreview("docx") },
+    { id: "cmd:export-pptx", label: "Export to PowerPoint", icon: "📽", group: "Export", keywords: ["pptx", "slides", "deck", "download"], run: () => openExportPreview("pptx") },
+    ...[["tape", "ticker tape"], ["watchlist", "watchlist"], ["movers", "top movers"], ["news", "news & video"], ["calendar", "calendar"], ["portfolio", "portfolio"], ["pnf", "P&F signals"]].map(([k, name]) => ({
+      id: `panel:${k}`,
+      label: `${panels[k] ? "Hide" : "Show"} ${name}`,
+      icon: panels[k] ? "◻" : "◼",
+      group: "Panel",
+      keywords: ["panel", "toggle", "layout", "show", "hide"],
+      run: () => setPanels(p => ({ ...p, [k]: !p[k] })),
+    })),
+    // Every watchlist symbol is reachable by name from the palette.
+    ...watchlist.map(sym => ({
+      id: `sym:${sym}`, label: sym, icon: "▲", group: "Symbol",
+      keywords: ["chart", "quote", "stock"],
+      run: () => { setSelected(sym); navigateSection(NAV_SECTIONS[1]); },
+    })),
+  ], [selected, watchlist, panels, fetchNews, openExportPreview, navigateSection, NAV_SECTIONS]);
+
+  // ---- the streaming catalog, as a chat attachment ----
+  // Browsing Netflix is something the desk was ASKED to do, so the shelf of
+  // posters is that request's answer. It used to render in the results box
+  // above the conversation, which left the question in one place and the
+  // thing it produced in another. It rides the transcript now.
+  const catalogPanel = catalog && (
+    <div style={{ display: "flex", flexDirection: "column", background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, overflow: "hidden" }}>
+      <div style={{ minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}`, ...TYPE.eyebrow, color: C.muted, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+        <span>🎬 {catalog.archive ? "FREE FILMS · Internet Archive" : `${catalog.popular ? "🔥 POPULAR" : catalog.service?.name?.toUpperCase()} · ${catalog.kind === "tv" ? "SHOWS" : "MOVIES"}`}</span>
+        <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          {!catalog.archive && (
+            <>
+              {["movie", "tv"].map(k => (
+                <button key={k} onClick={() => catalog.popular ? browsePopular(k) : browseCatalog(catalog.service, k)}
+                  style={{ background: catalog.kind === k ? "rgba(255,255,255,0.08)" : "transparent", border: `1px solid ${catalog.kind === k ? C.accent : C.panelEdge}`, color: catalog.kind === k ? C.accentText : C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "2px 8px", cursor: "pointer" }}>
+                  {k === "tv" ? "shows" : "movies"}
+                </button>
+              ))}
+            </>
+          )}
+          <button onClick={() => { setCatalog(null); setCatalogPick(null); }} aria-label="Close catalog" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
+        </span>
+      </div>
+      {catalog.loading ? (
+        <div style={{ padding: 12, fontFamily: MONO, fontSize: 12, color: C.faint }}>Loading catalog… <span className="cursor">▍</span></div>
+      ) : catalog.error ? (
+        <div style={{ padding: 12, fontFamily: SANS, fontSize: 11, color: C.down, lineHeight: 1.6 }}>{catalog.error}</div>
+      ) : catalog.items.length === 0 ? (
+        <div style={{ padding: 12, fontFamily: MONO, fontSize: 12, color: C.faint }}>Nothing found. Try another search.</div>
+      ) : (
+        <>
+          {/* summary panel for the picked title */}
+          {catalogPick && !catalog.archive && (
+            <div style={{ display: "flex", gap: 10, padding: 12, borderBottom: `1px solid ${C.panelEdge}`, background: "#161718" }}>
+              {catalogPick.poster && <img src={catalogPick.poster} alt="" style={{ width: 70, height: 105, objectFit: "cover", borderRadius: R.sm, flexShrink: 0 }} />}
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0, flex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: C.text }}>{catalogPick.title}{catalogPick.year ? ` (${catalogPick.year})` : ""}{catalogPick.rating > 0 ? <span style={{ color: C.accentText, fontWeight: 400 }}>  ★{Number(catalogPick.rating).toFixed(1)}</span> : null}</span>
+                  <button onClick={() => setCatalogPick(null)} aria-label="Close summary" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
+                </div>
+                <div style={{ fontFamily: SANS, fontSize: 11, lineHeight: 1.55, color: C.muted, maxHeight: 96, overflowY: "auto" }}>{catalogPick.overview || "No summary available."}</div>
+                <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
+                  <button onClick={() => playTrailer(catalogPick, catalog.service)} style={{ background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "4px 10px", cursor: "pointer" }}>▶ trailer</button>
+                  {catalog.service
+                    ? <button onClick={() => openEmbed(catalog.service.search(catalogPick.title), catalog.service.name)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 10px", cursor: "pointer" }}>watch on {catalog.service.name} ↗</button>
+                    : <a href={`https://www.themoviedb.org/${catalogPick.kind}/${catalogPick.id}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 10px" }}>details ↗</a>}
+                </div>
+              </div>
+            </div>
+          )}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 10, padding: 12 }}>
+            {catalog.items.map((it, i) => (
+              <div key={i} style={{ display: "flex", flexDirection: "column", background: "#161718", border: `1px solid ${catalogPick && catalogPick.id === it.id && catalogPick.archiveId === it.archiveId ? C.accent : C.panelEdge}`, borderRadius: R.md, overflow: "hidden" }}>
+                <div onClick={() => catalog.archive ? playArchive(it) : setCatalogPick(p => (p && p.id === it.id ? null : it))}
+                  title={catalog.archive ? "Play in-desk" : "Show summary"}
+                  style={{ position: "relative", width: "100%", paddingTop: "150%", background: "#161718", cursor: "pointer" }}>
+                  {it.poster && <img src={it.poster} alt="" loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
+                  {it.rating > 0 && <span style={{ position: "absolute", top: 4, right: 4, background: "rgba(0,0,0,0.75)", color: C.accentText, fontFamily: MONO, fontSize: 12, padding: "1px 5px", borderRadius: R.xs }}>★ {Number(it.rating).toFixed(1)}</span>}
+                  {!catalog.archive && <span style={{ position: "absolute", bottom: 4, left: 4, background: "rgba(0,0,0,0.7)", color: C.faint, fontFamily: MONO, fontSize: 12, padding: "1px 5px", borderRadius: R.xs }}>ⓘ summary</span>}
+                </div>
+                <div style={{ padding: "6px 7px", display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+                  <span style={{ fontFamily: SANS, fontSize: 10, color: C.text, lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{it.title}{it.year ? ` (${it.year})` : ""}</span>
+                  <span style={{ marginTop: "auto", display: "flex", gap: 4 }}>
+                    {catalog.archive ? (
+                      <>
+                        <button onClick={() => playArchive(it)} title="Play in-desk" style={{ flex: 1, background: "rgba(39,166,68,0.14)", border: `1px solid ${C.up}`, color: C.up, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "4px 0", cursor: "pointer" }}>▶ play</button>
+                        <a href={`https://archive.org/details/${it.archiveId}`} target="_blank" rel="noopener noreferrer" title="Open on Archive" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 7px" }}>↗</a>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => playTrailer(it, catalog.service)} title="Play trailer in-desk" style={{ flex: 1, background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "4px 0", cursor: "pointer" }}>▶ trailer</button>
+                        {catalog.service
+                          ? <button onClick={() => openEmbed(catalog.service.search(it.title), catalog.service.name)} title={`Watch on ${catalog.service.name}`} style={{ border: `1px solid ${C.panelEdge}`, color: C.muted, background: "transparent", borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 7px", cursor: "pointer" }}>↗</button>
+                          : <a href={`https://www.themoviedb.org/${it.kind}/${it.id}`} target="_blank" rel="noopener noreferrer" title="Details" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 7px" }}>↗</a>}
+                      </>
+                    )}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+  // ---- the games, as a chat attachment ----
+  // Games are hosted BY the anchor — it teaches the lesson, calls the round and
+  // reacts to the score — so the game belongs in the conversation it is being
+  // played through, not on a stage above the composer where the host's replies
+  // and the host's game ended up in two different columns.
+  const gamePanel = gameOn && (() => {
+    const primaryBtn = { background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 510, fontSize: 12, padding: "9px 16px", cursor: "pointer" };
+    const ghostBtn = { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "9px 12px", cursor: "pointer" };
+    const ctlBtn = { background: "rgba(255,255,255,0.05)", border: `1px solid ${C.panelEdge}`, color: C.text, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, lineHeight: 1, padding: "6px 10px", cursor: "pointer" };
+    // Titles arrive as "<glyph> NAME". The glyph is an emoji, so it
+    // cannot take a colour and it cannot ride at the eyebrow's 11px
+    // without collapsing into a smudge — it gets split off and sized
+    // on its own, and the name gets full text contrast.
+    const shell = (title, headerRight, body) => {
+      const cut = title.indexOf(" ");
+      const icon = cut > 0 ? title.slice(0, cut) : "";
+      const label = cut > 0 ? title.slice(cut + 1) : title;
+      return (
+      <div style={{ flexShrink: 0, minWidth: 0, background: "#161718", border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            {icon && <span aria-hidden="true" style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{icon}</span>}
+            <span style={{ ...TYPE.eyebrow, color: C.text }}>{label}</span>
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            {headerRight}
+            <button onClick={closeGame} className="v-gamectl" aria-label="Close games" style={{ ...ctlBtn, fontSize: 12, padding: "6px 9px" }}>✕</button>
+          </span>
+        </div>
+        {body}
+      </div>
+      );
+    };
+
+    // ---- game selection menu ----
+    if (gameMode === "menu") {
+      const games = [
+        { id: "school", icon: "🎓", name: "Stock School", desc: "8 short lessons on stocks, prices, and P&L." },
+        { id: "bullbear", icon: "📊", name: "Bull or Bear", desc: "Read a headline, call it up or down." },
+        { id: "ticker", icon: "🔤", name: "Ticker Match", desc: "Match companies to their tickers." },
+        { id: "cards", icon: "🃏", name: "Market Blackjack", desc: "21 against the dealer, with a chip bankroll." },
+        { id: "chess", icon: "♟", name: "Bulls vs Bears Chess", desc: "Two-player chess: Bulls vs Bears." },
+        { id: "algowars", icon: "🖥️", name: "Algorithm Wars", desc: "A trading-floor RTS: script bot armies in real time." },
+      ];
+      return shell("🎮 GAME ROOM", <span style={{ fontFamily: SANS, fontSize: 11, color: C.muted }}>no account needed</span>,
+        <div style={{ padding: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 10 }}>
+          {games.map(g => (
+            <button key={g.id} onClick={() => startMode(g.id)} className="v-lift"
+              style={{ textAlign: "left", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: 14, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, minHeight: 112 }}>
+              <span aria-hidden="true" style={{ fontSize: 20 }}>{g.icon}</span>
+              <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 13, color: C.text }}>{g.name}</span>
+              <span style={{ fontFamily: SANS, fontSize: 11, lineHeight: 1.5, color: C.faint }}>{g.desc}</span>
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    // ---- board/card games render their own self-contained components ----
+    const backBtn = <button onClick={() => { setGameMode("menu"); stopSpeak(); }} className="v-gamectl" style={ctlBtn}>← games</button>;
+    if (gameMode === "cards") {
+      return shell("🃏 MARKET BLACKJACK", backBtn,
+        <BlackjackGame onCheer={() => triggerAnchor("cheer", { label: "WINNER! ✓" })} onWin={() => triggerAnchor("cheer", { label: "BLACKJACK! 🃏" })} />);
+    }
+    if (gameMode === "chess") {
+      return shell("♟ BULLS vs BEARS", backBtn,
+        <ChessGame sfx={chessSfx} onWin={(w) => triggerAnchor("cheer", { label: w === "w" ? "BULLS WIN! 🐂" : "BEARS WIN! 🐻" })} />);
+    }
+    if (gameMode === "algowars") {
+      return shell("🖥️ ALGORITHM WARS", backBtn,
+        <AlgoWarsGame onWin={(w) => triggerAnchor(w === "you" ? "cheer" : "break", { label: w === "you" ? "MARKET DOMINATED! 🏆" : "OUTGUNNED 💥" })} onCheer={() => {}} />);
+    }
+
+    // ---- an active quiz game (school / bullbear / ticker) ----
+    // NB: named `round`, never `R` — a local `R` here shadows the theme's
+    // radius token across this whole closure (TDZ crash on open).
+    const data = gameSet(gameMode), total = data.length, round = data[gameStep] || {};
+    const done = gamePhase === "done";
+    const meta = gameMode === "school"
+      ? { hdr: "🎓 STOCK SCHOOL", unit: "lesson", title: round.title, question: round.q, choices: round.choices || [], answer: round.answer, explain: round.explain }
+      : gameMode === "bullbear"
+        ? { hdr: "📊 BULL OR BEAR", unit: "round", title: "Will the stock go up or down?", question: round.headline, choices: ["📈 Bullish — likely UP", "📉 Bearish — likely DOWN"], answer: round.bullish ? 0 : 1, explain: round.why }
+        : { hdr: "🔤 TICKER MATCH", unit: "round", title: "Pick the real ticker symbol", question: `Which symbol is ${round.company}?`, choices: round.options || [], answer: round.answer, explain: `${round.company} trades as ${round.options?.[round.answer]}.` };
+    const headerRight = (
+      <>
+        <span style={{ fontFamily: MONO, fontSize: 12, color: C.muted }}>{done ? `score ${gameScore}/${total}` : `${meta.unit} ${gameStep + 1}/${total} · score ${gameScore}`}</span>
+        {backBtn}
+      </>
+    );
+    const body = (
+      <>
+        <div style={{ height: 3, background: C.panelEdge }}>
+          <div style={{ height: "100%", width: `${((done ? total : gameStep) / total) * 100}%`, background: C.text, transition: "width 0.4s" }} />
+        </div>
+        <div style={{ padding: 14, fontFamily: MONO, display: "flex", flexDirection: "column", gap: 12 }}>
+          {done ? (
+            <>
+              <div style={{ fontSize: 17, fontWeight: 510, color: C.accentText }}>{gameMode === "school" ? "🎓 You graduated!" : "🏁 Round complete!"}</div>
+              <div style={{ fontSize: 12, lineHeight: 1.7, color: C.text }}>
+                You scored <b style={{ color: gameScore > total / 2 ? C.up : C.accentText }}>{gameScore} / {total}</b>. {gameMode === "school" ? "You now know the basics of how stocks work." : gameScore === total ? "Perfect run!" : "Play again to beat your score."}
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={() => startMode(gameMode)} style={primaryBtn}>Play again ↻</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 13, fontWeight: 510, color: C.text }}>{meta.title}</div>
+              {gameMode === "school" && gamePhase === "teach" && (
+                <>
+                  <div style={{ fontSize: 12, lineHeight: 1.7, color: C.text }}>{R.teach}</div>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button onClick={gameToQuiz} style={primaryBtn}>Quiz me →</button>
+                    <button onClick={() => speak("school", R.teach)} style={ghostBtn}>🔊 read again</button>
+                  </div>
+                </>
+              )}
+              {(gamePhase === "quiz" || gamePhase === "reveal") && (
+                <>
+                  <div style={{ fontSize: 12, lineHeight: 1.6, color: C.muted }}>{gameMode === "bullbear" ? "📰 " : ""}{meta.question}</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {meta.choices.map((c, i) => {
+                      const chosen = gameChoice === i, isRight = i === meta.answer, revealed = gamePhase === "reveal";
+                      const bg = revealed ? (isRight ? "rgba(39,166,68,0.15)" : chosen ? "rgba(235,87,87,0.12)" : "transparent") : "transparent";
+                      const bd = revealed ? (isRight ? C.up : chosen ? C.down : C.panelEdge) : C.panelEdge;
+                      return (
+                        <button key={i} disabled={revealed} onClick={() => gameAnswer(i)}
+                          style={{ textAlign: "left", background: bg, border: `1px solid ${bd}`, color: C.text, borderRadius: 5, fontFamily: SANS, fontSize: 12, padding: "9px 11px", cursor: revealed ? "default" : "pointer" }}>
+                          {gameMode === "school" ? `${String.fromCharCode(65 + i)}. ` : ""}{c}{revealed && isRight ? "  ✓" : revealed && chosen ? "  ✕" : ""}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {gamePhase === "reveal" && (
+                    <>
+                      <div style={{ fontSize: 12, lineHeight: 1.6, color: gameChoice === meta.answer ? C.up : C.muted }}>
+                        {meta.explain}
+                      </div>
+                      <button onClick={gameNext} style={primaryBtn}>{gameStep >= total - 1 ? (gameMode === "school" ? "Finish 🎓" : "See score 🏁") : "Next →"}</button>
+                    </>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </div>
+      </>
+    );
+    return shell(meta.hdr, headerRight, body);
+  })();
+  const deskBoxFilled = !!aiResponses.nav || deskCalendar || deskPortfolio
+    || !!(news && (news.news?.length > 0 || news.videos?.length > 0)) || newsBusy || !!newsErr || !!writtenReport;
+
+  // What rides at the tail of the transcript. Order is arrival order: a game is
+  // opened deliberately and stays, a catalog is the answer to the last thing asked.
+  const deskAttachments = (gamePanel || catalogPanel)
+    ? <>{gamePanel}{catalogPanel}</>
+    : null;
 
   return (
     <div onClickCapture={handleUiClick} style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: SANS }}>
@@ -6756,18 +7963,38 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Archivo:wght@500;600;800&display=swap');
         @keyframes tapeScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         .tape-track { animation: tapeScroll 40s linear infinite; }
-        .tape-track:hover { animation-play-state: paused; }
+        .tape-track:hover, .tape-track:has(:focus-visible) { animation-play-state: paused; }
         @media (prefers-reduced-motion: reduce) { .tape-track { animation: none; } }
+        /* A marquee cannot be used with a finger: the target is moving, and
+           because hover:none holds on touch the tape never pauses the way
+           it does under a mouse. On coarse pointers it stops scrolling itself
+           and becomes a strip you swipe, so every symbol can actually be hit.
+           The duplicate half exists only to loop the animation seamlessly, so
+           it goes when the animation does. !important on overflow because the
+           container sets it inline. */
+        @media (pointer: coarse) {
+          #tour-ticker { overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+          #tour-ticker::-webkit-scrollbar { display: none; }
+          .tape-track { animation: none; }
+          .tape-track > [aria-hidden="true"] { display: none; }
+        }
         @keyframes blink { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
-        .cursor { animation: blink 0.9s step-end infinite; color: ${C.amber}; }
+        .cursor { animation: blink 0.9s step-end infinite; color: ${C.accentText}; }
         @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
-        .wl-row:hover { background: #171E2C !important; }
-        /* keyboard-only focus ring (mouse clicks no longer draw a hard amber box) */
-        input:focus-visible, button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid ${C.amber}; outline-offset: 1px; border-radius: 3px; }
-        /* command bar highlights the whole rounded container, not the inner input */
-        .cmdbar:focus-within { border-color: ${C.amber} !important; box-shadow: 0 0 0 3px rgba(255,179,0,0.16); }
-        .cmdbar input:focus, .cmdbar input:focus-visible { outline: none; }
-        ::selection { background: ${C.amberDim}; }
+        .wl-row { transition: background ${MOTION.fast} ${MOTION.ease}, border-left-color ${MOTION.fast} ${MOTION.ease}; }
+        .wl-row:hover { background: ${C.surfaceRaised} !important; }
+        @media (prefers-reduced-motion: reduce) { .wl-row { transition: none; } }
+        /* Keyboard-only focus ring (mouse clicks no longer draw a hard box).
+           Violet, not amber: amber is reserved for genuinely live/on-air state,
+           so using it for focus made every focused control look like it was
+           broadcasting. global.css sets the same ring for everything else. */
+        input:focus-visible, button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid ${C.accent}; outline-offset: 2px; border-radius: ${R.sm}px; }
+        /* The command bar and chat composer highlight the whole rounded container,
+           not the inner input — they are the app's primary interface, so focusing
+           one should light up the surface rather than draw a box inside it. */
+        .cmdbar:focus-within { border-color: ${C.accentText} !important; box-shadow: 0 0 0 3px ${C.accentGlow}; }
+        .cmdbar input:focus, .cmdbar input:focus-visible, .cmdbar textarea:focus, .cmdbar textarea:focus-visible { outline: none; }
+        ::selection { background: rgba(255,255,255,0.16); color: #fff; }
         /* Spotify dock slide/fade in & out */
         @keyframes spotifyIn { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes spotifyOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(24px) scale(0.96); } }
@@ -6780,13 +8007,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       {/* ===== Spotify ambient player (replaces the synth when music source = spotify) ===== */}
       {/* Premium + connected → SDK plays full tracks silently in the background, show a status chip */}
       {spotifyRender && spotifyReady && (
-        <div className="spotify-dock" style={{ position: "fixed", bottom: 12, right: 12, zIndex: 40, display: "flex", alignItems: "center", gap: 8, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 999, padding: "8px 14px", fontFamily: MONO, fontSize: 11, color: C.up, boxShadow: "0 8px 30px rgba(0,0,0,0.5)", animation: spotifyAnim }}>
+        <div className="spotify-dock" style={{ position: "fixed", bottom: 12, right: 12, zIndex: 40, display: "flex", alignItems: "center", gap: 8, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 999, padding: "8px 14px", fontFamily: MONO, fontSize: 12, color: C.up, boxShadow: "0 8px 30px rgba(0,0,0,0.5)", animation: spotifyAnim }}>
           <span style={{ color: "#1DB954", fontSize: 13 }}>♫</span> Spotify · playing on Vantage Desk
         </div>
       )}
       {/* not connected (or no Premium) → fall back to the no-login preview embed */}
       {spotifyRender && !spotifyReady && spotifyEmbedUrl(spotifyUri) && (
-        <div className="spotify-dock" style={{ position: "fixed", bottom: 12, right: 12, width: 340, maxWidth: "90vw", zIndex: 40, borderRadius: 12, overflow: "hidden", boxShadow: "0 8px 30px rgba(0,0,0,0.5)", border: `1px solid ${C.panelEdge}`, animation: spotifyAnim }}>
+        <div className="spotify-dock" style={{ position: "fixed", bottom: 12, right: 12, width: 340, maxWidth: "90vw", zIndex: 40, borderRadius: R.lg, overflow: "hidden", boxShadow: "0 8px 30px rgba(0,0,0,0.5)", border: `1px solid ${C.panelEdge}`, animation: spotifyAnim }}>
           <iframe
             title="Spotify player"
             src={spotifyEmbedUrl(spotifyUri)}
@@ -6815,35 +8042,35 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         const addNews = () => setExportDraft(d => ({ ...d, news: [...d.news, { title: "", source: "", url: "" }] }));
         const inc = exportDraft.include || {};
         return (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.8)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setExportDraft(null)}>
-            <div id="export-modal" onClick={e => e.stopPropagation()} style={{ width: 620, maxWidth: "94vw", maxHeight: "88vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 8, boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
+          <div role="dialog" aria-label="Export preview" style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setExportDraft(null)}>
+            <div id="export-modal" onClick={e => e.stopPropagation()} className="v-rise" style={{ width: 620, maxWidth: "94vw", maxHeight: "88vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${C.panelEdge}` }}>
-                <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: C.amber }}>⬇ REVIEW & EDIT — before you export</span>
-                <button onClick={() => setExportDraft(null)} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 14, cursor: "pointer" }}>✕</button>
+                <span style={{ ...TYPE.eyebrow, color: C.muted }}>⬇ REVIEW & EDIT <span style={{ color: C.faint, fontWeight: 510, letterSpacing: "-0.013em", textTransform: "none" }}>· before you export</span></span>
+                <button onClick={() => setExportDraft(null)} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 14, cursor: "pointer" }}>✕</button>
               </div>
               <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
                 <div>
-                  <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>DOCUMENT TITLE</label>
+                  <label style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>DOCUMENT TITLE</label>
                   <input value={exportDraft.title} onChange={e => setExportDraft(d => ({ ...d, title: e.target.value }))}
-                    style={{ width: "100%", boxSizing: "border-box", marginTop: 4, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 10px" }} />
+                    style={{ width: "100%", boxSizing: "border-box", marginTop: 4, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 14, padding: "9px 10px" }} />
                 </div>
                 <div>
-                  <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>REPORT BODY · edit freely, this goes into the document</label>
+                  <label style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>REPORT BODY · edit freely, this goes into the document</label>
                   <textarea value={exportDraft.body} onChange={e => setExportDraft(d => ({ ...d, body: e.target.value }))} rows={13}
-                    style={{ width: "100%", boxSizing: "border-box", marginTop: 4, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, lineHeight: 1.6, padding: "10px", resize: "vertical" }} />
+                    style={{ width: "100%", boxSizing: "border-box", marginTop: 4, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, lineHeight: 1.6, padding: "10px", resize: "vertical" }} />
                   {!writtenReport && <button onClick={async () => { const t = await generateWrittenReport(); if (t) setExportDraft(d => ({ ...d, body: t })); }} disabled={reportBusy}
-                    style={{ marginTop: 6, background: "transparent", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>{reportBusy ? "✍ writing…" : "✨ write it for me (AI)"}</button>}
+                    style={{ marginTop: 6, background: "transparent", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>{reportBusy ? "✍ writing…" : "✨ write it for me (AI)"}</button>}
                 </div>
 
                 {/* editable snapshot — the Summary sheet / title-slide numbers */}
                 <div>
-                  <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>SNAPSHOT · edit any value ({exportDraft.selected?.sym || selected})</label>
+                  <label style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>SNAPSHOT · edit any value ({exportDraft.selected?.sym || selected})</label>
                   <div style={{ marginTop: 6, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     {[["name", "Name"], ["price", "Price"], ["chgPct", "Change %"], ["chg", "Change"], ["open", "Open"], ["high", "High"], ["low", "Low"], ["prevClose", "Prev Close"]].map(([k, lbl]) => (
                       <label key={k} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontFamily: MONO, fontSize: 10, color: C.muted, width: 74, flexShrink: 0 }}>{lbl}</span>
+                        <span style={{ fontFamily: MONO, fontSize: 12, color: C.muted, width: 74, flexShrink: 0 }}>{lbl}</span>
                         <input value={exportDraft.selected?.[k] ?? ""} onChange={e => setSel(k, e.target.value)}
-                          style={{ flex: 1, minWidth: 0, boxSizing: "border-box", background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px" }} />
+                          style={{ flex: 1, minWidth: 0, boxSizing: "border-box", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px" }} />
                       </label>
                     ))}
                   </div>
@@ -6851,11 +8078,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
                 {/* editable watchlist grid — per-cell for the Watchlist sheet / slide / table */}
                 <div>
-                  <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>WATCHLIST · edit any cell, add or remove rows</label>
-                  <div style={{ marginTop: 6, border: `1px solid ${C.panelEdge}`, borderRadius: 4, overflow: "hidden" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: wlCols, background: "#0D121C", borderBottom: `1px solid ${C.panelEdge}` }}>
+                  <label style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>WATCHLIST · edit any cell, add or remove rows</label>
+                  <div style={{ marginTop: 6, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, overflow: "hidden" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: wlCols, background: "#161718", borderBottom: `1px solid ${C.panelEdge}` }}>
                       {["Symbol", "Price", "Change", "Change %", ""].map((h, i) => (
-                        <span key={i} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", color: C.faint, padding: "6px 8px" }}>{h}</span>
+                        <span key={i} style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, padding: "6px 8px" }}>{h}</span>
                       ))}
                     </div>
                     {exportDraft.watchlist.map((w, i) => (
@@ -6864,28 +8091,28 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                           <input key={k} value={w[k] ?? ""} onChange={e => setWl(i, k, e.target.value)} aria-label={`${k} row ${i + 1}`}
                             style={{ boxSizing: "border-box", background: "transparent", border: "none", borderRight: `1px solid ${C.panelEdge}`, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px", minWidth: 0 }} />
                         ))}
-                        <button onClick={() => delWl(i)} title="Remove row" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
+                        <button onClick={() => delWl(i)} title="Remove row" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
                       </div>
                     ))}
-                    {!exportDraft.watchlist.length && <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, padding: "8px" }}>No rows — add one below.</div>}
+                    {!exportDraft.watchlist.length && <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint, padding: "8px" }}>No rows — add one below.</div>}
                   </div>
-                  <button onClick={addWl} style={{ marginTop: 6, background: "transparent", border: `1px dashed ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>+ add row</button>
+                  <button onClick={addWl} style={{ marginTop: 6, background: "transparent", border: `1px dashed ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>+ add row</button>
                 </div>
 
                 {/* editable AI-analysis blocks */}
                 {exportDraft.analysis.length > 0 && (
                   <div>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint, cursor: "pointer" }}>
-                      <input type="checkbox" checked={inc.analysis !== false} onChange={e => setInc("analysis", e.target.checked)} /> AI ANALYSIS · edit or remove
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, cursor: "pointer" }}>
+                      <Toggle checked={inc.analysis !== false} onChange={e => setInc("analysis", e.target.checked)} /> AI ANALYSIS · edit or remove
                     </label>
                     {inc.analysis !== false && exportDraft.analysis.map((a, i) => (
-                      <div key={i} style={{ marginTop: 6, border: `1px solid ${C.panelEdge}`, borderRadius: 4, padding: 8 }}>
+                      <div key={i} style={{ marginTop: 6, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, padding: 8 }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                          <span style={{ fontFamily: MONO, fontSize: 10, color: C.amber }}>{a.model}</span>
-                          <button onClick={() => delAn(i)} title="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
+                          <span style={{ fontFamily: MONO, fontSize: 12, color: C.accentText }}>{a.model}</span>
+                          <button onClick={() => delAn(i)} title="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
                         </div>
                         <textarea value={a.text ?? ""} onChange={e => setAn(i, e.target.value)} rows={3}
-                          style={{ width: "100%", boxSizing: "border-box", background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, lineHeight: 1.5, padding: "6px 8px", resize: "vertical" }} />
+                          style={{ width: "100%", boxSizing: "border-box", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, lineHeight: 1.5, padding: "6px 8px", resize: "vertical" }} />
                       </div>
                     ))}
                   </div>
@@ -6893,36 +8120,36 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
                 {/* editable news list */}
                 <div>
-                  <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint, cursor: "pointer" }}>
-                    <input type="checkbox" checked={inc.news !== false} onChange={e => setInc("news", e.target.checked)} /> NEWS · edit, add or remove
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, cursor: "pointer" }}>
+                    <Toggle checked={inc.news !== false} onChange={e => setInc("news", e.target.checked)} /> NEWS · edit, add or remove
                   </label>
                   {inc.news !== false && (<>
                     {exportDraft.news.map((n, i) => (
                       <div key={i} style={{ marginTop: 6, display: "grid", gridTemplateColumns: "2.4fr 1fr 28px", gap: 6, alignItems: "center" }}>
                         <input value={n.title ?? ""} onChange={e => setNews(i, "title", e.target.value)} placeholder="Headline" aria-label={`news title ${i + 1}`}
-                          style={{ boxSizing: "border-box", background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px", minWidth: 0 }} />
+                          style={{ boxSizing: "border-box", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px", minWidth: 0 }} />
                         <input value={n.source ?? ""} onChange={e => setNews(i, "source", e.target.value)} placeholder="Source" aria-label={`news source ${i + 1}`}
-                          style={{ boxSizing: "border-box", background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px", minWidth: 0 }} />
-                        <button onClick={() => delNews(i)} title="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
+                          style={{ boxSizing: "border-box", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px", minWidth: 0 }} />
+                        <button onClick={() => delNews(i)} title="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
                       </div>
                     ))}
-                    {!exportDraft.news.length && <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6 }}>No headlines — add one below.</div>}
-                    <button onClick={addNews} style={{ marginTop: 6, background: "transparent", border: `1px dashed ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>+ add headline</button>
+                    {!exportDraft.news.length && <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint, marginTop: 6 }}>No headlines — add one below.</div>}
+                    <button onClick={addNews} style={{ marginTop: 6, background: "transparent", border: `1px dashed ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>+ add headline</button>
                   </>)}
                 </div>
 
-                <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, lineHeight: 1.6, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-                    <input type="checkbox" checked={inc.chart !== false} onChange={e => setInc("chart", e.target.checked)} /> include session chart
+                <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint, lineHeight: 1.6, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, color: C.muted, cursor: "pointer" }}>
+                    <Toggle checked={inc.chart !== false} onChange={e => setInc("chart", e.target.checked)} /> include session chart
                   </label>
                   <span>· logo + snapshot always included.</span>
                   {exportMsg && <span style={{ color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted }}>· {exportMsg}</span>}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>FORMAT</span>
+                  <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>FORMAT</span>
                   {["xlsx", "docx", "pptx"].map(f => (
                     <button key={f} onClick={() => setExportDraft(d => ({ ...d, format: f }))}
-                      style={{ background: exportDraft.format === f ? "rgba(255,179,0,0.16)" : "transparent", border: `1px solid ${exportDraft.format === f ? C.amber : C.panelEdge}`, color: exportDraft.format === f ? C.amber : C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>{FMT[f]}</button>
+                      style={{ background: exportDraft.format === f ? "rgba(255,255,255,0.09)" : "transparent", border: `1px solid ${exportDraft.format === f ? C.accent : C.panelEdge}`, color: exportDraft.format === f ? C.accentText : C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>{FMT[f]}</button>
                   ))}
                   <button onClick={async () => {
                     const toNum = (v) => { if (v === "" || v == null) return null; const n = Number(v); return isNaN(n) ? v : n; };
@@ -6938,7 +8165,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     });
                     setExportDraft(null);
                   }}
-                    style={{ marginLeft: "auto", background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontWeight: 700, fontSize: 12, padding: "9px 18px", cursor: "pointer" }}>⬇ Download {FMT[exportDraft.format]}</button>
+                    style={{ marginLeft: "auto", background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 510, fontSize: 12, padding: "9px 18px", cursor: "pointer" }}>⬇ Download {FMT[exportDraft.format]}</button>
                 </div>
               </div>
             </div>
@@ -6948,22 +8175,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
       {/* ===== in-app browser: opens a broker/site inside Vantage (with a tab fallback for framed-blocked sites) ===== */}
       {embed && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", zIndex: 60, display: "flex", flexDirection: "column", padding: 18 }} onClick={() => setEmbed(null)}>
-          <div onClick={e => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", flex: 1, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 8, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
+        <div role="dialog" aria-label="In-app browser" style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", zIndex: 60, display: "flex", flexDirection: "column", padding: 18 }} onClick={() => setEmbed(null)}>
+          <div onClick={e => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", flex: 1, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.md, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "8px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-              <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: C.amber, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>🌐 {embed.title}</span>
+              <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: C.accentText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>🌐 {embed.title}</span>
               <span style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                 <a href={embed.url} target="_blank" rel="noopener noreferrer"
-                  style={{ background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "6px 14px", textDecoration: "none" }}>open in new tab ↗</a>
-                <button onClick={() => setEmbed(null)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>✕ close</button>
+                  style={{ background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: MONO, fontSize: 12, fontWeight: 510, padding: "6px 14px", textDecoration: "none" }}>open in new tab ↗</a>
+                <button onClick={() => setEmbed(null)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>✕ close</button>
               </span>
             </div>
-            <iframe title={embed.title} src={embed.url} style={{ flex: 1, width: "100%", border: "none", background: embed.trusted ? "#0B0E14" : "#fff" }}
+            <iframe title={embed.title} src={embed.url} style={{ flex: 1, width: "100%", border: "none", background: embed.trusted ? "#08090a" : "#fff" }}
               allow="clipboard-write; fullscreen" referrerPolicy="no-referrer-when-downgrade" />
             {!embed.trusted && (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "6px 12px", fontFamily: MONO, fontSize: 10, color: C.faint, borderTop: `1px solid ${C.panelEdge}`, lineHeight: 1.5, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "6px 12px", fontFamily: SANS, fontSize: 10, color: C.faint, borderTop: `1px solid ${C.panelEdge}`, lineHeight: 1.5, flexWrap: "wrap" }}>
                 <span>Blank? Brokers (Robinhood, Fidelity…) block embedding — use <b style={{ color: C.muted }}>open in new tab ↗</b>, or view the live chart in-app:</span>
-                <button onClick={() => openChart(selected)} style={{ background: "rgba(255,179,0,0.12)", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 10, fontWeight: 600, padding: "5px 10px", cursor: "pointer" }}>📈 {selected} chart (works in-frame)</button>
+                <button onClick={() => openChart(selected)} style={{ background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "5px 10px", cursor: "pointer" }}>📈 {selected} chart (works in-frame)</button>
               </div>
             )}
           </div>
@@ -6971,223 +8198,235 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       )}
 
       {/* ===== ticker tape ===== */}
+      {/* ===== application chrome =====
+           AppShell supplies the header: brand, primary navigation, market status,
+           the command palette and the account menu. It is presentational — every value
+           it renders is derived above and every action is a callback into this
+           component, so the dashboard below is unchanged by its presence.
+
+           onSignIn is deliberately signOut: it clears the session, which drops
+           the visitor back at the auth gate to sign in again. */}
+      <AppShell
+        sections={NAV_SECTIONS}
+        activeSection={activeSection}
+        onNavigate={navigateSection}
+        account={account}
+        plan={account?.plan}
+        onSignIn={onSignOut}
+        onSignOut={onSignOut}
+        onOpenSettings={() => { setSettingsTab("quick"); setShowSettings(true); }}
+        onOpenPlans={() => { setSettingsTab("account"); setShowSettings(true); }}
+        marketOpen={marketOpen}
+        marketLabel={marketOpen ? `NYSE ${t("OPEN")}` : `NYSE ${t("CLOSED")}`}
+        clock={shellClock}
+        commands={shellCommands}
+        paletteFallback={q => (q.length <= 20 && /^[A-Za-z][A-Za-z0-9.\- ]*$/.test(q)) ? {
+          id: `chart:${q}`, label: `Chart “${q.toUpperCase()}”`, icon: "📈", group: "Symbol",
+          run: () => {
+            chartQuery(q);
+            const sec = NAV_SECTIONS.find(x => x.id === "watchlist");
+            if (sec) navigateSection(sec);
+          },
+        } : null}
+        status={live ? <span style={chip("up")}>● LIVE DATA</span> : null}
+        searchRef={openPaletteRef}
+      >
       {panels.tape && (
       <div id="tour-ticker" style={{ overflow: "hidden", borderBottom: `1px solid ${C.panelEdge}`, background: "#0D111A", whiteSpace: "nowrap" }}>
         <div className="tape-track" style={{ display: "inline-block", padding: "7px 0" }}>
+          {/* Each entry charts its symbol — the tape already pauses on hover, so
+              it reads as navigation, not just decoration. */}
           {tape.map((r, i) => (
-            <span key={i} style={{ fontFamily: MONO, fontSize: 12, marginRight: 34 }}>
-              <span style={{ color: C.amber, fontWeight: 600 }}>{r.sym}</span>{" "}
+            <button key={i} onClick={() => setSelected(r.sym)} title={`Chart ${r.sym}`} className="v-tap"
+              // The duplicate half exists only so the loop is seamless — hide it
+              // from the tab order and from assistive tech so each symbol is
+              // offered exactly once. It stays clickable with the mouse.
+              aria-hidden={i >= tapeRows.length || undefined}
+              tabIndex={i >= tapeRows.length ? -1 : undefined}
+              style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: MONO, fontSize: 12, marginRight: 34 }}>
+              <span style={{ color: C.accentText, fontWeight: 510 }}>{r.sym}</span>{" "}
               <span style={{ color: C.text }}>{fmt(r.price)}</span>{" "}
               <span style={{ color: dirColorN(r.chg) }}>{r.chg > 0 ? "▲" : r.chg < 0 ? "▼" : "•"} {pct(r.chgPct)}</span>
-            </span>
+            </button>
           ))}
         </div>
       </div>
       )}
 
-      {/* ===== header + command bar ===== */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 20px", borderBottom: `1px solid ${C.panelEdge}`, flexWrap: "wrap" }}>
-        <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: 20, letterSpacing: "0.14em", color: C.amber }}>
-          VANTAGE<span style={{ color: C.faint, fontWeight: 500, fontSize: 11, letterSpacing: "0.08em", marginLeft: 10 }}>MARKET DASHBOARD</span>
-        </div>
-        <div id="tour-symbol" className="cmdbar" style={{ flex: 1, minWidth: 240, display: "flex", alignItems: "center", background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, padding: "0 10px" }}>
-          <span style={{ fontFamily: MONO, color: C.amber, fontSize: 13 }}>&gt;</span>
-          <input
-            value={cmd}
-            onChange={e => setCmd(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && runCmd()}
-            placeholder={t("Type a symbol and press Enter  ·  HELP for commands")}
-            aria-label="Command bar"
-            style={{ flex: 1, background: "transparent", border: "none", color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 8px" }}
-          />
-          <button onClick={runCmd} style={{ background: C.amber, color: "#141414", border: "none", borderRadius: 3, fontFamily: MONO, fontWeight: 600, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>GO</button>
-        </div>
-        {live && (
-          <span style={{ fontFamily: MONO, fontSize: 11, color: C.up, letterSpacing: "0.1em" }}>● LIVE</span>
-        )}
-        {liveMeeting && (
-          <a href={liveMeeting} target="_blank" rel="noopener noreferrer" title="Rejoin your live meeting"
-            style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: MONO, fontSize: 11, color: "#fff", background: "rgba(246,70,93,0.18)", border: `1px solid ${C.down}`, borderRadius: 999, padding: "3px 10px", textDecoration: "none" }}>
-            <span className="cursor" style={{ color: C.down }}>🔴</span> ON AIR ↗
-          </a>
-        )}
-        {(() => {
-          // clock shows the user's chosen timezone; OPEN/CLOSED always tracks NYSE (Eastern) hours
-          const timeStr = new Intl.DateTimeFormat("en-US", { timeZone: clockTz, hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }).format(clockNow);
-          const abbr = tzAbbrev(clockTz, clockNow);
-          const { day: eDay, mins: eMins } = etNow();
-          const open = eDay >= 1 && eDay <= 5 && eMins >= 570 && eMins < 960; // 9:30–16:00 ET, weekdays
-          return (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, marginLeft: "auto" }} title={`${TIMEZONES.find(z => z.id === clockTz)?.label || clockTz} · change in settings → DATA`}>
-              <select id="tour-lang" value={lang} onChange={e => setLang(e.target.value)} aria-label={t("Language")} title={t("Language")}
-                style={{ background: "#0D121C", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "3px 6px", cursor: "pointer" }}>
-                {LANGS.map(l => <option key={l.code} value={l.code} style={{ background: C.panel, color: C.text }}>{l.code === "en" ? "🌐 " + l.label : l.label}</option>)}
-              </select>
-              <span style={{ fontSize: 14, color: C.text, letterSpacing: "0.04em", fontVariantNumeric: "tabular-nums" }}>{timeStr}</span>
-              <span style={{ fontSize: 9, color: C.faint, letterSpacing: "0.08em" }}>{abbr}</span>
-              <span title="New York Stock Exchange hours" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, letterSpacing: "0.08em", color: open ? C.up : C.down }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: open ? C.up : C.down, display: "inline-block" }} />
-                NYSE {open ? t("OPEN") : t("CLOSED")}
-              </span>
-            </div>
-          );
-        })()}
-      </div>
-
       {cmdMsg && (
-        <div style={{ padding: "6px 20px", fontFamily: MONO, fontSize: 11, color: C.amber, borderBottom: `1px solid ${C.panelEdge}` }}>{cmdMsg}</div>
+        <div style={{ padding: "6px 20px", fontFamily: MONO, fontSize: 12, color: C.accentText, borderBottom: `1px solid ${C.panelEdge}` }}>{cmdMsg}</div>
       )}
       {breakingAlert && (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 20px", background: "linear-gradient(90deg, rgba(246,70,93,0.24), rgba(246,70,93,0.04))", borderBottom: `1px solid ${C.down}` }}>
-          <span className="breaking-pulse" style={{ fontFamily: MONO, fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", color: "#fff", background: C.down, borderRadius: 3, padding: "3px 8px", whiteSpace: "nowrap" }}>⚡ BREAKING</span>
-          <span style={{ fontFamily: MONO, fontSize: 12, color: C.text, flex: 1, lineHeight: 1.4 }}>{breakingAlert.text}</span>
-          <span style={{ fontFamily: MONO, fontSize: 9, color: C.faint, whiteSpace: "nowrap" }}>{breakingAlert.source}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 20px", background: "linear-gradient(90deg, rgba(235,87,87,0.24), rgba(235,87,87,0.04))", borderBottom: `1px solid ${C.down}` }}>
+          <span className="breaking-pulse" style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, letterSpacing: "-0.013em", color: "#08090a", background: C.down, borderRadius: R.xs, padding: "3px 8px", whiteSpace: "nowrap" }}>⚡ BREAKING</span>
+          <span style={{ fontFamily: SANS, fontSize: 12, color: C.text, flex: 1, lineHeight: 1.4 }}>{breakingAlert.text}</span>
+          <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint, whiteSpace: "nowrap" }}>{breakingAlert.source}</span>
           <button onClick={() => speak("breaking", `This just in. ${breakingAlert.text}.`)} title="Read on air"
-            style={{ background: "transparent", border: `1px solid ${C.down}`, color: C.down, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "3px 8px", cursor: "pointer", whiteSpace: "nowrap" }}>▶ read</button>
+            style={{ background: "transparent", border: `1px solid ${C.down}`, color: C.down, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "3px 8px", cursor: "pointer", whiteSpace: "nowrap" }}>▶ read</button>
           <button onClick={() => setBreakingAlert(null)} aria-label="Dismiss alert"
-            style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 13 }}>✕</button>
+            style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 13 }}>✕</button>
         </div>
       )}
       {live && liveErr && (
-        <div style={{ padding: "6px 20px", fontFamily: MONO, fontSize: 11, color: C.down, borderBottom: `1px solid ${C.panelEdge}` }}>live feed: {liveErr}</div>
+        <div style={{ padding: "6px 20px", fontFamily: MONO, fontSize: 12, color: C.down, borderBottom: `1px solid ${C.panelEdge}` }}>live feed: {liveErr}</div>
       )}
 
       {/* ===== AI desk ===== */}
-      <div style={{ padding: "14px 14px 0" }}>
-        <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted }}>
-              AI DESK <span style={{ color: C.faint }}>· {enabledCount > 1 ? `${enabledCount} models · falls back on error` : t("one model on the desk")}</span>
-            </span>
-            <span style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+      <div id="sec-desk" style={{ padding: "14px 14px 0" }}>
+        <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
+          <div className="v-deskhead" style={{ borderBottom: `1px solid ${C.panelEdge}` }}>
+            <span className="v-deskhead-title" style={{ ...TYPE.eyebrow, color: C.muted }}>AI DESK</span>
+            {/* Session state lives up here with the desk, not buried under the
+                chart: one glance says why every price is holding still. */}
+            {liveStale && (
+              <span style={{ fontFamily: MONO, fontSize: 12, color: C.muted, background: "rgba(255,255,255,0.05)", borderRadius: R.xs, padding: "3px 9px", letterSpacing: "-0.013em", whiteSpace: "nowrap" }}>
+                {t("MARKET CLOSED")} · {t("last trade")} {liveStale.toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}
+              </span>
+            )}
+            <span className="v-deskhead-tools">
               {/* visible export menu (Excel / Word / PowerPoint / report), all generated inside Vantage */}
-              <span style={{ position: "relative" }}>
+              <span data-deskmenu="" style={{ position: "relative" }}>
                 <button id="tour-export" onClick={() => { setShowExportMenu(v => !v); setShowMoreMenu(false); }} aria-label="Export a document"
-                  title="Export the current view as Excel, Word, or PowerPoint — built inside Vantage"
+                  title="Export as Excel, Word, or PowerPoint"
                   style={deskBtn(showExportMenu)} {...deskBtnHover(showExportMenu)}>
                   ⬇ {t("Export")} ▾
                 </button>
                 {showExportMenu && (
-                  <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", minWidth: 150, overflow: "hidden" }}>
-                    {exportMsg && <div style={{ fontFamily: MONO, fontSize: 10, color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted, padding: "6px 10px", borderBottom: `1px solid ${C.panelEdge}` }}>{exportMsg}</div>}
+                  <div className="v-rise" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", minWidth: 150, overflow: "hidden" }}>
+                    {exportMsg && <div style={{ fontFamily: MONO, fontSize: 12, color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted, padding: "6px 10px", borderBottom: `1px solid ${C.panelEdge}` }}>{exportMsg}</div>}
                     {[["xlsx", "📊 Excel (.xlsx)"], ["docx", "📄 Word (.docx)"], ["pptx", "📽 PowerPoint (.pptx)"]].map(([fmt, label]) => (
                       <button key={fmt} onClick={() => { setShowExportMenu(false); openExportPreview(fmt); }}
-                        style={{ textAlign: "left", background: "transparent", border: "none", color: C.text, fontFamily: MONO, fontSize: 11, padding: "8px 12px", cursor: "pointer" }}
-                        onMouseEnter={e => e.currentTarget.style.background = "#171E2C"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{label}</button>
+                        style={{ textAlign: "left", background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 11, padding: "8px 12px", cursor: "pointer" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#161718"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{label}</button>
                     ))}
                     <button onClick={() => { setShowExportMenu(false); generateWrittenReport(); }} disabled={reportBusy}
-                      style={{ textAlign: "left", background: "transparent", borderTop: `1px solid ${C.panelEdge}`, borderLeft: "none", borderRight: "none", borderBottom: "none", color: C.amber, fontFamily: MONO, fontSize: 11, padding: "8px 12px", cursor: "pointer" }}
-                      onMouseEnter={e => e.currentTarget.style.background = "#171E2C"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{reportBusy ? "✍ writing…" : "📝 write analyst report"}</button>
+                      style={{ textAlign: "left", background: "transparent", borderTop: `1px solid ${C.panelEdge}`, borderLeft: "none", borderRight: "none", borderBottom: "none", color: C.accentText, fontFamily: SANS, fontSize: 11, padding: "8px 12px", cursor: "pointer" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#161718"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{reportBusy ? "✍ writing…" : "📝 write analyst report"}</button>
                   </div>
                 )}
               </span>
               {/* consolidated "More" menu: games + ambient + music, so the row stays uncluttered */}
-              <span style={{ position: "relative" }}>
+              <span data-deskmenu="" style={{ position: "relative" }}>
                 <button onClick={() => { setShowMoreMenu(v => !v); setShowExportMenu(false); }} aria-label="More — games, ambient sound and music"
                   title="Games, ambient sound and music"
                   style={deskBtn(showMoreMenu || gameOn || ambienceOn || musicOn)} {...deskBtnHover(showMoreMenu || gameOn || ambienceOn || musicOn)}>
                   ⋯ {t("More")} ▾
                 </button>
                 {showMoreMenu && (
-                  <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", minWidth: 210, overflow: "hidden" }}>
+                  <div className="v-rise" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", minWidth: 258, overflow: "hidden" }}>
                     {[
                       { key: "games", icon: "🎮", label: t("Games"), sub: t("learn how stocks work"), active: gameOn, onClick: () => { setShowMoreMenu(false); gameOn ? closeGame() : openGames(); } },
-                      { key: "ambient", icon: "🌊", label: t("Ambient sound"), sub: t("waves, jungle, space hum…"), active: ambienceOn, onClick: () => setAmbienceOn(v => !v) },
+                      { key: "ambient", icon: "🎧", label: t("Ambient sound"), sub: t("waves, jungle, space hum…"), active: ambienceOn, onClick: () => setAmbienceOn(v => !v) },
                       { key: "music", icon: "♪", label: t("Music"), sub: t("background score"), active: musicOn, onClick: () => toggleMusic(!musicOn) },
                     ].map((it, idx) => (
                       <button key={it.key} onClick={it.onClick} aria-pressed={it.active}
-                        style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", background: "transparent", border: "none", borderBottom: idx < 2 ? `1px solid ${C.panelEdge}` : "none", color: C.text, fontFamily: MONO, fontSize: 11, padding: "9px 12px", cursor: "pointer" }}
-                        onMouseEnter={e => e.currentTarget.style.background = "#171E2C"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", background: "transparent", border: "none", borderBottom: idx < 2 ? `1px solid ${C.panelEdge}` : "none", color: C.text, fontFamily: SANS, fontSize: 11, padding: "9px 12px", cursor: "pointer" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#161718"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                         <span style={{ fontSize: 13, width: 16, textAlign: "center" }}>{it.icon}</span>
                         <span style={{ flex: 1 }}>
-                          <span style={{ display: "block", color: it.active ? C.amber : C.text }}>{it.label}</span>
-                          <span style={{ display: "block", fontSize: 9, color: C.faint }}>{it.sub}</span>
+                          <span style={{ display: "block", fontSize: 12, color: it.active ? C.accentText : C.text }}>{it.label}</span>
+                          <span style={{ display: "block", fontSize: 11, color: C.faint, marginTop: 1 }}>{it.sub}</span>
                         </span>
-                        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", color: it.active ? C.amber : C.faint }}>{it.active ? "● ON" : "○ off"}</span>
+                        <ToggleGlyph checked={it.active} />
                       </button>
                     ))}
                   </div>
                 )}
               </span>
-              <button id="tour-settings" onClick={() => { setKeyDraft(apiKey); setSettingsTab("quick"); setShowSettings(true); }}
-                style={deskBtn(false)} {...deskBtnHover(false)}>
-                ⚙ {t("Settings")}
-              </button>
-              {/* account chip: signed-in users see their plan + a menu; guests get a Sign in shortcut */}
-              <div style={{ position: "relative" }}>
-                <button onClick={() => { setShowExportMenu(false); setShowMoreMenu(false); account ? setAccountMenu(o => !o) : onSignOut?.(); }}
-                  title={account ? `Signed in as ${account.email}` : "Sign in / create account"}
-                  style={deskBtn(!!account)} {...deskBtnHover(!!account)}>
-                  <span style={{ width: 16, height: 16, borderRadius: "50%", background: account ? C.amber : C.panelEdge, color: "#0B0E14", display: "grid", placeItems: "center", fontWeight: 800, fontSize: 9 }}>
-                    {account ? (account.name || account.email || "?").trim().charAt(0).toUpperCase() : "?"}
-                  </span>
-                  {account ? planLabel(account.plan) : t("sign in")}
-                </button>
-                {account && accountMenu && (
-                  <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50, width: 210, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 8, boxShadow: "0 12px 40px rgba(0,0,0,0.6)", overflow: "hidden" }}>
-                    <div style={{ padding: "10px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-                      <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 12, color: C.text }}>{account.name || account.email.split("@")[0]}</div>
-                      <div style={{ fontFamily: MONO, fontSize: 9.5, color: C.faint, wordBreak: "break-all" }}>{account.email}</div>
-                      <div style={{ fontFamily: MONO, fontSize: 9.5, color: C.amber, marginTop: 4 }}>{planLabel(account.plan)} plan{account.backend ? " · server" : " · this device"}</div>
-                    </div>
-                    <button onClick={() => { setAccountMenu(false); setSettingsTab("account"); setShowSettings(true); }}
-                      style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 12px", background: "transparent", border: "none", color: C.text, fontFamily: MONO, fontSize: 11, cursor: "pointer" }}>Manage plan</button>
-                    <button onClick={() => { setAccountMenu(false); onSignOut?.(); }}
-                      style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 12px", background: "transparent", border: "none", color: "#ff8a8a", fontFamily: MONO, fontSize: 11, cursor: "pointer", borderTop: `1px solid ${C.panelEdge}` }}>Sign out</button>
-                  </div>
-                )}
-              </div>
+              {/* language rides last, keeping Export + More as an adjacent pair; it switches the whole UI, but above all the anchor's spoken answers */}
+              <select id="tour-lang" value={lang} onChange={e => setLang(e.target.value)} aria-label={t("Language")} title={t("Language")}
+                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: SANS, fontWeight: 510, fontSize: 11, letterSpacing: "-0.010em", padding: "5px 6px", cursor: "pointer" }}>
+                {LANGS.map(l => <option key={l.code} value={l.code} style={{ background: C.surface, color: C.text }}>{l.code === "en" ? "🌐 " + l.label : l.label}</option>)}
+              </select>
             </span>
+          </div>
+
+          {/* ===== command bar =====
+               Brand, navigation, the clock and the account menu live in
+               AppShell's sticky header. What is left is the thing this row was
+               actually for: typing a symbol — and that belongs to the desk,
+               not to the page chrome. Typing a symbol and asking about it are
+               the same gesture, so they share a panel. */}
+          <div className="v-cmdrow" style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, borderBottom: `1px solid ${C.panelEdge}`, flexWrap: "wrap" }}>
+            <div id="tour-symbol" className="cmdbar" style={{ flex: 1, minWidth: 240, display: "flex", alignItems: "center", background: C.inputBg, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: "0 6px 0 12px" }}>
+              <span aria-hidden="true" style={{ fontFamily: MONO, color: C.accentText, fontSize: 14 }}>&gt;</span>
+              <input
+                value={cmd}
+                onChange={e => setCmd(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && runCmd()}
+                placeholder={t("Type a symbol and press Enter  ·  HELP for commands")}
+                aria-label="Command bar"
+                style={{ flex: 1, minWidth: 0, background: "transparent", border: "none", outline: "none", color: C.text, fontFamily: MONO, fontSize: 14, padding: "10px 8px" }}
+              />
+              <button onClick={() => openPaletteRef.current?.()} aria-label="Open command palette" title={t("Search")}
+                style={{ display: "flex", alignItems: "center", gap: 7, background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, fontWeight: 510, padding: "7px 12px", marginRight: 6, cursor: "pointer", whiteSpace: "nowrap", transition: "border-color .12s, background .12s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.faint; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.edgeStrong; }}>
+                <span aria-hidden="true" style={{ color: C.accentText, fontSize: 13 }}>⌕</span>
+                <span>{t("Search")}</span>
+              </button>
+              <button onClick={runCmd} style={button("primary", "sm")}>GO</button>
+            </div>
+
+            {live && <span style={chip("up")}>● LIVE</span>}
+
+            {liveMeeting && (
+              <a href={liveMeeting} target="_blank" rel="noopener noreferrer" title="Rejoin your live meeting"
+                style={{ ...chip("live"), color: C.textOnLive, background: C.liveFill, borderColor: C.liveFill, textDecoration: "none" }}>
+                <span className="v-pulse" aria-hidden="true">🔴</span> ON AIR ↗
+              </a>
+            )}
+
           </div>
 
 
           {/* embedded player — docked at the TOP of the desk so a trailer opened from a
               tall catalog grid is visible without scrolling */}
           {player && (
-            <div ref={playerRef} style={{ margin: "12px 12px 0", border: `1px solid ${C.amber}`, borderRadius: 6, overflow: "hidden", background: "#0D121C" }}>
+            <div ref={playerRef} style={{ margin: "12px 12px 0", border: `1px solid ${C.accent}`, borderRadius: R.md, overflow: "hidden", background: "#161718" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-                <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.text }}>
+                <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: C.text }}>
                   <span style={{ color: C.down }}>▶</span> {player.title}
                   <span style={{ color: C.faint, fontWeight: 400, marginLeft: 8 }}>{player.channel}</span>
                 </span>
                 <button onClick={() => setPlayer(null)} aria-label="Close embedded player"
-                  style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 12, padding: "3px 10px", cursor: "pointer" }}>✕</button>
+                  style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, padding: "3px 10px", cursor: "pointer" }}>✕</button>
               </div>
               {player.archive ? (
                 <ArchiveFrame id={player.archive} title={player.title} />
               ) : player.id ? (
                 <VideoFrame id={player.id} title={player.title} />
               ) : (
-                <div style={{ padding: 12, fontFamily: MONO, fontSize: 12, color: C.text, lineHeight: 1.6 }}>
+                <div style={{ padding: 12, fontFamily: SANS, fontSize: 12, color: C.text, lineHeight: 1.6 }}>
                   {player.brief || "This link cannot be embedded directly, but the desk brief is available above."}
                 </div>
               )}
               {player.archive ? (
                 <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>Public-domain film · playing inside Vantage</span>
+                  <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>Public-domain film · playing inside Vantage</span>
                   <a href={`https://archive.org/details/${player.archive}`} target="_blank" rel="noopener noreferrer"
-                    style={{ fontFamily: MONO, fontSize: 10, color: C.amber, textDecoration: "none", border: `1px solid ${C.amberDim}`, borderRadius: 3, padding: "3px 9px" }}>
+                    style={{ fontFamily: MONO, fontSize: 12, color: C.accentText, textDecoration: "none", border: `1px solid ${C.accentEdge}`, borderRadius: R.xs, padding: "3px 9px" }}>
                     Open on Archive ↗
                   </a>
                 </div>
               ) : (
                 <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", color: C.amber }}>DESK BRIEF</span>
+                    <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.accentText }}>DESK BRIEF</span>
                     <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
                       <a href={ytWatchUrl(player)} target="_blank" rel="noopener noreferrer"
-                        style={{ fontFamily: MONO, fontSize: 10, color: C.amber, textDecoration: "none", border: `1px solid ${C.amberDim}`, borderRadius: 3, padding: "3px 9px" }}>
+                        style={{ fontFamily: MONO, fontSize: 12, color: C.accentText, textDecoration: "none", border: `1px solid ${C.accentEdge}`, borderRadius: R.xs, padding: "3px 9px" }}>
                         Watch on YouTube ↗
                       </a>
                       {player.brief && (
                         <button onClick={() => speak("brief", player.brief)}
-                          style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "3px 9px", cursor: "pointer" }}>
+                          style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "3px 9px", cursor: "pointer" }}>
                           ▶ read
                         </button>
                       )}
                     </span>
                   </div>
-                  <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.7, color: C.text, marginTop: 6 }}>
+                  <div style={{ fontFamily: SANS, fontSize: 11, lineHeight: 1.7, color: C.text, marginTop: 6 }}>
                     {player.brief || "Researching what this video covers…"}
                   </div>
                 </div>
@@ -7195,257 +8434,48 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             </div>
           )}
 
-          {/* anchor + response columns */}
-          {(Object.keys(aiResponses).length > 0 || true) && (
-            <div style={{ display: "flex", gap: 12, padding: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
-              {/* desk anchor */}
-              <div id="tour-anchor" style={{ background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "10px 8px", flexShrink: 0 }}>
-                <DeskAnchor
-                  talking={speakingId != null}
-                  mood={selectedRow?.chgPct}
-                  speakerLabel={aiModels.find(m => m.id === speakingId)?.label}
-                  character={CHARACTERS.find(c => c.id === characterId)}
-                  analyserRef={analyserRef}
-                  speechRef={speechMouthRef}
-                  env={envId}
-                  crew={
-                    crewId === "off" ? null :
-                    crewId === "auto"
-                      ? CHARACTERS[(CHARACTERS.findIndex(c => c.id === characterId) + 1) % CHARACTERS.length]
-                      : CHARACTERS.find(c => c.id === crewId) || null
-                  }
-                  cue={anchorCue}
-                  onAction={playActionSfx}
-                  onCue={playCueSfx}
-                  busy={
-                    gameOn ? "teach"
-                    : presenting ? "present"
-                    : (reportBusy || Object.values(aiResponses).some(r => r?.status === "running")) ? "work"
-                    : null
-                  }
-                />
-                {/* anchor + environment pickers — dropdowns scale cleanly past a dozen options; arrows browse */}
-                <div style={{ display: "grid", gap: 6, marginTop: 8, width: 190 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <button
-                      onClick={() => { const i = CHARACTERS.findIndex(c => c.id === characterId); setCharacterId(CHARACTERS[(i - 1 + CHARACTERS.length) % CHARACTERS.length].id); }}
-                      aria-label="Previous anchor"
-                      style={{ flexShrink: 0, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 12, lineHeight: 1, padding: "5px 8px", cursor: "pointer" }}>‹</button>
-                    <select value={characterId} onChange={e => setCharacterId(e.target.value)} aria-label="Anchor"
-                      style={{ flex: 1, minWidth: 0, background: C.bg, border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, fontWeight: 600, padding: "5px 6px", cursor: "pointer" }}>
-                      {CHARACTERS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                    <button
-                      onClick={() => { const i = CHARACTERS.findIndex(c => c.id === characterId); setCharacterId(CHARACTERS[(i + 1) % CHARACTERS.length].id); }}
-                      aria-label="Next anchor"
-                      style={{ flexShrink: 0, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 12, lineHeight: 1, padding: "5px 8px", cursor: "pointer" }}>›</button>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint, flexShrink: 0 }}>{t("SET")}</span>
-                    <select value={envId} onChange={e => setEnvId(e.target.value)} aria-label="Environment"
-                      style={{ flex: 1, minWidth: 0, background: C.bg, border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.muted, fontFamily: MONO, fontSize: 11, padding: "5px 6px", cursor: "pointer" }}>
-                      {ENVIRONMENTS.map(ev => <option key={ev.id} value={ev.id}>{ev.name}</option>)}
-                    </select>
-                  </div>
-                  {speakingId ? (
-                    <button onClick={stopSpeak}
-                      style={{ background: "transparent", border: `1px solid ${C.down}`, color: C.down, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 0", cursor: "pointer" }}>
-                      ■ {t("stop reading")}
-                    </button>
-                  ) : (
-                    <button onClick={() => { setKeyDraft(apiKey); setSettingsTab("anchor"); setShowSettings(true); }}
-                      style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.faint, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 0", cursor: "pointer" }}>
-                      {t("voice & anchor settings")}
-                    </button>
-                  )}
-                </div>
-              </div>
+          {/* Anchor beside the response box. The response box only has something
+              to show when a navigator answer, the calendar or the portfolio has
+              been pulled onto the desk — which is the minority of the time. When
+              it is empty it is hidden outright and the anchor centres, instead of
+              rendering a 2px sliver that pushed the anchor against a column of
+              dead panel. */}
+          {(() => {
+            if (!deskBoxFilled) return null;
+            return (
+            <div className="v-deskrow">
 
-              {/* ---- Game panel: menu + three beginner games, all hosted by the anchor (fully local) ---- */}
-              {gameOn && (() => {
-                const primaryBtn = { background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontWeight: 700, fontSize: 12, padding: "9px 16px", cursor: "pointer" };
-                const ghostBtn = { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "9px 12px", cursor: "pointer" };
-                const shell = (title, headerRight, body) => (
-                  <div style={{ flex: 1, minWidth: 260, background: "#0D121C", border: `1px solid ${C.amber}`, borderRadius: 6, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-                      <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: C.amber, letterSpacing: "0.08em" }}>{title}</span>
-                      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        {headerRight}
-                        <button onClick={closeGame} aria-label="Close games" style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 13, cursor: "pointer" }}>✕</button>
-                      </span>
-                    </div>
-                    {body}
-                  </div>
-                );
-
-                // ---- game selection menu ----
-                if (gameMode === "menu") {
-                  const games = [
-                    { id: "school", icon: "🎓", name: "Stock School", desc: "8 quick lessons — what a stock is, why prices move, reading gains & losses. The anchor teaches you." },
-                    { id: "bullbear", icon: "📊", name: "Bull or Bear", desc: "Read a headline, predict whether the stock goes up or down. Learn how news moves markets." },
-                    { id: "ticker", icon: "🔤", name: "Ticker Match", desc: "Match famous companies to their real stock symbols. AAPL, NVDA, TSLA…" },
-                    { id: "cards", icon: "🃏", name: "Market Blackjack", desc: "Play 21 against the dealer with a chip bankroll. Hit, stand, and try not to bust." },
-                    { id: "chess", icon: "♟", name: "Bulls vs Bears Chess", desc: "Two-player chess on one screen: green Bulls vs red Bears. Checkmate the enemy king." },
-                    { id: "algowars", icon: "🖥️", name: "Algorithm Wars", desc: "A live trading-floor RTS: deploy automated bots and re-script your army's AI in real time to crush the enemy algorithms." },
-                  ];
-                  return shell("🎮 GAME ROOM", <span style={{ fontFamily: MONO, fontSize: 10, color: C.muted }}>no account needed</span>,
-                    <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-                      {games.map(g => (
-                        <button key={g.id} onClick={() => startMode(g.id)}
-                          style={{ textAlign: "left", background: "#111827", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "10px 12px", cursor: "pointer", display: "flex", gap: 10, alignItems: "flex-start" }}>
-                          <span style={{ fontSize: 20 }}>{g.icon}</span>
-                          <span>
-                            <div style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: C.amber }}>{g.name} →</div>
-                            <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.5, color: C.muted, marginTop: 3 }}>{g.desc}</div>
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  );
-                }
-
-                // ---- board/card games render their own self-contained components ----
-                const backBtn = <button onClick={() => { setGameMode("menu"); stopSpeak(); }} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 10, cursor: "pointer" }}>← games</button>;
-                if (gameMode === "cards") {
-                  return shell("🃏 MARKET BLACKJACK", backBtn,
-                    <BlackjackGame onCheer={() => triggerAnchor("cheer", { label: "WINNER! ✓" })} onWin={() => triggerAnchor("cheer", { label: "BLACKJACK! 🃏" })} />);
-                }
-                if (gameMode === "chess") {
-                  return shell("♟ BULLS vs BEARS", backBtn,
-                    <ChessGame sfx={chessSfx} onWin={(w) => triggerAnchor("cheer", { label: w === "w" ? "BULLS WIN! 🐂" : "BEARS WIN! 🐻" })} />);
-                }
-                if (gameMode === "algowars") {
-                  return shell("🖥️ ALGORITHM WARS", backBtn,
-                    <AlgoWarsGame onWin={(w) => triggerAnchor(w === "you" ? "cheer" : "break", { label: w === "you" ? "MARKET DOMINATED! 🏆" : "OUTGUNNED 💥" })} onCheer={() => {}} />);
-                }
-
-                // ---- an active quiz game (school / bullbear / ticker) ----
-                const data = gameSet(gameMode), total = data.length, R = data[gameStep] || {};
-                const done = gamePhase === "done";
-                const meta = gameMode === "school"
-                  ? { hdr: "🎓 STOCK SCHOOL", unit: "lesson", title: R.title, question: R.q, choices: R.choices || [], answer: R.answer, explain: R.explain }
-                  : gameMode === "bullbear"
-                    ? { hdr: "📊 BULL OR BEAR", unit: "round", title: "Will the stock go up or down?", question: R.headline, choices: ["📈 Bullish — likely UP", "📉 Bearish — likely DOWN"], answer: R.bullish ? 0 : 1, explain: R.why }
-                    : { hdr: "🔤 TICKER MATCH", unit: "round", title: "Pick the real ticker symbol", question: `Which symbol is ${R.company}?`, choices: R.options || [], answer: R.answer, explain: `${R.company} trades as ${R.options?.[R.answer]}.` };
-                const headerRight = (
-                  <span style={{ fontFamily: MONO, fontSize: 10, color: C.muted }}>{done ? `score ${gameScore}/${total}` : `${meta.unit} ${gameStep + 1}/${total} · score ${gameScore}`}</span>
-                );
-                const body = (
-                  <>
-                    <div style={{ height: 3, background: C.panelEdge }}>
-                      <div style={{ height: "100%", width: `${((done ? total : gameStep) / total) * 100}%`, background: C.amber, transition: "width 0.4s" }} />
-                    </div>
-                    <div style={{ padding: 14, fontFamily: MONO, display: "flex", flexDirection: "column", gap: 12 }}>
-                      {done ? (
-                        <>
-                          <div style={{ fontSize: 18, fontWeight: 800, color: C.amber }}>{gameMode === "school" ? "🎓 You graduated!" : "🏁 Round complete!"}</div>
-                          <div style={{ fontSize: 12, lineHeight: 1.7, color: C.text }}>
-                            You scored <b style={{ color: gameScore > total / 2 ? C.up : C.amber }}>{gameScore} / {total}</b>. {gameMode === "school" ? "You now know the basics of how stocks work." : gameScore === total ? "Perfect run!" : "Play again to beat your score."}
-                          </div>
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                            <button onClick={() => startMode(gameMode)} style={primaryBtn}>Play again ↻</button>
-                            <button onClick={() => { setGameMode("menu"); stopSpeak(); }} style={ghostBtn}>← All games</button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{meta.title}</div>
-                          {gameMode === "school" && gamePhase === "teach" && (
-                            <>
-                              <div style={{ fontSize: 12, lineHeight: 1.7, color: C.text }}>{R.teach}</div>
-                              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                                <button onClick={gameToQuiz} style={primaryBtn}>Quiz me →</button>
-                                <button onClick={() => speak("school", R.teach)} style={ghostBtn}>🔊 read again</button>
-                              </div>
-                            </>
-                          )}
-                          {(gamePhase === "quiz" || gamePhase === "reveal") && (
-                            <>
-                              <div style={{ fontSize: 12, lineHeight: 1.6, color: C.muted }}>{gameMode === "bullbear" ? "📰 " : ""}{meta.question}</div>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                                {meta.choices.map((c, i) => {
-                                  const chosen = gameChoice === i, isRight = i === meta.answer, revealed = gamePhase === "reveal";
-                                  const bg = revealed ? (isRight ? "rgba(47,211,122,0.15)" : chosen ? "rgba(246,70,93,0.12)" : "transparent") : "transparent";
-                                  const bd = revealed ? (isRight ? C.up : chosen ? C.down : C.panelEdge) : C.panelEdge;
-                                  return (
-                                    <button key={i} disabled={revealed} onClick={() => gameAnswer(i)}
-                                      style={{ textAlign: "left", background: bg, border: `1px solid ${bd}`, color: C.text, borderRadius: 5, fontFamily: MONO, fontSize: 12, padding: "9px 11px", cursor: revealed ? "default" : "pointer" }}>
-                                      {gameMode === "school" ? `${String.fromCharCode(65 + i)}. ` : ""}{c}{revealed && isRight ? "  ✓" : revealed && chosen ? "  ✕" : ""}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                              {gamePhase === "reveal" && (
-                                <>
-                                  <div style={{ fontSize: 12, lineHeight: 1.6, color: gameChoice === meta.answer ? C.up : C.muted }}>
-                                    {gameChoice === meta.answer ? "✓ Correct — " : "✗ Not quite — "}{meta.explain}
-                                  </div>
-                                  <button onClick={gameNext} style={primaryBtn}>{gameStep >= total - 1 ? (gameMode === "school" ? "Finish 🎓" : "See score 🏁") : "Next →"}</button>
-                                </>
-                              )}
-                            </>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </>
-                );
-                return shell(meta.hdr, headerRight, body);
-              })()}
 
               {/* response area — ONE box; navigator / desk answer / report / news are sections within it */}
-              <div id="tour-response" style={{ flex: 1, minWidth: 260, display: gameOn ? "none" : "flex", flexDirection: "column", background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-                {Object.keys(aiResponses).length === 0 && !writtenReport && !news && !catalog && !deskCalendar && !deskPortfolio && (
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 14, padding: "22px 20px", minHeight: 220 }}>
-                    <div>
-                      <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 16, color: C.text }}>{t("Ask the desk anything")}</div>
-                      <div style={{ fontFamily: MONO, fontSize: 11.5, color: C.muted, lineHeight: 1.6, marginTop: 6, maxWidth: 480 }}>
-                        {t("Answers appear here and the anchor reads them on air. Tap a starter — or type your own below.")}
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {[
-                        { label: t("Summarize {sym} today").replace("{sym}", selected), q: `Summarize ${selected} today — price action and why` },
-                        { label: t("What's moving today?"), q: "What's moving in the market today and why?" },
-                        { label: t("Take me to Robinhood"), q: "take me to Robinhood" },
-                        { label: t("What's on Netflix?"), q: "what's on netflix" },
-                        { label: t("Write a report → PPT"), q: "write a report and export ppt" },
-                      ].map((s, i) => (
-                        <button key={i} onClick={() => askDesk(s.q)}
-                          style={{ background: "rgba(255,179,0,0.07)", border: `1px solid ${C.panelEdge}`, color: C.text, borderRadius: 999, fontFamily: MONO, fontSize: 11, padding: "7px 13px", cursor: "pointer", transition: "border-color .12s, background .12s" }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = C.amber; e.currentTarget.style.background = "rgba(255,179,0,0.14)"; }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = C.panelEdge; e.currentTarget.style.background = "rgba(255,179,0,0.07)"; }}>
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+              <div id="tour-response" className="v-deskrow-main" style={{ display: !deskBoxFilled ? "none" : "flex", flexDirection: "column", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
+                {/* The blank-slate prompt that used to live here now belongs to
+                    <ChatAssistant> below, which owns the conversation and its
+                    starter chips. This box is only for responses. */}
                 {aiResponses.nav && (
                   <div style={{ display: "flex", flexDirection: "column" }}>
-                    <div style={{ padding: "8px 10px", borderBottom: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.amber, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}`, ...TYPE.eyebrow, color: C.muted, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span>⌖ NAVIGATOR</span>
                       <button onClick={() => setAiResponses(p => { const { nav, ...rest } = p; return rest; })} aria-label="Dismiss navigator"
-                        style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
+                        style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
                     </div>
-                    <div style={{ padding: 10, fontFamily: MONO, fontSize: 12, lineHeight: 1.65, color: aiResponses.nav.status === "error" ? C.down : C.text }}>
+                    <div style={{ padding: 10, fontFamily: SANS, fontSize: 12, lineHeight: 1.65, color: aiResponses.nav.status === "error" ? C.down : C.text }}>
                       {aiResponses.nav.text}
                       {aiResponses.nav.status === "running" && <span className="cursor">▍</span>}
                       {aiResponses.nav.links?.length > 0 && (
                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
                           {aiResponses.nav.links.map(l => (
-                            <span key={l.name} style={{ display: "inline-flex", border: `1px solid ${C.amber}`, borderRadius: 4, overflow: "hidden" }}>
+                            <span key={l.name} style={{ display: "inline-flex", border: `1px solid ${C.accent}`, borderRadius: R.sm, overflow: "hidden" }}>
                               <button onClick={() => openEmbed(l.href, l.name)} title={`Open ${l.name} inside Vantage`}
-                                style={{ background: "rgba(255,179,0,0.12)", border: "none", color: C.amber, fontFamily: MONO, fontSize: 11, fontWeight: 600, padding: "6px 12px", cursor: "pointer" }}>
+                                style={{ background: "rgba(255,255,255,0.07)", border: "none", color: C.accentText, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "6px 12px", cursor: "pointer" }}>
                                 {l.name}
                               </button>
                               <a href={l.href} target="_blank" rel="noopener noreferrer" title="Open in a new tab instead"
-                                style={{ textDecoration: "none", background: "transparent", borderLeft: `1px solid ${C.amber}`, color: C.amber, fontFamily: MONO, fontSize: 11, padding: "6px 8px" }}>↗</a>
+                                style={{ textDecoration: "none", background: "transparent", borderLeft: `1px solid ${C.accent}`, color: C.accentText, fontFamily: SANS, fontSize: 11, padding: "6px 8px" }}>↗</a>
                             </span>
                           ))}
                           {!aiResponses.nav.stream && (
-                            <button onClick={() => openChart(selected)} title="Interactive chart that actually renders inside Vantage"
-                              style={{ background: "rgba(47,211,122,0.12)", border: `1px solid ${C.up}`, color: C.up, borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 600, padding: "6px 12px", cursor: "pointer" }}>
+                            <button onClick={() => openChart(selected)} title="Open the in-app chart"
+                              style={{ background: "rgba(39,166,68,0.12)", border: `1px solid ${C.up}`, color: C.up, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "6px 12px", cursor: "pointer" }}>
                               📈 {selected} chart in-app
                             </button>
                           )}
@@ -7453,13 +8483,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       )}
                       {aiResponses.nav.videos?.map((v, i) => (
                         <div key={i} style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.panelEdge}` }}>
-                          <div style={{ fontSize: 11, fontWeight: 600 }}>
+                          <div style={{ fontSize: 11, fontWeight: 510 }}>
                             <span style={{ color: C.down }}>▶</span> {v.title}
                             <span style={{ color: C.faint, fontWeight: 400, marginLeft: 6 }}>{v.channel}</span>
                           </div>
                           {v.brief && <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>{v.brief}</div>}
                           <button onClick={() => openVideo(v)}
-                            style={{ marginTop: 6, background: "rgba(255,179,0,0.12)", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 10, fontWeight: 600, padding: "5px 10px", cursor: "pointer" }}>
+                            style={{ marginTop: 6, background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "5px 10px", cursor: "pointer" }}>
                             play in desk
                           </button>
                         </div>
@@ -7469,9 +8499,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 )}
                 {deskCalendar && (
                   <div style={{ display: "flex", flexDirection: "column", borderTop: aiResponses.nav ? `1px solid ${C.panelEdge}` : "none" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderBottom: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.amber }}>
-                      <span>📅 CALENDAR</span>
-                      <button onClick={() => setDeskCalendar(false)} aria-label="Close calendar" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}`, ...TYPE.eyebrow, color: C.muted }}>
+                      <span>{t("Calendar")}</span>
+                      <button onClick={() => setDeskCalendar(false)} aria-label="Close calendar" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
                     </div>
                     <div style={{ maxWidth: 460, width: "100%" }}>
                       <AppCalendar extra={marketEvents} />
@@ -7480,258 +8510,317 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 )}
                 {deskPortfolio && (
                   <div style={{ display: "flex", flexDirection: "column", borderTop: (aiResponses.nav || deskCalendar) ? `1px solid ${C.panelEdge}` : "none" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderBottom: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.amber }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}`, ...TYPE.eyebrow, color: C.muted }}>
                       <span>💼 PORTFOLIO {positions.length > 0 && priv(<span style={{ color: dirColorN(portTotals.pnl), marginLeft: 6 }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}</span>
                       <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        {positions.length > 0 && <button onClick={briefPortfolio} title="Read on air" style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.amber, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶ read</button>}
-                        <button onClick={() => setDeskPortfolio(false)} aria-label="Close portfolio" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
+                        {positions.length > 0 && <button onClick={briefPortfolio} title="Read on air" style={{ background: "transparent", border: `1px solid ${C.liveDim}`, color: C.live, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶ read</button>}
+                        <button onClick={() => setDeskPortfolio(false)} aria-label="Close portfolio" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
                       </span>
                     </div>
                     <div style={{ padding: "6px 10px" }}>
-                      {positions.length === 0 && <div style={{ fontFamily: MONO, fontSize: 11, color: C.faint, padding: "6px 0" }}>No holdings yet — add symbol, shares, and your cost per share below.</div>}
+                      {positions.length === 0 && <div style={{ fontFamily: MONO, fontSize: 12, color: C.faint, padding: "6px 0" }}>No holdings yet — add symbol, shares, and your cost per share below.</div>}
                       {portfolioRows.length > 0 && (
-                        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 4, fontFamily: MONO, fontSize: 9, color: C.faint, padding: "2px 0", borderBottom: `1px solid ${C.grid}` }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 4, fontFamily: MONO, fontSize: 12, color: C.faint, padding: "2px 0", borderBottom: `1px solid ${C.grid}` }}>
                           <span>SYMBOL</span><span style={{ textAlign: "right" }}>COST→NOW</span><span style={{ textAlign: "right" }}>VALUE</span><span style={{ textAlign: "right" }}>P&L</span><span />
                         </div>
                       )}
                       {portfolioRows.map(r => (
-                        <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 4, alignItems: "center", fontFamily: MONO, fontSize: 11, padding: "6px 0", borderBottom: `1px solid ${C.grid}` }}>
-                          <button onClick={() => setSelected(r.sym)} style={{ background: "transparent", border: "none", color: C.text, fontFamily: MONO, fontSize: 11, fontWeight: 600, textAlign: "left", cursor: "pointer", padding: 0 }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 9 }}>×{r.shares}</span></button>
+                        <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 4, alignItems: "center", fontFamily: MONO, fontSize: 12, padding: "6px 0", borderBottom: `1px solid ${C.grid}` }}>
+                          <button onClick={() => setSelected(r.sym)} style={{ background: "transparent", border: "none", color: C.text, fontFamily: MONO, fontSize: 12, fontWeight: 510, textAlign: "left", cursor: "pointer", padding: 0 }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span></button>
                           <span style={{ textAlign: "right", color: C.muted, fontSize: 10, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{fmt(r.cost / r.shares)}→{r.price != null ? fmt(r.price) : "—"}</span>
                           <span style={{ textAlign: "right", color: C.text, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.val != null ? fmt(r.val) : "—"}</span>
-                          <span style={{ textAlign: "right", color: dirColorN(r.pnl), ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}{r.pnlPct != null ? <span style={{ fontSize: 9, display: "block", color: dirColorN(r.pnl) }}>{r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%</span> : null}</span>
-                          <button onClick={() => removePosition(r.id)} aria-label="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 11 }}>✕</button>
+                          <span style={{ textAlign: "right", color: dirColorN(r.pnl), ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}{r.pnlPct != null ? <span style={{ fontSize: 10, display: "block", color: dirColorN(r.pnl) }}>{r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%</span> : null}</span>
+                          <button onClick={() => removePosition(r.id)} aria-label="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 11 }}>✕</button>
                         </div>
                       ))}
                       {positions.length > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0 2px", fontFamily: MONO, fontSize: 11, fontWeight: 700 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0 2px", fontFamily: MONO, fontSize: 12, fontWeight: 510 }}>
                           {priv(<span style={{ color: C.muted }}>TOTAL · {fmt(portTotals.val)}</span>)}
                           {priv(<span style={{ color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}
                         </div>
                       )}
                       <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
                         <input value={portForm.sym} onChange={e => setPortForm(f => ({ ...f, sym: e.target.value.toUpperCase() }))} placeholder="SYM" aria-label="Symbol"
-                          style={{ width: 60, background: "#0B0E14", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, padding: "6px 6px" }} />
+                          style={{ width: 60, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 6px" }} />
                         <input value={portForm.shares} onChange={e => setPortForm(f => ({ ...f, shares: e.target.value }))} placeholder="shares" inputMode="decimal" aria-label="Shares"
-                          style={{ width: 64, background: "#0B0E14", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, padding: "6px 6px" }} />
+                          style={{ width: 64, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 6px" }} />
                         <input value={portForm.cost} onChange={e => setPortForm(f => ({ ...f, cost: e.target.value }))} onKeyDown={e => e.key === "Enter" && addPosition()} placeholder="cost / share" inputMode="decimal" aria-label="Cost basis"
-                          style={{ flex: 1, minWidth: 0, background: "#0B0E14", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, padding: "6px 6px" }} />
-                        <button onClick={addPosition} style={{ background: C.amber, border: "none", color: "#141414", borderRadius: 4, fontFamily: MONO, fontSize: 13, fontWeight: 700, padding: "0 12px", cursor: "pointer" }}>+ add</button>
+                          style={{ flex: 1, minWidth: 0, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 6px" }} />
+                        <button onClick={addPosition} style={{ background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: R.sm, fontFamily: SANS, fontSize: 13, fontWeight: 510, padding: "0 12px", cursor: "pointer" }}>+ add</button>
                       </div>
                     </div>
                   </div>
                 )}
-                {catalog && (
-                  <div style={{ display: "flex", flexDirection: "column", borderTop: Object.keys(aiResponses).length ? `1px solid ${C.panelEdge}` : "none" }}>
-                    <div style={{ padding: "8px 10px", borderBottom: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.amber, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
-                      <span>🎬 {catalog.archive ? "FREE FILMS · Internet Archive" : `${catalog.popular ? "🔥 POPULAR" : catalog.service?.name?.toUpperCase()} · ${catalog.kind === "tv" ? "SHOWS" : "MOVIES"}`}</span>
-                      <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                        {!catalog.archive && (
-                          <>
-                            {["movie", "tv"].map(k => (
-                              <button key={k} onClick={() => catalog.popular ? browsePopular(k) : browseCatalog(catalog.service, k)}
-                                style={{ background: catalog.kind === k ? "rgba(255,179,0,0.14)" : "transparent", border: `1px solid ${catalog.kind === k ? C.amber : C.panelEdge}`, color: catalog.kind === k ? C.amber : C.muted, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "2px 8px", cursor: "pointer" }}>
-                                {k === "tv" ? "shows" : "movies"}
-                              </button>
-                            ))}
-                          </>
-                        )}
-                        <button onClick={() => { setCatalog(null); setCatalogPick(null); }} aria-label="Close catalog" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
+                {/* --- news & video ---
+                     News is a desk RESULT, so it belongs in the box results
+                     appear in — beside the navigator answer, the calendar, the
+                     portfolio and the report — not in a section of its own
+                     under the composer. Compact: this column is narrower than
+                     the desk, so the cards run single file.
+                     Keeps #sec-news so the News nav item still lands on it. */}
+                {panels.news && (news?.news?.length > 0 || news?.videos?.length > 0 || newsBusy || newsErr) && (
+                  <div id="sec-news" style={{ borderTop: `1px solid ${C.panelEdge}` }}>
+                    <NewsDesk
+                      items={news?.news || []}
+                      videos={news?.videos || []}
+                      subject={selected}
+                      loadedFor={newsFor}
+                      busy={newsBusy}
+                      error={newsErr}
+                      stale={!!news && newsFor !== selected}
+                      onLoad={fetchNews}
+                      onBroadcast={broadcastNews}
+                      onPlayVideo={openVideo}
+                      onReadStory={readStory}
+                      readingTitle={typeof speakingId === "string" && speakingId.startsWith("story:") ? speakingId.slice(6) : null}
+                      onAskStory={askStory}
+                      hrefFor={newsHref}
+                      compact
+                    />
+                  </div>
+                )}
+                {/* --- analyst report ---
+                     The desk's conversational answer now lives in the chat
+                     transcript below; what remains here is the long-form report,
+                     which is a document to scroll rather than a chat turn. */}
+                {writtenReport && (
+                  <div style={{ display: "flex", flexDirection: "column", borderTop: (aiResponses.nav || news) ? `1px solid ${C.panelEdge}` : "none" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}`, ...TYPE.eyebrow, color: C.muted }}>
+                      <span>📝 ANALYST REPORT — {reportSym || selected}</span>
+                      <span style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => (speakingId === "report" ? stopSpeak() : speak("report", writtenReport))}
+                          style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "2px 8px", cursor: "pointer" }}>{speakingId === "report" ? "■" : "▶ read"}</button>
+                        <button onClick={() => setWrittenReport("")} aria-label="Dismiss report" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
                       </span>
                     </div>
-                    {catalog.loading ? (
-                      <div style={{ padding: 12, fontFamily: MONO, fontSize: 11, color: C.faint }}>Loading catalog… <span className="cursor">▍</span></div>
-                    ) : catalog.error ? (
-                      <div style={{ padding: 12, fontFamily: MONO, fontSize: 11, color: C.down, lineHeight: 1.6 }}>{catalog.error}</div>
-                    ) : catalog.items.length === 0 ? (
-                      <div style={{ padding: 12, fontFamily: MONO, fontSize: 11, color: C.faint }}>Nothing found. Try another search.</div>
-                    ) : (
-                      <>
-                        {/* summary panel for the picked title */}
-                        {catalogPick && !catalog.archive && (
-                          <div style={{ display: "flex", gap: 10, padding: 12, borderBottom: `1px solid ${C.panelEdge}`, background: "#0B0E14" }}>
-                            {catalogPick.poster && <img src={catalogPick.poster} alt="" style={{ width: 70, height: 105, objectFit: "cover", borderRadius: 4, flexShrink: 0 }} />}
-                            <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0, flex: 1 }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                                <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: C.text }}>{catalogPick.title}{catalogPick.year ? ` (${catalogPick.year})` : ""}{catalogPick.rating > 0 ? <span style={{ color: C.amber, fontWeight: 400 }}>  ★{Number(catalogPick.rating).toFixed(1)}</span> : null}</span>
-                                <button onClick={() => setCatalogPick(null)} aria-label="Close summary" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
-                              </div>
-                              <div style={{ fontFamily: MONO, fontSize: 10.5, lineHeight: 1.55, color: C.muted, maxHeight: 96, overflowY: "auto" }}>{catalogPick.overview || "No summary available."}</div>
-                              <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
-                                <button onClick={() => playTrailer(catalogPick, catalog.service)} style={{ background: "rgba(255,179,0,0.12)", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 3, fontFamily: MONO, fontSize: 10, fontWeight: 600, padding: "4px 10px", cursor: "pointer" }}>▶ trailer</button>
-                                {catalog.service
-                                  ? <button onClick={() => openEmbed(catalog.service.search(catalogPick.title), catalog.service.name)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "4px 10px", cursor: "pointer" }}>watch on {catalog.service.name} ↗</button>
-                                  : <a href={`https://www.themoviedb.org/${catalogPick.kind}/${catalogPick.id}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "4px 10px" }}>details ↗</a>}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 10, padding: 12 }}>
-                          {catalog.items.map((it, i) => (
-                            <div key={i} style={{ display: "flex", flexDirection: "column", background: "#0B0E14", border: `1px solid ${catalogPick && catalogPick.id === it.id && catalogPick.archiveId === it.archiveId ? C.amber : C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-                              <div onClick={() => catalog.archive ? playArchive(it) : setCatalogPick(p => (p && p.id === it.id ? null : it))}
-                                title={catalog.archive ? "Play in-desk" : "Show summary"}
-                                style={{ position: "relative", width: "100%", paddingTop: "150%", background: "#141821", cursor: "pointer" }}>
-                                {it.poster && <img src={it.poster} alt="" loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
-                                {it.rating > 0 && <span style={{ position: "absolute", top: 4, right: 4, background: "rgba(0,0,0,0.75)", color: C.amber, fontFamily: MONO, fontSize: 9, padding: "1px 5px", borderRadius: 3 }}>★ {Number(it.rating).toFixed(1)}</span>}
-                                {!catalog.archive && <span style={{ position: "absolute", bottom: 4, left: 4, background: "rgba(0,0,0,0.7)", color: C.faint, fontFamily: MONO, fontSize: 8, padding: "1px 5px", borderRadius: 3 }}>ⓘ summary</span>}
-                              </div>
-                              <div style={{ padding: "6px 7px", display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
-                                <span style={{ fontFamily: MONO, fontSize: 10, color: C.text, lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{it.title}{it.year ? ` (${it.year})` : ""}</span>
-                                <span style={{ marginTop: "auto", display: "flex", gap: 4 }}>
-                                  {catalog.archive ? (
-                                    <>
-                                      <button onClick={() => playArchive(it)} title="Play in-desk" style={{ flex: 1, background: "rgba(47,211,122,0.14)", border: `1px solid ${C.up}`, color: C.up, borderRadius: 3, fontFamily: MONO, fontSize: 9, fontWeight: 600, padding: "4px 0", cursor: "pointer" }}>▶ play</button>
-                                      <a href={`https://archive.org/details/${it.archiveId}`} target="_blank" rel="noopener noreferrer" title="Open on Archive" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 3, fontFamily: MONO, fontSize: 9, padding: "4px 7px" }}>↗</a>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <button onClick={() => playTrailer(it, catalog.service)} title="Play trailer in-desk" style={{ flex: 1, background: "rgba(255,179,0,0.12)", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 3, fontFamily: MONO, fontSize: 9, fontWeight: 600, padding: "4px 0", cursor: "pointer" }}>▶ trailer</button>
-                                      {catalog.service
-                                        ? <button onClick={() => openEmbed(catalog.service.search(it.title), catalog.service.name)} title={`Watch on ${catalog.service.name}`} style={{ border: `1px solid ${C.panelEdge}`, color: C.muted, background: "transparent", borderRadius: 3, fontFamily: MONO, fontSize: 9, padding: "4px 7px", cursor: "pointer" }}>↗</button>
-                                        : <a href={`https://www.themoviedb.org/${it.kind}/${it.id}`} target="_blank" rel="noopener noreferrer" title="Details" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 3, fontFamily: MONO, fontSize: 9, padding: "4px 7px" }}>↗</a>}
-                                    </>
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
+                    <div style={{ padding: "12px 14px", fontSize: 13, lineHeight: 1.7, color: C.text, maxHeight: 320, overflowY: "auto" }}><RichText text={writtenReport} /></div>
                   </div>
                 )}
-                {news && (news.news?.length > 0 || news.videos?.length > 0) && (
-                  <div style={{ display: "flex", flexDirection: "column", borderTop: `1px solid ${C.panelEdge}` }}>
-                    <div style={{ padding: "8px 10px", borderBottom: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.amber, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span>📰 NEWS — {newsFor}</span>
-                      <button onClick={() => setNews(null)} aria-label="Dismiss news"
-                        style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
-                    </div>
-                    {news._via && (
-                      <div style={{ padding: "6px 10px", fontFamily: MONO, fontSize: 9, color: C.faint, borderBottom: `1px solid ${C.panelEdge}`, lineHeight: 1.5 }}>
-                        ⚠ via {news._via} — from AI knowledge, not live web. Links open a search. Add an Anthropic key for live, sourced results.
-                      </div>
-                    )}
-                    <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-                      {news.news?.map((n, i) => (
-                        <a key={`dn${i}`} href={newsHref(n)} target="_blank" rel="noopener noreferrer"
-                          style={{ textDecoration: "none", color: C.text, fontFamily: MONO, fontSize: 11, lineHeight: 1.5 }}>
-                          <span style={{ color: C.up }}>▸</span> {n.title} <span style={{ color: C.faint }}>— {n.source} ↗</span>
-                        </a>
-                      ))}
-                      {news.videos?.length > 0 && (
-                        <div style={{ borderTop: `1px solid ${C.panelEdge}`, paddingTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
-                          {news.videos.map((v, i) => (
-                            <button key={`dv${i}`} onClick={() => openVideo(v)}
-                              style={{ textAlign: "left", background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.text, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "6px 8px", cursor: "pointer" }}>
-                              <span style={{ color: C.down }}>▶</span> {v.title} <span style={{ color: C.faint }}>{v.channel}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+              </div>
+            </div>
+            );
+          })()}
+          {/* ===== chat assistant =====
+               Replaces the old single-line question bar. The engine is unchanged —
+               askDesk() still does the routing, intent matching and model fallback —
+               but the exchange is now a transcript instead of one answer that
+               overwrites the last, so follow-ups like "why?" have something to
+               refer back to. Turns are mirrored in from `aiResponses` by
+               syncChatBubble() above.
+
+               In `suggestions`, label is what the chip says and value is what the
+               desk actually receives — the fuller prompt gets a better answer than
+               the chip's shorthand would.
+
+               The anchor column sits in this row (it used to lead the desk):
+               the presenter is in view from the composer, instead of a scroll
+               of responses above it.
+
+               `busy` is scoped to the desk answer on purpose: `aiResponses`
+               accumulates entries from several features, so asking "is anything
+               running" would let one stalled entry lock the composer for good. */}
+          <div id="tour-ask" className="v-askrow" style={{ borderTop: `1px solid ${C.panelEdge}` }}>
+            {/* desk anchor */}
+            <div id="tour-anchor" className="v-deskrow-anchor" style={{ background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: "10px 8px" }}>
+              <DeskAnchor
+                talking={speakingId != null}
+                mood={selectedRow?.chgPct}
+                speakerLabel={aiModels.find(m => m.id === speakingId)?.label}
+                character={CHARACTERS.find(c => c.id === characterId)}
+                analyserRef={analyserRef}
+                speechRef={speechMouthRef}
+                env={envId}
+                crew={
+                  crewId === "off" ? null :
+                  crewId === "auto"
+                    ? CHARACTERS[(CHARACTERS.findIndex(c => c.id === characterId) + 1) % CHARACTERS.length]
+                    : CHARACTERS.find(c => c.id === crewId) || null
+                }
+                cue={anchorCue}
+                onAction={playActionSfx}
+                onCue={playCueSfx}
+                busy={
+                  gameOn ? "teach"
+                  : presenting ? "present"
+                  : (reportBusy || Object.values(aiResponses).some(r => r?.status === "running")) ? "work"
+                  : null
+                }
+              />
+              {/* anchor + environment pickers — dropdowns scale cleanly past a dozen options; arrows browse */}
+              <div style={{ display: "grid", gap: 6, marginTop: 8, width: 190 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <button
+                    onClick={() => { const i = CHARACTERS.findIndex(c => c.id === characterId); setCharacterId(CHARACTERS[(i - 1 + CHARACTERS.length) % CHARACTERS.length].id); }}
+                    aria-label="Previous anchor" className="v-tap"
+                    style={{ flexShrink: 0, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, lineHeight: 1, padding: "5px 8px", cursor: "pointer" }}>‹</button>
+                  <select value={characterId} onChange={e => setCharacterId(e.target.value)} aria-label="Anchor"
+                    style={{ flex: 1, minWidth: 0, background: C.bg, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "5px 6px", cursor: "pointer" }}>
+                    {CHARACTERS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <button
+                    onClick={() => { const i = CHARACTERS.findIndex(c => c.id === characterId); setCharacterId(CHARACTERS[(i + 1) % CHARACTERS.length].id); }}
+                    aria-label="Next anchor" className="v-tap"
+                    style={{ flexShrink: 0, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, lineHeight: 1, padding: "5px 8px", cursor: "pointer" }}>›</button>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, flexShrink: 0 }}>{t("SET")}</span>
+                  <select value={envId} onChange={e => setEnvId(e.target.value)} aria-label="Environment"
+                    style={{ flex: 1, minWidth: 0, background: C.bg, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.muted, fontFamily: SANS, fontSize: 11, padding: "5px 6px", cursor: "pointer" }}>
+                    {ENVIRONMENTS.map(ev => <option key={ev.id} value={ev.id}>{ev.name}</option>)}
+                  </select>
+                </div>
+                {speakingId ? (
+                  <button onClick={stopSpeak}
+                    style={{ background: "transparent", border: `1px solid ${C.down}`, color: C.down, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "6px 0", cursor: "pointer" }}>
+                    ■ {t("stop reading")}
+                  </button>
+                ) : (
+                  <button onClick={() => { setSettingsTab("anchor"); setShowSettings(true); }}
+                    style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.faint, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "6px 0", cursor: "pointer" }}>
+                    {t("voice & anchor settings")}
+                  </button>
                 )}
-                {(aiResponses.desk || writtenReport) && (() => {
-                  const r = aiResponses.desk;
-                  const dot = r ? (r.status === "running" ? C.amber : r.status === "error" ? C.down : C.up) : C.up;
-                  const isSpeaking = speakingId === "desk";
-                  const fellBack = r && (r.tried?.length || 0) > 0 && r.status !== "error"; // an earlier model failed first
-                  return (
-                    <div style={{ display: "flex", flexDirection: "column", borderTop: (aiResponses.nav || news) ? `1px solid ${C.panelEdge}` : "none" }}>
-                      {/* --- desk answer --- */}
-                      {r && (
-                        <>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderBottom: `1px solid ${C.panelEdge}` }}>
-                            <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.text }}>
-                              <span style={{ color: dot, marginRight: 6 }}>●</span>AI DESK
-                              {r.via && <span style={{ color: C.faint, fontWeight: 400, marginLeft: 6 }}>· {r.via}{r.model ? ` (${r.model})` : ""}</span>}
-                              {fellBack && <span title={`Skipped: ${r.tried.join(" · ")}`} style={{ color: C.amber, fontWeight: 400, marginLeft: 6, fontSize: 9, letterSpacing: "0.06em" }}>↩ FELL BACK</span>}
-                            </span>
-                            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>{r.status === "running" ? (r.via ? `${r.via}…` : "thinking…") : r.ms != null ? `${r.ms} ms` : ""}</span>
-                              {r.status !== "running" && r.text && (
-                                <button onClick={() => (isSpeaking ? stopSpeak() : speak("desk", r.text))} aria-label={isSpeaking ? "Stop reading" : "Read the answer aloud"}
-                                  style={{ background: "transparent", border: `1px solid ${isSpeaking ? C.amber : C.panelEdge}`, color: isSpeaking ? C.amber : C.muted, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "2px 8px", cursor: "pointer" }}>{isSpeaking ? "■" : "▶"}</button>
-                              )}
-                              <button onClick={() => { if (isSpeaking) stopSpeak(); setAiResponses(p => { const { desk, ...rest } = p; return rest; }); }} aria-label="Dismiss answer"
-                                style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
-                            </span>
-                          </div>
-                          <div style={{ padding: 10, fontFamily: MONO, fontSize: 12, lineHeight: 1.65, whiteSpace: "pre-wrap", color: r.status === "error" ? C.down : C.text }}>
-                            {r.tried?.length > 0 && r.status !== "error" && r.status !== "done" && (
-                              <div style={{ color: C.faint, fontSize: 10, marginBottom: 6 }}>skipped {r.tried.join(" · ")} — trying {r.via}…</div>
-                            )}
-                            {r.text}
-                            {r.status === "running" && <span className="cursor">▍</span>}
-                          </div>
-                        </>
-                      )}
-                      {/* --- analyst report, as a section in the SAME box --- */}
-                      {writtenReport && (
-                        <>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderTop: r ? `1px solid ${C.panelEdge}` : "none", borderBottom: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.amber }}>
-                            <span>📝 ANALYST REPORT — {reportSym || selected}</span>
-                            <span style={{ display: "flex", gap: 8 }}>
-                              <button onClick={() => (speakingId === "report" ? stopSpeak() : speak("report", writtenReport))}
-                                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "2px 8px", cursor: "pointer" }}>{speakingId === "report" ? "■" : "▶ read"}</button>
-                              <button onClick={() => setWrittenReport("")} aria-label="Dismiss report" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
-                            </span>
-                          </div>
-                          <div style={{ padding: 12, fontFamily: MONO, fontSize: 12, lineHeight: 1.7, color: C.text, whiteSpace: "pre-wrap", maxHeight: 320, overflowY: "auto" }}>{writtenReport}</div>
-                        </>
-                      )}
-                    </div>
-                  );
-                })()}
+              </div>
+            </div>
+            <div className="v-askrow-chat">
+            <ChatAssistant
+              embedded
+              compact
+              messages={chatThread}
+              attachments={deskAttachments}
+              onSend={(text) => askDesk(text)}
+              onClear={() => { stopAsk(); setChatThread([]); }}
+              /* Retry re-asks the question that produced the failed answer, not
+                 the last thing typed — by the time someone hits it they may have
+                 typed something else into the composer. The user turn sits
+                 directly above its answer, so walk back to it. */
+              onRetry={(m) => {
+                const i = chatThread.findIndex(x => x.id === m.id);
+                const asked = i > 0 ? [...chatThread.slice(0, i)].reverse().find(x => x.role === "user") : null;
+                if (asked?.text) askDesk(asked.text);
+                else if (lastAsked) askDesk(lastAsked);
+              }}
+              onStop={stopAsk}
+              onSpeak={(m) => (speakingId === m.id ? stopSpeak() : speak(m.id, m.text))}
+              speakingId={speakingId}
+              busy={aiResponses.desk?.status === "running" || reportBusy}
+              subject={selected}
+              placeholder={t('Ask about {sym} — or tap a suggestion below').replace("{sym}", selected)}
+              suggestions={[
+                { label: t("Summarize {sym} today").replace("{sym}", selected), value: `Summarize ${selected} today — price action and why` },
+                { label: t("What's moving today?"), value: "What's moving in the market today and why?" },
+                { label: t("Take me to Robinhood"), value: "take me to Robinhood" },
+                { label: t("What's on Netflix?"), value: "what's on netflix" },
+                { label: t("Write a report → PPT"), value: "write a report and export ppt" },
+              ]}
+              toolbar={voiceSupported ? (
+                <button onClick={toggleVoice} aria-label={listening ? "Stop listening" : "Talk to the desk"} title="Talk to the desk"
+                  className={listening ? "v-tap v-pulse" : "v-tap"}
+                  aria-pressed={listening}
+                  /* Recording is an on-air state, so it wears the broadcast red
+                     (white on liveFill is 5.5:1). At rest the icon sits in muted
+                     ink — visible, but quieter than Send. */
+                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", background: listening ? C.liveFill : "transparent", color: listening ? C.textOnLive : C.muted, border: `1px solid ${listening ? C.liveFill : C.edge}`, borderRadius: R.sm, padding: "7px 10px", cursor: "pointer", flexShrink: 0 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="9" y="2" width="6" height="12" rx="3" />
+                    <path d="M5 10v1a7 7 0 0 0 14 0v-1" />
+                    <line x1="12" y1="18" x2="12" y2="22" />
+                  </svg>
+                </button>
+              ) : null}
+            />
+            {exportMsg && (
+              <div style={{ marginTop: 8, ...TYPE.bodySm, fontSize: 12, color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted }}>
+                {exportMsg}
+              </div>
+            )}
+            </div>
+          </div>
+
+          {/* The stage. When nothing is on the desk, the space beside the
+              anchor offers the desk's verbs instead of rendering as a void —
+              every card here is an existing capability whose result fills
+              this same slot, so the empty state teaches the filled one. */}
+          {!gameOn && !deskBoxFilled && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 12, borderTop: `1px solid ${C.panelEdge}` }}>
+              <div style={{ ...TYPE.eyebrowSm, color: C.faint }}>{t("ON THE DESK")} · {selected}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8 }}>
+                {[
+                  ["📰", newsBusy ? "Searching…" : "Load the news", `latest ${selected} headlines and video`, () => fetchNews(), newsBusy],
+                  ["💼", "Portfolio on desk", "positions and P&L", () => setDeskPortfolio(true), false],
+                  ["📅", "Calendar on desk", "your events and market earnings", () => setDeskCalendar(true), false],
+                  ["📈", "Full chart", `the full ${selected} chart`, () => openChart(selected), false],
+                ].map(([icon, label, hint, run, off]) => (
+                  <button key={hint} onClick={run} disabled={off} className="v-lift"
+                    style={{
+                      display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 5, textAlign: "left",
+                      background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.lg,
+                      padding: "12px 14px", cursor: off ? "default" : "pointer", opacity: off ? 0.6 : 1, minHeight: 88,
+                    }}>
+                    <span aria-hidden="true" style={{ fontSize: 15, color: C.accentText }}>{icon}</span>
+                    <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 13, color: C.text }}>{label}</span>
+                    <span style={{ fontFamily: SANS, fontSize: 11, color: C.faint, lineHeight: 1.45 }}>{hint}</span>
+                  </button>
+                ))}
               </div>
             </div>
           )}
-          {lastAsked && (
-            <div style={{ padding: "0 12px 4px", fontFamily: MONO, fontSize: 10, color: C.faint }}>
-              last question: <span style={{ color: C.muted }}>{lastAsked}</span> · every answer sees the current snapshot ({live ? "live" : "simulated"} data)
-            </div>
-          )}
 
-          {/* question bar — one box for everything: ask, navigate, pull up video, OR export a file */}
-          <div id="tour-ask" style={{ display: "flex", alignItems: "center", padding: 12, gap: 8, flexWrap: "wrap" }}>
-            <span style={{ fontFamily: MONO, color: C.amber, fontSize: 13 }}>{reportBusy ? "✍" : "?"}</span>
-            <input
-              value={aiQuestion}
-              onChange={e => setAiQuestion(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && askDesk()}
-              placeholder={t('Ask about {sym}, "take me to Robinhood", or "download excel" / "make a powerpoint" / "write a report and export ppt"').replace("{sym}", selected)}
-              aria-label="Ask the AI desk or request an export"
-              style={{ flex: 1, minWidth: 220, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 10px" }}
-            />
-            {exportMsg && <span style={{ fontFamily: MONO, fontSize: 10, color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted }}>{exportMsg}</span>}
-            {voiceSupported && (
-              <button onClick={toggleVoice} aria-label={listening ? "Stop listening" : "Talk to the desk"} title="Talk to the desk"
-                className={listening ? "breaking-pulse" : ""}
-                style={{ background: listening ? C.down : "transparent", color: listening ? "#fff" : C.amber, border: `1px solid ${listening ? C.down : C.amber}`, borderRadius: 3, fontFamily: MONO, fontSize: 14, padding: "7px 12px", cursor: "pointer" }}>
-                🎙
-              </button>
-            )}
-            <button onClick={askDesk}
-              style={{ background: C.amber, color: "#141414", border: "none", borderRadius: 3, fontFamily: MONO, fontWeight: 600, fontSize: 11, padding: "9px 16px", cursor: "pointer" }}>
-              {t("ASK ALL")}
-            </button>
-          </div>
         </div>
       </div>
 
 
       {/* ===== main grid ===== */}
-      <div style={{ display: "grid", gridTemplateColumns: "230px 1fr 240px", gap: 14, padding: 14, alignItems: "start" }}>
+      <div className="v-dash">
 
         {/* left rail: watchlist + portfolio */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
+        <div className="v-dash-col v-dash-left">
         {/* --- watchlist --- */}
         {panels.watchlist && (
-        <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-          <div style={{ padding: "9px 12px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>{t("WATCHLIST")}</div>
-          {watchlist.map(s => {
+        <div id="sec-watchlist" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 32, boxSizing: "border-box", padding: "0 6px 0 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
+            <span style={{ ...TYPE.eyebrow, color: C.muted }}>{t("WATCHLIST")}</span>
+            <span style={{ display: "flex" }}>
+              {[["list", "≡", "List"], ["heat", "▦", "Heat map"]].map(([id, glyph, hint]) => (
+                <button key={id} onClick={() => setWlView(id)} title={hint} aria-pressed={wlView === id} aria-label={`${id} view`} className="v-tap"
+                  style={{ background: wlView === id ? "#161718" : "transparent", border: "none", color: wlView === id ? C.accentText : C.muted, fontFamily: SANS, fontSize: 12, padding: "4px 9px", cursor: "pointer", borderRadius: R.sm, transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}` }}>
+                  {glyph}
+                </button>
+              ))}
+            </span>
+          </div>
+          {/* heat grid: one tile per symbol; colour carries direction, intensity
+              carries the size of the move relative to today's biggest. Uses
+              dirColorN so the colour-blind palette applies here too. */}
+          {wlView === "heat" && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(96px, 1fr))", gap: 6, padding: 10 }}>
+              {(() => {
+                const rows = watchlist.map(getRow).filter(Boolean);
+                const maxAbs = Math.max(0.5, ...rows.map(r => Math.abs(r.chgPct ?? 0)));
+                const hexA = (h, a) => { const n = parseInt(String(h).slice(1), 16); return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a.toFixed(2)})`; };
+                return rows.map(r => {
+                  const on = r.sym === selected;
+                  const alpha = 0.10 + (Math.abs(r.chgPct ?? 0) / maxAbs) * 0.42;
+                  return (
+                    <button key={r.sym} onClick={() => setSelected(r.sym)}
+                      aria-label={`${r.sym} ${fmt(r.price)} ${pct(r.chgPct)}`}
+                      style={{
+                        display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2,
+                        padding: "9px 10px", borderRadius: R.md, cursor: "pointer", textAlign: "left",
+                        background: hexA(dirColorN(r.chg), alpha),
+                        border: `1px solid ${on ? C.accent : "transparent"}`,
+                        transition: "background 0.5s ease",
+                      }}>
+                      <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: on ? C.accentText : C.text }}>{r.sym}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 12, color: C.text, opacity: 0.8 }}>{fmt(r.price)}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: dirColorN(r.chg) }}>{pct(r.chgPct)}</span>
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+          )}
+          {wlView === "list" && watchlist.map(s => {
             const r = getRow(s);
             if (!r) return null;
             const on = s === selected;
@@ -7741,16 +8830,20 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 className="wl-row"
                 onClick={() => setSelected(s)}
                 style={{
-                  display: "flex", width: "100%", justifyContent: "space-between", alignItems: "baseline",
-                  padding: "9px 12px", background: on ? "#171E2C" : "transparent",
-                  border: "none", borderLeft: `2px solid ${on ? C.amber : "transparent"}`,
+                  display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center",
+                  padding: "9px 12px", background: on ? "#161718" : "transparent",
+                  border: "none", borderLeft: `2px solid ${on ? C.accent : "transparent"}`,
                   cursor: "pointer", textAlign: "left",
                 }}
               >
-                <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 600, color: on ? C.amber : C.text }}>{s}</span>
+                <span style={{ fontFamily: MONO, fontSize: 14, fontWeight: 510, color: on ? C.accentText : C.text }}>{s}</span>
+                {/* the shape of the session, at a glance — dotted line is prev close */}
+                <span aria-hidden="true" style={{ flex: 1, display: "flex", justifyContent: "center", padding: "0 10px", color: C.faint, minWidth: 0, overflow: "hidden" }}>
+                  <Sparkline data={getCloses(s)} color={dirColorN(r.chg)} refValue={r.prevClose} />
+                </span>
                 <span style={{ textAlign: "right" }}>
-                  <div style={{ fontFamily: MONO, fontSize: 12, color: C.text }}>{fmt(r.price)}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 10, color: dirColorN(r.chg) }}>{pct(r.chgPct)}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 12, color: C.text }}><TickFlash value={r.price}>{fmt(r.price)}</TickFlash></div>
+                  <div style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.chg) }}>{pct(r.chgPct)}</div>
                 </span>
               </button>
             );
@@ -7761,51 +8854,74 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         </div>
 
         {/* --- chart + stats --- */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
-          <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: 16 }}>
+        <div className="v-dash-col v-dash-main">
+          <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: 16 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap" }}>
-              <span style={{ fontFamily: SANS, fontWeight: 800, fontSize: 26, letterSpacing: "0.04em" }}>{selected}</span>
-              {selectedRow?.name && <span style={{ color: C.muted, fontSize: 12 }}>{selectedRow.name}</span>}
-              <span style={{ fontFamily: MONO, fontSize: 26, fontWeight: 600, color: accent }}>{selectedRow?.chg != null && prefDirGlyph(chgDir) ? `${prefDirGlyph(chgDir)} ` : ""}{fmt(selectedRow?.price)}</span>
-              <span style={{ fontFamily: MONO, fontSize: 13, color: live && liveBad[selected] ? C.down : dirColorN(selectedRow?.chg) }}>
+              <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 24, letterSpacing: "-0.012em" }}>{selected}</span>
+              {selectedRow?.name && <span className="v-coname" style={{ color: C.muted, fontSize: 12 }}>{selectedRow.name}</span>}
+              <span style={{ fontFamily: MONO, fontSize: 24, fontWeight: 510, color: accent }}><TickFlash value={selectedRow?.price}>{selectedRow?.chg != null && prefDirGlyph(chgDir) ? `${prefDirGlyph(chgDir)} ` : ""}{fmt(selectedRow?.price)}</TickFlash></span>
+              <span style={{ fontFamily: MONO, fontSize: 14, color: live && liveBad[selected] ? C.down : dirColorN(selectedRow?.chg) }}>
                 {selectedRow?.chg != null
                   ? `${prefDirGlyph(chgDir) ? prefDirGlyph(chgDir) + " " : ""}${selectedRow.chg >= 0 ? "+" : ""}${fmt(selectedRow.chg)} (${pct(selectedRow.chgPct)})`
                   : live && liveBad[selected] ? "unrecognized symbol" : "waiting for data…"}
               </span>
               {liveStale && (
-                <span style={{ fontFamily: MONO, fontSize: 10, color: C.amber, border: `1px solid ${C.amberDim}`, borderRadius: 4, padding: "2px 6px", letterSpacing: "0.08em" }}>
+                <span style={{ fontFamily: MONO, fontSize: 12, color: C.muted, background: "rgba(255,255,255,0.05)", borderRadius: R.xs, padding: "2px 6px", letterSpacing: "-0.013em" }}>
                   MARKET CLOSED
                 </span>
               )}
-              <div style={{ marginLeft: "auto", display: "flex", border: `1px solid ${C.panelEdge}`, borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ marginLeft: "auto", display: "flex", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, overflow: "hidden" }}>
                 {[["line", t("LINE")], ["pnf", "P&F"]].map(([m, label]) => (
-                  <button key={m} onClick={() => setChartMode(m)}
+                  <button key={m} onClick={() => setChartMode(m)} className="v-tap"
                     title={m === "pnf" ? "Point & Figure — X/O columns, 3-box reversal" : "Line chart of the session tape"}
-                    style={{ background: chartMode === m ? "#171E2C" : "transparent", border: "none", color: chartMode === m ? C.amber : C.muted, fontFamily: MONO, fontSize: 11, padding: "5px 10px", cursor: "pointer" }}>
+                    style={{ background: chartMode === m ? "#161718" : "transparent", border: "none", color: chartMode === m ? C.accentText : C.muted, fontFamily: SANS, fontSize: 11, padding: "5px 10px", cursor: "pointer" }}>
                     {label}
                   </button>
                 ))}
               </div>
-              <button onClick={() => openChart(selected)} title="Open the full interactive TradingView chart inside Vantage"
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>
-                📈 {t("full chart")}
+              {chartMode === "line" && (
+                <div style={{ display: "flex", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, overflow: "hidden" }}>
+                  {[
+                    ["sma", "SMA20", chartSMA, () => setChartSMA(v => !v), "20-point moving average of the tape"],
+                    ["hl", "H/L", chartHL, () => setChartHL(v => !v), "session high / low lines"],
+                  ].map(([k, label, isOn, toggle, hint]) => (
+                    <button key={k} onClick={toggle} title={hint} aria-pressed={isOn}
+                      style={{ background: isOn ? "#161718" : "transparent", border: "none", color: isOn ? C.accentText : C.muted, fontFamily: SANS, fontSize: 11, padding: "5px 10px", cursor: "pointer" }}>
+                      {label}
+                    </button>
+                  ))}
+                  <select value={chartVs || ""} onChange={e => setChartVs(e.target.value || null)} aria-label="Compare with"
+                    title="Overlay another symbol — both plotted as % change"
+                    style={{ background: chartVs ? "#161718" : "transparent", border: "none", borderLeft: `1px solid ${C.panelEdge}`, color: chartVs ? "#C08BFF" : C.muted, fontFamily: SANS, fontSize: 11, padding: "5px 6px", cursor: "pointer" }}>
+                    <option value="" style={{ background: C.surface, color: C.text }}>vs —</option>
+                    {watchlist.filter(x => x !== selected).map(x => <option key={x} value={x} style={{ background: C.surface, color: C.text }}>vs {x}</option>)}
+                  </select>
+                </div>
+              )}
+              <button onClick={() => openChart(selected)} title="Open the full chart"
+                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>
+                {t("full chart")}
               </button>
             </div>
 
             {/* P&F gets extra height: box cells are square and scale with rows, so a
                 session spanning ~20 boxes renders unreadably small inside the line
                 chart's 300px. */}
-            <div style={{ height: chartMode === "pnf" ? 440 : 300, marginTop: 10, position: "relative" }}>
+            <div className={`v-chartbox${chartMode === "pnf" ? " is-pnf" : ""}`} style={{ marginTop: 10, position: "relative" }}>
               {chartMode === "pnf" ? (
                 pnf && pnf.columns.length >= 2 ? (
-                  <>
-                    <PnFChart columns={pnf.columns} boxSize={pnf.boxSize} up={dirColorN(1)} down={dirColorN(-1)} />
+                  /* the pattern callout sits in flow ABOVE the grid — overlaying it
+                     covered the chart's top rows, which are the newest action */
+                  <div style={{ height: "100%", display: "flex", flexDirection: "column", gap: 6 }}>
                     {pnfPattern && (
-                      <div style={{ position: "absolute", top: 8, left: 10, fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: pnfPattern.side === "bull" ? dirColorN(1) : dirColorN(-1), background: "rgba(13,18,28,0.85)", border: `1px solid ${C.panelEdge}`, borderRadius: 4, padding: "4px 8px" }}>
+                      <div style={{ alignSelf: "flex-start", fontFamily: SANS, fontSize: 11, fontWeight: 510, letterSpacing: "-0.010em", textTransform: "uppercase", color: pnfPattern.side === "bull" ? dirColorN(1) : dirColorN(-1), background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, padding: "4px 8px" }}>
                         {pnfPattern.name}
                       </div>
                     )}
-                  </>
+                    <div style={{ flex: 1, minHeight: 0 }}>
+                      <PnFChart columns={pnf.columns} boxSize={pnf.boxSize} up={dirColorN(1)} down={dirColorN(-1)} />
+                    </div>
+                  </div>
                 ) : (
                   <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: C.faint, fontFamily: MONO, fontSize: 12, textAlign: "center", padding: "0 24px" }}>
                     <div>{t("not enough movement for a P&F column yet")}</div>
@@ -7816,7 +8932,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                             .replace("{price}", fmt(pnfWarmup.last)).replace("{box}", fmt(pnfWarmup.boxSize))
                             .replace("{lo}", fmt(pnfWarmup.lo)).replace("{hi}", fmt(pnfWarmup.hi))}
                         </div>
-                        <div style={{ fontSize: 11, color: C.amber }}>
+                        <div style={{ fontSize: 11, color: C.accentText }}>
                           {pnfWarmup.kind === "first"
                             ? t("first column at ≥ {up} or < {down}").replace("{up}", fmt(pnfWarmup.up)).replace("{down}", fmt(pnfWarmup.down))
                             : pnfWarmup.down != null
@@ -7829,7 +8945,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 )
               ) : chartData.length > 1 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 8, right: 6, bottom: 0, left: 0 }}>
+                  <AreaChart data={comparePlot || chartPlot} margin={{ top: 8, right: 6, bottom: 0, left: 0 }}>
                     <defs>
                       <linearGradient id="fillArea" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor={accent} stopOpacity={0.28} />
@@ -7837,18 +8953,40 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       </linearGradient>
                     </defs>
                     <CartesianGrid stroke={C.grid} vertical={false} />
-                    <XAxis dataKey="t" tick={{ fill: C.faint, fontSize: 10, fontFamily: MONO }} minTickGap={48} axisLine={{ stroke: C.panelEdge }} tickLine={false} />
-                    <YAxis domain={yDomain} tick={{ fill: C.faint, fontSize: 10, fontFamily: MONO }} width={56} axisLine={false} tickLine={false} tickFormatter={v => fmt(v)} />
+                    <XAxis dataKey="t" tick={{ fill: C.faint, fontSize: 12, fontFamily: MONO }} minTickGap={48} axisLine={{ stroke: C.panelEdge }} tickLine={false} />
+                    <YAxis domain={comparePlot ? ["auto", "auto"] : yDomain} tick={{ fill: C.faint, fontSize: 12, fontFamily: MONO }} width={56} axisLine={false} tickLine={false} tickFormatter={v => (comparePlot ? `${v > 0 ? "+" : ""}${(+v).toFixed(1)}%` : fmt(v))} />
                     <Tooltip
-                      contentStyle={{ background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, fontFamily: MONO, fontSize: 12 }}
+                      contentStyle={{ background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, fontFamily: MONO, fontSize: 12 }}
                       labelStyle={{ color: C.muted }} itemStyle={{ color: C.text }}
-                      formatter={v => [fmt(v), "price"]}
+                      formatter={(v, name) => (comparePlot
+                        ? [`${v > 0 ? "+" : ""}${(+v).toFixed(2)}%`, name === "vs" ? chartVs : selected]
+                        : [fmt(v), name === "sma" ? `SMA ${SMA_N}` : "price"])}
                     />
-                    {selectedRow?.prevClose != null && (
-                      <ReferenceLine y={selectedRow.prevClose} stroke={C.faint} strokeDasharray="4 4"
-                        label={{ value: `prev ${fmt(selectedRow.prevClose)}`, fill: C.faint, fontSize: 10, fontFamily: MONO, position: "insideTopRight" }} />
+                    {comparePlot && (
+                      <ReferenceLine y={0} stroke={C.faint} strokeDasharray="4 4"
+                        label={{ value: "0%", fill: C.faint, fontSize: 12, fontFamily: MONO, position: "insideTopRight" }} />
                     )}
-                    <Area type="monotone" dataKey="price" stroke={accent} strokeWidth={1.8} fill="url(#fillArea)" isAnimationActive={false} dot={false} />
+                    {!comparePlot && selectedRow?.prevClose != null && (
+                      <ReferenceLine y={selectedRow.prevClose} stroke={C.faint} strokeDasharray="4 4"
+                        label={{ value: `prev ${fmt(selectedRow.prevClose)}`, fill: C.faint, fontSize: 12, fontFamily: MONO, position: "insideTopRight" }} />
+                    )}
+                    {!comparePlot && sessionHL && (
+                      <ReferenceLine y={sessionHL.hi} stroke={C.up} strokeOpacity={0.5} strokeDasharray="2 4"
+                        label={{ value: `hi ${fmt(sessionHL.hi)}`, fill: C.up, fontSize: 12, fontFamily: MONO, position: "insideTopLeft" }} />
+                    )}
+                    {!comparePlot && sessionHL && (
+                      <ReferenceLine y={sessionHL.lo} stroke={C.down} strokeOpacity={0.5} strokeDasharray="2 4"
+                        label={{ value: `lo ${fmt(sessionHL.lo)}`, fill: C.down, fontSize: 12, fontFamily: MONO, position: "insideBottomLeft" }} />
+                    )}
+                    {/* C.info, not amber or a direction colour: the SMA is data,
+                        and every other hue on this chart already has a meaning. */}
+                    {!comparePlot && chartSMA && chartPlot.some(d => d.sma != null) && (
+                      <Area type="monotone" dataKey="sma" stroke={C.info} strokeWidth={1.3} strokeDasharray="5 3" fill="transparent" isAnimationActive={false} dot={false} />
+                    )}
+                    {!comparePlot && <Area type="monotone" dataKey="price" stroke={accent} strokeWidth={1.8} fill="url(#fillArea)" isAnimationActive={false} dot={false} />}
+                    {comparePlot && <Area type="monotone" dataKey="base" stroke={accent} strokeWidth={1.8} fill="url(#fillArea)" isAnimationActive={false} dot={false} />}
+                    {/* the comparison line owns purple — every other hue here has a meaning already */}
+                    {comparePlot && <Area type="monotone" dataKey="vs" stroke="#C08BFF" strokeWidth={1.5} fill="transparent" isAnimationActive={false} dot={false} />}
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
@@ -7859,7 +8997,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       {suggestSym(selected) && (
                         <button
                           onClick={() => { const t = suggestSym(selected); setSelected(t); if (!watchlist.includes(t)) setWatchlist(w => [...w, t]); }}
-                          style={{ fontFamily: MONO, fontSize: 12, color: C.bg, background: C.amber, border: "none", borderRadius: 4, padding: "6px 12px", cursor: "pointer", fontWeight: 700 }}
+                          style={{ fontFamily: SANS, fontSize: 12, color: C.bg, background: C.accent, border: "none", borderRadius: R.sm, padding: "6px 12px", cursor: "pointer", fontWeight: 510 }}
                         >
                           Switch to {suggestSym(selected)}
                         </button>
@@ -7870,15 +9008,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               )}
             </div>
             {chartMode === "pnf" && pnf && pnf.columns.length >= 2 && (
-              <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6 }}>
+              <div style={{ fontFamily: MONO, fontSize: 12, color: C.faint, marginTop: 6 }}>
                 box {fmt(pnf.boxSize)} · {t("3-box reversal · this session")}
               </div>
             )}
-            <div style={{ fontFamily: MONO, fontSize: 10, color: liveStale ? C.amber : C.faint, marginTop: 6 }}>
+            <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginTop: 6 }}>
               {live
-                ? (liveStale
-                    ? `LIVE · market closed — last trade ${liveStale.toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}. Price is frozen until the next session; switch to Demo mode to see an animated tape.`
-                    : "LIVE · quotes via Finnhub, polled every 15s · chart accumulates this session's polls")
+                ? "LIVE · quotes via Finnhub, polled every 15s · chart accumulates this session's polls"
                 : "DEMO · simulated session from a seeded random-walk engine · ticks every ~2s"}
             </div>
           </div>
@@ -7890,27 +9026,50 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               ["LOW", selectedRow?.low], ["PREV CLOSE", selectedRow?.prevClose],
               ["CHANGE", selectedRow?.chg], ["CHANGE %", selectedRow?.chgPct],
             ].map(([label, val]) => (
-              <div key={label} style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "10px 12px" }}>
-                <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", color: C.muted }}>{label}</div>
+              <div key={label} style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: "10px 12px" }}>
+                <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.muted }}>{label}</div>
                 <div style={{
-                  fontFamily: MONO, fontSize: 15, fontWeight: 600, marginTop: 3,
+                  fontFamily: MONO, fontSize: 14, fontWeight: 510, marginTop: 3,
                   color: label.startsWith("CHANGE") ? dirColorN(val) : C.text,
                 }}>
                   {label.startsWith("CHANGE") && prefDirGlyph(val > 0 ? "up" : val < 0 ? "down" : "flat") ? `${prefDirGlyph(val > 0 ? "up" : val < 0 ? "down" : "flat")} ` : ""}{label === "CHANGE %" ? pct(val) : fmt(val)}
                 </div>
               </div>
             ))}
+            {selectedRow?.high != null && selectedRow?.low != null && selectedRow.high > selectedRow.low && (() => {
+              const { low, high, price, prevClose, chg } = selectedRow;
+              const at = v => `${Math.min(100, Math.max(0, ((v - low) / (high - low)) * 100))}%`;
+              return (
+                <div style={{ gridColumn: "1 / -1", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: "10px 12px" }}
+                  role="img" aria-label={`Day range: ${fmt(low)} to ${fmt(high)}, last ${fmt(price)}`}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.muted }}>{t("DAY RANGE")}</div>
+                    <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint }}>● {t("last")}{prevClose != null && prevClose >= low && prevClose <= high ? ` · │ ${t("prev close")}` : ""}</div>
+                  </div>
+                  <div style={{ position: "relative", height: 6, background: C.grid, borderRadius: 3, marginTop: 11 }}>
+                    {prevClose != null && prevClose >= low && prevClose <= high && (
+                      <div style={{ position: "absolute", top: -3, bottom: -3, width: 2, borderRadius: 1, background: C.faint, left: at(prevClose) }} />
+                    )}
+                    <div style={{ position: "absolute", top: "50%", left: at(price), transform: "translate(-50%, -50%)", width: 10, height: 10, borderRadius: "50%", background: dirColorN(chg), boxShadow: `0 0 0 2px ${C.panel}`, transition: "left 0.5s ease, background 0.5s ease" }} />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontFamily: MONO, fontSize: 12 }}>
+                    <span style={{ color: dirColorN(-1) }}>{fmt(low)}</span>
+                    <span style={{ color: dirColorN(1) }}>{fmt(high)}</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* --- P&F pattern signals (below stats, only when a pattern is on the board) --- */}
           {panels.pnf && Object.keys(pnfSignals).length > 0 && (
-            <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-              <div style={{ padding: "9px 12px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>✕○ {t("P&F SIGNALS")}</div>
+            <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", ...TYPE.eyebrow, color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>✕○ {t("P&F SIGNALS")}</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10, padding: 12 }}>
                 {Object.entries(pnfSignals).map(([sym, p]) => (
-                  <div key={sym} style={{ background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "10px 12px" }}>
-                    <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{sym}</div>
-                    <div style={{ fontFamily: MONO, fontSize: 11, marginTop: 3, color: p.side === "bull" ? dirColorN(1) : dirColorN(-1) }}>{p.name}</div>
+                  <div key={sym} style={{ background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "10px 12px" }}>
+                    <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: C.text }}>{sym}</div>
+                    <div style={{ fontFamily: SANS, fontSize: 11, marginTop: 3, color: p.side === "bull" ? dirColorN(1) : dirColorN(-1) }}>{p.name}</div>
                   </div>
                 ))}
               </div>
@@ -7919,155 +9078,155 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         </div>
 
         {/* right rail: movers + trade */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
+        <div className="v-dash-col v-dash-right">
         {/* --- movers --- */}
         {panels.movers && (
-        <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-          <div style={{ padding: "9px 12px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>{t("TOP MOVERS")}</div>
-          {movers.length === 0 && <div style={{ padding: 12, fontFamily: MONO, fontSize: 11, color: C.faint }}>waiting for quotes…</div>}
-          {movers.map(r => (
-            <button key={r.sym} className="wl-row" onClick={() => setSelected(r.sym)}
-              style={{ display: "block", width: "100%", padding: "10px 12px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{r.sym}</span>
-                <span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.chg) }}>{prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat") ? `${prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat")} ` : ""}{pct(r.chgPct)}</span>
-              </div>
-              <div style={{ height: 3, background: C.grid, borderRadius: 2, marginTop: 6 }}>
-                <div style={{
-                  height: 3, borderRadius: 2, background: dirColorN(r.chg),
-                  width: `${Math.min(100, Math.abs(r.chgPct) * 22)}%`,
-                }} />
-              </div>
-            </button>
-          ))}
-          <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 10, color: C.faint, lineHeight: 1.6 }}>
+        <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", ...TYPE.eyebrow, color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>{t("TOP MOVERS")}</div>
+          {movers.length === 0 && (
+            <div style={{ padding: 12, fontFamily: SANS, fontSize: 11, color: C.faint }}>
+              {watchlist.length === 0 ? "Add a symbol to rank today's movers." : "Waiting for quotes…"}
+            </div>
+          )}
+          {(() => {
+            const maxAbs = Math.max(0.01, ...movers.map(m => Math.abs(m.chgPct)));
+            return movers.map(r => {
+              const half = (Math.abs(r.chgPct) / maxAbs) * 50;
+              const on = r.sym === selected;
+              return (
+                <button key={r.sym} className="wl-row" onClick={() => setSelected(r.sym)} aria-current={on ? "true" : undefined}
+                  style={{ display: "block", width: "100%", padding: "10px 12px", background: on ? "#161718" : "transparent", border: "none", borderLeft: `2px solid ${on ? C.accent : "transparent"}`, cursor: "pointer", textAlign: "left" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: C.text }}>
+                      {r.sym} <span style={{ fontWeight: 400, color: C.faint }}>{fmt(r.price)}</span>
+                    </span>
+                    <span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.chg) }}>{prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat") ? `${prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat")} ` : ""}{pct(r.chgPct)}</span>
+                  </div>
+                  <div style={{ position: "relative", height: 5, background: C.grid, borderRadius: 3, marginTop: 6, overflow: "hidden" }}>
+                    <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: C.panelEdge }} />
+                    <div style={{ position: "absolute", top: 0, bottom: 0, background: dirColorN(r.chg), left: r.chgPct >= 0 ? "50%" : `${50 - half}%`, width: `${half}%`, transition: "left 0.5s ease, width 0.5s ease" }} />
+                  </div>
+                </button>
+              );
+            });
+          })()}
+          <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}`, fontFamily: SANS, fontSize: 10, color: C.faint, lineHeight: 1.6 }}>
             {t("ranked by |Δ%| across your watchlist")}
           </div>
         </div>
         )}
 
-        {/* --- news & video (right rail) --- */}
-        {panels.news && (
-        <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-            <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted }}>NEWS &amp; VIDEO</span>
-            <span style={{ display: "flex", gap: 6 }}>
-              {news?.news?.length > 0 && (
-                <button
-                  onClick={() => {
-                    const anchorName = CHARACTERS.find(c => c.id === characterId)?.name || "the desk";
-                    const script = `This is ${anchorName} with the ${newsFor} brief. ` +
-                      news.news.map((n, i) => `Story ${i + 1}, from ${n.source}: ${n.title}.`).join(" ") +
-                      " That's the tape. Back to you.";
-                    speak("broadcast", script);
-                  }}
-                  style={{ background: "rgba(255,179,0,0.12)", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 3, fontFamily: MONO, fontSize: 10, fontWeight: 600, padding: "3px 8px", cursor: "pointer" }}>
-                  ● on air
-                </button>
-              )}
-              <button onClick={fetchNews} disabled={newsBusy}
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: newsBusy ? C.faint : C.amber, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "3px 8px", cursor: newsBusy ? "default" : "pointer" }}>
-                {newsBusy ? "searching…" : news ? "refresh" : `load ${selected}`}
-              </button>
-            </span>
-          </div>
-          {newsErr && <div style={{ padding: "8px 12px", fontFamily: MONO, fontSize: 10, color: C.down }}>{newsErr}</div>}
-          {!news && !newsBusy && !newsErr && (
-            <div style={{ padding: 12, fontFamily: MONO, fontSize: 10, color: C.faint, lineHeight: 1.6 }}>
-              Live web search for {selected} headlines and YouTube coverage — hit load.
-            </div>
-          )}
-          {news?.news?.map((n, i) => (
-            <a key={`n${i}`} href={newsHref(n)} target="_blank" rel="noopener noreferrer" className="wl-row"
-              style={{ display: "block", padding: "9px 12px", textDecoration: "none", borderTop: i === 0 ? "none" : `1px solid ${C.panelEdge}` }}>
-              <div style={{ fontFamily: MONO, fontSize: 11, color: C.text, lineHeight: 1.45 }}>{n.title}</div>
-              <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginTop: 3 }}>{n.source} ↗</div>
-            </a>
-          ))}
-          {news?.videos?.length > 0 && (
-            <div style={{ padding: "7px 12px 3px", fontFamily: MONO, fontSize: 9, letterSpacing: "0.14em", color: C.faint, borderTop: `1px solid ${C.panelEdge}` }}>VIDEO</div>
-          )}
-          {news?.videos?.map((v, i) => (
-            <button key={`v${i}`} onClick={() => openVideo(v)} className="wl-row"
-              style={{ display: "block", width: "100%", padding: "8px 12px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}>
-              <div style={{ fontFamily: MONO, fontSize: 11, color: C.text, lineHeight: 1.45 }}>
-                <span style={{ color: C.down }}>▶</span> {v.title}
-              </div>
-              <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginTop: 3 }}>{v.channel} · plays in the desk theater</div>
-            </button>
-          ))}
-          {news && newsFor !== selected && (
-            <div style={{ padding: "6px 12px 10px", fontFamily: MONO, fontSize: 9, color: C.faint }}>
-              showing {newsFor} — refresh for {selected}
-            </div>
-          )}
-        </div>
-        )}
-
         {/* --- Portfolio (right rail) --- */}
         {panels.portfolio && (
-          <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted }}>💼 PORTFOLIO</span>
+          <div id="sec-portfolio" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
+              <span style={{ ...TYPE.eyebrow, color: C.muted }}>{t("Portfolio")}</span>
               {positions.length > 0 && (
                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {priv(<span style={{ fontFamily: MONO, fontSize: 11, color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}
-                  <button onClick={briefPortfolio} title="Anchor briefs your portfolio" style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.amber, borderRadius: 3, fontFamily: MONO, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶</button>
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}
+                  <button onClick={briefPortfolio} title={t("Read on air")} aria-label={t("Read on air")} className="v-tap" style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.accentText, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶</button>
                 </span>
               )}
             </div>
-            {portfolioRows.map(r => (
-              <button key={r.id} className="wl-row" onClick={() => setSelected(r.sym)}
-                style={{ display: "block", width: "100%", padding: "8px 12px", background: "transparent", border: "none", borderTop: `1px solid ${C.grid}`, cursor: "pointer", textAlign: "left" }}>
+            {positions.length > 0 && (() => {
+              const series = portfolioRows
+                .map(r => ({ closes: getCloses(r.sym), shares: r.shares }))
+                .filter(x => x.closes.length > 1);
+              if (!series.length) return null;
+              const n = Math.min(...series.map(x => x.closes.length));
+              const totals = Array.from({ length: n }, (_, i) =>
+                series.reduce((a, x) => a + x.closes[x.closes.length - n + i] * x.shares, 0));
+              const refVals = portfolioRows.map(r => ({ pc: getRow(r.sym)?.prevClose, sh: r.shares }));
+              const refValue = refVals.every(x => x.pc != null) ? refVals.reduce((a, x) => a + x.pc * x.sh, 0) : null;
+              return (
+                <div style={{ padding: "8px 12px 0", display: "flex", alignItems: "center", gap: 10, color: C.faint }}>
+                  <Sparkline data={totals} width={132} height={28} color={dirColorN(portTotals.pnl)} refValue={refValue} />
+                  <span title="Dotted line marks yesterday's value" style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>SESSION VALUE</span>
+                </div>
+              );
+            })()}
+            {/* Allocation strip: each holding's share of portfolio value, coloured
+                by its P&L direction. Percent-of-total only — no dollar amounts —
+                so it stays honest with privacy mode on. */}
+            {portfolioRows.length > 1 && (() => {
+              const slices = portfolioRows.map(r => ({ sym: r.sym, v: (r.price != null ? r.price : r.cost / r.shares) * r.shares, pnl: r.pnl ?? 0 }));
+              const total = slices.reduce((a, x) => a + x.v, 0);
+              if (!(total > 0)) return null;
+              return (
+                <div style={{ padding: "8px 12px 4px" }}>
+                  <div role="img" aria-label={`Allocation by value: ${slices.map(x => `${x.sym} ${(x.v / total * 100).toFixed(0)}%`).join(", ")}`}
+                    style={{ display: "flex", height: 6, borderRadius: R.xs, overflow: "hidden", gap: 1 }}>
+                    {slices.map(x => (
+                      <span key={x.sym} title={`${x.sym} · ${(x.v / total * 100).toFixed(1)}% of portfolio value`}
+                        style={{ width: `${(x.v / total * 100).toFixed(2)}%`, background: dirColorN(x.pnl), opacity: 0.85, minWidth: 2 }} />
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 4, fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>{t("ALLOCATION BY VALUE")}</div>
+                </div>
+              );
+            })()}
+            {(() => {
+              const maxPnl = Math.max(0.5, ...portfolioRows.map(r => Math.abs(r.pnlPct ?? 0)));
+              return portfolioRows.map(r => (
+              <button key={r.id} className="wl-row" onClick={() => setSelected(r.sym)} aria-current={r.sym === selected ? "true" : undefined}
+                style={{ display: "block", width: "100%", padding: "8px 12px", background: r.sym === selected ? "#161718" : "transparent", border: "none", borderLeft: `2px solid ${r.sym === selected ? C.accent : "transparent"}`, borderTop: `1px solid ${C.grid}`, cursor: "pointer", textAlign: "left" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 10 }}>×{r.shares}</span></span>
-                  {priv(<span style={{ fontFamily: MONO, fontSize: 11, color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>)}
+                  <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: C.text }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span></span>
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>)}
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                  {priv(<span style={{ fontFamily: MONO, fontSize: 9, color: C.faint }}>@{fmt(r.cost / r.shares)} → {r.price != null ? fmt(r.price) : "—"}</span>)}
-                  {priv(<span style={{ fontFamily: MONO, fontSize: 9, color: dirColorN(r.pnl) }}>{r.pnlPct == null ? "" : `${r.pnlPct >= 0 ? "+" : ""}${r.pnlPct.toFixed(1)}%`}</span>)}
-                  <span onClick={e => { e.stopPropagation(); removePosition(r.id); }} style={{ fontFamily: MONO, fontSize: 10, color: C.faint, cursor: "pointer" }}>✕</span>
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>@{fmt(r.cost / r.shares)} → {r.price != null ? fmt(r.price) : "—"}</span>)}
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.pnl) }}>{r.pnlPct == null ? "" : `${r.pnlPct >= 0 ? "+" : ""}${r.pnlPct.toFixed(1)}%`}</span>)}
+                  <span onClick={e => { e.stopPropagation(); removePosition(r.id); }} style={{ fontFamily: MONO, fontSize: 12, color: C.faint, cursor: "pointer" }}>✕</span>
                 </div>
+                {r.pnlPct != null && (
+                  <div style={{ position: "relative", height: 4, background: C.grid, borderRadius: 2, marginTop: 6, overflow: "hidden" }}>
+                    <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: C.panelEdge }} />
+                    <div style={{ position: "absolute", top: 0, bottom: 0, background: dirColorN(r.pnl), transition: "left 0.5s ease, width 0.5s ease",
+                      left: r.pnlPct >= 0 ? "50%" : `${50 - (Math.abs(r.pnlPct) / maxPnl) * 50}%`, width: `${(Math.abs(r.pnlPct) / maxPnl) * 50}%` }} />
+                  </div>
+                )}
               </button>
-            ))}
-            <div style={{ display: "flex", gap: 4, padding: "8px 12px", borderTop: `1px solid ${C.panelEdge}` }}>
+              ));
+            })()}
+            <div style={{ display: "flex", gap: 6, padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}` }}>
               <input value={portForm.sym} onChange={e => setPortForm(f => ({ ...f, sym: e.target.value.toUpperCase() }))} placeholder="SYM" aria-label="Symbol"
-                style={{ width: 52, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 10, padding: "5px 5px" }} />
+                style={{ width: 56, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "7px 7px" }} />
               <input value={portForm.shares} onChange={e => setPortForm(f => ({ ...f, shares: e.target.value }))} placeholder="qty" inputMode="decimal" aria-label="Shares"
-                style={{ width: 44, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 10, padding: "5px 5px" }} />
+                style={{ width: 48, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "7px 7px" }} />
               <input value={portForm.cost} onChange={e => setPortForm(f => ({ ...f, cost: e.target.value }))} onKeyDown={e => e.key === "Enter" && addPosition()} placeholder="$ cost" inputMode="decimal" aria-label="Cost basis"
-                style={{ flex: 1, minWidth: 0, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 10, padding: "5px 5px" }} />
-              <button onClick={addPosition} aria-label="Add position" style={{ background: C.amber, border: "none", color: "#141414", borderRadius: 4, fontFamily: MONO, fontSize: 13, fontWeight: 700, padding: "0 9px", cursor: "pointer" }}>+</button>
+                style={{ flex: 1, minWidth: 0, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "7px 7px" }} />
+              <button onClick={addPosition} aria-label="Add position" style={{ background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, letterSpacing: "-0.010em", padding: "0 12px", cursor: "pointer", whiteSpace: "nowrap" }}>+ Add</button>
             </div>
-            {positions.length === 0 && <div style={{ padding: "0 12px 10px", fontFamily: MONO, fontSize: 9, color: C.faint, lineHeight: 1.5 }}>Add a holding: symbol, share count, and your cost per share.</div>}
+            {positions.length === 0 && <div style={{ padding: "0 12px 10px", fontFamily: SANS, fontSize: 10, color: C.faint, lineHeight: 1.5 }}>Symbol, shares, cost per share.</div>}
           </div>
         )}
 
         {/* --- Price alerts (right rail, only when armed) --- */}
         {priceAlerts.length > 0 && (
-          <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-            <div style={{ padding: "9px 12px", fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>⏰ PRICE ALERTS</div>
+          <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", ...TYPE.eyebrow, color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>{t("Price alerts")}</div>
             {priceAlerts.map(a => {
               const row = getRow(a.sym); const cur = row?.price;
               return (
                 <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderTop: `1px solid ${C.grid}` }}>
-                  <span style={{ fontFamily: MONO, fontSize: 11, color: C.text }}>{a.sym}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 11, color: a.op === ">" ? C.up : C.down }}>{a.op === ">" ? "▲ ≥" : "▼ ≤"} {fmt(a.price)}</span>
-                  <span style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginLeft: "auto" }}>now {cur != null ? fmt(cur) : "—"}</span>
-                  <button onClick={() => removeAlert(a.id)} aria-label="Remove alert" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 11 }}>✕</button>
+                  <span style={{ fontFamily: MONO, fontSize: 12, color: C.text }}>{a.sym}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 12, color: a.op === ">" ? C.up : C.down }}>{a.op === ">" ? "▲ ≥" : "▼ ≤"} {fmt(a.price)}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint, marginLeft: "auto" }}>now {cur != null ? fmt(cur) : "—"}</span>
+                  <button onClick={() => removeAlert(a.id)} aria-label="Remove alert" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 11 }}>✕</button>
                 </div>
               );
             })}
-            <div style={{ padding: "8px 12px", borderTop: `1px solid ${C.panelEdge}`, fontFamily: MONO, fontSize: 9, color: C.faint, lineHeight: 1.5 }}>Say "alert me when {selected} hits {fmt((getRow(selected)?.price || 100) * 1.05, 0)}" to add more.</div>
+            <div style={{ padding: "8px 12px", borderTop: `1px solid ${C.panelEdge}`, fontFamily: SANS, fontSize: 12, color: C.faint, lineHeight: 1.5 }}>Say "alert me when <span style={{ fontFamily: MONO, color: C.muted }}>{selected}</span> hits <span style={{ fontFamily: MONO, color: C.muted }}>{fmt((getRow(selected)?.price || 100) * 1.05, 0)}</span>" to add more.</div>
           </div>
         )}
 
         {/* --- Vantage Calendar (native, right rail) --- */}
         {panels.calendar && (
-          <div id="app-calendar-panel" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 6, overflow: "hidden" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.muted }}>📅 CALENDAR</span>
-              <span style={{ fontFamily: MONO, fontSize: 9, color: C.faint }}>saved on this device</span>
+          <div id="app-calendar-panel" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
+              <span style={{ ...TYPE.eyebrow, color: C.muted }}>{t("Calendar")}</span>
+              <span style={{ fontFamily: SANS, fontSize: 10, color: C.faint }}>saved on this device</span>
             </div>
             <AppCalendar extra={marketEvents} />
           </div>
@@ -8103,28 +9262,28 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 </mask>
               </defs>
               <rect width="100%" height="100%" fill="rgba(5,8,13,0.80)" mask="url(#tour-mask)" />
-              {r && <rect x={r.x - pad} y={r.y - pad} width={r.w + pad * 2} height={r.h + pad * 2} rx="8" fill="none" stroke={C.amber} strokeWidth="2" />}
+              {r && <rect x={r.x - pad} y={r.y - pad} width={r.w + pad * 2} height={r.h + pad * 2} rx="8" fill="none" stroke={C.accent} strokeWidth="2" />}
             </svg>
-            <div style={{ position: "absolute", boxSizing: "border-box", width: TIPW, maxWidth: "calc(100vw - 24px)", left: tip.left, top: tip.top, maxHeight: maxH, overflowY: "auto", background: C.panel, border: `1px solid ${C.amber}`, borderRadius: 8, padding: 16, boxShadow: "0 16px 50px rgba(0,0,0,0.6)" }}>
+            <div style={{ position: "absolute", boxSizing: "border-box", width: TIPW, maxWidth: "calc(100vw - 24px)", left: tip.left, top: tip.top, maxHeight: maxH, overflowY: "auto", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.md, padding: 16, boxShadow: "0 16px 50px rgba(0,0,0,0.6)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", color: C.faint }}>TOUR · {tourStep + 1}/{TOUR_STEPS.length}</span>
-                <button onClick={endSpotlight} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 11, cursor: "pointer" }}>{t("exit")} ✕</button>
+                <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>TOUR · {tourStep + 1}/{TOUR_STEPS.length}</span>
+                <button onClick={endSpotlight} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 11, cursor: "pointer" }}>{t("exit")} ✕</button>
               </div>
-              <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: 15, letterSpacing: "0.04em", color: C.amber, marginTop: 6 }}>{t(step.title)}</div>
-              <div style={{ fontFamily: MONO, fontSize: 12, lineHeight: 1.65, color: C.text, marginTop: 8 }}>{t(step.body)}</div>
+              <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 15, letterSpacing: "-0.011em", color: C.accentText, marginTop: 6 }}>{t(step.title)}</div>
+              <div style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.65, color: C.text, marginTop: 8 }}>{t(step.body)}</div>
               <div style={{ display: "flex", gap: 4, margin: "12px 0" }}>
                 {TOUR_STEPS.map((_, i) => (
                   <button key={i} onClick={() => setTourStep(i)} aria-label={`Step ${i + 1}`}
-                    style={{ flex: 1, height: 3, borderRadius: 2, border: "none", padding: 0, cursor: "pointer", background: i <= tourStep ? C.amber : C.grid }} />
+                    style={{ flex: 1, height: 3, borderRadius: 2, border: "none", padding: 0, cursor: "pointer", background: i <= tourStep ? C.accent : C.grid }} />
                 ))}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <button onClick={endSpotlight} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 11, cursor: "pointer" }}>{t("skip tour")}</button>
+                <button onClick={endSpotlight} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 11, cursor: "pointer" }}>{t("skip tour")}</button>
                 <div style={{ display: "flex", gap: 6 }}>
                   {tourStep > 0 && (
-                    <button onClick={() => setTourStep(s => s - 1)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>{t("Back")}</button>
+                    <button onClick={() => setTourStep(s => s - 1)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>{t("Back")}</button>
                   )}
-                  <button onClick={() => (last ? endSpotlight() : setTourStep(s => s + 1))} style={{ background: C.amber, border: "none", color: "#141414", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "6px 16px", cursor: "pointer" }}>{last ? t("Done") : t("Next")}</button>
+                  <button onClick={() => (last ? endSpotlight() : setTourStep(s => s + 1))} style={{ background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "6px 16px", cursor: "pointer" }}>{last ? t("Done") : t("Next")}</button>
                 </div>
               </div>
             </div>
@@ -8134,9 +9293,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
       {/* ===== anchor-led auto demo: a slim banner while the desk drives itself ===== */}
       {demoRunning && (
-        <div style={{ position: "fixed", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 65, display: "flex", alignItems: "center", gap: 12, background: C.panel, border: `1px solid ${C.amber}`, borderRadius: 999, padding: "7px 8px 7px 16px", boxShadow: "0 8px 30px rgba(0,0,0,0.5)", fontFamily: MONO, fontSize: 12, color: C.text }}>
+        <div style={{ position: "fixed", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 65, display: "flex", alignItems: "center", gap: 12, background: C.panel, border: `1px solid ${C.accent}`, borderRadius: 999, padding: "7px 8px 7px 16px", boxShadow: "0 8px 30px rgba(0,0,0,0.5)", fontFamily: MONO, fontSize: 12, color: C.text }}>
           <span className="cursor" style={{ color: C.down }}>▶</span> Demo — the anchor is driving
-          <button onClick={stopDemo} style={{ background: "rgba(246,70,93,0.14)", border: `1px solid ${C.down}`, color: C.down, borderRadius: 999, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "5px 14px", cursor: "pointer" }}>■ stop</button>
+          <button onClick={stopDemo} style={{ background: "rgba(235,87,87,0.14)", border: `1px solid ${C.down}`, color: C.down, borderRadius: 999, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "5px 14px", cursor: "pointer" }}>■ stop</button>
         </div>
       )}
 
@@ -8145,30 +9304,35 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         const done = MISSIONS.filter(m => missionsDone.has(m.id)).length;
         const allDone = done === MISSIONS.length;
         return (
-          <div style={{ position: "fixed", left: 12, bottom: 12, zIndex: 55, width: 264, maxWidth: "92vw", background: C.panel, border: `1px solid ${C.amber}`, borderRadius: 10, boxShadow: "0 12px 40px rgba(0,0,0,0.55)", overflow: "hidden" }}>
+          <div className="v-rise" style={{ position: "fixed", left: 12, bottom: 12, zIndex: 55, width: 268, maxWidth: "92vw", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.lg, boxShadow: "0 12px 40px rgba(0,0,0,0.55)", overflow: "hidden" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-              <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: C.amber, letterSpacing: "0.08em" }}>🎯 GETTING STARTED · {done}/{MISSIONS.length}</span>
-              <button onClick={() => setMissionsOpen(false)} aria-label="Close missions" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: MONO, fontSize: 12 }}>✕</button>
+              <span style={{ ...TYPE.eyebrow, color: C.muted }}>{t("Getting started")} · <span style={{ color: C.accentText }}>{done}/{MISSIONS.length}</span></span>
+              <button onClick={() => setMissionsOpen(false)} aria-label="Close missions" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
             </div>
             <div style={{ padding: "6px 12px 10px" }}>
               {MISSIONS.map(m => {
                 const ok = missionsDone.has(m.id);
                 return (
-                  <div key={m.id} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "7px 0", borderBottom: `1px solid ${C.grid}` }}>
-                    <span style={{ color: ok ? C.up : C.faint, fontFamily: MONO, fontSize: 13, lineHeight: 1.3 }}>{ok ? "☑" : "☐"}</span>
+                  <div key={m.id} style={{ display: "flex", alignItems: "flex-start", gap: 9, padding: "7px 0", borderBottom: `1px solid ${C.grid}` }}>
+                    <span aria-hidden="true" style={{
+                      width: 15, height: 15, marginTop: 1, flexShrink: 0, borderRadius: R.xs, boxSizing: "border-box",
+                      background: ok ? C.accent : "transparent", border: `1px solid ${ok ? C.accent : C.panelEdge}`,
+                      display: "grid", placeItems: "center", color: "#08090a", fontSize: 10, fontWeight: 510,
+                      transition: "background .15s, border-color .15s",
+                    }}>{ok ? "✓" : ""}</span>
                     <span style={{ display: "flex", flexDirection: "column" }}>
-                      <span style={{ fontFamily: MONO, fontSize: 11.5, color: ok ? C.faint : C.text, textDecoration: ok ? "line-through" : "none" }}>{m.label}</span>
-                      {!ok && <span style={{ fontFamily: MONO, fontSize: 9.5, color: C.faint, marginTop: 1 }}>{m.hint}</span>}
+                      <span style={{ fontFamily: SANS, fontSize: 13, color: ok ? C.faint : C.text, textDecoration: ok ? "line-through" : "none" }}>{m.label}</span>
+                      {!ok && <span style={{ fontFamily: SANS, fontSize: 11, color: C.faint, marginTop: 1 }}>{m.hint}</span>}
                     </span>
                   </div>
                 );
               })}
               <div style={{ marginTop: 10 }}>
-                <div style={{ height: 4, borderRadius: 2, background: C.grid, overflow: "hidden" }}>
-                  <div style={{ width: `${(done / MISSIONS.length) * 100}%`, height: "100%", background: C.amber, transition: "width 0.4s" }} />
+                <div style={{ height: 5, borderRadius: 3, background: C.grid, overflow: "hidden" }}>
+                  <div style={{ width: `${(done / MISSIONS.length) * 100}%`, height: "100%", background: C.text, transition: "width 0.4s" }} />
                 </div>
-                <div style={{ fontFamily: MONO, fontSize: 10, color: allDone ? C.up : C.muted, marginTop: 8, textAlign: "center" }}>
-                  {allDone ? "🎉 You've got it — you're a Vantage pro." : "Do these in the app; they check off automatically."}
+                <div style={{ fontFamily: SANS, fontSize: 11, color: allDone ? C.up : C.faint, marginTop: 8, textAlign: "center" }}>
+                  {allDone ? "🎉 All six. You know the desk." : "These check off as you use the app."}
                 </div>
               </div>
             </div>
@@ -8182,37 +9346,37 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 61, padding: 16 }}
           onClick={() => setSetupOpen(false)}>
           <div onClick={e => e.stopPropagation()}
-            style={{ width: 520, maxWidth: "94vw", maxHeight: "90vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.amber}`, borderRadius: 12, padding: 22, boxShadow: "0 24px 70px rgba(0,0,0,0.6)" }}>
+            style={{ width: 520, maxWidth: "94vw", maxHeight: "90vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.lg, padding: 22, boxShadow: "0 24px 70px rgba(0,0,0,0.6)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: 18, letterSpacing: "0.04em", color: C.amber }}>⚙️ SETUP GUIDE</div>
-              <button onClick={() => setSetupOpen(false)} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: MONO, fontSize: 12, cursor: "pointer" }}>✕</button>
+              <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 17, letterSpacing: "-0.010em", color: C.accentText }}>⚙️ SETUP GUIDE</div>
+              <button onClick={() => setSetupOpen(false)} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 12, cursor: "pointer" }}>✕</button>
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 11.5, lineHeight: 1.7, color: C.text, marginTop: 10 }}>
-              Vantage works right now in <b style={{ color: C.text }}>demo mode with nothing set up</b>. Here's what each key adds and where to get it — <b style={{ color: C.amber }}>only the first is needed</b> for the desk to answer; the rest are optional extras.
+            <div style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.7, color: C.text, marginTop: 10 }}>
+              Vantage works right now — <b style={{ color: C.text }}>there are no keys to paste</b>. Every provider is wired up on the server, so this is just what the desk can do and where to find it.
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
               {SETUP_STEPS.map((s, i) => (
-                <div key={i} style={{ background: "#0D121C", border: `1px solid ${s.req ? C.amber : C.panelEdge}`, borderRadius: 8, padding: "12px 14px" }}>
+                <div key={i} style={{ background: "#161718", border: `1px solid ${s.req ? C.accent : C.panelEdge}`, borderRadius: R.md, padding: "12px 14px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 20, lineHeight: 1 }}>{s.icon}</span>
-                    <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 13.5, color: C.text }}>{s.name}</span>
-                    <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 8.5, letterSpacing: "0.1em", color: s.req ? "#141414" : C.faint, background: s.req ? C.amber : "transparent", border: `1px solid ${s.req ? C.amber : C.panelEdge}`, borderRadius: 999, padding: "2px 8px" }}>{s.need.toUpperCase()}</span>
+                    <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 14, color: C.text }}>{s.name}</span>
+                    <span style={{ marginLeft: "auto", fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: s.req ? "#08090a" : C.faint, background: s.req ? C.accent : "transparent", border: `1px solid ${s.req ? C.accent : C.panelEdge}`, borderRadius: 999, padding: "2px 8px" }}>{s.need.toUpperCase()}</span>
                   </div>
-                  <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.muted, marginTop: 7 }}>{s.what}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.text, marginTop: 5 }}>
+                  <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: C.muted, marginTop: 7 }}>{s.what}</div>
+                  <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: C.text, marginTop: 5 }}>
                     <span style={{ color: C.faint }}>How: </span>{s.how}{" "}
-                    {s.url && <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{s.link}</a>}
+                    {s.url && <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: C.accentText }}>{s.link}</a>}
                   </div>
                 </div>
               ))}
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
               <button onClick={() => { setSetupOpen(false); setSettingsTab("quick"); setShowSettings(true); }}
-                style={{ flex: 1, minWidth: 180, background: C.amber, border: "none", color: "#141414", borderRadius: 5, fontFamily: MONO, fontSize: 12, fontWeight: 700, padding: "10px 0", cursor: "pointer" }}>
-                Open Settings → paste the AI key →
+                style={{ flex: 1, minWidth: 180, background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: 5, fontFamily: SANS, fontSize: 12, fontWeight: 510, padding: "10px 0", cursor: "pointer" }}>
+                Open Settings →
               </button>
               <button onClick={() => setSetupOpen(false)}
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: MONO, fontSize: 12, padding: "10px 18px", cursor: "pointer" }}>
+                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: SANS, fontSize: 12, padding: "10px 18px", cursor: "pointer" }}>
                 later
               </button>
             </div>
@@ -8224,20 +9388,20 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       {showTutorial && (
         <div role="dialog" aria-label="Welcome to Vantage"
           style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: 16 }}>
-          <div style={{ width: 480, maxWidth: "94vw", maxHeight: "92vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.amber}`, borderRadius: 12, padding: 20, boxShadow: "0 24px 70px rgba(0,0,0,0.6)" }}>
-            <div style={{ fontFamily: SANS, fontWeight: 800, fontSize: 20, letterSpacing: "0.1em", color: C.amber }}>
-              VANTAGE <span style={{ fontSize: 10, letterSpacing: "0.08em", color: C.faint, fontWeight: 500 }}>· GETTING STARTED</span>
+          <div className="v-rise" style={{ width: 480, maxWidth: "94vw", maxHeight: "92vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.lg, padding: 20, boxShadow: "0 24px 70px rgba(0,0,0,0.6)" }}>
+            <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 20, letterSpacing: "-0.012em", color: C.accentText }}>
+              VANTAGE <span style={{ fontSize: 10, letterSpacing: "-0.010em", color: C.faint, fontWeight: 510 }}>· GETTING STARTED</span>
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 11.5, lineHeight: 1.55, color: C.text, marginTop: 7 }}>
+            <div style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.55, color: C.text, marginTop: 7 }}>
               Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 10, lineHeight: 1.5, color: C.muted, marginTop: 7, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "7px 9px" }}>
-              💡 <b style={{ color: C.text }}>No setup required.</b> Everything runs in demo mode. The only key worth adding is for the AI desk — its answers come from external models that bill to <i>your</i> account. Live prices, streaming and video are optional.
+            <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.55, color: C.muted, marginTop: 7, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "8px 10px" }}>
+              💡 <b style={{ color: C.text }}>No setup required.</b> Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.
             </div>
             {!aiReady() && (
-              <div style={{ fontFamily: MONO, fontSize: 10.5, lineHeight: 1.6, color: C.down, marginTop: 8, background: "rgba(246,70,93,0.08)", border: `1px solid ${C.down}`, borderRadius: 6, padding: "8px 10px" }}>
+              <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: C.down, marginTop: 8, background: "rgba(235,87,87,0.08)", border: `1px solid ${C.down}`, borderRadius: R.md, padding: "8px 10px" }}>
                 ⚠ <b>No AI key set up yet.</b> Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.{" "}
-                <button onClick={() => { setShowTutorial(false); setSetupOpen(true); }} style={{ background: "transparent", border: "none", color: C.amber, textDecoration: "underline", cursor: "pointer", fontFamily: MONO, fontSize: 10.5, padding: 0 }}>Set it up →</button>
+                <button onClick={() => { setShowTutorial(false); setSetupOpen(true); }} style={{ background: "transparent", border: "none", color: C.accentText, textDecoration: "underline", cursor: "pointer", fontFamily: SANS, fontSize: 11, padding: 0 }}>Set it up →</button>
               </div>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 12 }}>
@@ -8248,23 +9412,23 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 { icon: "⚙️", title: "Set it up (keys & options)", desc: "What each key does and where to get it.", cta: "Setup guide", on: () => { setShowTutorial(false); setSetupOpen(true); } },
               ].map((o, i) => (
                 <button key={i} onClick={o.on}
-                  style={{ textAlign: "left", display: "flex", alignItems: "center", gap: 11, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 8, padding: "9px 12px", cursor: "pointer" }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = C.amber} onMouseLeave={e => e.currentTarget.style.borderColor = C.panelEdge}>
+                  style={{ textAlign: "left", display: "flex", alignItems: "center", gap: 11, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "9px 12px", cursor: "pointer" }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = C.accent} onMouseLeave={e => e.currentTarget.style.borderColor = C.panelEdge}>
                   <span style={{ fontSize: 20, lineHeight: 1 }}>{o.icon}</span>
                   <span style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
-                    <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 13, color: C.text }}>{o.title}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: C.muted, marginTop: 2, lineHeight: 1.4 }}>{o.desc}</span>
+                    <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 13, color: C.text }}>{o.title}</span>
+                    <span style={{ fontFamily: SANS, fontSize: 11, color: C.muted, marginTop: 2, lineHeight: 1.45 }}>{o.desc}</span>
                   </span>
-                  <span style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, color: C.amber, whiteSpace: "nowrap" }}>{o.cta} →</span>
+                  <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 510, color: C.accentText, whiteSpace: "nowrap" }}>{o.cta} →</span>
                 </button>
               ))}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 11, gap: 12, flexWrap: "wrap" }}>
-              <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>Replay anytime from Settings → DATA SOURCE</span>
+              <span style={{ fontFamily: SANS, fontSize: 11, color: C.faint }}>Replay anytime from Settings → DATA SOURCE</span>
               <button onClick={() => setShowTutorial(false)}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = C.muted; e.currentTarget.style.color = C.text; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = C.panelEdge; e.currentTarget.style.color = C.muted; }}
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: MONO, fontSize: 11, fontWeight: 600, cursor: "pointer", padding: "8px 16px", whiteSpace: "nowrap", transition: "border-color .12s, color .12s" }}>
+                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: SANS, fontSize: 11, fontWeight: 510, cursor: "pointer", padding: "8px 16px", whiteSpace: "nowrap", transition: "border-color .12s, color .12s" }}>
                 {t("skip — I'll explore on my own")}
               </button>
             </div>
@@ -8275,71 +9439,85 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       {/* ===== settings modal ===== */}
       {showSettings && (
         <div role="dialog" aria-label="Settings"
-          style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: Z.header + 1 }}
           onClick={() => setShowSettings(false)}>
-          <div onClick={e => e.stopPropagation()}
-            style={{ width: 520, maxWidth: "94vw", maxHeight: "86vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 8 }}>
+          <div onClick={e => e.stopPropagation()} className="v-rise"
+            style={{ width: 520, maxWidth: "94vw", maxHeight: "86vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg }}>
 
             {/* tab bar */}
-            <div style={{ display: "flex", borderBottom: `1px solid ${C.panelEdge}`, position: "sticky", top: 0, zIndex: 2, background: C.panel }}>
+            <div style={{ display: "flex", gap: 4, padding: "0 6px", borderBottom: `1px solid ${C.panelEdge}`, position: "sticky", top: 0, zIndex: 2, background: C.panel }}>
               {[["account", "ACCOUNT"], ["quick", "START"], ["data", "DATA"], ["models", "AI"], ["anchor", "VOICE"], ["meetings", "MEET"]].map(([id, label]) => (
                 <button key={id} onClick={() => setSettingsTab(id)}
                   style={{
-                    flex: 1, padding: "12px 0", background: "transparent", cursor: "pointer",
-                    border: "none", borderBottom: `2px solid ${settingsTab === id ? C.amber : "transparent"}`,
-                    color: settingsTab === id ? C.amber : C.muted,
-                    fontFamily: MONO, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em",
+                    flex: 1, padding: "12px 6px", background: "transparent", cursor: "pointer",
+                    border: "none", borderBottom: `2px solid ${settingsTab === id ? C.accent : "transparent"}`,
+                    color: settingsTab === id ? C.accentText : C.muted,
+                    ...TYPE.eyebrow,
                   }}>{t(label)}</button>
               ))}
+              {/* The tab bar is sticky, so this closes from any scroll position —
+                  the footer "Close" sits below six tabs of content. */}
+              <button onClick={() => setShowSettings(false)} aria-label="Close settings"
+                style={{ flex: "0 0 auto", marginLeft: 4, padding: "0 12px", background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 13, cursor: "pointer" }}>✕</button>
             </div>
 
             <div style={{ padding: 18 }}>
               {/* ---- START HERE tab: the easy path — one key + a plain-language status board ---- */}
               {settingsTab === "quick" && (() => {
-                const or = aiModels.find(m => m.id === "openrouter") || {};
-                const aiReady = planAllows("ai") && aiModels.some(m => m.enabled && (isLocalModel(m) || (m.kind === "claude" ? anthropicApiKey.trim() : (m.apiKey || "").trim())));
+                const serverAi = !!meetStatus?.ai?.configured;
+                const localAi = aiModels.some(m => m.enabled && isLocalModel(m));
+                const aiReady = planAllows("ai") && (!!meetStatus?.ai?.configured || aiModels.some(m => m.enabled && (isLocalModel(m) || (m.kind === "claude" ? anthropicApiKey.trim() : (m.apiKey || "").trim()))));
                 const meetOn = !!(meetStatus?.zoom?.connected || meetStatus?.google?.connected);
                 const chips = [
-                  { label: t("AI desk"), ready: aiReady, note: aiReady ? t("ready") : t("add key ↑"), tab: "models" },
-                  { label: t("Voice"), ready: true, note: elevenKey ? "ElevenLabs" : t("browser"), tab: "anchor" },
-                  { label: t("Live quotes"), ready: mode === "live" && !!apiKey, note: (mode === "live" && apiKey) ? t("live") : t("demo"), tab: "data" },
-                  { label: t("Real videos"), ready: !!youtubeKey, note: youtubeKey ? t("on") : t("optional"), tab: "data" },
-                  { label: t("Streaming"), ready: !!tmdbKey, note: tmdbKey ? t("on") : t("optional"), tab: "data" },
+                  { label: t("AI desk"), ready: aiReady, note: aiReady ? t("ready") : t("not configured"), tab: "models" },
+                  { label: t("Voice"), ready: true, note: voiceEngine === "elevenlabs" && canUseStudioVoice ? "ElevenLabs" : t("browser"), tab: "anchor" },
+                  { label: t("Live quotes"), ready: mode === "live" && quotesReady, note: (mode === "live" && quotesReady) ? t("live") : t("demo"), tab: "data" },
+                  { label: t("Real videos"), ready: canSearchVideos, note: canSearchVideos ? t("on") : t("optional"), tab: "data" },
+                  { label: t("Streaming"), ready: canBrowseCatalog, note: canBrowseCatalog ? t("on") : t("optional"), tab: "data" },
                   { label: t("Calendar"), ready: true, note: t("built-in"), tab: "data" },
                   { label: t("Meetings"), ready: meetOn, note: meetOn ? t("connected") : t("optional"), tab: "meetings" },
                   { label: t("Memory"), ready: memoryTurns > 0, note: memoryTurns > 0 ? `${memoryTurns}` : t("empty"), tab: "models" },
                 ];
                 return (
                   <div style={{ display: "grid", gap: 16 }}>
-                    <div style={{ fontFamily: MONO, fontSize: 11.5, lineHeight: 1.7, color: C.text, background: "rgba(255,179,0,0.06)", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "10px 12px" }}>
-                      👋 <b style={{ color: C.amber }}>{t("You're already set up.")}</b> {t("Vantage runs right now in demo mode — no keys needed. The one thing worth adding is an AI key so the desk can actually answer you:")}
+                    <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.7, color: C.text, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "10px 12px" }}>
+                      👋 <b style={{ color: C.accentText }}>{t("You're already set up.")}</b>{" "}
+                      {aiReady ? t("This server holds the model key, so the desk can already answer.") : t("Demo mode needs no keys — everything below works right now.")}
                     </div>
 
-                    {/* the ONE essential */}
+                    {/* The desk's model key is the operator's to configure, not the
+                        visitor's to obtain. Asking every user to go and create an
+                        OpenRouter account before the product answers anything is a
+                        dev-tool flow, and on a phone it is close to unusable — so
+                        this reports state and nothing else. Bring-your-own-key and
+                        local models still live in the AI tab for people who want them. */}
                     <div>
-                      <label style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.1em", color: aiReady ? C.up : C.amber }}>
-                        {aiReady ? `● ${t("AI DESK IS ON")}` : `⚡ ${t("TURN ON THE AI DESK — paste one key")}`}
-                      </label>
-                      <input value={or.apiKey || ""} onChange={e => updateModel("openrouter", { apiKey: e.target.value.trim() })} type="password"
-                        placeholder="OpenRouter API key (sk-or-…)"
-                        style={{ width: "100%", boxSizing: "border-box", marginTop: 8, background: "#0D121C", border: `1px solid ${aiReady ? C.up : C.amber}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "10px" }} />
-                      <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
-                        {t("One key unlocks the whole desk — OpenRouter gives you dozens of models (GPT, Llama, more) behind a single key, and it's the primary model.")}{" "}
-                        <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("get a key")} ↗</a>
-                        <br />{t("No AI key? The desk still can't answer, but everything else — charts, news, games, streaming, calendar — works without it.")}
+                      <div style={{ ...TYPE.eyebrow, color: aiReady ? C.up : C.muted }}>
+                        {aiReady ? `● ${t("AI DESK IS ON")}` : `○ ${t("AI DESK IS OFF")}`}
+                      </div>
+                      <div style={{ fontFamily: SANS, fontSize: 12, color: C.muted, marginTop: 6, lineHeight: 1.6 }}>
+                        {aiReady
+                          ? (serverAi
+                              ? t("Answers run on this server's model key. Nothing to set up.")
+                              : t("Answers run on your local model. Nothing leaves this device."))
+                          : !planAllows("ai")
+                            // The key is not the blocker here — the plan is. Saying
+                            // "not configured" would send people hunting for a setting.
+                            ? <>{t("The AI desk is part of")} {planFor("ai")}. {lockChip("ai")}</>
+                            : t("This server has no model key configured yet, so the desk can't answer. Everything else works.")}
                       </div>
                     </div>
 
                     {/* status board */}
                     <div>
-                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("WHAT'S SET UP")} <span style={{ color: C.faint }}>· {t("tap to configure")}</span></label>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 8 }}>
+                      <div id="start-setup-lbl" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("WHAT'S SET UP")} <span style={{ color: C.faint, textTransform: "none" }}>· {t("tap to configure")}</span></div>
+                      <div role="group" aria-labelledby="start-setup-lbl" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 8 }}>
                         {chips.map(c => (
                           <button key={c.label} onClick={() => setSettingsTab(c.tab)}
-                            style={{ display: "flex", alignItems: "center", gap: 7, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 5, padding: "8px 10px", cursor: "pointer", textAlign: "left" }}>
+                            style={{ display: "flex", alignItems: "center", gap: 7, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: 5, padding: "8px 10px", cursor: "pointer", textAlign: "left" }}>
                             <span style={{ color: c.ready ? C.up : C.faint, fontSize: 12 }}>{c.ready ? "●" : "○"}</span>
-                            <span style={{ fontFamily: MONO, fontSize: 11, color: C.text }}>{c.label}</span>
-                            <span style={{ fontFamily: MONO, fontSize: 9, color: c.ready ? C.up : C.faint, marginLeft: "auto" }}>{c.note}</span>
+                            <span style={{ fontFamily: SANS, fontSize: 11, color: C.text }}>{c.label}</span>
+                            <span style={{ fontFamily: SANS, fontSize: 10, color: c.ready ? C.up : C.faint, marginLeft: "auto" }}>{c.note}</span>
                           </button>
                         ))}
                       </div>
@@ -8348,11 +9526,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     {/* quick actions */}
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <button onClick={() => { setShowSettings(false); setTutStep(0); replayTutorial(); }}
-                        style={{ flex: 1, minWidth: 140, background: "transparent", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 600, padding: "9px 0", cursor: "pointer" }}>
+                        style={{ flex: 1, minWidth: 140, background: "transparent", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "9px 0", cursor: "pointer" }}>
                         ↺ {t("tour · demo · missions")}
                       </button>
                       <button onClick={() => setSettingsTab("anchor")}
-                        style={{ flex: 1, minWidth: 140, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "9px 0", cursor: "pointer" }}>
+                        style={{ flex: 1, minWidth: 140, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "9px 0", cursor: "pointer" }}>
                         🎙️ {t("pick your anchor")}
                       </button>
                     </div>
@@ -8364,35 +9542,35 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               {settingsTab === "data" && (
                 <>
                   <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${C.panelEdge}` }}>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("PANELS")}</label>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
+                    <div id="data-panels-lbl" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("PANELS")}</div>
+                    <div role="group" aria-labelledby="data-panels-lbl" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
                       {[["tape", "ticker tape"], ["watchlist", "watchlist"], ["movers", "top movers"], ["news", "news & video"], ["calendar", "calendar"], ["portfolio", "portfolio"], ["pnf", "P&F signals"]].map(([k, label]) => (
-                        <label key={k} style={{ display: "flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 11, color: panels[k] ? C.text : C.faint, cursor: "pointer" }}>
-                          <input type="checkbox" checked={panels[k]} onChange={() => togglePanel(k)} />
+                        <label key={k} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 12, color: panels[k] ? C.text : C.faint, cursor: "pointer" }}>
+                          <Toggle checked={panels[k]} onChange={() => togglePanel(k)} />
                           {t(label)}
                         </label>
                       ))}
                     </div>
-                    <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.muted }}>{t("in-app alerts")}</div>
+                    <div style={{ marginTop: 14, ...TYPE.eyebrow, color: C.muted }}>{t("in-app alerts")}</div>
                     {[["priceTriggers", "price triggers"], ["breakingNews", "breaking news"], ["pnfPatterns", "P&F pattern alerts"]].map(([key, label]) => (
-                      <label key={key} style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontFamily: MONO, fontSize: 11, color: prefs.notify[key] ? C.text : C.faint, cursor: "pointer" }}>
-                        <input type="checkbox" checked={prefs.notify[key]}
+                      <label key={key} style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontFamily: SANS, fontSize: 12, color: prefs.notify[key] ? C.text : C.faint, cursor: "pointer" }}>
+                        <Toggle checked={prefs.notify[key]}
                           onChange={() => setPref("notify", { ...prefs.notify, [key]: !prefs.notify[key] })} />
                         {t(label)}
                       </label>
                     ))}
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.text, cursor: "pointer" }}>
-                      <input type="checkbox" checked={prefs.colorBlind} onChange={() => setPref("colorBlind", !prefs.colorBlind)} />
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: SANS, fontSize: 12, color: C.text, cursor: "pointer" }}>
+                      <Toggle checked={prefs.colorBlind} onChange={() => setPref("colorBlind", !prefs.colorBlind)} />
                       {t("color-blind mode (blue/orange + ▲▼)")}
                     </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.text, cursor: "pointer" }}>
-                      <input type="checkbox" checked={prefs.privacy} onChange={() => setPref("privacy", !prefs.privacy)} />
-                      {t("privacy mode — blur balances (Shift+P)")}
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: SANS, fontSize: 12, color: C.text, cursor: "pointer" }}>
+                      <Toggle checked={prefs.privacy} onChange={() => setPref("privacy", !prefs.privacy)} />
+                      {t("privacy mode — blur balances")}
                     </label>
                     <div style={{ marginTop: 14 }}>
-                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("CLOCK TIMEZONE")}</label>
-                      <select value={clockTz} onChange={e => setClockTz(e.target.value)}
-                        style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px 10px" }}>
+                      <label htmlFor="data-clock-tz" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("CLOCK TIMEZONE")}</label>
+                      <select id="data-clock-tz" value={clockTz} onChange={e => setClockTz(e.target.value)}
+                        style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, padding: "8px 10px" }}>
                         <optgroup label="Americas">
                           {TIMEZONES.filter(z => z.group === "Americas").map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
                         </optgroup>
@@ -8400,32 +9578,32 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                           {TIMEZONES.filter(z => z.group === "Europe").map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
                         </optgroup>
                       </select>
-                      <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6, lineHeight: 1.6 }}>
+                      <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginTop: 6, lineHeight: 1.6 }}>
                         {t("Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.")}
                       </div>
                     </div>
-                    <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 11, color: C.text }}>
-                      <div style={{ color: C.muted, marginBottom: 6 }}>{t("refresh interval")}</div>
+                    <div style={{ marginTop: 12 }}>
+                      <div style={{ ...TYPE.eyebrow, color: C.muted, marginBottom: 6 }}>{t("refresh interval")}</div>
                       <div style={{ display: "flex", gap: 6 }}>
                         {[["Manual", 0], ["5s", 5000], ["15s", 15000], ["30s", 30000]].map(([label, ms]) => (
                           <button key={ms} onClick={() => setPref("refreshMs", coerceRefreshMs(ms))}
-                            style={{ flex: 1, padding: "6px 0", borderRadius: 4, cursor: "pointer", fontFamily: MONO, fontSize: 11,
-                              border: `1px solid ${prefs.refreshMs === ms ? C.amber : C.panelEdge}`,
-                              background: prefs.refreshMs === ms ? "rgba(255,179,0,0.08)" : "transparent",
-                              color: prefs.refreshMs === ms ? C.amber : C.muted }}>{ms === 0 ? t(label) : label}</button>
+                            style={{ flex: 1, padding: "6px 0", borderRadius: R.sm, cursor: "pointer", fontFamily: SANS, fontSize: 11,
+                              border: `1px solid ${prefs.refreshMs === ms ? C.accent : C.panelEdge}`,
+                              background: prefs.refreshMs === ms ? "rgba(255,255,255,0.05)" : "transparent",
+                              color: prefs.refreshMs === ms ? C.accentText : C.muted }}>{ms === 0 ? t(label) : label}</button>
                         ))}
                       </div>
                       {prefs.refreshMs === 0 && (
                         <button onClick={() => pollLive()} disabled={!live}
-                          style={{ marginTop: 8, width: "100%", padding: "7px 0", borderRadius: 4, cursor: live ? "pointer" : "not-allowed",
-                            fontFamily: MONO, fontSize: 11, background: "transparent", border: `1px solid ${C.panelEdge}`,
+                          style={{ marginTop: 8, width: "100%", padding: "7px 0", borderRadius: R.sm, cursor: live ? "pointer" : "not-allowed",
+                            fontFamily: SANS, fontSize: 11, background: "transparent", border: `1px solid ${C.panelEdge}`,
                             color: live ? C.muted : C.faint }}>
                           ↻ {t("refresh now")}
                         </button>
                       )}
                     </div>
                     <button onClick={() => { setTutStep(0); replayTutorial(); setShowSettings(false); }}
-                      style={{ marginTop: 12, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "7px 12px", cursor: "pointer" }}>
+                      style={{ marginTop: 12, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "7px 12px", cursor: "pointer" }}>
                       ↺ {t("replay tutorial")}
                     </button>
                   </div>
@@ -8436,16 +9614,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       <button key={mm} disabled={locked} onClick={() => {
                         if (locked) { setSettingsTab("account"); return; } // nudge upgrade instead of enabling
                         setMode(mm);
-                        if (mm === "live") {
-                          const trimmed = keyDraft.trim();
-                          if (trimmed) setApiKey(trimmed);
-                        }
                       }}
                         style={{
-                          flex: 1, padding: "9px 0", borderRadius: 4, cursor: locked ? "not-allowed" : "pointer", fontFamily: MONO, fontSize: 12, fontWeight: 600,
-                          background: mode === mm ? C.amber : "transparent",
-                          color: locked ? C.faint : mode === mm ? "#141414" : C.muted,
-                          border: `1px solid ${mode === mm ? C.amber : C.panelEdge}`,
+                          flex: 1, padding: "9px 0", borderRadius: R.sm, cursor: locked ? "not-allowed" : "pointer", fontFamily: SANS, fontSize: 12, fontWeight: 510,
+                          background: mode === mm ? C.accent : "transparent",
+                          color: locked ? C.faint : mode === mm ? "#08090a" : C.muted,
+                          border: `1px solid ${mode === mm ? C.accent : C.panelEdge}`,
                           opacity: locked ? 0.6 : 1,
                         }}>{t(mm.toUpperCase())}{locked ? " 🔒" : ""}</button>
                       );
@@ -8453,247 +9627,86 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     {lockChip("finnhub")}
                   </div>
                   {mode === "demo" && (
-                    <div style={{ fontFamily: MONO, fontSize: 11, color: C.muted, lineHeight: 1.7 }}>
-                      {t("Demo mode runs a seeded random-walk market engine — a reproducible simulated session, no key or network needed.")}
+                    <div style={{ fontFamily: SANS, fontSize: 12, color: C.muted, lineHeight: 1.7 }}>
+                      {t("Demo mode is a seeded random-walk session: reproducible, no key or network needed.")}
                     </div>
                   )}
                   {mode === "live" && (
-                    <>
-                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("FINNHUB API KEY (free tier works)")}</label>
-                      <input
-                        value={keyDraft} onChange={e => {
-                          const next = e.target.value;
-                          setKeyDraft(next);
-                          if (mode === "live") setApiKey(next.trim());
-                        }} type="password"
-                        placeholder={t("paste key")}
-                        style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 10px" }}
-                      />
-                      <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
-                        {t("Key is saved on this device and sent only to finnhub.io.")}{" "}
-                        <a href="https://finnhub.io/register" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("get a free key")} ↗</a>
-                      </div>
-                      <TestBtn kind="finnhub" />
-                    </>
+                    <div style={{ fontFamily: SANS, fontSize: 12, color: quotesReady ? C.muted : C.down, lineHeight: 1.7 }}>
+                      {quotesReady
+                        ? `● ${t("Live quotes are provided by this server — no key needed on this device.")}`
+                        : `○ ${t("Live quotes are not configured on this server.")}`}
+                    </div>
                   )}
 
                   <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.panelEdge}` }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
-                      {t("YOUTUBE DATA API KEY")} <span style={{ color: C.faint }}>{t("(optional — real, playable video results)")}</span>
-                      {lockChip("youtube")}
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, ...TYPE.eyebrow, color: C.muted }}>
+                      {t("VIDEO SEARCH")} {lockChip("youtube")}
                     </label>
-                    <input
-                      value={youtubeKeyDraft} disabled={!planAllows("youtube")} onChange={e => {
-                        const next = e.target.value;
-                        setYoutubeKeyDraft(next);
-                        setYoutubeKey(next.trim());
-                      }} type="password"
-                      placeholder={planAllows("youtube") ? t("paste key (AIza…)") : `${t("needs")} ${planFor("youtube")}`}
-                      style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 10px", opacity: planAllows("youtube") ? 1 : 0.5 }}
-                    />
-                    <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
-                      {t("Without a key, \"show videos of …\" asks Claude to guess videos (often unembeddable). With one, the desk pulls real embeddable results from YouTube.")}{" "}
-                      <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("enable API")} ↗</a>{" · "}
-                      <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("get a key")} ↗</a>
+                    <div style={{ fontFamily: SANS, fontSize: 12, color: canSearchVideos ? C.muted : C.faint, lineHeight: 1.7, marginTop: 6 }}>
+                      {canSearchVideos
+                        ? `● ${t("Real, embeddable video results are provided by this server — no key needed on this device.")}`
+                        : `○ ${t("Not configured on this server — \"show videos of …\" asks the AI to guess instead.")}`}
                     </div>
-                    <TestBtn kind="youtube" />
                   </div>
 
                   <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.panelEdge}` }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
-                      {t("TMDB API KEY")} <span style={{ color: C.faint }}>{t("(optional — in-app Netflix / Disney+ / Hulu catalog + trailers)")}</span>
-                      {lockChip("tmdb")}
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, ...TYPE.eyebrow, color: C.muted }}>
+                      {t("STREAMING CATALOG")} {lockChip("tmdb")}
                     </label>
-                    <input
-                      value={tmdbKey} disabled={!planAllows("tmdb")} onChange={e => setTmdbKey(e.target.value.trim())} type="password"
-                      placeholder={planAllows("tmdb") ? t("paste TMDB API key (v3 auth)") : `${t("needs")} ${planFor("tmdb")}`}
-                      style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 10px", opacity: planAllows("tmdb") ? 1 : 0.5 }}
-                    />
-                    <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
-                      {t("Powers \"what's on netflix\", \"browse hulu shows\", \"what's on disney+\" — real libraries with posters, ratings & in-desk trailers. Playback still opens on the service (they block embedding); public-domain films play fully in-desk via \"free movies …\" (no key needed).")}{" "}
-                      <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("get a free key")} ↗</a>
+                    <div style={{ fontFamily: SANS, fontSize: 12, color: canBrowseCatalog ? C.muted : C.faint, lineHeight: 1.7, marginTop: 6 }}>
+                      {canBrowseCatalog
+                        ? `● ${t("Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.")}`
+                        : `○ ${t("Not configured on this server — public-domain films via \"free movies …\" still play in-desk.")}`}
                     </div>
                   </div>
 
                 </>
               )}
 
-              {/* ---- MODELS tab ---- */}
+              {/* ---- AI tab: one engine, provided by this server ----
+                   The old developer surface (model cards, BYOK key fields, local
+                   Ollama / LM Studio wiring, fallback chains) is gone from the UI:
+                   people using this product should not have to choose an inference
+                   stack. The desk speaks through the server's OpenRouter key; the
+                   only thing left to manage here is memory. */}
               {settingsTab === "models" && (
                 <div style={{ display: "grid", gap: 12 }}>
-                  {(() => {
-                    const bs = bannerState(aiModels);
-                    const tone = bs.kind === "local" ? C.up : bs.kind === "cloud" ? C.amber : C.faint;
-                    const text = bs.kind === "local" ? t("FULLY LOCAL · nothing leaves this device")
-                      : bs.kind === "cloud" ? t("CLOUD ENABLED · queries leave this device")
-                      : t("no model enabled");
-                    return (
-                      <div style={{
-                        display: "flex", alignItems: "center", gap: 8, marginBottom: 14,
-                        padding: "9px 11px", borderRadius: 6,
-                        border: `1px solid ${tone}`, background: "rgba(255,255,255,0.02)",
-                        fontFamily: MONO, fontSize: 11, letterSpacing: "0.06em", color: tone,
-                      }}>
-                        <span>{bs.kind === "local" ? "🔒" : bs.kind === "cloud" ? "☁" : "○"}</span>
-                        <span>{text}</span>
-                      </div>
-                    );
-                  })()}
-                  {psInfo && (
-                    <div style={{ marginBottom: 14, fontFamily: MONO, fontSize: 10.5, color: C.muted, lineHeight: 1.7 }}>
-                      {psInfo === "unavailable" && <div style={{ color: C.faint }}>{t("telemetry unavailable — is the local server running?")}</div>}
-                      {psInfo !== "unavailable" && psInfo.models.length === 0 && <div style={{ color: C.faint }}>{t("no model loaded")}</div>}
-                      {psInfo !== "unavailable" && psInfo.models.map((pm) => {
-                        const res = gpuResidency(pm);
-                        const tps = throughput(lastEvalRef.current);
-                        return (
-                          <div key={pm.name} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                            <span style={{ color: C.text }}>{pm.name}</span>
-                            {Number.isFinite(pm.size) && pm.size > 0 && <span>{(pm.size / 1e9).toFixed(1)} GB</span>}
-                            {res && <span style={{ color: res.cpuOnly ? C.amber : C.up }}>{res.label}</span>}
-                            {tps && <span>{tps} tok/s</span>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "9px 11px", borderRadius: R.md,
+                    border: `1px solid ${meetStatus?.ai?.configured ? C.up : C.faint}`, background: "rgba(255,255,255,0.02)",
+                    fontFamily: SANS, fontWeight: 510, fontSize: 11, letterSpacing: "-0.010em",
+                    color: meetStatus?.ai?.configured ? C.up : C.faint,
+                  }}>
+                    <span>{meetStatus?.ai?.configured ? "●" : "○"}</span>
+                    <span>{meetStatus?.ai?.configured ? t("AI DESK IS ON") : t("AI DESK IS OFF")}</span>
+                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 12, color: C.muted, lineHeight: 1.7 }}>
+                    {meetStatus?.ai?.configured
+                      ? t("Answers run on this server's model key. Nothing to set up.")
+                      : t("This server has no model key configured yet, so the desk can't answer. Everything else works.")}
+                  </div>
                   {!planAllows("ai") && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.amber, background: "rgba(255,179,0,0.08)", border: `1px solid ${C.amber}`, borderRadius: 6, padding: "8px 10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 11, lineHeight: 1.6, color: C.accentText, background: "rgba(255,255,255,0.05)", border: `1px solid ${C.accent}`, borderRadius: R.md, padding: "8px 10px" }}>
                       {lockChip("ai")} {t("AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).").replace("{plan}", planFor("ai"))}
                     </div>
                   )}
-                  {/* AMD / ROCm one-click: run the whole agent on the local Ollama model, no cloud keys */}
-                  <div style={{ border: `1px solid ${C.amber}`, borderRadius: 6, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: C.amber }}>⚡ {t("Run local-only (AMD / ROCm)")}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, lineHeight: 1.6 }}>
-                      {t("One click points the desk at your local Ollama model (localhost:11434) and turns off every cloud model — so the whole agent runs on local inference (e.g. an AMD Radeon GPU via ROCm), no keys. Also opens with ?local=1 in the URL.")}
-                    </span>
-                    <button onClick={() => { if (!preDemoSnapshot) setPreDemoSnapshot(snapshotEnabled(aiModels)); setDevMode(true); soloModel("ollama"); }}
-                      style={{ alignSelf: "flex-start", background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 14px", cursor: "pointer" }}>
-                      {t("Switch the desk to local")}
-                    </button>
-                    {preDemoSnapshot && (
-                      <button onClick={() => { setAiModels(ms => restoreEnabled(ms, preDemoSnapshot)); setPreDemoSnapshot(null); }}
-                        style={{ marginTop: 8, width: "100%", background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, padding: "8px 0", cursor: "pointer" }}>
-                        ↺ {t("restore previous models")}
-                      </button>
-                    )}
-                  </div>
                   {/* local multi-turn memory: lives only in this browser; one click forgets it */}
-                  <div style={{ marginTop: 14, padding: "10px 11px", border: `1px solid ${C.panelEdge}`, borderRadius: 6 }}>
-                    <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted, marginBottom: 6 }}>
+                  <div style={{ marginTop: 4, padding: "10px 11px", border: `1px solid ${C.panelEdge}`, borderRadius: R.md }}>
+                    <div style={{ ...TYPE.eyebrow, color: C.muted, marginBottom: 6 }}>
                       {t("MEMORY")}
                     </div>
-                    <div style={{ fontFamily: MONO, fontSize: 11, color: C.text, marginBottom: 8 }}>
+                    <div style={{ fontFamily: SANS, fontSize: 11, color: C.text, marginBottom: 8 }}>
                       {t("{n} turns remembered on this device").replace("{n}", String(memoryTurns))}
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: MONO, fontSize: 10.5, color: C.muted, lineHeight: 1.6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: SANS, fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
                       <span>🧠 {t("The desk remembers this conversation locally (this device only) so follow-up questions work.")}</span>
                       <button onClick={() => { forgetConversation(); setCmdMsg(t("Desk memory cleared — the conversation is forgotten.")); }}
-                        style={{ flex: "0 0 auto", background: "transparent", color: C.muted, border: `1px solid ${C.panelEdge}`, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>
+                        style={{ flex: "0 0 auto", background: "transparent", color: C.muted, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>
                         {t("forget conversation")}
                       </button>
                     </div>
-                  </div>
-                  <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.muted, background: "rgba(255,179,0,0.06)", border: `1px solid ${C.panelEdge}`, borderRadius: 6, padding: "8px 10px" }}>
-                    <b style={{ color: C.text }}>{enabledCount > 1 ? t("{n} models enabled").replace("{n}", enabledCount) : t("One model at a time")}.</b>{" "}
-                    {lang === "en"
-                      ? <>Use <span style={{ color: C.amber }}>only this</span> for a single model, or enable several — the desk answers in <b style={{ color: C.text }}>one box</b>, trying them top-to-bottom and <b style={{ color: C.text }}>falling back to the next if one errors</b> (e.g. Claude → OpenRouter).</>
-                      : t("Use \"only this\" for a single model, or enable several — the desk answers in one box, trying them top-to-bottom and falling back to the next if one errors (e.g. Claude → OpenRouter).")}
-                  </div>
-                  <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.text, cursor: "pointer", border: `1px solid ${fallbackLocal ? C.amber : C.panelEdge}`, borderRadius: 6, padding: "8px 10px" }}>
-                    <input type="checkbox" checked={fallbackLocal} onChange={e => setFallbackLocal(e.target.checked)} style={{ marginTop: 2 }} />
-                    <span>
-                      <b style={{ color: fallbackLocal ? C.amber : C.text }}>{t("Auto-fallback to a local model.")}</b>{" "}
-                      {t("If paid models fail (no credits, bad key, offline), the desk and reports retry on your local model (Ollama or LM Studio) automatically. Configure one below — set its BASE URL and start the local server.")}
-                    </span>
-                  </label>
-                  {aiModels.map(mm => (
-                    <div key={mm.id} style={{ border: `1px solid ${mm.enabled ? C.amberDim || C.panelEdge : C.panelEdge}`, borderRadius: 6, padding: 12 }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                        <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 12, fontWeight: 600, color: mm.enabled ? C.text : C.faint, cursor: "pointer" }}>
-                          <input type="checkbox" checked={mm.enabled} disabled={!planAllows("ai")} onChange={e => updateModel(mm.id, { enabled: e.target.checked })} />
-                          {mm.label}
-                          {mm.enabled && enabledCount === 1 && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em", color: C.amber, border: `1px solid ${C.amber}`, borderRadius: 3, padding: "1px 5px" }}>{t("ACTIVE")}</span>}
-                        </label>
-                        <button onClick={() => soloModel(mm.id)}
-                          disabled={mm.enabled && enabledCount === 1}
-                          title={`Turn off every other model and use only ${mm.label}`}
-                          style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: (mm.enabled && enabledCount === 1) ? C.faint : C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "3px 9px", cursor: (mm.enabled && enabledCount === 1) ? "default" : "pointer", whiteSpace: "nowrap" }}>
-                          {t("use only this")}
-                        </button>
-                      </div>
-                      <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-                        <div style={{ flex: 2, minWidth: 180 }}>
-                          <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>{t("BASE URL")}</label>
-                          <input value={mm.baseUrl || ""} onChange={e => updateModel(mm.id, { baseUrl: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", marginTop: 3, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, padding: "7px 8px" }} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 110 }}>
-                          <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>{t("MODEL")}</label>
-                          <input value={mm.model || ""} onChange={e => updateModel(mm.id, { model: e.target.value })}
-                            style={{ width: "100%", boxSizing: "border-box", marginTop: 3, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, padding: "7px 8px" }} />
-                          {mm.id === "openrouter" && (
-                            <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginTop: 3, lineHeight: 1.4 }}>
-                              {t("format:")} <span style={{ color: C.muted }}>provider/model</span> — {t("e.g.")} openai/gpt-4o-mini, meta-llama/llama-3.3-70b-instruct.{" "}
-                              <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("browse models")} ↗</a>
-                            </div>
-                          )}
-                          {mm.id === "proton" && (
-                            <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginTop: 3, lineHeight: 1.4 }}>
-                              {t("Proton Lumo has no official hosted API yet — run a local OpenAI-compatible bridge and point BASE URL at it.")}{" "}
-                              <a href="https://github.com/carlostkd/Lumo-Api" target="_blank" rel="noopener noreferrer" style={{ color: C.amber }}>{t("Lumo bridge")} ↗</a>
-                            </div>
-                          )}
-                          {mm.id === "ollama" && (
-                            <div style={{ marginTop: 4 }}>
-                              <button type="button" onClick={detectOllama}
-                                style={{ background: "transparent", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 9, padding: "4px 8px", cursor: "pointer" }}>↻ {t("detect installed models")}</button>
-                              {ollamaTags.length > 0 && (
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
-                                  {ollamaTags.map(name => (
-                                    <button key={name} type="button" onClick={() => updateModel("ollama", { model: name })}
-                                      style={{ background: mm.model === name ? "rgba(255,179,0,0.18)" : "#0D121C", border: `1px solid ${mm.model === name ? C.amber : C.panelEdge}`, color: mm.model === name ? C.amber : C.muted, borderRadius: 999, fontFamily: MONO, fontSize: 9, padding: "3px 8px", cursor: "pointer" }}>{name}</button>
-                                  ))}
-                                </div>
-                              )}
-                              {ollamaTagErr
-                                ? <div style={{ fontFamily: MONO, fontSize: 9, color: C.muted, marginTop: 4, lineHeight: 1.4 }}>{ollamaTagErr}</div>
-                                : ollamaTags.length === 0 && <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginTop: 4, lineHeight: 1.4 }}>{t("Lists the models on your Ollama server — the same set as `ollama list`.")}</div>}
-                            </div>
-                          )}
-                        </div>
-                        {(mm.kind === "claude" || mm.needsKey) && (
-                          <div style={{ flexBasis: "100%" }}>
-                            <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>
-                              {t("API KEY")} ·{" "}
-                              <a href={mm.kind === "claude" ? "https://console.anthropic.com/settings/keys" : mm.id === "gemini" ? "https://aistudio.google.com/apikey" : mm.id === "openrouter" ? "https://openrouter.ai/keys" : "https://platform.openai.com/api-keys"}
-                                target="_blank" rel="noopener noreferrer" style={{ color: C.amber, letterSpacing: "0.04em" }}>
-                                {t("get a key")} ↗
-                              </a>
-                            </label>
-                            <input type="password" value={mm.kind === "claude" ? anthropicApiKey : (mm.apiKey || "")}
-                              onChange={e => mm.kind === "claude" ? setAnthropicApiKey(e.target.value) : updateModel(mm.id, { apiKey: e.target.value })}
-                              placeholder={t("paste key")}
-                              style={{ width: "100%", boxSizing: "border-box", marginTop: 3, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, padding: "7px 8px" }} />
-                            <TestBtn kind={mm.id} />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, lineHeight: 1.7 }}>
-                    {lang === "en" ? (
-                      <>Local endpoints need CORS enabled to accept requests from this page:<br />
-                      · Ollama — start with <span style={{ color: C.muted }}>{`OLLAMA_ORIGINS="${PAGE_ORIGIN}"`}</span> (or *)<br />
-                      · LM Studio — Developer tab → enable server + turn on CORS<br />
-                      The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).</>
-                    ) : (
-                      <>{t("Local endpoints need CORS enabled to accept requests from this page:")}<br />
-                      · Ollama — {t("start with")} <span style={{ color: C.muted }}>{`OLLAMA_ORIGINS="${PAGE_ORIGIN}"`}</span> ({t("or")} *)<br />
-                      · LM Studio — {t("Developer tab → enable server + turn on CORS")}<br />
-                      {t("The LM Studio slot works with anything speaking the OpenAI chat format (llama.cpp, vLLM…).")}</>
-                    )}
                   </div>
                 </div>
               )}
@@ -8702,57 +9715,57 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               {settingsTab === "anchor" && (
                 <div style={{ display: "grid", gap: 16 }}>
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("ANCHOR")}</label>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(84px, 1fr))", gap: 8, marginTop: 8 }}>
+                    <div id="voice-anchor-lbl" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("ANCHOR")}</div>
+                    <div role="radiogroup" aria-labelledby="voice-anchor-lbl" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(84px, 1fr))", gap: 8, marginTop: 8 }}>
                       {CHARACTERS.map(c => (
-                        <button key={c.id} onClick={() => setCharacterId(c.id)}
+                        <button key={c.id} role="radio" aria-checked={characterId === c.id} onClick={() => setCharacterId(c.id)}
                           style={{
-                            padding: "10px 0", borderRadius: 6, cursor: "pointer",
-                            fontFamily: MONO, fontSize: 11, fontWeight: 600,
-                            background: characterId === c.id ? "rgba(255,179,0,0.12)" : "transparent",
-                            color: characterId === c.id ? C.amber : C.muted,
-                            border: `1px solid ${characterId === c.id ? C.amber : C.panelEdge}`,
+                            padding: "10px 0", borderRadius: R.md, cursor: "pointer",
+                            fontFamily: SANS, fontSize: 11, fontWeight: 510,
+                            background: characterId === c.id ? "rgba(255,255,255,0.07)" : "transparent",
+                            color: characterId === c.id ? C.accentText : C.muted,
+                            border: `1px solid ${characterId === c.id ? C.accent : C.panelEdge}`,
                           }}>{c.name}</button>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("ENVIRONMENT")}</label>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(84px, 1fr))", gap: 8, marginTop: 8 }}>
+                    <div id="voice-env-lbl" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("ENVIRONMENT")}</div>
+                    <div role="radiogroup" aria-labelledby="voice-env-lbl" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(84px, 1fr))", gap: 8, marginTop: 8 }}>
                       {ENVIRONMENTS.map(ev => (
-                        <button key={ev.id} onClick={() => setEnvId(ev.id)}
+                        <button key={ev.id} role="radio" aria-checked={envId === ev.id} onClick={() => setEnvId(ev.id)}
                           style={{
-                            padding: "10px 0", borderRadius: 6, cursor: "pointer",
-                            fontFamily: MONO, fontSize: 11, fontWeight: 600,
-                            background: envId === ev.id ? "rgba(255,179,0,0.12)" : "transparent",
-                            color: envId === ev.id ? C.amber : C.muted,
-                            border: `1px solid ${envId === ev.id ? C.amber : C.panelEdge}`,
+                            padding: "10px 0", borderRadius: R.md, cursor: "pointer",
+                            fontFamily: SANS, fontSize: 11, fontWeight: 510,
+                            background: envId === ev.id ? "rgba(255,255,255,0.07)" : "transparent",
+                            color: envId === ev.id ? C.accentText : C.muted,
+                            border: `1px solid ${envId === ev.id ? C.accent : C.panelEdge}`,
                           }}>{ev.name}</button>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("BACKGROUND CREW")}</label>
+                    <label htmlFor="voice-crew" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("BACKGROUND CREW")}</label>
                     <select
-                      value={crewId} onChange={e => setCrewId(e.target.value)}
-                      style={{ width: "100%", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px" }}>
+                      id="voice-crew" value={crewId} onChange={e => setCrewId(e.target.value)}
+                      style={{ width: "100%", marginTop: 6, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, padding: "8px" }}>
                       <option value="auto">{t("Auto — whoever isn't anchoring")}</option>
                       <option value="off">{t("Off — solo broadcast")}</option>
                       {CHARACTERS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("VOICE ENGINE")} {lockChip("elevenlabs")}</label>
-                    <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                    <div id="voice-engine-lbl" style={{ display: "flex", alignItems: "center", gap: 8, ...TYPE.eyebrow, color: C.muted }}>{t("VOICE ENGINE")} {lockChip("elevenlabs")}</div>
+                    <div role="radiogroup" aria-labelledby="voice-engine-lbl" style={{ display: "flex", gap: 8, marginTop: 6 }}>
                       {[["browser", t("BROWSER · free")], ["elevenlabs", "ELEVENLABS"]].map(([id, label]) => {
                         const locked = id === "elevenlabs" && !planAllows("elevenlabs"); // studio voice needs Trading Floor
                         return (
-                        <button key={id} disabled={locked} onClick={() => { if (locked) { setSettingsTab("account"); return; } setVoiceEngine(id); }}
+                        <button key={id} role="radio" aria-checked={voiceEngine === id} disabled={locked} onClick={() => { if (locked) { setSettingsTab("account"); return; } setVoiceEngine(id); }}
                           style={{
-                            flex: 1, padding: "9px 0", borderRadius: 4, cursor: locked ? "not-allowed" : "pointer", fontFamily: MONO, fontSize: 11, fontWeight: 600,
-                            background: voiceEngine === id ? C.amber : "transparent",
-                            color: locked ? C.faint : voiceEngine === id ? "#141414" : C.muted,
-                            border: `1px solid ${voiceEngine === id ? C.amber : C.panelEdge}`,
+                            flex: 1, padding: "9px 0", borderRadius: R.sm, cursor: locked ? "not-allowed" : "pointer", fontFamily: SANS, fontSize: 11, fontWeight: 510,
+                            background: voiceEngine === id ? C.accent : "transparent",
+                            color: locked ? C.faint : voiceEngine === id ? "#08090a" : C.muted,
+                            border: `1px solid ${voiceEngine === id ? C.accent : C.panelEdge}`,
                             opacity: locked ? 0.6 : 1,
                           }}>{label}{locked ? " 🔒" : ""}</button>
                         );
@@ -8761,57 +9774,37 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   </div>
                   {voiceEngine === "elevenlabs" && (
                     <div style={{ display: "grid", gap: 10 }}>
-                      <div>
-                        <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
-                          {t("ELEVENLABS API KEY")}
-                          <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" style={{ color: C.amber, letterSpacing: "0.04em" }}>
-                            {t("get a key ↗")}
-                          </a>
-                        </label>
-                        <input
-                          value={elevenKeyDraft} onChange={e => {
-                            const next = e.target.value;
-                            setElevenKeyDraft(next);
-                            const cleaned = next.trim();
-                            setElevenKey(cleaned);
-                            if (typeof window !== "undefined") {
-                              if (cleaned) window.localStorage.setItem("tape-eleven-key", cleaned);
-                              else window.localStorage.removeItem("tape-eleven-key");
-                            }
-                            if (cleaned) loadElevenVoices(cleaned);
-                          }} type="password"
-                          placeholder={t("paste key")}
-                          style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 13, padding: "9px 10px" }}
-                        />
-                        <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6, lineHeight: 1.6 }}>
-                          {t("Held in memory only, sent only to api.elevenlabs.io. Uses eleven_flash_v2_5 for low latency — each read costs quota characters.")}
-                        </div>
-                        <TestBtn kind="eleven" />
+                      <div style={{ fontFamily: SANS, fontSize: 12, color: (canUseStudioVoice && !elevenErr) ? C.muted : C.down, lineHeight: 1.7 }}>
+                        {!canUseStudioVoice
+                          ? `○ ${t("Studio voice is not configured on this server.")}`
+                          : elevenErr
+                            ? `○ ${t("This server has a studio-voice key set, but the last call to it failed.")}`
+                            : `● ${t("Studio voice is provided by this server — no key needed on this device.")}`}
                       </div>
                       {elevenVoices.length > 0 && (
                         <div>
-                          <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("ELEVENLABS VOICE")}</label>
+                          <label htmlFor="voice-eleven" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("ELEVENLABS VOICE")}</label>
                           <select
-                            value={elevenVoiceId} onChange={e => setElevenVoiceId(e.target.value)}
-                            style={{ width: "100%", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px" }}>
+                            id="voice-eleven" value={elevenVoiceId} onChange={e => setElevenVoiceId(e.target.value)}
+                            style={{ width: "100%", marginTop: 6, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, padding: "8px" }}>
                             {elevenVoices.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
                           </select>
                         </div>
                       )}
-                      {elevenErr && <div style={{ fontFamily: MONO, fontSize: 10, color: C.down }}>{elevenErr}</div>}
-                      {elevenVoices.length === 0 && !elevenErr && (
-                        <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>{t("Paste a key and hit Apply — voices load automatically.")}</div>
+                      {elevenErr && <div style={{ fontFamily: SANS, fontSize: 12, color: C.down, lineHeight: 1.6 }}>{elevenErr}</div>}
+                      {canUseStudioVoice && elevenVoices.length === 0 && !elevenErr && (
+                        <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint }}>{t("Loading voices…")}</div>
                       )}
                     </div>
                   )}
                   {voiceEngine === "browser" && (
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
-                      {t("VOICE")} {voices.length > 0 && <span style={{ color: C.faint, letterSpacing: 0 }}>· {voices.length} {t("free")}</span>}
+                    <label htmlFor="voice-browser" style={{ ...TYPE.eyebrow, color: C.muted }}>
+                      {t("VOICE")} {voices.length > 0 && <span style={{ color: C.faint, letterSpacing: 0, textTransform: "none" }}>· {voices.length} {t("free")}</span>}
                     </label>
                     <select
-                      value={voiceName} onChange={e => setVoiceName(e.target.value)}
-                      style={{ width: "100%", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px" }}>
+                      id="voice-browser" value={voiceName} onChange={e => setVoiceName(e.target.value)}
+                      style={{ width: "100%", marginTop: 6, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, padding: "8px" }}>
                       {(() => {
                         // every voice the OS/browser exposes is free — group them all by language, current language first
                         const cur = (TTS_LANG[lang] || "en-US").slice(0, 2);
@@ -8829,39 +9822,39 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   </div>
                   )}
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
-                      {t("READING SPEED")} · {speechRate.toFixed(2)}x
+                    <label htmlFor="voice-rate" style={{ ...TYPE.eyebrow, color: C.muted }}>
+                      {t("READING SPEED")} · <span style={{ fontFamily: MONO, fontWeight: 510 }}>{speechRate.toFixed(2)}x</span>
                     </label>
-                    <input type="range" min="0.7" max="1.5" step="0.02" value={speechRate}
+                    <input id="voice-rate" type="range" min="0.7" max="1.5" step="0.02" value={speechRate}
                       onChange={e => setSpeechRate(+e.target.value)}
-                      style={{ width: "100%", marginTop: 6, accentColor: C.amber }} />
+                      style={{ width: "100%", marginTop: 6, accentColor: C.accent }} />
                   </div>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 12, color: C.text, cursor: "pointer" }}>
-                    <input type="checkbox" checked={autoSpeak} onChange={e => setAutoSpeak(e.target.checked)} />
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 12, color: C.text, cursor: "pointer" }}>
+                    <Toggle checked={autoSpeak} onChange={e => setAutoSpeak(e.target.checked)} />
                     {t("auto-read the first answer that finishes")}
                   </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 12, color: C.text, cursor: "pointer" }}>
-                    <input type="checkbox" checked={uiSounds} onChange={e => setUiSounds(e.target.checked)} />
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 12, color: C.text, cursor: "pointer" }}>
+                    <Toggle checked={uiSounds} onChange={e => setUiSounds(e.target.checked)} />
                     {t("UI click sounds — terminal blips on every button")}
                   </label>
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
+                    <label htmlFor="voice-sound-vol" style={{ ...TYPE.eyebrow, color: C.muted }}>
                       {t("SOUND VOLUME")} · {(soundVolume * 100).toFixed(0)}%
                     </label>
-                    <input type="range" min="0" max="1" step="0.01" value={soundVolume}
+                    <input id="voice-sound-vol" type="range" min="0" max="1" step="0.01" value={soundVolume}
                       onChange={e => setSoundVolume(+e.target.value)}
-                      style={{ width: "100%", marginTop: 6, accentColor: C.amber }} />
+                      style={{ width: "100%", marginTop: 6, accentColor: C.accent }} />
                   </div>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 12, color: C.text, cursor: "pointer" }}>
-                    <input type="checkbox" checked={musicOn} onChange={e => toggleMusic(e.target.checked)} />
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 12, color: C.text, cursor: "pointer" }}>
+                    <Toggle checked={musicOn} onChange={e => toggleMusic(e.target.checked)} />
                     ♪ {t("ambient music")} — {musicSource === "spotify" ? t("your Spotify playlist, docked bottom-right") : t("generative synth, ducks under the anchor's voice")}
                   </label>
                   <div>
-                    <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("MUSIC SOURCE")}</label>
-                    <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                    <div id="voice-music-src-lbl" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("MUSIC SOURCE")}</div>
+                    <div role="radiogroup" aria-labelledby="voice-music-src-lbl" style={{ display: "flex", gap: 6, marginTop: 6 }}>
                       {[["synth", "Synth"], ["spotify", "Spotify"]].map(([id, label]) => (
-                        <button key={id} onClick={() => setMusicSource(id)}
-                          style={{ flex: 1, background: musicSource === id ? "rgba(255,179,0,0.14)" : "transparent", border: `1px solid ${musicSource === id ? C.amber : C.panelEdge}`, color: musicSource === id ? C.amber : C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 600, padding: "7px 0", cursor: "pointer" }}>
+                        <button key={id} role="radio" aria-checked={musicSource === id} onClick={() => setMusicSource(id)}
+                          style={{ flex: 1, background: musicSource === id ? "rgba(255,255,255,0.08)" : "transparent", border: `1px solid ${musicSource === id ? C.accent : C.panelEdge}`, color: musicSource === id ? C.accentText : C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "7px 0", cursor: "pointer" }}>
                           {label}
                         </button>
                       ))}
@@ -8869,34 +9862,25 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   </div>
                   {musicSource === "spotify" ? (
                     <div>
-                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>{t("SPOTIFY PLAYLIST / ALBUM / TRACK LINK")}</label>
-                      <input
-                        value={spotifyUri}
-                        onChange={e => setSpotifyUri(e.target.value)}
-                        placeholder="https://open.spotify.com/playlist/…"
-                        style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${spotifyEmbedUrl(spotifyUri) ? C.panelEdge : C.down}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px 10px" }}
-                      />
-                      <div style={{ fontFamily: MONO, fontSize: 10, color: spotifyEmbedUrl(spotifyUri) ? C.faint : C.down, marginTop: 6, lineHeight: 1.6 }}>
-                        {spotifyEmbedUrl(spotifyUri)
-                          ? t("No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)")
-                          : t("Paste a Spotify share link — open Spotify → any playlist/album/track → Share → Copy link.")}
+                      <div style={{ fontFamily: SANS, fontSize: 12, color: C.faint, lineHeight: 1.6 }}>
+                        {t("No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)")}
                       </div>
 
                       {/* Optional full playback via OAuth (Premium) — collapsed so it never demands a login */}
                       <details style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.panelEdge}` }}>
-                        <summary style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted, cursor: "pointer" }}>
+                        <summary style={{ ...TYPE.eyebrow, color: C.muted, cursor: "pointer" }}>
                           {t("OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS")}
                         </summary>
-                        <label style={{ display: "block", marginTop: 10, fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
+                        <label style={{ display: "block", marginTop: 10, ...TYPE.eyebrow, color: C.muted }}>
                           {t("FULL PLAYBACK · SPOTIFY PREMIUM")}{" "}
-                          <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ color: C.amber, letterSpacing: "0.04em" }}>{t("create an app ↗")}</a>
+                          <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ color: C.accentText, letterSpacing: "-0.010em" }}>{t("create an app ↗")}</a>
                           {" "}{lockChip("spotify")}
                         </label>
                         {spotifyReady ? (
                           <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-                            <span style={{ fontFamily: MONO, fontSize: 11, color: C.up }}>{t("● connected — full tracks enabled")}</span>
+                            <span style={{ fontFamily: SANS, fontSize: 11, color: C.up }}>{t("● connected — full tracks enabled")}</span>
                             <button onClick={disconnectSpotify}
-                              style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>{t("disconnect")}</button>
+                              style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>{t("disconnect")}</button>
                           </div>
                         ) : (
                           <>
@@ -8904,13 +9888,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                               value={spotifyClientId}
                               onChange={e => setSpotifyClientId(e.target.value)}
                               placeholder={t("Spotify app Client ID")}
-                              style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px 10px" }}
+                              style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px 10px" }}
                             />
-                            <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 6, lineHeight: 1.6 }}>
+                            <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginTop: 6, lineHeight: 1.6 }}>
                               {lang === "en"
                                 ? <>In your Spotify app settings, add this exact <b style={{ color: C.muted }}>Redirect URI</b>:</>
                                 : <>{t("In your Spotify app settings, add this exact Redirect URI:")}</>}<br />
-                              <code style={{ color: C.amber, wordBreak: "break-all" }}>{spotifyRedirect()}</code>
+                              <code style={{ color: C.accentText, wordBreak: "break-all" }}>{spotifyRedirect()}</code>
                               {!/^https:|127\.0\.0\.1/.test(spotifyRedirect()) && (
                                 <span style={{ color: C.down }}><br />⚠ {t("Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.")}</span>
                               )}
@@ -8918,30 +9902,30 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
                               {(() => { const ok = planAllows("spotify") && spotifyClientId.trim(); return (
                               <button onClick={() => { if (!planAllows("spotify")) { setSettingsTab("account"); return; } connectSpotify(); }} disabled={!ok}
-                                style={{ background: ok ? "#1DB954" : C.panelEdge, color: ok ? "#0B0E14" : C.faint, border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 16px", cursor: ok ? "pointer" : "default" }}>
+                                style={{ background: ok ? "#1DB954" : C.panelEdge, color: ok ? "#ffffff" : C.faint, border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "8px 16px", cursor: ok ? "pointer" : "default" }}>
                                 {planAllows("spotify") ? t("Connect Spotify") : `${t("Connect Spotify")} 🔒`}
                               </button>
                               ); })()}
-                              {spotifyAuth && !spotifyReady && <span style={{ fontFamily: MONO, fontSize: 10, color: C.muted }}>{t("connecting…")}</span>}
+                              {spotifyAuth && !spotifyReady && <span style={{ fontFamily: SANS, fontSize: 10, color: C.muted }}>{t("connecting…")}</span>}
                             </div>
                           </>
                         )}
-                        {spotifyErr && <div style={{ fontFamily: MONO, fontSize: 10, color: C.down, marginTop: 8 }}>{spotifyErr}</div>}
+                        {spotifyErr && <div style={{ fontFamily: SANS, fontSize: 10, color: C.down, marginTop: 8 }}>{spotifyErr}</div>}
                       </details>
                     </div>
                   ) : (
                     <div>
-                      <label style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted }}>
+                      <label htmlFor="voice-music-vol" style={{ ...TYPE.eyebrow, color: C.muted }}>
                         {t("MUSIC VOLUME")} · {(musicVolume * 100).toFixed(0)}%
                       </label>
-                      <input type="range" min="0" max="1" step="0.01" value={musicVolume}
+                      <input id="voice-music-vol" type="range" min="0" max="1" step="0.01" value={musicVolume}
                         onChange={e => setMusicVolume(+e.target.value)}
-                        style={{ width: "100%", marginTop: 6, accentColor: C.amber }} />
+                        style={{ width: "100%", marginTop: 6, accentColor: C.accent }} />
                     </div>
                   )}
                   <button
                     onClick={() => speak("preview", `This is ${CHARACTERS.find(c => c.id === characterId)?.name} at the Vantage desk. ${selected} is currently trading at ${fmt(selectedRow?.price)}.`)}
-                    style={{ background: "transparent", border: `1px solid ${C.amber}`, color: C.amber, borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 600, padding: "9px 0", cursor: "pointer" }}>
+                    style={{ background: "transparent", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "9px 0", cursor: "pointer" }}>
                     ▶ {t("preview voice")}
                   </button>
                 </div>
@@ -8951,14 +9935,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               {settingsTab === "meetings" && (
                 <div style={{ display: "grid", gap: 12 }}>
                   {/* zero-setup: just open a new meeting in a tab (uses your existing Zoom/Google login, no OAuth app) */}
-                  <div style={{ border: `1px solid ${C.amber}`, borderRadius: 6, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: C.amber }}>⚡ {t("Go Live — no setup")}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 11, color: C.muted, lineHeight: 1.6 }}>{t("Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.")}</span>
+                  <div style={{ border: `1px solid ${C.liveEdge}`, background: C.liveGlow, borderRadius: R.md, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <span style={{ ...TYPE.subhead, fontSize: 12, fontWeight: 510, color: C.live }}>⚡ {t("Go Live — no setup")}</span>
+                    <span style={{ ...TYPE.bodySm, fontSize: 13, color: C.muted }}>{t("Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.")}</span>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <button onClick={() => window.open("https://meet.new", "_blank", "noopener")}
-                        style={{ background: "#00897B", color: "#fff", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 16px", cursor: "pointer" }}>{t("New Google Meet")} ↗</button>
+                        style={{ background: "#00796B", color: "#fff", border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 12, fontWeight: 510, padding: "9px 16px", cursor: "pointer" }}>{t("New Google Meet")} ↗</button>
                       <button onClick={() => window.open("https://zoom.us/start/videomeeting", "_blank", "noopener")}
-                        style={{ background: "#2D8CFF", color: "#fff", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "8px 16px", cursor: "pointer" }}>{t("New Zoom meeting")} ↗</button>
+                        style={{ background: "#1567D3", color: "#fff", border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 12, fontWeight: 510, padding: "9px 16px", cursor: "pointer" }}>{t("New Zoom meeting")} ↗</button>
                     </div>
                     {/* pin the link the tab created, so Vantage shows a live badge you can rejoin/share */}
                     <div style={{ borderTop: `1px solid ${C.panelEdge}`, paddingTop: 8, marginTop: 2 }}>
@@ -8970,18 +9954,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{meetingLabel(liveMeeting)} ↗</span>
                           </a>
                           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                            <a href={liveMeeting} target="_blank" rel="noopener noreferrer" style={{ background: C.down, color: "#fff", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "6px 16px", cursor: "pointer", textDecoration: "none" }}>{t("Join")} ↗</a>
-                            <button onClick={() => navigator.clipboard?.writeText(liveMeeting)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 12px", cursor: "pointer" }}>{t("copy link")}</button>
-                            <button onClick={() => setLiveMeeting("")} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 10, padding: "6px 12px", cursor: "pointer" }}>{t("end")}</button>
+                            <a href={liveMeeting} target="_blank" rel="noopener noreferrer" style={{ background: C.down, color: "#08090a", border: "none", borderRadius: R.sm, fontFamily: MONO, fontSize: 12, fontWeight: 510, padding: "6px 16px", cursor: "pointer", textDecoration: "none" }}>{t("Join")} ↗</a>
+                            <button onClick={() => navigator.clipboard?.writeText(liveMeeting)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "6px 12px", cursor: "pointer" }}>{t("copy link")}</button>
+                            <button onClick={() => setLiveMeeting("")} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "6px 12px", cursor: "pointer" }}>{t("end")}</button>
                           </div>
                         </div>
                       ) : (
                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                           <input value={liveMeetDraft} onChange={e => setLiveMeetDraft(e.target.value)}
                             placeholder={t("paste your meeting link to pin it as LIVE…")}
-                            style={{ flex: 1, minWidth: 160, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 4, color: C.text, fontFamily: MONO, fontSize: 11, padding: "7px 9px" }} />
+                            style={{ flex: 1, minWidth: 160, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "7px 9px" }} />
                           <button onClick={() => { const u = liveMeetDraft.trim(); if (/^https?:\/\//.test(u)) { setLiveMeeting(u); setLiveMeetDraft(""); } }}
-                            style={{ background: C.amber, color: "#141414", border: "none", borderRadius: 4, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "7px 14px", cursor: "pointer" }}>{t("Pin")}</button>
+                            style={{ background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "7px 14px", cursor: "pointer" }}>{t("Pin")}</button>
                         </div>
                       )}
                     </div>
@@ -8996,58 +9980,58 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   {!account ? (
                     // guest: no account yet — offer to sign out (which returns to the auth gate)
                     <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
-                      <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 15, color: C.text }}>{t("You're exploring as a guest")}</div>
-                      <div style={{ fontFamily: MONO, fontSize: 11.5, color: C.muted, lineHeight: 1.6 }}>{t("Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.")}</div>
+                      <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 15, color: C.text }}>{t("You're exploring as a guest")}</div>
+                      <div style={{ fontFamily: SANS, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>{t("Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.")}</div>
                       <button onClick={() => { setShowSettings(false); onSignOut?.(); }}
-                        style={{ background: C.amber, color: "#0B0E14", border: "none", borderRadius: 6, fontFamily: SANS, fontWeight: 700, fontSize: 13, padding: "10px 18px", cursor: "pointer" }}>{t("Sign in / create account")}</button>
+                        style={{ background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.md, fontFamily: SANS, fontWeight: 510, fontSize: 13, padding: "10px 18px", cursor: "pointer" }}>{t("Sign in / create account")}</button>
                     </div>
                   ) : (<>
                     {/* identity card */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#0D121C", border: `1px solid ${C.panelEdge}`, borderRadius: 8, padding: 14 }}>
-                      <span style={{ width: 40, height: 40, borderRadius: "50%", background: C.amber, color: "#0B0E14", display: "grid", placeItems: "center", fontWeight: 800, fontSize: 18, fontFamily: SANS, flex: "0 0 auto" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: 14 }}>
+                      <span style={{ width: 40, height: 40, borderRadius: "50%", background: C.text, color: C.bg, display: "grid", placeItems: "center", fontWeight: 510, fontSize: 17, fontFamily: SANS, flex: "0 0 auto" }}>
                         {(account.name || account.email).trim().charAt(0).toUpperCase()}
                       </span>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 15, color: C.text }}>{account.name || account.email.split("@")[0]}</div>
-                        <div style={{ fontFamily: MONO, fontSize: 11, color: C.faint, wordBreak: "break-all" }}>{account.email}</div>
-                        <div style={{ fontFamily: MONO, fontSize: 10, color: C.up, marginTop: 3 }}>{account.backend ? t("secured on server") : t("stored on this device")}</div>
+                        <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 15, color: C.text }}>{account.name || account.email.split("@")[0]}</div>
+                        <div style={{ fontFamily: MONO, fontSize: 12, color: C.faint, wordBreak: "break-all" }}>{account.email}</div>
+                        <div style={{ fontFamily: SANS, fontSize: 10, color: C.up, marginTop: 3 }}>{account.backend ? t("secured on server") : t("stored on this device")}</div>
                       </div>
                     </div>
 
                     {account.backend && (
-                      <div style={{ border: `1px solid ${agentPrefs?.enabled ? C.amber : C.panelEdge}`, borderRadius: 8, padding: 12, background: agentPrefs?.enabled ? "rgba(255,179,0,0.05)" : "transparent" }}>
+                      <div style={{ border: `1px solid ${agentPrefs?.enabled ? C.accent : C.panelEdge}`, borderRadius: R.md, padding: 12, background: agentPrefs?.enabled ? "rgba(255,255,255,0.05)" : "transparent" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                           <div>
-                            <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", color: C.amber }}>AI MARKET-BRIEF AGENT</div>
-                            <div style={{ marginTop: 5, fontFamily: MONO, fontSize: 10, lineHeight: 1.55, color: C.muted }}>Runs daily on your current watchlist, stores a factual brief, and never trades or makes recommendations.</div>
+                            <div style={{ ...TYPE.eyebrow, color: C.accentText }}>AI MARKET-BRIEF AGENT</div>
+                            <div style={{ marginTop: 5, fontFamily: SANS, fontSize: 10, lineHeight: 1.55, color: C.muted }}>Runs daily on your current watchlist, stores a factual brief, and never trades or makes recommendations.</div>
                           </div>
                           <button onClick={() => saveAgentPrefs(!agentPrefs?.enabled)} disabled={agentBusy || !agentPrefs}
-                            style={{ background: agentPrefs?.enabled ? "transparent" : C.amber, color: agentPrefs?.enabled ? C.amber : "#0B0E14", border: agentPrefs?.enabled ? `1px solid ${C.amber}` : "none", borderRadius: 4, fontFamily: MONO, fontSize: 10, fontWeight: 700, padding: "6px 10px", cursor: agentBusy ? "default" : "pointer", opacity: agentBusy || !agentPrefs ? 0.6 : 1, whiteSpace: "nowrap" }}>
+                            style={{ background: agentPrefs?.enabled ? "transparent" : C.accent, color: agentPrefs?.enabled ? C.accentText : "#08090a", border: agentPrefs?.enabled ? `1px solid ${C.accent}` : "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "6px 10px", cursor: agentBusy ? "default" : "pointer", opacity: agentBusy || !agentPrefs ? 0.6 : 1, whiteSpace: "nowrap" }}>
                             {agentBusy ? "…" : agentPrefs?.enabled ? "PAUSE" : "ENABLE"}
                           </button>
                         </div>
-                        {agentPrefs?.enabled && <div style={{ marginTop: 8, fontFamily: MONO, fontSize: 9, color: C.faint }}>Watching: {agentPrefs.symbols?.join(" · ") || "no symbols"}</div>}
+                        {agentPrefs?.enabled && <div style={{ marginTop: 8, fontFamily: MONO, fontSize: 12, color: C.faint }}>Watching: {agentPrefs.symbols?.join(" · ") || "no symbols"}</div>}
                       </div>
                     )}
 
                     {/* plan chooser */}
                     <div>
-                      <label style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.12em", color: C.faint }}>{t("YOUR PLAN")}</label>
+                      <label style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>{t("YOUR PLAN")}</label>
                       <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
                         {PLANS.map(p => {
                           const on = account.plan === p.id;
                           const paid = p.id !== "free";
                           return (
-                            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, border: `1.5px solid ${on ? C.amber : C.panelEdge}`, borderRadius: 8, padding: "10px 12px", background: on ? "rgba(255,179,0,0.06)" : "transparent" }}>
+                            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, border: `1.5px solid ${on ? C.accent : C.panelEdge}`, borderRadius: R.md, padding: "10px 12px", background: on ? "rgba(255,255,255,0.04)" : "transparent" }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 13, color: C.text }}>{p.label} <span style={{ fontFamily: MONO, fontSize: 11, color: C.faint, fontWeight: 400 }}>{p.price}{p.cadence === "forever" ? "" : p.cadence}</span></div>
-                                <div style={{ fontFamily: MONO, fontSize: 10, color: C.muted, lineHeight: 1.5 }}>{p.tagline}</div>
+                                <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 14, color: C.text }}>{p.label} <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint, fontWeight: 400 }}>{p.price}{p.cadence === "forever" ? "" : p.cadence}</span></div>
+                                <div style={{ fontFamily: SANS, fontSize: 10, color: C.muted, lineHeight: 1.5 }}>{p.tagline}</div>
                               </div>
                               {on ? (
-                                <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, color: C.amber, whiteSpace: "nowrap" }}>{t("CURRENT")}</span>
+                                <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 510, color: C.accentText, whiteSpace: "nowrap" }}>{t("CURRENT")}</span>
                               ) : (
                                 <button onClick={() => startPlanChange(p.id)} disabled={!!billingBusy}
-                                  style={{ background: paid ? C.amber : "transparent", color: paid ? "#0B0E14" : C.amber, border: paid ? "none" : `1px solid ${C.amber}`, borderRadius: 5, fontFamily: MONO, fontSize: 11, fontWeight: 700, padding: "7px 14px", cursor: billingBusy ? "default" : "pointer", opacity: billingBusy ? 0.6 : 1, whiteSpace: "nowrap" }}>
+                                  style={{ background: paid ? C.accent : "transparent", color: paid ? "#08090a" : C.accentText, border: paid ? "none" : `1px solid ${C.accent}`, borderRadius: 5, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "7px 14px", cursor: billingBusy ? "default" : "pointer", opacity: billingBusy ? 0.6 : 1, whiteSpace: "nowrap" }}>
                                   {billingBusy === p.id ? "…" : paid ? t("Upgrade") : t("Switch")}
                                 </button>
                               )}
@@ -9056,7 +10040,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         })}
                       </div>
                       {/* billing honesty: say plainly whether a real charge could happen */}
-                      <div style={{ fontFamily: MONO, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
+                      <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
                         {billingCfg?.enabled
                           ? t("Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.")
                           : t("No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.")}
@@ -9064,21 +10048,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     </div>
 
                     <button onClick={() => { setShowSettings(false); onSignOut?.(); }}
-                      style={{ alignSelf: "flex-start", background: "transparent", border: `1px solid ${C.panelEdge}`, color: "#ff8a8a", borderRadius: 6, fontFamily: MONO, fontSize: 11, padding: "8px 14px", cursor: "pointer" }}>{t("Sign out")}</button>
-                    <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, lineHeight: 1.6 }}>{t("Terms & Privacy accepted")} {account.agreedAt ? "· v" + LEGAL_VERSION : ""}. {t("This account UI is a prototype; see the security note in the code.")}</div>
+                      style={{ alignSelf: "flex-start", background: "transparent", border: `1px solid ${C.panelEdge}`, color: "#f28080", borderRadius: R.md, fontFamily: SANS, fontSize: 11, padding: "8px 14px", cursor: "pointer" }}>{t("Sign out")}</button>
+                    <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint, lineHeight: 1.6 }}>{t("Terms & Privacy accepted")} {account.agreedAt ? "· v" + LEGAL_VERSION : ""}. {t("This account UI is a prototype; see the security note in the code.")}</div>
                   </>)}
-
-                  {/* developer / testing mode — bypasses ALL plan gates so every premium feature is testable now */}
-                  <div style={{ marginTop: 4, paddingTop: 12, borderTop: `1px solid ${C.panelEdge}` }}>
-                    <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontFamily: MONO, fontSize: 11, lineHeight: 1.6, color: C.text, cursor: "pointer" }}>
-                      <input type="checkbox" checked={devMode} onChange={e => setDevMode(e.target.checked)} style={{ marginTop: 2 }} />
-                      <span>
-                        <b style={{ color: devMode ? C.amber : C.text }}>{t("Developer mode (testing).")}</b>{" "}
-                        {t("Unlocks every premium feature regardless of plan — AI desk, live data, YouTube, TMDB, Spotify and the ElevenLabs voice. You still need each feature's own API key to actually use it. Not for production.")} <span style={{ color: C.faint }}>{lang === "en" ? <>(also toggles with <code style={{ color: C.muted }}>?dev=1</code> in the URL)</> : <>({t("also toggles with ?dev=1 in the URL")})</>}</span>
-                      </span>
-                    </label>
-                    {devMode && <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em", color: C.amber, marginTop: 6 }}>● {t("DEV MODE ON — all plan gates bypassed")}</div>}
-                  </div>
                 </div>
               )}
             </div>
@@ -9086,38 +10058,26 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             {/* footer */}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "0 18px 18px" }}>
               <button onClick={() => setShowSettings(false)}
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 4, fontFamily: MONO, fontSize: 12, padding: "8px 14px", cursor: "pointer" }}>{t("Close")}</button>
-              <button onClick={() => {
-                setApiKey(keyDraft.trim());
-                const ek = elevenKeyDraft.trim();
-                persistElevenKey(ek);
-                if (ek) loadElevenVoices(ek);
-                setJustApplied(true);
-                setTimeout(() => setJustApplied(false), 1500);
-              }}
-                style={{ background: justApplied ? C.up : C.amber, border: "none", color: "#141414", borderRadius: 4, fontFamily: MONO, fontSize: 12, fontWeight: 600, padding: "8px 14px", cursor: "pointer" }}>
-                {justApplied ? `✓ ${t("Applied")}` : t("Apply")}
-              </button>
+                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, padding: "8px 14px", cursor: "pointer" }}>{t("Close")}</button>
+
             </div>
           </div>
         </div>
       )}
+      </AppShell>
     </div>
   );
 }
 
 // ============================================================
 //  App — the default export. Decides between the auth gate and the dashboard.
-//  The gate is SKIPPABLE ("Explore in demo mode") so the app keeps its zero-setup
-//  identity: guests get the full dashboard, accounts additionally get a saved plan
-//  and a header chip. The heavy MarketDashboard only mounts once we're past the gate,
-//  so no rules-of-hooks juggling and the demo never runs behind a locked screen.
+//  The gate is mandatory: every visitor signs up or logs in. The heavy MarketDashboard
+//  only mounts once we're past the gate, so no rules-of-hooks juggling and the
+//  dashboard never runs behind a locked screen.
 // ============================================================
 export default function App() {
-  // account: a signed-in user; guest: chose to skip the gate. Either one lets us in.
+  // account: the signed-in user — the only way past the gate.
   const [account, setAccount] = useState(loadAccount);
-  // Deliberately NOT persisted: skipping the gate lasts for the visit, not forever.
-  const [guest, setGuest] = useState(false);
   // UI + AI language (persisted). Provided app-wide so AuthScreen and the dashboard both translate.
   const [lang, setLangState] = useState(loadLang);
   const setLang = useCallback((code) => { setLangState(code); try { localStorage.setItem("vantage-lang", code); } catch { /* ignore */ } }, []);
@@ -9140,8 +10100,7 @@ export default function App() {
   const signOut = () => {
     // best-effort backend logout; local state always clears
     if (account?.backend && account?.token) { fetch("/api/auth/logout", { method: "POST", headers: { Authorization: `Bearer ${account.token}` } }).catch(() => {}); }
-    // also drops guest mode, so "Sign in / create account" returns to the gate
-    saveAccount(null); setAccount(null); setGuest(false);
+    saveAccount(null); setAccount(null);
   };
   // Update the current plan. For a local account, also patch the tape-users record so it
   // survives sign-out/in. (Real paid upgrades route through Stripe in the ACCOUNT tab first.)
@@ -9161,8 +10120,8 @@ export default function App() {
 
   return (
     <I18nContext.Provider value={i18n}>
-      {!account && !guest
-        ? <AuthScreen onAuthed={signIn} onGuest={() => setGuest(true)} />
+      {!account
+        ? <AuthScreen onAuthed={signIn} />
         : <MarketDashboard account={account} onSignOut={signOut} onChangePlan={changePlan} />}
     </I18nContext.Provider>
   );

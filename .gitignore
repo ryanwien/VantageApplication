@@ -12,6 +12,9 @@ dist/
 # local env / secrets — API keys live in the browser's localStorage, never commit them
 .env
 .env.local
+# hand-made backups of the above. They are copies of the same secrets, so the
+# rule that keeps .env out has to cover them too.
+.env.bak-*
 
 # backend data stores — password hashes, live session tokens, live OAuth tokens. NEVER commit.
 server/tokens.json
@@ -25,5 +28,6 @@ server/ai-usage.json
 # These are local-only concerns — remove these lines if you ever intend to ship such config.
 .appsec/
 .claude/
+.vscode/
 .github/copilot-instructions.md
 .demo-tooling/

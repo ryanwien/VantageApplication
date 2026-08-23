@@ -5,7 +5,9 @@ export const DEFAULT_PREFS = {
   colorBlind: false,
   privacy: false,
   refreshMs: 15000,
-  notify: { priceTriggers: true, breakingNews: true, pnfPatterns: true },
+  // All off by default — break-ins (sound + speech) are opt-in, not something a
+  // first visit should have to discover how to silence.
+  notify: { priceTriggers: false, breakingNews: false, pnfPatterns: false },
 };
 
 const ALLOWED_REFRESH = new Set([0, 5000, 15000, 30000]);

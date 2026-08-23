@@ -38,6 +38,37 @@ const PUBLIC_ORIGIN = process.env.PUBLIC_ORIGIN || `http://localhost:${PORT}`;
 const APP_ORIGIN = process.env.APP_ORIGIN || "http://127.0.0.1:5173";
 const DATAHUB_GMS_URL = (process.env.DATAHUB_GMS_URL || "http://localhost:8080").replace(/\/+$/, "");
 const DATAHUB_TOKEN = process.env.DATAHUB_TOKEN || "";
+// One name for one key. This was read as FINNHUB_KEY here and FINNHUB_API_KEY
+// for the scheduled briefs, so setting the documented name silently left the
+// news route disabled. FINNHUB_API_KEY is canonical; the old name still works.
+const FINNHUB_KEY = process.env.FINNHUB_API_KEY || process.env.FINNHUB_KEY || "";
+// The desk's model key. It lives here and only here: anything shipped to the
+// browser is readable by anyone who opens devtools, so a key in the client is a
+// published key. Clients call POST /api/ai/chat instead and never see it.
+const OPENROUTER = {
+  key: process.env.OPENROUTER_API_KEY || "",
+  model: process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini",
+};
+// Server-held YouTube Data key. Same reasoning as the model key: a key in the
+// browser is a published key, and an unrestricted Google key is worth real money.
+const YOUTUBE_KEY = process.env.YOUTUBE_API_KEY || "";
+// Same reasoning for the rest of the paid surface: a key the browser can read
+// is a key anyone can spend.
+const TMDB_KEY = process.env.TMDB_API_KEY || "";
+const GEMINI_KEY = process.env.GEMINI_API_KEY || "";
+const ELEVEN_KEY = process.env.ELEVENLABS_API_KEY || "";
+// The desk's ambient playlist. Unlike the keys above this is public — a share
+// link — but it is still server-held, because picking the room's music is the
+// operator's call, not a field every listener has to fill in.
+const SPOTIFY_PLAYLIST = process.env.SPOTIFY_PLAYLIST || "https://open.spotify.com/playlist/37i9dQZF1DWWQRwui0ExPn";
+// Anonymous callers get a spend guard instead of an account quota.
+const ANON_AI_PER_HOUR = Number(process.env.ANON_AI_PER_HOUR || 6);
+const ANON_YT_PER_HOUR = Number(process.env.ANON_YT_PER_HOUR || 20);
+const ANON_QUOTE_PER_HOUR = Number(process.env.ANON_QUOTE_PER_HOUR || 1000);  // a watchlist tick is one call
+const ANON_TTS_PER_HOUR = Number(process.env.ANON_TTS_PER_HOUR || 30);   // speech is billed per character
+// X-Forwarded-For is caller-controlled unless something we run sets it, and a
+// spoofable IP makes a per-IP limit decorative. Only honoured when declared.
+const TRUST_PROXY = process.env.TRUST_PROXY === "1";
 // The token is OPTIONAL: the local quickstart runs with metadata-service auth disabled and
 // accepts unauthenticated queries. A deployed DataHub will require the token. So "configured"
 // means we know where GMS is; the Authorization header is attached only when a token exists.
@@ -68,9 +99,9 @@ const VERTEX = {
   location: process.env.GOOGLE_CLOUD_LOCATION || "us-central1",
   serviceAccount: process.env.GCP_SERVICE_ACCOUNT_EMAIL,
   privateKey: process.env.GCP_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-  model: process.env.VERTEX_GEMINI_MODEL || "gemini-2.0-flash",
+  model: process.env.VERTEX_GEMINI_MODEL || "gemini-3.6-flash",
 };
-const MARKET = { finnhubKey: process.env.FINNHUB_API_KEY, cronSecret: process.env.AGENT_CRON_SECRET };
+const MARKET = { finnhubKey: FINNHUB_KEY, cronSecret: process.env.AGENT_CRON_SECRET };
 
 // Social sign-in via OpenID Connect ("Continue with Google / Yahoo"). Each needs an OAuth app.
 // Google REUSES the meetings client id/secret (just register the extra redirect URI + these scopes).
@@ -142,9 +173,11 @@ async function askVertex(prompt) {
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const planQuota = (plan) => plan === "desk" ? 250 : plan === "pro" ? 75 : 5;
 function canUseAi(email) { const used = AI_USAGE[email]?.days?.[todayKey()] || 0, limit = planQuota(USERS[email]?.plan || "free"); return { used, limit, allowed: used < limit }; }
-function recordAiRun(email, promptChars, outcome, meta = {}) {
+function recordAiRun(email, promptChars, outcome, meta = {}, charge = true) {
   const user = AI_USAGE[email] || (AI_USAGE[email] = { days: {}, runs: [] }), day = todayKey();
-  user.days[day] = (user.days[day] || 0) + 1;
+  // A failure that is OUR fault (bad server key, provider down) must not eat
+  // the caller's daily allowance — log it, but only charge for real work.
+  if (charge) user.days[day] = (user.days[day] || 0) + 1;
   user.runs.push({ at: new Date().toISOString(), agent: "market-brief", plan: USERS[email]?.plan || "free", promptChars, outcome, ...meta });
   user.runs = user.runs.slice(-500); writeJSON(AI_USAGE_FILE, AI_USAGE);
   return { used: user.days[day], limit: planQuota(USERS[email]?.plan || "free") };
@@ -358,6 +391,23 @@ function verifyStripeSignature(raw, signature) {
 }
 const planFromStripeObject = (obj) => obj?.metadata?.plan || Object.entries(STRIPE.prices).find(([, id]) => id === (obj?.lines?.data?.[0]?.price?.id || obj?.items?.data?.[0]?.price?.id))?.[0] || null;
 
+// ---- rate limiting ----
+// Fixed windows keyed by IP, held in memory on purpose: this is a spend guard,
+// not a security boundary, so a restart clearing the counters is acceptable and
+// it keeps the backend dependency-free.
+const RATE_BUCKETS = new Map();
+function rateLimit(key, limit, windowMs) {
+  const now = Date.now(), slot = Math.floor(now / windowMs), id = `${key}:${slot}`;
+  const hits = (RATE_BUCKETS.get(id) || 0) + 1;
+  RATE_BUCKETS.set(id, hits);
+  // Opportunistic sweep so a long-lived process cannot grow the map forever.
+  if (RATE_BUCKETS.size > 5000) for (const k of RATE_BUCKETS.keys()) if (!k.endsWith(`:${slot}`)) RATE_BUCKETS.delete(k);
+  return { ok: hits <= limit, hits, limit, resetMs: (slot + 1) * windowMs - now };
+}
+const clientIp = (req) =>
+  (TRUST_PROXY ? String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() : "") ||
+  req.socket?.remoteAddress || "unknown";
+
 // ---- request router ----
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, PUBLIC_ORIGIN);
@@ -403,6 +453,359 @@ const server = http.createServer(async (req, res) => {
       const tok = tokenFromReq(req, url);
       if (tok && SESSIONS[tok]) { delete SESSIONS[tok]; writeJSON(SESSIONS_FILE, SESSIONS); }
       return send(res, 200, { ok: true });
+    }
+
+    // ---- NEWS (REST: Finnhub company-news proxied through the server's own key,
+    //      so clients get real headlines without each needing a personal key) ----
+    // ---- QUOTES (server-held Finnhub key) ----
+    // The highest-volume call in the app, and the one that leaked worst: the
+    // browser put the key in a URL query string, where it shows up in devtools
+    // and in any proxy or server log the request passes through.
+    //
+    // Accepts a comma-separated list so a watchlist refresh is one request
+    // rather than one per symbol — the old client fanned out N calls a tick.
+    if (p === "/api/quote" && req.method === "GET") {
+      if (!FINNHUB_KEY) return send(res, 503, { error: "Live quotes are not configured on this server (set FINNHUB_API_KEY)." });
+      const rl = rateLimit(`q:${clientIp(req)}`, ANON_QUOTE_PER_HOUR, 3600000);
+      if (!rl.ok) return send(res, 429,
+        { error: `Rate limit reached (${rl.limit} per hour).`, retryInSec: Math.ceil(rl.resetMs / 1000) },
+        { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
+
+      const syms = String(url.searchParams.get("symbols") || url.searchParams.get("symbol") || "")
+        .split(",").map(s => s.trim().toUpperCase()).filter(Boolean).slice(0, 25);
+      if (!syms.length) return send(res, 400, { error: "Pass ?symbols=AAPL,MSFT." });
+      const bad = syms.find(s => !/^[A-Z.-]{1,10}$/.test(s));
+      if (bad) return send(res, 400, { error: `Not a symbol: ${bad}` });
+
+      const one = async (sym) => {
+        try {
+          const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${FINNHUB_KEY}`,
+            { signal: AbortSignal.timeout(8000) });
+          if (!r.ok) return [sym, { error: r.status === 401 || r.status === 403 ? "key" : `http_${r.status}` }];
+          const j = await r.json();
+          // Finnhub answers 200 with all-zero fields for a symbol it does not know.
+          if (!j || typeof j.c !== "number" || j.c === 0) return [sym, { error: "unknown" }];
+          return [sym, { c: j.c, d: j.d, dp: j.dp, o: j.o, h: j.h, l: j.l, pc: j.pc, t: j.t }];
+        } catch { return [sym, { error: "unreachable" }]; }
+      };
+      const pairs = await Promise.all(syms.map(one));
+      const quotes = Object.fromEntries(pairs);
+      // A key rejected upstream is our misconfiguration, not the caller's.
+      if (pairs.every(([, v]) => v.error === "key")) return send(res, 502, { error: "The server's Finnhub key was rejected." });
+      return send(res, 200, { quotes });
+    }
+
+    // ---- GEMINI (server-held key) ----
+    // Google's own streaming shape, passed straight through, so the browser's
+    // SSE parser is unchanged. Not folded into /api/ai/chat: that one speaks
+    // OpenAI-over-OpenRouter, and Gemini's request and response differ.
+    if (p === "/api/ai/gemini" && req.method === "POST") {
+      if (!GEMINI_KEY) return send(res, 503, { error: "Gemini is not configured on this server (set GEMINI_API_KEY)." });
+      const email = emailFromReq(req, url);
+      if (email) {
+        const quota = canUseAi(email);
+        if (!quota.allowed) return send(res, 429, { error: `Daily AI limit reached (${quota.used}/${quota.limit}).`, ...quota });
+      } else {
+        const rl = rateLimit(`ai:${clientIp(req)}`, ANON_AI_PER_HOUR, 3600000);
+        if (!rl.ok) return send(res, 429, { error: `Rate limit reached (${rl.limit} per hour). Sign in for a higher allowance.` },
+          { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
+      }
+      const { model, contents } = await readBody(req);
+      if (!Array.isArray(contents) || !contents.length) return send(res, 400, { error: "Pass { model, contents }." });
+      const useModel = String(model || "gemini-3.6-flash");
+      if (!/^[A-Za-z0-9.-]{1,60}$/.test(useModel)) return send(res, 400, { error: "Bad model id." });
+      const promptChars = JSON.stringify(contents).length;
+
+      let up;
+      try {
+        up = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${useModel}:streamGenerateContent?alt=sse&key=${encodeURIComponent(GEMINI_KEY)}`,
+          { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents }) });
+      } catch {
+        if (email) recordAiRun(email, promptChars, "error", { agent: "gemini", reason: "unreachable" }, false);
+        return send(res, 502, { error: "Could not reach Gemini." });
+      }
+      if (!up.ok) {
+        let detail = ""; try { detail = (await up.json())?.error?.message || ""; } catch { /* no body */ }
+        if (email) recordAiRun(email, promptChars, "error", { agent: "gemini", status: up.status }, false);
+        const ours = up.status === 401 || up.status === 403 || /api key/i.test(detail);
+        return send(res, ours ? 502 : up.status, { error: ours ? "The server's Gemini key was rejected." : (detail || `Gemini HTTP ${up.status}`) });
+      }
+      if (email) recordAiRun(email, promptChars, "ok", { agent: "gemini", model: useModel });
+      res.writeHead(200, { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive", "X-Accel-Buffering": "no", "Access-Control-Allow-Origin": APP_ORIGIN });
+      const rd = up.body.getReader();
+      req.on("close", () => { rd.cancel().catch(() => {}); });
+      try { for (;;) { const { value, done } = await rd.read(); if (done) break; res.write(Buffer.from(value)); } } catch { /* hung up */ }
+      return res.end();
+    }
+
+    // ---- ELEVENLABS (server-held key) ----
+    // Two endpoints: the voice list, and speech. Speech streams MP3 bytes rather
+    // than JSON, so it is piped through untouched with the upstream content type.
+    // ElevenLabs answers auth failures with 400 and a typed detail, not 401, so the
+    // status alone cannot tell our bad key from the caller sending nonsense. Read the
+    // detail: anything authentication-shaped is our fault and must not leak upstream wording.
+    async function elevenFault(r) {
+      let detail = null;
+      try { detail = (await r.json())?.detail || null; } catch { /* no body */ }
+      const type = String(detail?.type || detail?.status || "");
+      const ours = r.status === 401 || /authentication|api_key|invalid_api_key|quota|unusual_activity/i.test(type);
+      // A key can be perfectly valid and still refused, because ElevenLabs scopes
+      // keys per operation and a new key can be created with none of them on.
+      // "Rejected" sends you to make another key, which fails identically; the
+      // actual repair is editing this key's permissions. Name the missing one.
+      const perm = String(detail?.message || "").match(/missing the permission (\w+)/)?.[1];
+      const error = perm
+        ? `The server's ElevenLabs key is missing the "${perm}" permission — enable it on the key in the ElevenLabs dashboard.`
+        : "The server's ElevenLabs key was rejected.";
+      return { ours, type, error };
+    }
+    if (p === "/api/voices" && req.method === "GET") {
+      if (!ELEVEN_KEY) return send(res, 503, { error: "Studio voice is not configured on this server (set ELEVENLABS_API_KEY)." });
+      let r;
+      try { r = await fetch("https://api.elevenlabs.io/v1/voices", { headers: { "xi-api-key": ELEVEN_KEY }, signal: AbortSignal.timeout(8000) }); }
+      catch { return send(res, 502, { error: "Could not reach ElevenLabs." }); }
+      if (!r.ok) {
+        const { ours, error } = await elevenFault(r);
+        return send(res, ours ? 502 : r.status,
+          { error: ours ? error : `ElevenLabs HTTP ${r.status}` });
+      }
+      return send(res, 200, await r.json());
+    }
+    if (p === "/api/tts" && req.method === "POST") {
+      if (!ELEVEN_KEY) return send(res, 503, { error: "Studio voice is not configured on this server (set ELEVENLABS_API_KEY)." });
+      const rl = rateLimit(`tts:${clientIp(req)}`, ANON_TTS_PER_HOUR, 3600000);
+      if (!rl.ok) return send(res, 429, { error: `Rate limit reached (${rl.limit} per hour).` }, { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
+      const { text, voiceId } = await readBody(req);
+      const say = String(text || "").slice(0, 5000);   // characters are billed; cap the blast radius
+      if (!say.trim()) return send(res, 400, { error: "Pass { text, voiceId }." });
+      if (!/^[A-Za-z0-9]{1,40}$/.test(String(voiceId || ""))) return send(res, 400, { error: "Bad voiceId." });
+      let up;
+      try {
+        up = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128`,
+          { method: "POST", headers: { "xi-api-key": ELEVEN_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({ text: say, model_id: "eleven_flash_v2_5" }) });
+      } catch { return send(res, 502, { error: "Could not reach ElevenLabs." }); }
+      if (!up.ok) {
+        const { ours, error } = await elevenFault(up);
+        return send(res, ours ? 502 : up.status,
+          { error: ours ? error : `ElevenLabs HTTP ${up.status}` });
+      }
+      res.writeHead(200, { "Content-Type": up.headers.get("content-type") || "audio/mpeg",
+        "Cache-Control": "no-store", "Access-Control-Allow-Origin": APP_ORIGIN });
+      const rd = up.body.getReader();
+      req.on("close", () => { rd.cancel().catch(() => {}); });
+      try { for (;;) { const { value, done } = await rd.read(); if (done) break; res.write(Buffer.from(value)); } } catch { /* hung up */ }
+      return res.end();
+    }
+
+    // ---- TMDB (server-held key) ----
+    // Three fixed endpoints rather than a pass-through path parameter: an
+    // arbitrary-path proxy is an SSRF hole and a way to spend the key on
+    // whatever the caller fancies. Every input is validated before it is used.
+    if (p.startsWith("/api/tmdb/") && req.method === "GET") {
+      if (!TMDB_KEY) return send(res, 503, { error: "The streaming catalog is not configured on this server (set TMDB_API_KEY)." });
+      const rl = rateLimit(`tmdb:${clientIp(req)}`, ANON_QUOTE_PER_HOUR, 3600000);
+      if (!rl.ok) return send(res, 429, { error: `Rate limit reached (${rl.limit} per hour).` }, { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
+
+      const kind = String(url.searchParams.get("kind") || "");
+      if (kind !== "movie" && kind !== "tv") return send(res, 400, { error: "kind must be movie or tv." });
+      const num = (v) => /^[0-9]{1,12}$/.test(String(v || ""));
+      const base = "https://api.themoviedb.org/3";
+      const key = `api_key=${encodeURIComponent(TMDB_KEY)}&language=en-US`;
+      let upstream;
+      if (p === "/api/tmdb/discover") {
+        const provider = url.searchParams.get("provider"), region = String(url.searchParams.get("region") || "US");
+        if (!num(provider)) return send(res, 400, { error: "provider must be a TMDB provider id." });
+        if (!/^[A-Z]{2}$/.test(region)) return send(res, 400, { error: "region must be a 2-letter code." });
+        upstream = `${base}/discover/${kind}?${key}&with_watch_providers=${provider}&watch_region=${region}&sort_by=popularity.desc`;
+      } else if (p === "/api/tmdb/trending") {
+        upstream = `${base}/trending/${kind}/week?${key}`;
+      } else if (p === "/api/tmdb/videos") {
+        const id = url.searchParams.get("id");
+        if (!num(id)) return send(res, 400, { error: "id must be a TMDB id." });
+        upstream = `${base}/${kind}/${id}/videos?${key}`;
+      } else return send(res, 404, { error: "Unknown TMDB endpoint." });
+
+      let r;
+      try { r = await fetch(upstream, { signal: AbortSignal.timeout(8000) }); }
+      catch { return send(res, 502, { error: "Could not reach TMDB." }); }
+      if (!r.ok) {
+        const ours = r.status === 401 || r.status === 403;
+        return send(res, ours ? 502 : r.status, { error: ours ? "The server's TMDB key was rejected." : `TMDB HTTP ${r.status}` });
+      }
+      return send(res, 200, await r.json());
+    }
+
+    // ---- the rest of the Finnhub surface ----
+    // Each returns the same top-level shape Finnhub does, so the browser parses
+    // the response exactly as it did when it called the provider itself. These
+    // carry only public market data — the point is purely that the key stays here.
+    if ((p === "/api/symbol-search" || p === "/api/earnings" || p === "/api/market-news") && req.method === "GET") {
+      if (!FINNHUB_KEY) return send(res, 503, { error: "Market data is not configured on this server (set FINNHUB_API_KEY)." });
+      const rl = rateLimit(`fh:${clientIp(req)}`, ANON_QUOTE_PER_HOUR, 3600000);
+      if (!rl.ok) return send(res, 429,
+        { error: `Rate limit reached (${rl.limit} per hour).`, retryInSec: Math.ceil(rl.resetMs / 1000) },
+        { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
+
+      let upstream;
+      if (p === "/api/symbol-search") {
+        const q = String(url.searchParams.get("q") || "").trim().slice(0, 60);
+        if (!q) return send(res, 400, { error: "Pass ?q=company+name." });
+        upstream = `https://finnhub.io/api/v1/search?q=${encodeURIComponent(q)}&token=${FINNHUB_KEY}`;
+      } else if (p === "/api/earnings") {
+        const day = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
+        const from = String(url.searchParams.get("from") || ""), to = String(url.searchParams.get("to") || "");
+        if (!day.test(from) || !day.test(to)) return send(res, 400, { error: "Pass ?from=YYYY-MM-DD&to=YYYY-MM-DD." });
+        upstream = `https://finnhub.io/api/v1/calendar/earnings?from=${from}&to=${to}&token=${FINNHUB_KEY}`;
+      } else {
+        upstream = `https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`;
+      }
+
+      let r;
+      try { r = await fetch(upstream, { signal: AbortSignal.timeout(8000) }); }
+      catch { return send(res, 502, { error: "Could not reach Finnhub." }); }
+      if (!r.ok) {
+        // 401/403 is our key, not the caller's request.
+        const ours = r.status === 401 || r.status === 403;
+        return send(res, ours ? 502 : r.status,
+          { error: ours ? "The server's Finnhub key was rejected." : `Finnhub HTTP ${r.status}` });
+      }
+      const data = await r.json();
+      // Trim to what the desk actually renders; an unbounded wire feed is megabytes.
+      if (p === "/api/market-news") return send(res, 200, (Array.isArray(data) ? data : []).slice(0, 40));
+      if (p === "/api/symbol-search") return send(res, 200, { result: (data?.result || []).slice(0, 30) });
+      return send(res, 200, { earningsCalendar: (data?.earningsCalendar || []).slice(0, 400) });
+    }
+
+    if (p === "/api/news" && req.method === "GET") {
+      if (!FINNHUB_KEY) return send(res, 503, { error: "News is not configured on the server (set FINNHUB_API_KEY)." });
+      const symbol = String(url.searchParams.get("symbol") || "").trim().toUpperCase();
+      if (!/^[A-Z.-]{1,10}$/.test(symbol)) return send(res, 400, { error: "Pass ?symbol=TICKER." });
+      const fmtD = (t) => new Date(t).toISOString().slice(0, 10);
+      const from = fmtD(Date.now() - 7 * 86400000), to = fmtD(Date.now());
+      const r = await fetch(`https://finnhub.io/api/v1/company-news?symbol=${encodeURIComponent(symbol)}&from=${from}&to=${to}&token=${FINNHUB_KEY}`, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) return send(res, 502, { error: `Finnhub HTTP ${r.status}` });
+      const arr = await r.json();
+      const seen = new Set();
+      const news = (Array.isArray(arr) ? arr : [])
+        .filter(n => n.headline && n.url && !seen.has(n.headline) && seen.add(n.headline))
+        .slice(0, 8)
+        .map(n => ({ title: n.headline, source: n.source || "wire", url: n.url }));
+      return send(res, 200, { symbol, news });
+    }
+
+    // ---- AI DESK (server-held OpenRouter key) ----
+    // Takes the same OpenAI-shaped body the client used to send upstream and
+    // streams the same SSE back, so the browser's parser is unchanged — the only
+    // difference is which side of the wire the key sits on.
+    if (p === "/api/ai/chat" && req.method === "POST") {
+      if (!OPENROUTER.key) return send(res, 503, { error: "The AI desk is not configured on this server (set OPENROUTER_API_KEY)." });
+      // Signed-in callers spend their plan's daily allowance. Anonymous ones are
+      // allowed too — the desk is usable in demo without an account — but behind a
+      // per-IP hourly cap, because an open proxy is a tap on someone else's credits.
+      const email = emailFromReq(req, url);
+      if (email) {
+        const quota = canUseAi(email);
+        if (!quota.allowed) return send(res, 429, { error: `Daily AI limit reached (${quota.used}/${quota.limit}).`, ...quota });
+      } else {
+        const rl = rateLimit(`ai:${clientIp(req)}`, ANON_AI_PER_HOUR, 3600000);
+        if (!rl.ok) return send(res, 429,
+          { error: `Rate limit reached (${rl.limit} per hour). Sign in for a higher allowance.`, retryInSec: Math.ceil(rl.resetMs / 1000) },
+          { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
+      }
+
+      const { model, messages } = await readBody(req);
+      if (!Array.isArray(messages) || messages.length === 0) return send(res, 400, { error: "Pass { model, messages }." });
+      const promptChars = messages.reduce((n, m) => n + String(m?.content || "").length, 0);
+      const useModel = String(model || OPENROUTER.model);
+
+      let upstream;
+      try {
+        upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${OPENROUTER.key}`,
+            "Content-Type": "application/json",
+            // Attribution headers, not secrets — OpenRouter uses them for rankings.
+            "HTTP-Referer": APP_ORIGIN,
+            "X-Title": "Vantage",
+          },
+          body: JSON.stringify({ model: useModel, stream: true, messages }),
+        });
+      } catch (e) {
+        if (email) recordAiRun(email, promptChars, "error", { agent: "desk-chat", reason: "unreachable" }, false);
+        return send(res, 502, { error: "Could not reach OpenRouter." });
+      }
+
+      if (!upstream.ok) {
+        // Surface the provider's own reason, but never the key or our headers.
+        let detail = "";
+        try { const j = await upstream.json(); detail = j?.error?.message || (typeof j?.error === "string" ? j.error : "") || ""; } catch { /* no body */ }
+        if (email) recordAiRun(email, promptChars, "error", { agent: "desk-chat", status: upstream.status }, false);
+        // A 401 upstream is OUR misconfiguration, not the caller's — don't ask them to re-auth.
+        return send(res, upstream.status === 401 ? 502 : upstream.status,
+          { error: upstream.status === 401 ? "The server's OpenRouter key was rejected." : (detail || `OpenRouter HTTP ${upstream.status}`) });
+      }
+
+      if (email) recordAiRun(email, promptChars, "ok", { agent: "desk-chat", model: useModel });
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",           // stop proxies buffering the stream into one lump
+        "Access-Control-Allow-Origin": APP_ORIGIN,
+      });
+      const reader = upstream.body.getReader();
+      // If the browser aborts mid-answer, stop pulling tokens we'd still be billed for.
+      req.on("close", () => { reader.cancel().catch(() => {}); });
+      try {
+        for (;;) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          res.write(Buffer.from(value));
+        }
+      } catch { /* client hung up */ }
+      return res.end();
+    }
+
+    // ---- YOUTUBE (server-held Data API key) ----
+    // Search costs 100 quota units against a 10k/day project budget, so this is
+    // rate-limited per IP even though the endpoint itself is read-only.
+    if (p === "/api/youtube/search" && req.method === "GET") {
+      if (!YOUTUBE_KEY) return send(res, 503, { error: "Video search is not configured on this server (set YOUTUBE_API_KEY)." });
+      const rl = rateLimit(`yt:${clientIp(req)}`, ANON_YT_PER_HOUR, 3600000);
+      if (!rl.ok) return send(res, 429,
+        { error: `Rate limit reached (${rl.limit} per hour).`, retryInSec: Math.ceil(rl.resetMs / 1000) },
+        { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
+
+      const q = String(url.searchParams.get("q") || "").trim().slice(0, 120);
+      if (!q) return send(res, 400, { error: "Pass ?q=search+terms." });
+      const max = Math.min(10, Math.max(1, Number(url.searchParams.get("max")) || 3));
+      const api = new URL("https://www.googleapis.com/youtube/v3/search");
+      api.search = new URLSearchParams({ part: "snippet", type: "video", videoEmbeddable: "true", maxResults: String(max), q, key: YOUTUBE_KEY });
+
+      let r;
+      try { r = await fetch(api, { signal: AbortSignal.timeout(8000) }); }
+      catch { return send(res, 502, { error: "Could not reach YouTube." }); }
+      if (!r.ok) {
+        let detail = "";
+        try { detail = (await r.json())?.error?.message || ""; } catch { /* no body */ }
+        // Google reports a bad key as 400, not 403, so status alone misattributes
+        // it to the caller. Anything naming the key is ours to fix, not theirs.
+        const ours = r.status === 403 || /api key|quota/i.test(detail);
+        return send(res, ours ? 502 : r.status,
+          { error: ours ? "The server's YouTube key was rejected or is out of quota." : (detail || `YouTube HTTP ${r.status}`) });
+      }
+      const data = await r.json();
+      const decode = (s) => String(s || "").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+      const videos = (data.items || []).filter(it => it.id?.videoId).map(it => ({
+        id: it.id.videoId,
+        title: decode(it.snippet?.title) || q,
+        channel: it.snippet?.channelTitle || "YouTube",
+        url: `https://www.youtube.com/watch?v=${it.id.videoId}`,
+      }));
+      return send(res, 200, { q, videos });
     }
 
     // ---- DATAHUB (read-only catalog context) ----
@@ -568,6 +971,14 @@ const server = http.createServer(async (req, res) => {
     if (p === "/api/status") {
       const email = emailFromReq(req, url);
       const status = {};
+      status.ai = { configured: !!OPENROUTER.key, model: OPENROUTER.model };
+      status.youtube = { configured: !!YOUTUBE_KEY };
+      status.quotes = { configured: !!FINNHUB_KEY };
+      status.tmdb = { configured: !!TMDB_KEY };
+      status.gemini = { configured: !!GEMINI_KEY };
+      status.eleven = { configured: !!ELEVEN_KEY };
+      status.hosted = { configured: !!(VERTEX.project && VERTEX.serviceAccount && VERTEX.privateKey) };
+      status.music = { playlist: SPOTIFY_PLAYLIST, configured: !!SPOTIFY_PLAYLIST };
       for (const k of ["zoom", "google"]) status[k] = { configured: !!(CFG[k].id && CFG[k].secret), connected: !!(email && TOKENS[email]?.[k]?.access_token) };
       return send(res, 200, status);
     }
@@ -637,5 +1048,20 @@ server.listen(PORT, () => {
   console.log(`Vantage backend → ${PUBLIC_ORIGIN}`);
   console.log(`  auth: on · billing: ${STRIPE.secret ? "configured" : "simulated (no STRIPE_SECRET_KEY)"}`);
   console.log(`  zoom: ${on("zoom")} · google: ${on("google")}`);
-  console.log(`  redirect URIs to register: ${CFG.zoom.redirect} , ${CFG.google.redirect}`);
+  // An ElevenLabs SECRET starts "sk_". The dashboard also shows a 64-char hex
+  // key ID beside it, and the two are easy to mix up — the API rejects the ID
+  // with a 401, which surfaces three layers away as a failed voice. Say it here,
+  // at boot, where it costs nothing and is unmissable.
+  if (ELEVEN_KEY && !ELEVEN_KEY.startsWith("sk_")) {
+    console.log(`  ⚠ ELEVENLABS_API_KEY does not start with "sk_" — that looks like a key ID, not the secret. Studio voice will 401.`);
+  }
+  // Every URI the provider must have registered, named by what it is for. The two
+  // sign-in callbacks used to be missing from this list — and the Google one is the
+  // easiest of the four to overlook, because it belongs to the SAME OAuth client as
+  // the meetings callback and is simply a second URI on it.
+  console.log(`  redirect URIs to register:`);
+  console.log(`    zoom meetings    ${CFG.zoom.redirect}`);
+  console.log(`    google meetings  ${CFG.google.redirect}`);
+  console.log(`    google sign-in   ${OAUTH.google.redirect}`);
+  console.log(`    yahoo sign-in    ${OAUTH.yahoo.redirect}`);
 });
