@@ -135,8 +135,16 @@ function Bubble({ msg, onRetry, onSpeak, speaking, anchorName }) {
       <div
         style={{
           background: isAction ? "transparent" : C.surface,
-          border: `1px solid ${msg.error ? C.dangerEdge : isAction ? "transparent" : C.edge}`,
-          borderLeft: isAction ? `2px solid ${C.edgeStrong}` : undefined,
+          // Four longhands, not `border` plus a `borderLeft` override. React
+          // warns about mixing the two for good reason: when a turn switches
+          // between action and answer, the shorthand and the longhand are
+          // applied in an order React does not guarantee, so the left edge can
+          // keep a width from the previous render.
+          borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 1,
+          borderLeftWidth: isAction ? 2 : 1,
+          borderStyle: "solid",
+          borderColor: msg.error ? C.dangerEdge : isAction ? "transparent" : C.edge,
+          borderLeftColor: isAction ? C.edgeStrong : msg.error ? C.dangerEdge : C.edge,
           borderRadius: isAction ? 0 : R.lg,
           padding: isAction ? "4px 0 4px 14px" : "22px 26px",
           color: msg.error ? C.down : isAction ? C.muted : C.text,

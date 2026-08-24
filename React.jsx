@@ -431,6 +431,12 @@ const I18N = {
     "positions and P&L": "posiciones y resultado",
     "the full {sym} chart": "el gráfico completo de {sym}",
     "your events and market earnings": "tus eventos y los resultados del mercado",
+    // --- settings: the plain-language sidebar ---
+    "Runs on this device": "Funciona en este dispositivo",
+    "Secured on the server": "Protegido en el servidor",
+    // --- settings: the plain-language sidebar ---
+    "Terms": "Términos",
+    "Privacy": "Privacidad",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -751,6 +757,12 @@ const I18N = {
     "positions and P&L": "positions et résultat",
     "the full {sym} chart": "le graphique complet de {sym}",
     "your events and market earnings": "vos événements et les résultats du marché",
+    // --- settings: the plain-language sidebar ---
+    "Runs on this device": "Fonctionne sur cet appareil",
+    "Secured on the server": "Sécurisé sur le serveur",
+    // --- settings: the plain-language sidebar ---
+    "Terms": "Conditions",
+    "Privacy": "Confidentialité",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -1071,6 +1083,12 @@ const I18N = {
     "positions and P&L": "Positionen und Ergebnis",
     "the full {sym} chart": "das vollständige {sym}-Chart",
     "your events and market earnings": "deine Termine und die Quartalszahlen",
+    // --- settings: the plain-language sidebar ---
+    "Runs on this device": "Läuft auf diesem Gerät",
+    "Secured on the server": "Auf dem Server gesichert",
+    // --- settings: the plain-language sidebar ---
+    "Terms": "Bedingungen",
+    "Privacy": "Datenschutz",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1390,6 +1408,12 @@ const I18N = {
     "positions and P&L": "posições e resultado",
     "the full {sym} chart": "o gráfico completo de {sym}",
     "your events and market earnings": "os teus eventos e os resultados do mercado",
+    // --- settings: the plain-language sidebar ---
+    "Runs on this device": "Funciona neste dispositivo",
+    "Secured on the server": "Protegido no servidor",
+    // --- settings: the plain-language sidebar ---
+    "Terms": "Termos",
+    "Privacy": "Privacidade",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -1709,6 +1733,12 @@ const I18N = {
     "positions and P&L": "posizioni e risultato",
     "the full {sym} chart": "il grafico completo di {sym}",
     "your events and market earnings": "i tuoi eventi e le trimestrali",
+    // --- settings: the plain-language sidebar ---
+    "Runs on this device": "Funziona su questo dispositivo",
+    "Secured on the server": "Protetto sul server",
+    // --- settings: the plain-language sidebar ---
+    "Terms": "Termini",
+    "Privacy": "Privacy",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -4599,7 +4629,7 @@ function AuthPasswordField({ id, value, onChange, autoComplete, placeholder, inv
           aria-label={shown ? "Hide password" : "Show password"}
           style={{
             position: "absolute", right: 5, top: "50%", transform: "translateY(-50%)",
-            ...button("quiet", "sm"), padding: "5px 9px", color: C.accentText, fontWeight: 510,
+            ...button("quiet", "sm"), padding: "5px 9px", color: C.accentText, fontWeight: 600,
           }}>
           {shown ? "Hide" : "Show"}
         </button>
@@ -4644,7 +4674,26 @@ function PasswordStrength({ result }) {
 // ============================================================
 function AuthScreen({ onAuthed }) {
   const { t } = useI18n();
-  const [step, setStep] = useState("welcome");     // welcome | login | signup | plan | legal
+  // The homepage records which button sent you here. "Start free" should land
+  // on the signup form and "Sign in" on the login form — arriving instead at a
+  // welcome screen that asks you to pick between them again is a dead click
+  // between pressing a button and getting what it promised.
+  const [step, setStep] = useState(() => {
+    try {
+      const intent = window.sessionStorage.getItem("vantage-auth-intent");
+      if (intent === "up") return "signup";
+      if (intent === "in") return "login";
+    } catch { /* private mode */ }
+    return "welcome";
+  });     // welcome | login | signup | plan | legal
+  // Clearing the intent is a SIDE EFFECT, so it cannot live in the initializer
+  // above. StrictMode invokes an initializer twice in development: a version
+  // that consumed the key on the first run returned "welcome" on the second,
+  // and React keeps the second — so the routing silently did nothing, in dev
+  // only, which is the worst place for a bug to hide.
+  useEffect(() => {
+    try { window.sessionStorage.removeItem("vantage-auth-intent"); } catch { /* private mode */ }
+  }, []);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -4780,10 +4829,16 @@ function AuthScreen({ onAuthed }) {
           <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
             <VantageMark size={34} />
             <div>
-              <div className="v-grad-text" style={{ fontFamily: DISPLAY, fontWeight: 510, fontSize: 20, letterSpacing: "-0.025em" }}>VANTAGE</div>
-              <div style={{ ...TYPE.eyebrowSm, color: C.faint, marginTop: 3, display: "flex", alignItems: "center", gap: 5 }}>
-                <span aria-hidden="true" style={{ width: 5, height: 5, borderRadius: "50%", background: useBackend ? C.up : C.faint }} />
-                {useBackend ? "secured by server" : "runs on this device"}
+              {/* "Vantage", the way the homepage and the app header both set it.
+                  This said VANTAGE in uppercase gradient text at weight 510 —
+                  a wordmark from the previous system, on a screen you reach by
+                  pressing a button on the new one. */}
+              <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20, letterSpacing: "-0.018em", color: C.text }}>Vantage</div>
+              {/* Sentence-case sans, not a mono eyebrow: this is a sentence
+                  about where your account lives, not a data label. */}
+              <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, marginTop: 3, display: "flex", alignItems: "center", gap: 6 }}>
+                <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: useBackend ? C.up : C.faint }} />
+                {useBackend ? t("Secured on the server") : t("Runs on this device")}
               </div>
             </div>
           </div>
@@ -4805,7 +4860,8 @@ function AuthScreen({ onAuthed }) {
             </div>
             {socialBlock}
             <button style={primaryBtn()} onClick={() => go("signup")}>{t("Create account")}</button>
-            <button style={{ ...primaryBtn(), background: "transparent", color: C.text, border: `1px solid ${C.edge}` }} onClick={() => go("login")}>{t("Log in")}</button>
+            {/* A real ghost, not a primary with its fill painted out. */}
+            <button style={{ ...button("ghost", "lg", { full: true }), color: C.text }} onClick={() => go("login")}>{t("Log in")}</button>
           </>)}
 
           {/* ---------- LOG IN ---------- */}
@@ -4821,7 +4877,7 @@ function AuthScreen({ onAuthed }) {
               {socialBlock}
 
               <AuthField id="login-email" label="Email" error={emailErr}>
-                <input id="login-email" style={{ ...inputStyle, ...(emailErr ? { borderColor: C.danger } : null) }}
+                <input id="login-email" style={{ ...inputStyle, border: `1px solid ${emailErr ? C.danger : C.edgeStrong}` }}
                   type="email" inputMode="email" placeholder="you@example.com" value={email}
                   autoComplete="username" aria-invalid={emailErr ? "true" : undefined}
                   onChange={e => setEmail(e.target.value)} onBlur={() => touch("email")} />
@@ -4873,7 +4929,7 @@ function AuthScreen({ onAuthed }) {
               </AuthField>
 
               <AuthField id="signup-email" label="Email" error={emailErr}>
-                <input id="signup-email" style={{ ...inputStyle, ...(emailErr ? { borderColor: C.danger } : null) }}
+                <input id="signup-email" style={{ ...inputStyle, border: `1px solid ${emailErr ? C.danger : C.edgeStrong}` }}
                   type="email" inputMode="email" placeholder="you@example.com" value={email}
                   autoComplete="username" aria-invalid={emailErr ? "true" : undefined}
                   onChange={e => setEmail(e.target.value)} onBlur={() => touch("email")} />
@@ -4917,12 +4973,12 @@ function AuthScreen({ onAuthed }) {
                 const on = plan === p.id;
                 return (
                   <button key={p.id} onClick={() => setPlan(p.id)} style={{ textAlign: "left", cursor: "pointer", background: on ? "#161718" : "transparent", border: `2px solid ${on ? C.accent : C.panelEdge}`, borderRadius: R.lg, padding: 16, display: "flex", flexDirection: "column", gap: 8, position: "relative" }}>
-                    {p.featured && <span style={{ position: "absolute", top: -10, right: 12, background: C.textStrong, color: C.bg, ...TYPE.eyebrowSm, fontWeight: 510, padding: "3px 8px", borderRadius: R.pill }}>POPULAR</span>}
-                    <div style={{ ...TYPE.subhead, fontSize: 15, fontWeight: 510 }}>{p.label}</div>
+                    {p.featured && <span style={{ position: "absolute", top: -10, right: 12, background: C.accent, color: C.textOnAccent, fontFamily: MONO, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", padding: "3px 10px", borderRadius: R.pill }}>{t("POPULAR")}</span>}
+                    <div style={{ ...TYPE.subhead, fontSize: 15, fontWeight: 700 }}>{p.label}</div>
                     {/* The price is the one number here, so it keeps the numeric face
                         and the cadence rides alongside it in prose. */}
                     <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                      <span style={{ ...TYPE.numLg, fontSize: 24, fontWeight: 510 }}>{p.price}</span>
+                      <span style={{ ...TYPE.numLg, fontSize: 24, fontWeight: 700 }}>{p.price}</span>
                       <span style={{ ...TYPE.caption, color: C.faint }}>{p.cadence}</span>
                     </div>
                     <div style={{ ...TYPE.caption, color: C.muted }}>{p.tagline}</div>
@@ -4941,9 +4997,15 @@ function AuthScreen({ onAuthed }) {
           {/* ---------- LEGAL AGREEMENT ---------- */}
           {step === "legal" && (<>
             <div style={{ ...TYPE.title, fontSize: 17 }}>Before you start</div>
-            <div style={{ display: "flex", gap: 6 }}>
-              {["terms", "privacy"].map(t => (
-                <button key={t} onClick={() => setLegalTab(t)} style={{ flex: 1, padding: "7px 0", background: legalTab === t ? C.panelEdge : "transparent", border: `1px solid ${C.panelEdge}`, borderRadius: 7, color: legalTab === t ? C.text : C.faint, fontFamily: SANS, fontSize: 11, fontWeight: 510, cursor: "pointer", textTransform: "uppercase", letterSpacing: 0.5 }}>{t === "terms" ? "Terms" : "Privacy"}</button>
+            {/* The same segmented control the rest of the product uses for
+                "one of a few", instead of two uppercase pills of its own. */}
+            <div role="radiogroup" aria-label="Legal document" style={{ ...segmentTrack(), display: "flex" }}>
+              {/* NB: named `tab`, never `t` — a local `t` here shadows the i18n
+                  function for the whole callback, so any translated string
+                  inside would throw. Same trap as the `R` shadowing noted in
+                  the games panel. */}
+              {["terms", "privacy"].map(tab => (
+                <button key={tab} role="radio" aria-checked={legalTab === tab} onClick={() => setLegalTab(tab)} style={{ ...segmentItem(legalTab === tab), flex: 1 }}>{tab === "terms" ? t("Terms") : t("Privacy")}</button>
               ))}
             </div>
             <div style={{ maxHeight: 200, overflowY: "auto", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
