@@ -187,7 +187,7 @@ a:hover { text-decoration: underline; }
    minmax(0, …) lets the track shrink and the content scroll inside itself. */
 .v-dash {
   display: grid;
-  grid-template-columns: 230px minmax(0, 1fr) 240px;
+  grid-template-columns: 250px minmax(0, 1fr) 268px;
   gap: 14px;
   padding: 14px;
   align-items: start;
@@ -197,7 +197,7 @@ a:hover { text-decoration: underline; }
 
 /* Tablet: the right rail moves under the main column; the watchlist stays beside it. */
 @media (max-width: 1180px) {
-  .v-dash { grid-template-columns: 210px minmax(0, 1fr); }
+  .v-dash { grid-template-columns: 230px minmax(0, 1fr); }
   .v-dash-right { grid-column: 1 / -1; }
 }
 

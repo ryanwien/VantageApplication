@@ -9,7 +9,7 @@ import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage,
 import { buildPnF, pnfTargets, visibleWindow, INTRADAY_BOX_PCT } from "./src/pnf/pnf.js";
 import { detectPattern } from "./src/pnf/patterns.js";
 import { CHESS_GLYPH, chessInit, legalMoves, chessApply, gameStatus, inCheck, chessAIMove } from "./src/chess/chess.js";
-import { C, GRAD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, button, panel, field as fieldRecipe, chip } from "./src/ui/theme.js";
+import { C, GRAD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, button, panel, panelHead, panelNote, field as fieldRecipe, chip } from "./src/ui/theme.js";
 import { passwordCheck, PW_MIN } from "./src/auth/password.js";
 import Sparkline from "./src/ui/Sparkline.jsx";
 import RichText from "./src/ui/RichText.jsx";
@@ -122,8 +122,27 @@ const I18N = {
     "DataHub's schema for {name} has no column named \"{col}\".": "El esquema de {name} en DataHub no tiene ninguna columna llamada \"{col}\".",
     "DataHub lookup failed: {reason}": "La consulta a DataHub falló: {reason}",
     "ALLOCATION BY VALUE": "ASIGNACIÓN POR VALOR",
-    "DAY RANGE": "RANGO DEL DÍA",
     "MARKET CLOSED": "MERCADO CERRADO",
+    "Symbol": "Símbolo",
+    "Shares": "Acciones",
+    "Cost / share": "Coste / acción",
+    "Add position": "Añadir posición",
+    "on this device": "en este dispositivo",
+    "Watchlist": "Lista de seguimiento",
+    "Top movers": "Mayores movimientos",
+    "by |Δ%|": "por |Δ%|",
+    "Line": "Línea",
+    "High / Low": "Máx. / Mín.",
+    "Compare": "Comparar",
+    "Full chart": "Gráfico completo",
+    "Open": "Apertura",
+    "High": "Máximo",
+    "Low": "Mínimo",
+    "Prev close": "Cierre ant.",
+    "Change": "Variación",
+    "Day range": "Rango del día",
+    "Live · quotes via Finnhub": "En vivo · cotizaciones vía Finnhub",
+    "Demo · simulated session": "Demo · sesión simulada",
     "ask the desk about \"{q}\"": "preguntar a la mesa sobre \"{q}\"",
     "{env} set": "plató {env}",
     "Data": "Datos",
@@ -151,7 +170,7 @@ const I18N = {
     "Voice & anchor settings": "Ajustes de voz y presentador", "SET": "SET", "stop reading": "detener lectura", "free": "gratis",
     "ASK ALL": "PREGUNTAR A TODOS",
  "Summarize {sym} today": "Resume {sym} hoy", "What's moving today?": "¿Qué se mueve hoy?", "Take me to Robinhood": "Llévame a Robinhood", "What's on Netflix?": "¿Qué hay en Netflix?", "Write a report → PPT": "Escribe un informe → PPT",
-    "WATCHLIST": "LISTA DE SEGUIMIENTO", "TOP MOVERS": "MAYORES MOVIMIENTOS", "full chart": "gráfico completo",
+    "WATCHLIST": "LISTA DE SEGUIMIENTO","full chart": "gráfico completo",
     "LINE": "LÍNEA", "not enough movement for a P&F column yet": "aún no hay suficiente movimiento para una columna P&F", "3-box reversal · this session": "reversión de 3 casillas · esta sesión",
     "tracking {price} · box {box} · session range {lo}–{hi}": "siguiendo {price} · casilla {box} · rango de la sesión {lo}–{hi}", "first column at ≥ {up} or < {down}": "primera columna con ≥ {up} o < {down}", "column 2 needs a reversal < {down}": "la columna 2 necesita una reversión < {down}", "column 2 needs a reversal ≥ {up}": "la columna 2 necesita una reversión ≥ {up}",
     "Language": "Idioma",
@@ -179,7 +198,6 @@ const I18N = {
     "Search": "Buscar",
     "The AI broadcast desk for the markets.": "La mesa de retransmisión con IA para los mercados.",
     "Create account": "Crear cuenta", "Log in": "Iniciar sesión",
-    "ranked by |Δ%| across your watchlist": "ordenado por |Δ%| en tu lista de seguimiento",
     'Ask about {sym} — or tap a suggestion below': 'Pregunta sobre {sym} — o toca una sugerencia',
     // settings tabs + guided tour
     "ACCOUNT": "CUENTA", "START": "INICIO", "DATA": "DATOS", "VOICE": "VOZ", "MEET": "REUNIÓN",
@@ -227,7 +245,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANELES", "ticker tape": "cinta de cotizaciones", "watchlist": "lista de seguimiento", "top movers": "mayores movimientos", "news & video": "noticias y vídeo", "calendar": "calendario", "portfolio": "cartera",
     "in-app alerts": "alertas en la aplicación", "price triggers": "activadores de precio", "breaking news": "última hora",
-    "P&F SIGNALS": "SEÑALES P&F", "P&F signals": "señales P&F", "P&F pattern alerts": "alertas de patrones P&F",
+    "P&F SIGNALS": "SEÑALES P&F", "P&F signals": "Señales P&F", "P&F pattern alerts": "alertas de patrones P&F",
     "color-blind mode (blue/orange + ▲▼)": "modo para daltónicos (azul/naranja + ▲▼)",
     "privacy mode — blur balances": "modo privacidad — difuminar saldos",
     "hidden": "oculto",
@@ -279,8 +297,27 @@ const I18N = {
     "DataHub's schema for {name} has no column named \"{col}\".": "Le schéma de {name} dans DataHub ne contient aucune colonne nommée \"{col}\".",
     "DataHub lookup failed: {reason}": "Échec de la requête DataHub : {reason}",
     "ALLOCATION BY VALUE": "RÉPARTITION PAR VALEUR",
-    "DAY RANGE": "AMPLITUDE DU JOUR",
     "MARKET CLOSED": "MARCHÉ FERMÉ",
+    "Symbol": "Symbole",
+    "Shares": "Actions",
+    "Cost / share": "Coût / action",
+    "Add position": "Ajouter une position",
+    "on this device": "sur cet appareil",
+    "Watchlist": "Liste de suivi",
+    "Top movers": "Plus fortes variations",
+    "by |Δ%|": "par |Δ%|",
+    "Line": "Ligne",
+    "High / Low": "Haut / Bas",
+    "Compare": "Comparer",
+    "Full chart": "Graphique complet",
+    "Open": "Ouverture",
+    "High": "Haut",
+    "Low": "Bas",
+    "Prev close": "Clôture préc.",
+    "Change": "Variation",
+    "Day range": "Amplitude du jour",
+    "Live · quotes via Finnhub": "En direct · cours via Finnhub",
+    "Demo · simulated session": "Démo · séance simulée",
     "ask the desk about \"{q}\"": "demander au plateau à propos de \"{q}\"",
     "{env} set": "plateau {env}",
     "Data": "Données",
@@ -308,7 +345,7 @@ const I18N = {
     "Voice & anchor settings": "Réglages voix et présentateur", "SET": "DÉCOR", "stop reading": "arrêter la lecture", "free": "gratuites",
     "ASK ALL": "TOUT DEMANDER",
  "Summarize {sym} today": "Résumez {sym} aujourd'hui", "What's moving today?": "Qu'est-ce qui bouge aujourd'hui ?", "Take me to Robinhood": "Emmène-moi sur Robinhood", "What's on Netflix?": "Qu'y a-t-il sur Netflix ?", "Write a report → PPT": "Rédiger un rapport → PPT",
-    "WATCHLIST": "LISTE DE SUIVI", "TOP MOVERS": "PLUS FORTES VARIATIONS", "full chart": "graphique complet",
+    "WATCHLIST": "LISTE DE SUIVI","full chart": "graphique complet",
     "LINE": "LIGNE", "not enough movement for a P&F column yet": "pas encore assez de mouvement pour une colonne P&F", "3-box reversal · this session": "retournement de 3 cases · cette séance",
     "tracking {price} · box {box} · session range {lo}–{hi}": "suivi {price} · case {box} · amplitude de la séance {lo}–{hi}", "first column at ≥ {up} or < {down}": "première colonne à ≥ {up} ou < {down}", "column 2 needs a reversal < {down}": "la colonne 2 exige un retournement < {down}", "column 2 needs a reversal ≥ {up}": "la colonne 2 exige un retournement ≥ {up}",
     "Language": "Langue",
@@ -336,7 +373,6 @@ const I18N = {
     "Search": "Rechercher",
     "The AI broadcast desk for the markets.": "Le plateau de diffusion IA pour les marchés.",
     "Create account": "Créer un compte", "Log in": "Se connecter",
-    "ranked by |Δ%| across your watchlist": "classé par |Δ%| dans votre liste de suivi",
     'Ask about {sym} — or tap a suggestion below': 'Posez une question sur {sym} — ou touchez une suggestion',
     // settings tabs + guided tour
     "ACCOUNT": "COMPTE", "START": "DÉMARRER", "DATA": "DONNÉES", "VOICE": "VOIX", "MEET": "RÉUNION",
@@ -384,7 +420,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANNEAUX", "ticker tape": "bandeau de cotation", "watchlist": "liste de suivi", "top movers": "plus fortes variations", "news & video": "actualités et vidéo", "calendar": "calendrier", "portfolio": "portefeuille",
     "in-app alerts": "alertes dans l'application", "price triggers": "seuils de prix", "breaking news": "dernière minute",
-    "P&F SIGNALS": "SIGNAUX P&F", "P&F signals": "signaux P&F", "P&F pattern alerts": "alertes de figures P&F",
+    "P&F SIGNALS": "SIGNAUX P&F", "P&F signals": "Signaux P&F", "P&F pattern alerts": "alertes de figures P&F",
     "color-blind mode (blue/orange + ▲▼)": "mode daltonien (bleu/orange + ▲▼)",
     "privacy mode — blur balances": "mode privé — flouter les soldes",
     "hidden": "masqué",
@@ -436,8 +472,27 @@ const I18N = {
     "DataHub's schema for {name} has no column named \"{col}\".": "Das Schema von {name} in DataHub hat keine Spalte namens \"{col}\".",
     "DataHub lookup failed: {reason}": "DataHub-Abfrage fehlgeschlagen: {reason}",
     "ALLOCATION BY VALUE": "AUFTEILUNG NACH WERT",
-    "DAY RANGE": "TAGESSPANNE",
     "MARKET CLOSED": "MARKT GESCHLOSSEN",
+    "Symbol": "Symbol",
+    "Shares": "Anteile",
+    "Cost / share": "Kosten / Anteil",
+    "Add position": "Position hinzufügen",
+    "on this device": "auf diesem Gerät",
+    "Watchlist": "Beobachtungsliste",
+    "Top movers": "Top-Bewegungen",
+    "by |Δ%|": "nach |Δ%|",
+    "Line": "Linie",
+    "High / Low": "Hoch / Tief",
+    "Compare": "Vergleichen",
+    "Full chart": "Vollbild-Chart",
+    "Open": "Eröffnung",
+    "High": "Hoch",
+    "Low": "Tief",
+    "Prev close": "Vortagesschluss",
+    "Change": "Veränderung",
+    "Day range": "Tagesspanne",
+    "Live · quotes via Finnhub": "Live · Kurse über Finnhub",
+    "Demo · simulated session": "Demo · simulierte Sitzung",
     "ask the desk about \"{q}\"": "das Pult zu \"{q}\" fragen",
     "{env} set": "Set {env}",
     "Data": "Daten",
@@ -465,7 +520,7 @@ const I18N = {
     "Voice & anchor settings": "Stimme & Moderator-Einstellungen", "SET": "KULISSE", "stop reading": "Vorlesen stoppen", "free": "kostenlos",
     "ASK ALL": "ALLE FRAGEN",
  "Summarize {sym} today": "Fasse {sym} heute zusammen", "What's moving today?": "Was bewegt sich heute?", "Take me to Robinhood": "Bring mich zu Robinhood", "What's on Netflix?": "Was läuft auf Netflix?", "Write a report → PPT": "Bericht schreiben → PPT",
-    "WATCHLIST": "BEOBACHTUNGSLISTE", "TOP MOVERS": "GRÖSSTE BEWEGUNGEN", "full chart": "vollständiges Diagramm",
+    "WATCHLIST": "BEOBACHTUNGSLISTE","full chart": "vollständiges Diagramm",
     "LINE": "LINIE", "not enough movement for a P&F column yet": "noch nicht genug Bewegung für eine P&F-Spalte", "3-box reversal · this session": "3-Box-Umkehr · diese Sitzung",
     "tracking {price} · box {box} · session range {lo}–{hi}": "verfolge {price} · Box {box} · Sitzungsspanne {lo}–{hi}", "first column at ≥ {up} or < {down}": "erste Spalte ab ≥ {up} oder < {down}", "column 2 needs a reversal < {down}": "Spalte 2 braucht eine Umkehr < {down}", "column 2 needs a reversal ≥ {up}": "Spalte 2 braucht eine Umkehr ≥ {up}",
     "Language": "Sprache",
@@ -493,7 +548,6 @@ const I18N = {
     "Search": "Suchen",
     "The AI broadcast desk for the markets.": "Das KI-Broadcast-Pult für die Märkte.",
     "Create account": "Konto erstellen", "Log in": "Anmelden",
-    "ranked by |Δ%| across your watchlist": "sortiert nach |Δ%| in Ihrer Beobachtungsliste",
     'Ask about {sym} — or tap a suggestion below': 'Fragen zu {sym} — oder tippe unten auf einen Vorschlag',
     // settings tabs + guided tour
     "ACCOUNT": "KONTO", "START": "START", "DATA": "DATEN", "VOICE": "STIMME", "MEET": "MEETING",
@@ -593,8 +647,27 @@ const I18N = {
     "DataHub's schema for {name} has no column named \"{col}\".": "O esquema de {name} no DataHub não tem nenhuma coluna chamada \"{col}\".",
     "DataHub lookup failed: {reason}": "A consulta ao DataHub falhou: {reason}",
     "ALLOCATION BY VALUE": "ALOCAÇÃO POR VALOR",
-    "DAY RANGE": "INTERVALO DO DIA",
     "MARKET CLOSED": "MERCADO FECHADO",
+    "Symbol": "Símbolo",
+    "Shares": "Ações",
+    "Cost / share": "Custo / ação",
+    "Add position": "Adicionar posição",
+    "on this device": "neste dispositivo",
+    "Watchlist": "Lista de acompanhamento",
+    "Top movers": "Maiores variações",
+    "by |Δ%|": "por |Δ%|",
+    "Line": "Linha",
+    "High / Low": "Máx. / Mín.",
+    "Compare": "Comparar",
+    "Full chart": "Gráfico completo",
+    "Open": "Abertura",
+    "High": "Máximo",
+    "Low": "Mínimo",
+    "Prev close": "Fecho ant.",
+    "Change": "Variação",
+    "Day range": "Intervalo do dia",
+    "Live · quotes via Finnhub": "Ao vivo · cotações via Finnhub",
+    "Demo · simulated session": "Demo · sessão simulada",
     "ask the desk about \"{q}\"": "perguntar à mesa sobre \"{q}\"",
     "{env} set": "cenário {env}",
     "Data": "Dados",
@@ -622,7 +695,7 @@ const I18N = {
     "Voice & anchor settings": "Definições de voz e apresentador", "SET": "CENÁRIO", "stop reading": "parar leitura", "free": "grátis",
     "ASK ALL": "PERGUNTAR A TODOS",
  "Summarize {sym} today": "Resumir {sym} hoje", "What's moving today?": "O que está a mover-se hoje?", "Take me to Robinhood": "Leva-me ao Robinhood", "What's on Netflix?": "O que há na Netflix?", "Write a report → PPT": "Escrever um relatório → PPT",
-    "WATCHLIST": "LISTA DE ACOMPANHAMENTO", "TOP MOVERS": "MAIORES VARIAÇÕES", "full chart": "gráfico completo",
+    "WATCHLIST": "LISTA DE ACOMPANHAMENTO","full chart": "gráfico completo",
     "LINE": "LINHA", "not enough movement for a P&F column yet": "ainda não há movimento suficiente para uma coluna P&F", "3-box reversal · this session": "reversão de 3 caixas · esta sessão",
     "tracking {price} · box {box} · session range {lo}–{hi}": "acompanhando {price} · caixa {box} · intervalo da sessão {lo}–{hi}", "first column at ≥ {up} or < {down}": "primeira coluna com ≥ {up} ou < {down}", "column 2 needs a reversal < {down}": "a coluna 2 precisa de uma reversão < {down}", "column 2 needs a reversal ≥ {up}": "a coluna 2 precisa de uma reversão ≥ {up}",
     "Language": "Idioma",
@@ -650,7 +723,6 @@ const I18N = {
     "Search": "Pesquisar",
     "The AI broadcast desk for the markets.": "A mesa de transmissão com IA para os mercados.",
     "Create account": "Criar conta", "Log in": "Iniciar sessão",
-    "ranked by |Δ%| across your watchlist": "ordenado por |Δ%| na sua lista de acompanhamento",
     'Ask about {sym} — or tap a suggestion below': 'Pergunte sobre {sym} — ou toque numa sugestão',
     "ACCOUNT": "CONTA", "START": "INÍCIO", "DATA": "DADOS", "VOICE": "VOZ", "MEET": "REUNIÃO",
     "exit": "sair", "skip tour": "ignorar visita", "Back": "Voltar", "Next": "Seguinte", "Done": "Concluído",
@@ -697,7 +769,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PAINÉIS", "ticker tape": "fita de cotações", "watchlist": "lista de acompanhamento", "top movers": "maiores variações", "news & video": "notícias e vídeo", "calendar": "calendário", "portfolio": "carteira",
     "in-app alerts": "alertas no aplicativo", "price triggers": "gatilhos de preço", "breaking news": "última hora",
-    "P&F SIGNALS": "SINAIS P&F", "P&F signals": "sinais P&F", "P&F pattern alerts": "alertas de padrões P&F",
+    "P&F SIGNALS": "SINAIS P&F", "P&F signals": "Sinais P&F", "P&F pattern alerts": "alertas de padrões P&F",
     "color-blind mode (blue/orange + ▲▼)": "modo para daltônicos (azul/laranja + ▲▼)",
     "privacy mode — blur balances": "modo privacidade — desfocar saldos",
     "hidden": "oculto",
@@ -749,8 +821,27 @@ const I18N = {
     "DataHub's schema for {name} has no column named \"{col}\".": "Lo schema di {name} in DataHub non ha alcuna colonna chiamata \"{col}\".",
     "DataHub lookup failed: {reason}": "Ricerca su DataHub non riuscita: {reason}",
     "ALLOCATION BY VALUE": "RIPARTIZIONE PER VALORE",
-    "DAY RANGE": "RANGE DEL GIORNO",
     "MARKET CLOSED": "MERCATO CHIUSO",
+    "Symbol": "Simbolo",
+    "Shares": "Azioni",
+    "Cost / share": "Costo / azione",
+    "Add position": "Aggiungi posizione",
+    "on this device": "su questo dispositivo",
+    "Watchlist": "Lista di osservazione",
+    "Top movers": "Maggiori variazioni",
+    "by |Δ%|": "per |Δ%|",
+    "Line": "Linea",
+    "High / Low": "Max / Min",
+    "Compare": "Confronta",
+    "Full chart": "Grafico completo",
+    "Open": "Apertura",
+    "High": "Massimo",
+    "Low": "Minimo",
+    "Prev close": "Chius. prec.",
+    "Change": "Variazione",
+    "Day range": "Intervallo del giorno",
+    "Live · quotes via Finnhub": "In diretta · quotazioni via Finnhub",
+    "Demo · simulated session": "Demo · sessione simulata",
     "ask the desk about \"{q}\"": "chiedi alla postazione di \"{q}\"",
     "{env} set": "set {env}",
     "Data": "Dati",
@@ -778,7 +869,7 @@ const I18N = {
     "Voice & anchor settings": "Impostazioni voce e conduttore", "SET": "SET", "stop reading": "ferma lettura", "free": "gratis",
     "ASK ALL": "CHIEDI A TUTTI",
  "Summarize {sym} today": "Riassumi {sym} oggi", "What's moving today?": "Cosa si muove oggi?", "Take me to Robinhood": "Portami su Robinhood", "What's on Netflix?": "Cosa c'è su Netflix?", "Write a report → PPT": "Scrivi un report → PPT",
-    "WATCHLIST": "LISTA DI OSSERVAZIONE", "TOP MOVERS": "MAGGIORI VARIAZIONI", "full chart": "grafico completo",
+    "WATCHLIST": "LISTA DI OSSERVAZIONE","full chart": "grafico completo",
     "LINE": "LINEA", "not enough movement for a P&F column yet": "movimento ancora insufficiente per una colonna P&F", "3-box reversal · this session": "inversione a 3 caselle · questa sessione",
     "tracking {price} · box {box} · session range {lo}–{hi}": "seguendo {price} · casella {box} · intervallo della sessione {lo}–{hi}", "first column at ≥ {up} or < {down}": "prima colonna a ≥ {up} o < {down}", "column 2 needs a reversal < {down}": "la colonna 2 richiede un'inversione < {down}", "column 2 needs a reversal ≥ {up}": "la colonna 2 richiede un'inversione ≥ {up}",
     "Language": "Lingua",
@@ -806,7 +897,6 @@ const I18N = {
     "Search": "Cerca",
     "The AI broadcast desk for the markets.": "La postazione di trasmissione IA per i mercati.",
     "Create account": "Crea account", "Log in": "Accedi",
-    "ranked by |Δ%| across your watchlist": "ordinato per |Δ%| nella tua lista di osservazione",
     'Ask about {sym} — or tap a suggestion below': 'Chiedi di {sym} — o tocca un suggerimento',
     "ACCOUNT": "ACCOUNT", "START": "INIZIO", "DATA": "DATI", "VOICE": "VOCE", "MEET": "RIUNIONE",
     "exit": "esci", "skip tour": "salta il tour", "Back": "Indietro", "Next": "Avanti", "Done": "Fatto",
@@ -853,7 +943,7 @@ const I18N = {
     // DATA tab
     "PANELS": "PANNELLI", "ticker tape": "nastro delle quotazioni", "watchlist": "lista di osservazione", "top movers": "maggiori variazioni", "news & video": "notizie e video", "calendar": "calendario", "portfolio": "portafoglio",
     "in-app alerts": "avvisi nell'app", "price triggers": "soglie di prezzo", "breaking news": "ultima ora",
-    "P&F SIGNALS": "SEGNALI P&F", "P&F signals": "segnali P&F", "P&F pattern alerts": "avvisi di pattern P&F",
+    "P&F SIGNALS": "SEGNALI P&F", "P&F signals": "Segnali P&F", "P&F pattern alerts": "avvisi di pattern P&F",
     "color-blind mode (blue/orange + ▲▼)": "modalità per daltonici (blu/arancione + ▲▼)",
     "privacy mode — blur balances": "modalità privacy — sfoca i saldi",
     "hidden": "nascosto",
@@ -3362,7 +3452,7 @@ function AppCalendar({ extra = [] }) {
           <button onClick={() => shift(1)} aria-label="Next month" className="v-tap" style={navBtn}>›</button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
-          {CAL_DOW.map((d, i) => <div key={i} style={{ textAlign: "center", fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>{d}</div>)}
+          {CAL_DOW.map((d, i) => <div key={i} style={{ textAlign: "center", fontFamily: MONO, fontSize: 11.5, color: C.faint }}>{d}</div>)}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
           {cells.map((d, i) => {
@@ -3371,17 +3461,22 @@ function AppCalendar({ extra = [] }) {
             const isToday = key === todayKey, isSel = key === sel;
             const hasUser = userDays.has(key), hasMkt = mktDays.has(key);
             return (
-              <button key={i} onClick={() => setSel(key)} className="v-calday" style={{
-                height: 36, display: "flex", alignItems: "center", justifyContent: "center", position: "relative",
-                background: isSel ? "rgba(255,255,255,0.10)" : "transparent",
-                border: `1px solid ${isToday ? C.accent : "transparent"}`, borderRadius: R.sm, cursor: "pointer",
-                fontFamily: SANS, fontSize: 12, color: isSel ? C.accentText : C.text, padding: 0,
-              }}>
+              <button key={i} onClick={() => setSel(key)} className="v-calday"
+                aria-current={isToday ? "date" : undefined} aria-pressed={isSel}
+                style={{
+                  height: 36, display: "flex", alignItems: "center", justifyContent: "center", position: "relative",
+                  background: isToday ? C.accent : isSel ? C.surfaceRaised : "transparent",
+                  border: `1px solid ${!isToday && isSel ? C.edgeStrong : "transparent"}`, borderRadius: 5, cursor: "pointer",
+                  fontFamily: SANS, fontSize: 12, fontWeight: isToday ? 700 : 400,
+                  color: isToday ? C.textOnAccent : isSel ? C.text : C.muted, padding: 0,
+                }}>
                 {d}
                 {(hasUser || hasMkt) && (
                   <span style={{ position: "absolute", bottom: 3, display: "flex", gap: 2 }}>
-                    {hasUser && <span style={{ width: 4, height: 4, borderRadius: "50%", background: isSel ? C.accent : C.up }} />}
-                    {hasMkt && <span style={{ width: 4, height: 4, borderRadius: "50%", background: C.amber }} />}
+                    {/* On the filled tile the dots have to sit on near-black to
+                        stay visible — the up-green would vanish into the fill. */}
+                    {hasUser && <span style={{ width: 4, height: 4, borderRadius: "50%", background: isToday ? C.textOnAccent : C.up }} />}
+                    {hasMkt && <span style={{ width: 4, height: 4, borderRadius: "50%", background: isToday ? C.textOnAccent : C.amber }} />}
                   </span>
                 )}
               </button>
@@ -9049,8 +9144,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         {/* --- watchlist --- */}
         {panels.watchlist && (
         <div id="sec-watchlist" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 32, boxSizing: "border-box", padding: "0 6px 0 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-            <span style={{ ...TYPE.eyebrow, color: C.muted }}>{t("WATCHLIST")}</span>
+          <div style={panelHead({ pad: "10px 8px 10px 14px" })}>
+            <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              {t("Watchlist")}
+              <span style={panelNote}>{watchlist.length}</span>
+            </span>
             <span style={{ display: "flex" }}>
               {[["list", "≡", "List"], ["heat", "▦", "Heat map"]].map(([id, glyph, hint]) => (
                 <button key={id} onClick={() => setWlView(id)} title={hint} aria-pressed={wlView === id} aria-label={`${id} view`} className="v-tap"
@@ -9101,20 +9199,28 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 className="wl-row"
                 onClick={() => setSelected(s)}
                 style={{
-                  display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center",
-                  padding: "9px 12px", background: on ? "#161718" : "transparent",
-                  border: "none", borderLeft: `2px solid ${on ? C.accent : "transparent"}`,
+                  display: "grid", gridTemplateColumns: "52px 1fr auto", gap: 8, alignItems: "center",
+                  width: "100%", padding: "11px 14px",
+                  background: on ? C.surfaceRaised : "transparent",
+                  border: "none", boxShadow: on ? `inset 3px 0 0 ${C.accent}` : "none",
                   cursor: "pointer", textAlign: "left",
                 }}
               >
-                <span style={{ fontFamily: MONO, fontSize: 14, fontWeight: 510, color: on ? C.accentText : C.text }}>{s}</span>
+                {/* Sans bold, not mono. In a list the ticker is the row's
+                    heading; the numbers beside it are the values. Setting both
+                    in mono is what made every row read as one flat string. */}
+                <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis" }}>{s}</span>
                 {/* the shape of the session, at a glance — dotted line is prev close */}
-                <span aria-hidden="true" style={{ flex: 1, display: "flex", justifyContent: "center", padding: "0 10px", color: C.faint, minWidth: 0, overflow: "hidden" }}>
+                <span aria-hidden="true" style={{ display: "flex", justifyContent: "center", color: C.faint, minWidth: 0, overflow: "hidden" }}>
                   <Sparkline data={getCloses(s)} color={dirColorN(r.chg)} refValue={r.prevClose} />
                 </span>
-                <span style={{ textAlign: "right" }}>
-                  <div style={{ fontFamily: MONO, fontSize: 12, color: C.text }}><TickFlash value={r.price}>{fmt(r.price)}</TickFlash></div>
-                  <div style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.chg) }}>{pct(r.chgPct)}</div>
+                {/* nowrap so a six-figure price cannot break across two lines in
+                    the auto track. (The 3px the tick-flash highlight overhangs is
+                    deliberate — .v-tick-up pads then negative-margins it back, so it
+                    paints wider than the text without taking layout width.) */}
+                <span style={{ textAlign: "right", fontFamily: MONO, fontSize: 12.5, whiteSpace: "nowrap" }}>
+                  <div style={{ color: C.text }}><TickFlash value={r.price}>{fmt(r.price)}</TickFlash></div>
+                  <div style={{ color: dirColorN(r.chg) }}>{pct(r.chgPct)}</div>
                 </span>
               </button>
             );
@@ -9126,59 +9232,63 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
         {/* --- chart + stats --- */}
         <div className="v-dash-col v-dash-main">
-          <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: 16 }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap" }}>
-              <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 24, letterSpacing: "-0.012em" }}>{selected}</span>
-              {selectedRow?.name && <span className="v-coname" style={{ color: C.muted, fontSize: 12 }}>{selectedRow.name}</span>}
-              <span style={{ fontFamily: MONO, fontSize: 24, fontWeight: 510, color: accent }}><TickFlash value={selectedRow?.price}>{selectedRow?.chg != null && prefDirGlyph(chgDir) ? `${prefDirGlyph(chgDir)} ` : ""}{fmt(selectedRow?.price)}</TickFlash></span>
+          <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: 20 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+              <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 24, letterSpacing: "-0.015em" }}>{selected}</span>
+              {selectedRow?.name && <span className="v-coname" style={{ color: C.muted, fontSize: 14 }}>{selectedRow.name}</span>}
+              <span style={{ fontFamily: MONO, fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", marginLeft: 10, color: C.text }}><TickFlash value={selectedRow?.price}>{selectedRow?.chg != null && prefDirGlyph(chgDir) ? `${prefDirGlyph(chgDir)} ` : ""}{fmt(selectedRow?.price)}</TickFlash></span>
               <span style={{ fontFamily: MONO, fontSize: 14, color: live && liveBad[selected] ? C.down : dirColorN(selectedRow?.chg) }}>
                 {selectedRow?.chg != null
-                  ? `${prefDirGlyph(chgDir) ? prefDirGlyph(chgDir) + " " : ""}${selectedRow.chg >= 0 ? "+" : ""}${fmt(selectedRow.chg)} (${pct(selectedRow.chgPct)})`
+                  ? `${prefDirGlyph(chgDir) ? prefDirGlyph(chgDir) + " " : ""}${selectedRow.chg >= 0 ? "+" : ""}${fmt(selectedRow.chg)} · ${pct(selectedRow.chgPct)}`
                   : live && liveBad[selected] ? "unrecognized symbol" : "waiting for data…"}
               </span>
-              {liveStale && (
-                <span style={{ fontFamily: MONO, fontSize: 12, color: C.muted, background: "rgba(255,255,255,0.05)", borderRadius: R.xs, padding: "2px 6px", letterSpacing: "-0.013em" }}>
-                  MARKET CLOSED
-                </span>
-              )}
-              <div style={{ marginLeft: "auto", display: "flex", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, overflow: "hidden" }}>
-                {[["line", t("LINE")], ["pnf", "P&F"]].map(([m, label]) => (
-                  <button key={m} onClick={() => setChartMode(m)} className="v-tap"
+              {/* A segmented control on its own track, not two buttons in a
+                  hairline box: the track says these two are the same question
+                  answered differently, and the raised thumb says which. */}
+              <div style={{ marginLeft: "auto", display: "flex", background: C.surfaceRaised, borderRadius: R.sm, padding: 3 }}>
+                {[["line", t("Line")], ["pnf", "P&F"]].map(([m, label]) => (
+                  <button key={m} onClick={() => setChartMode(m)} className="v-tap" aria-pressed={chartMode === m}
                     title={m === "pnf" ? "Point & Figure — X/O columns, 3-box reversal" : "Line chart of the session tape"}
-                    style={{ background: chartMode === m ? "#161718" : "transparent", border: "none", color: chartMode === m ? C.accentText : C.muted, fontFamily: SANS, fontSize: 11, padding: "5px 10px", cursor: "pointer" }}>
+                    style={{ background: chartMode === m ? C.edgeStrong : "transparent", border: "none", borderRadius: 6, color: chartMode === m ? C.text : C.muted, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, padding: "5px 14px", cursor: "pointer", transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}` }}>
                     {label}
                   </button>
                 ))}
               </div>
-              {chartMode === "line" && (
-                <div style={{ display: "flex", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, overflow: "hidden" }}>
-                  {[
-                    ["sma", "SMA20", chartSMA, () => setChartSMA(v => !v), "20-point moving average of the tape"],
-                    ["hl", "H/L", chartHL, () => setChartHL(v => !v), "session high / low lines"],
-                  ].map(([k, label, isOn, toggle, hint]) => (
-                    <button key={k} onClick={toggle} title={hint} aria-pressed={isOn}
-                      style={{ background: isOn ? "#161718" : "transparent", border: "none", color: isOn ? C.accentText : C.muted, fontFamily: SANS, fontSize: 11, padding: "5px 10px", cursor: "pointer" }}>
-                      {label}
-                    </button>
-                  ))}
-                  <select value={chartVs || ""} onChange={e => setChartVs(e.target.value || null)} aria-label="Compare with"
-                    title="Overlay another symbol — both plotted as % change"
-                    style={{ background: chartVs ? "#161718" : "transparent", border: "none", borderLeft: `1px solid ${C.panelEdge}`, color: chartVs ? "#C08BFF" : C.muted, fontFamily: SANS, fontSize: 11, padding: "5px 6px", cursor: "pointer" }}>
-                    <option value="" style={{ background: C.surface, color: C.text }}>vs —</option>
-                    {watchlist.filter(x => x !== selected).map(x => <option key={x} value={x} style={{ background: C.surface, color: C.text }}>vs {x}</option>)}
-                  </select>
-                </div>
-              )}
+            </div>
+
+            {/* Chart modifiers. Outlined pills at rest, filled when on — the
+                accent is not spent here, because the one green thing on this
+                screen is the action that leaves it. */}
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", margin: "14px 0 12px" }}>
+              {chartMode === "line" && (<>
+                {[
+                  ["sma", `SMA ${SMA_N}`, chartSMA, () => setChartSMA(v => !v), "20-point moving average of the tape"],
+                  ["hl", t("High / Low"), chartHL, () => setChartHL(v => !v), "session high / low lines"],
+                ].map(([k, label, isOn, toggle, hint]) => (
+                  <button key={k} onClick={toggle} title={hint} aria-pressed={isOn}
+                    style={{ background: isOn ? C.surfaceRaised : "transparent", border: `1px solid ${isOn ? C.edgeStrong : C.edgeStrong}`, color: isOn ? C.text : C.muted, fontFamily: SANS, fontSize: 12.5, borderRadius: 20, padding: "5px 12px", cursor: "pointer", transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}` }}>
+                    {label}
+                  </button>
+                ))}
+                <select value={chartVs || ""} onChange={e => setChartVs(e.target.value || null)} aria-label="Compare with"
+                  title="Overlay another symbol — both plotted as % change"
+                  style={{ background: chartVs ? C.surfaceRaised : "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: 20, color: chartVs ? "#C08BFF" : C.muted, fontFamily: SANS, fontSize: 12.5, padding: "5px 10px", cursor: "pointer" }}>
+                  <option value="" style={{ background: C.surface, color: C.text }}>{t("Compare")}</option>
+                  {watchlist.filter(x => x !== selected).map(x => <option key={x} value={x} style={{ background: C.surface, color: C.text }}>vs {x}</option>)}
+                </select>
+              </>)}
+              {/* The one accent on this screen. It is a link, not a box: the
+                  chart is already here, and this opens a bigger one. */}
               <button onClick={() => openChart(selected)} title="Open the full chart"
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>
-                {t("full chart")}
+                style={{ marginLeft: "auto", background: "transparent", border: "none", color: C.accent, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, padding: "5px 0", cursor: "pointer" }}>
+                {t("Full chart")} →
               </button>
             </div>
 
             {/* P&F gets extra height: box cells are square and scale with rows, so a
                 session spanning ~20 boxes renders unreadably small inside the line
                 chart's 300px. */}
-            <div className={`v-chartbox${chartMode === "pnf" ? " is-pnf" : ""}`} style={{ marginTop: 10, position: "relative" }}>
+            <div className={`v-chartbox${chartMode === "pnf" ? " is-pnf" : ""}`} style={{ position: "relative" }}>
               {chartMode === "pnf" ? (
                 pnf && pnf.columns.length >= 2 ? (
                   /* the pattern callout sits in flow ABOVE the grid — overlaying it
@@ -9283,64 +9393,77 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 box {fmt(pnf.boxSize)} · {t("3-box reversal · this session")}
               </div>
             )}
-            <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginTop: 6 }}>
-              {live
-                ? "LIVE · quotes via Finnhub, polled every 15s · chart accumulates this session's polls"
-                : "DEMO · simulated session from a seeded random-walk engine · ticks every ~2s"}
+
+            {/* Session figures — footnotes to the chart, so they live inside it.
+                Label in sans, value in mono: the split the whole system runs on,
+                and the reason this reads as a sentence rather than a readout. */}
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "baseline", marginTop: 16, paddingTop: 14, borderTop: `1px solid ${C.panelEdge}`, fontFamily: SANS, fontSize: 13 }}>
+              {[
+                [t("Open"), selectedRow?.open, false],
+                [t("High"), selectedRow?.high, false],
+                [t("Low"), selectedRow?.low, false],
+                [t("Prev close"), selectedRow?.prevClose, false],
+                [t("Change"), selectedRow?.chg, true],
+              ].map(([label, val, isChg]) => (
+                <span key={label} style={{ color: C.muted }}>
+                  {label}{" "}
+                  <b style={{ fontFamily: MONO, fontWeight: 500, color: isChg ? dirColorN(val) : C.text }}>
+                    {isChg
+                      ? `${prefDirGlyph(val > 0 ? "up" : val < 0 ? "down" : "flat") ? prefDirGlyph(val > 0 ? "up" : val < 0 ? "down" : "flat") + " " : ""}${val == null ? "—" : `${val >= 0 ? "+" : ""}${fmt(val)}`} · ${pct(selectedRow?.chgPct)}`
+                      : fmt(val)}
+                  </b>
+                </span>
+              ))}
+              {/* Whether these numbers are real. It was a 10px all-caps sentence
+                  about polling intervals; what a reader needs is this. */}
+              <span style={{ marginLeft: "auto", color: C.faint, fontSize: 12 }}>
+                {live ? t("Live · quotes via Finnhub") : t("Demo · simulated session")}
+              </span>
             </div>
           </div>
 
-          {/* stats strip */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10 }}>
-            {[
-              ["OPEN", selectedRow?.open], ["HIGH", selectedRow?.high],
-              ["LOW", selectedRow?.low], ["PREV CLOSE", selectedRow?.prevClose],
-              ["CHANGE", selectedRow?.chg], ["CHANGE %", selectedRow?.chgPct],
-            ].map(([label, val]) => (
-              <div key={label} style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: "10px 12px" }}>
-                <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.muted }}>{label}</div>
-                <div style={{
-                  fontFamily: MONO, fontSize: 14, fontWeight: 510, marginTop: 3,
-                  color: label.startsWith("CHANGE") ? dirColorN(val) : C.text,
-                }}>
-                  {label.startsWith("CHANGE") && prefDirGlyph(val > 0 ? "up" : val < 0 ? "down" : "flat") ? `${prefDirGlyph(val > 0 ? "up" : val < 0 ? "down" : "flat")} ` : ""}{label === "CHANGE %" ? pct(val) : fmt(val)}
+          {/* --- day range --- */}
+          {selectedRow?.high != null && selectedRow?.low != null && selectedRow.high > selectedRow.low && (() => {
+            const { low, high, price, prevClose } = selectedRow;
+            const at = v => `${Math.min(100, Math.max(0, ((v - low) / (high - low)) * 100))}%`;
+            return (
+              <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: "16px 20px" }}
+                role="img" aria-label={`Day range: ${fmt(low)} to ${fmt(high)}, last ${fmt(price)}`}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontFamily: SANS, fontSize: 13, fontWeight: 600 }}>
+                  {t("Day range")}
+                  <span style={panelNote}>{t("last")}{prevClose != null && prevClose >= low && prevClose <= high ? ` · │ ${t("prev close")}` : ""}</span>
+                </div>
+                {/* The fill and the thumb are NEUTRAL here. Direction is already
+                    stated twice above — in the change figure and in the chart's
+                    own colour — and a third telling costs the one thing this
+                    control is for: where in the day's span the last trade sits. */}
+                <div style={{ position: "relative", height: 6, background: C.grid, borderRadius: 3, margin: "18px 0 10px" }}>
+                  <div style={{ position: "absolute", left: 0, top: 0, height: 6, width: at(price), borderRadius: 3, background: `linear-gradient(90deg, ${C.edgeStrong}, #3a424e)`, transition: "width 0.5s ease" }} />
+                  {prevClose != null && prevClose >= low && prevClose <= high && (
+                    <div style={{ position: "absolute", top: -3, bottom: -3, width: 2, borderRadius: 1, background: C.faint, left: at(prevClose) }} />
+                  )}
+                  <span style={{ position: "absolute", top: -4, left: at(price), transform: "translateX(-50%)", width: 14, height: 14, borderRadius: "50%", background: C.text, border: `3px solid ${C.panel}`, boxSizing: "border-box", transition: "left 0.5s ease" }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontFamily: MONO, fontSize: 12.5, color: C.muted }}>
+                  <span>{fmt(low)}</span>
+                  <span>{fmt(high)}</span>
                 </div>
               </div>
-            ))}
-            {selectedRow?.high != null && selectedRow?.low != null && selectedRow.high > selectedRow.low && (() => {
-              const { low, high, price, prevClose, chg } = selectedRow;
-              const at = v => `${Math.min(100, Math.max(0, ((v - low) / (high - low)) * 100))}%`;
-              return (
-                <div style={{ gridColumn: "1 / -1", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: "10px 12px" }}
-                  role="img" aria-label={`Day range: ${fmt(low)} to ${fmt(high)}, last ${fmt(price)}`}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                    <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.muted }}>{t("DAY RANGE")}</div>
-                    <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint }}>● {t("last")}{prevClose != null && prevClose >= low && prevClose <= high ? ` · │ ${t("prev close")}` : ""}</div>
-                  </div>
-                  <div style={{ position: "relative", height: 6, background: C.grid, borderRadius: 3, marginTop: 11 }}>
-                    {prevClose != null && prevClose >= low && prevClose <= high && (
-                      <div style={{ position: "absolute", top: -3, bottom: -3, width: 2, borderRadius: 1, background: C.faint, left: at(prevClose) }} />
-                    )}
-                    <div style={{ position: "absolute", top: "50%", left: at(price), transform: "translate(-50%, -50%)", width: 10, height: 10, borderRadius: "50%", background: dirColorN(chg), boxShadow: `0 0 0 2px ${C.panel}`, transition: "left 0.5s ease, background 0.5s ease" }} />
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontFamily: MONO, fontSize: 12 }}>
-                    <span style={{ color: dirColorN(-1) }}>{fmt(low)}</span>
-                    <span style={{ color: dirColorN(1) }}>{fmt(high)}</span>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
+            );
+          })()}
 
           {/* --- P&F pattern signals (below stats, only when a pattern is on the board) --- */}
           {panels.pnf && Object.keys(pnfSignals).length > 0 && (
             <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
-              <div style={{ display: "flex", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", ...TYPE.eyebrow, color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>✕○ {t("P&F SIGNALS")}</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10, padding: 12 }}>
+              <div style={panelHead({ divider: false, pad: "18px 20px 14px" })}>{t("P&F signals")}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10, padding: "0 20px 18px" }}>
                 {Object.entries(pnfSignals).map(([sym, p]) => (
-                  <div key={sym} style={{ background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "10px 12px" }}>
-                    <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: C.text }}>{sym}</div>
-                    <div style={{ fontFamily: SANS, fontSize: 11, marginTop: 3, color: p.side === "bull" ? dirColorN(1) : dirColorN(-1) }}>{p.name}</div>
+                  <div key={sym} style={{ background: C.surfaceRaised, borderRadius: 9, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+                    <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 2, flexShrink: 0, background: p.side === "bull" ? dirColorN(1) : dirColorN(-1) }} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: C.text }}>{sym}</div>
+                      <div style={{ fontFamily: SANS, fontSize: 12.5, marginTop: 1, color: C.muted }}>{p.name}</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -9353,7 +9476,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         {/* --- movers --- */}
         {panels.movers && (
         <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
-          <div style={{ display: "flex", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", ...TYPE.eyebrow, color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>{t("TOP MOVERS")}</div>
+          <div style={panelHead({ divider: false, pad: "16px 16px 14px" })}>
+            <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+              {t("Top movers")}
+              <span style={panelNote}>· {t("by |Δ%|")}</span>
+            </span>
+          </div>
           {movers.length === 0 && (
             <div style={{ padding: 12, fontFamily: SANS, fontSize: 11, color: C.faint }}>
               {watchlist.length === 0 ? "Add a symbol to rank today's movers." : "Waiting for quotes…"}
@@ -9365,33 +9493,32 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               const half = (Math.abs(r.chgPct) / maxAbs) * 50;
               const on = r.sym === selected;
               return (
+                /* One row: ticker, a bar sized by |Δ%| against the biggest mover,
+                   the percent. The bar is left-anchored rather than centred on a
+                   zero line — the list is ranked by MAGNITUDE, so the length is
+                   answering "how big", and the colour is already answering
+                   "which way". */
                 <button key={r.sym} className="wl-row" onClick={() => setSelected(r.sym)} aria-current={on ? "true" : undefined}
-                  style={{ display: "block", width: "100%", padding: "10px 12px", background: on ? "#161718" : "transparent", border: "none", borderLeft: `2px solid ${on ? C.accent : "transparent"}`, cursor: "pointer", textAlign: "left" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                    <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: C.text }}>
-                      {r.sym} <span style={{ fontWeight: 400, color: C.faint }}>{fmt(r.price)}</span>
-                    </span>
-                    <span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.chg) }}>{prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat") ? `${prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat")} ` : ""}{pct(r.chgPct)}</span>
-                  </div>
-                  <div style={{ position: "relative", height: 5, background: C.grid, borderRadius: 3, marginTop: 6, overflow: "hidden" }}>
-                    <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: C.panelEdge }} />
-                    <div style={{ position: "absolute", top: 0, bottom: 0, background: dirColorN(r.chg), left: r.chgPct >= 0 ? "50%" : `${50 - half}%`, width: `${half}%`, transition: "left 0.5s ease, width 0.5s ease" }} />
-                  </div>
+                  title={`${r.sym} ${fmt(r.price)}`}
+                  style={{ display: "grid", gridTemplateColumns: "52px 1fr auto", gap: 10, alignItems: "center", width: "100%", padding: "7px 16px", background: on ? C.surfaceRaised : "transparent", border: "none", boxShadow: on ? `inset 3px 0 0 ${C.accent}` : "none", cursor: "pointer", textAlign: "left" }}>
+                  <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis" }}>{r.sym}</span>
+                  <span style={{ height: 4, background: C.grid, borderRadius: 2, overflow: "hidden" }}>
+                    <span style={{ display: "block", height: 4, borderRadius: 2, background: dirColorN(r.chg), width: `${(half * 2).toFixed(0)}%`, transition: "width 0.5s ease, background 0.5s ease" }} />
+                  </span>
+                  <span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.chg), whiteSpace: "nowrap" }}>{prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat") ? `${prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat")} ` : ""}{pct(r.chgPct)}</span>
                 </button>
               );
             });
           })()}
-          <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}`, fontFamily: SANS, fontSize: 10, color: C.faint, lineHeight: 1.6 }}>
-            {t("ranked by |Δ%| across your watchlist")}
-          </div>
+          <div style={{ height: 16 }} />
         </div>
         )}
 
         {/* --- Portfolio (right rail) --- */}
         {panels.portfolio && (
           <div id="sec-portfolio" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-              <span style={{ ...TYPE.eyebrow, color: C.muted }}>{t("Portfolio")}</span>
+            <div style={panelHead({ divider: positions.length > 0, pad: "16px 16px 12px" })}>
+              <span>{t("Portfolio")}</span>
               {positions.length > 0 && (
                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}
@@ -9460,23 +9587,30 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               </button>
               ));
             })()}
-            <div style={{ display: "flex", gap: 6, padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}` }}>
-              <input value={portForm.sym} onChange={e => setPortForm(f => ({ ...f, sym: e.target.value.toUpperCase() }))} placeholder="SYM" aria-label="Symbol"
-                style={{ width: 56, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "7px 7px" }} />
-              <input value={portForm.shares} onChange={e => setPortForm(f => ({ ...f, shares: e.target.value }))} placeholder="qty" inputMode="decimal" aria-label="Shares"
-                style={{ width: 48, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "7px 7px" }} />
-              <input value={portForm.cost} onChange={e => setPortForm(f => ({ ...f, cost: e.target.value }))} onKeyDown={e => e.key === "Enter" && addPosition()} placeholder="$ cost" inputMode="decimal" aria-label="Cost basis"
-                style={{ flex: 1, minWidth: 0, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "7px 7px" }} />
-              <button onClick={addPosition} aria-label="Add position" style={{ background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, letterSpacing: "-0.010em", padding: "0 12px", cursor: "pointer", whiteSpace: "nowrap" }}>+ Add</button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16, borderTop: positions.length ? `1px solid ${C.panelEdge}` : "none" }}>
+              {(() => {
+                const fieldStyle = { boxSizing: "border-box", background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 13, padding: "9px 12px", outline: "none" };
+                return (<>
+                  <input value={portForm.sym} onChange={e => setPortForm(f => ({ ...f, sym: e.target.value.toUpperCase() }))} placeholder={t("Symbol")} aria-label="Symbol"
+                    style={{ ...fieldStyle, width: "100%", fontFamily: MONO }} />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input value={portForm.shares} onChange={e => setPortForm(f => ({ ...f, shares: e.target.value }))} placeholder={t("Shares")} inputMode="decimal" aria-label="Shares"
+                      style={{ ...fieldStyle, flex: 1, minWidth: 0 }} />
+                    <input value={portForm.cost} onChange={e => setPortForm(f => ({ ...f, cost: e.target.value }))} onKeyDown={e => e.key === "Enter" && addPosition()} placeholder={t("Cost / share")} inputMode="decimal" aria-label="Cost basis"
+                      style={{ ...fieldStyle, flex: 1, minWidth: 0 }} />
+                  </div>
+                </>);
+              })()}
+              {/* The rail's one primary action. */}
+              <button onClick={addPosition} style={{ ...button("primary", "sm"), width: "100%", padding: 10, borderRadius: R.sm, fontSize: 13.5, fontWeight: 700 }}>{t("Add position")}</button>
             </div>
-            {positions.length === 0 && <div style={{ padding: "0 12px 10px", fontFamily: SANS, fontSize: 10, color: C.faint, lineHeight: 1.5 }}>Symbol, shares, cost per share.</div>}
           </div>
         )}
 
         {/* --- Price alerts (right rail, only when armed) --- */}
         {priceAlerts.length > 0 && (
           <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
-            <div style={{ display: "flex", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", ...TYPE.eyebrow, color: C.muted, borderBottom: `1px solid ${C.panelEdge}` }}>{t("Price alerts")}</div>
+            <div style={panelHead({ pad: "16px 16px 12px" })}>{t("Price alerts")}</div>
             {priceAlerts.map(a => {
               const row = getRow(a.sym); const cur = row?.price;
               return (
@@ -9495,9 +9629,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         {/* --- Vantage Calendar (native, right rail) --- */}
         {panels.calendar && (
           <div id="app-calendar-panel" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-              <span style={{ ...TYPE.eyebrow, color: C.muted }}>{t("Calendar")}</span>
-              <span style={{ fontFamily: SANS, fontSize: 10, color: C.faint }}>saved on this device</span>
+            <div style={panelHead({ divider: false, pad: "16px 16px 4px" })}>
+              <span>{t("Calendar")}</span>
+              <span style={{ ...panelNote, fontSize: 11 }}>{t("on this device")}</span>
             </div>
             <AppCalendar extra={marketEvents} />
           </div>

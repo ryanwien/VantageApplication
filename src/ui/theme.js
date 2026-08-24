@@ -319,6 +319,24 @@ export function panel(opts = {}) {
   };
 }
 
+// A panel's title bar. Sentence-case sans at 13/600, hairlined off the body.
+// `note` is the quiet half a title often carries — a count, a qualifier
+// ("· by |Δ%|"), a provenance line — which belongs beside the title rather than
+// stranded in a footer nobody reads.
+export function panelHead(opts = {}) {
+  const { pad = "12px 14px", divider = true } = opts;
+  return {
+    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+    padding: pad,
+    borderBottom: divider ? `1px solid ${C.edge}` : "none",
+    fontFamily: SANS, fontWeight: 600, fontSize: 13, color: C.text,
+    lineHeight: 1.4,
+  };
+}
+
+// The quiet half of a panel title.
+export const panelNote = { fontFamily: SANS, fontWeight: 400, fontSize: 12, color: C.faint };
+
 export function field(opts = {}) {
   const { invalid = false } = opts;
   return {
