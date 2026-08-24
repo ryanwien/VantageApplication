@@ -20,6 +20,7 @@ import AppShell from "./src/ui/AppShell.jsx";
 import ChatAssistant from "./src/ui/ChatAssistant.jsx";
 import NewsDesk, { sourceColor, toneOf } from "./src/ui/NewsDesk.jsx";
 import VantageMark from "./src/ui/VantageMark.jsx";
+import HomePage from "./src/ui/HomePage.jsx";
 
 /* ============================================================
    VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
@@ -388,6 +389,35 @@ const I18N = {
     "queen": "dama",
     "king": "rey",
     "piece": "pieza",
+    // --- settings: the plain-language sidebar ---
+    "AMD session, down 0.84%": "Sesión de AMD, baja un 0,84 %",
+    "Alert fired": "Aviso disparado",
+    "Alerts, on air": "Avisos, en directo",
+    "An AI news anchor for the markets": "Un presentador de noticias con IA para los mercados",
+    "Answers with receipts": "Respuestas con pruebas",
+    "Change or cancel any time": "Cámbialo o cancélalo cuando quieras",
+    "Choose {plan}": "Elegir {plan}",
+    "Down 0.84% on light volume. Support held at 156.": "Baja un 0,84 % con poco volumen. El soporte aguantó en 156.",
+    "Every answer cites the catalog it came from. When the data isn't there, Sterling says so instead of guessing.": "Cada respuesta cita el catálogo del que salió. Cuando el dato no está, Sterling lo dice en vez de inventarlo.",
+    "Explorer is free and stays free — no card, no expiry. Paid plans are billed monthly and can be changed or cancelled from Settings at any time.": "Explorer es gratis y sigue siéndolo: sin tarjeta y sin caducidad. Los planes de pago se facturan cada mes y puedes cambiarlos o cancelarlos desde Ajustes cuando quieras.",
+    "Free, with no end date": "Gratis, sin fecha de caducidad",
+    "Main": "Principal",
+    "No card. The demo desk works the moment you land.": "Sin tarjeta. El escritorio de demostración funciona nada más entrar.",
+    "One command bar": "Una sola barra de comandos",
+    "POPULAR": "POPULAR",
+    "Pick your desk": "Elige tu escritorio",
+    "Price triggers and P&F pattern alerts — the anchor reads them the moment they fire.": "Disparadores de precio y avisos de patrones P&F: el presentador los lee en cuanto saltan.",
+    "Pricing": "Precios",
+    "Product": "Producto",
+    "Sign in": "Iniciar sesión",
+    "Start free": "Empieza gratis",
+    "The market,": "El mercado,",
+    "Type AMD and press Enter. Quote, chart, and a spoken read of the session in one motion.": "Escribe AMD y pulsa Enter. Cotización, gráfico y una lectura hablada de la sesión de una sola vez.",
+    "Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know.": "Escribe un símbolo y obtén la cotización, el gráfico y una lectura hablada de la sesión, de un presentador que te dice cuándo no lo sabe.",
+    "Vantage — an AI market desk. Not investment advice.": "Vantage: un escritorio de mercados con IA. No es asesoramiento de inversión.",
+    "forever": "para siempre",
+    "on air.": "en directo.",
+    "{who} is reading this answer": "{who} está leyendo esta respuesta",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -667,6 +697,35 @@ const I18N = {
     "queen": "dame",
     "king": "roi",
     "piece": "pièce",
+    // --- settings: the plain-language sidebar ---
+    "AMD session, down 0.84%": "Séance AMD, en baisse de 0,84 %",
+    "Alert fired": "Alerte déclenchée",
+    "Alerts, on air": "Alertes, à l'antenne",
+    "An AI news anchor for the markets": "Un présentateur info IA pour les marchés",
+    "Answers with receipts": "Des réponses sourcées",
+    "Change or cancel any time": "Modifiable ou résiliable à tout moment",
+    "Choose {plan}": "Choisir {plan}",
+    "Down 0.84% on light volume. Support held at 156.": "En baisse de 0,84 % sur de faibles volumes. Le support a tenu à 156.",
+    "Every answer cites the catalog it came from. When the data isn't there, Sterling says so instead of guessing.": "Chaque réponse cite le catalogue dont elle provient. Quand la donnée manque, Sterling le dit au lieu de deviner.",
+    "Explorer is free and stays free — no card, no expiry. Paid plans are billed monthly and can be changed or cancelled from Settings at any time.": "Explorer est gratuit et le reste — sans carte, sans expiration. Les forfaits payants sont facturés au mois et peuvent être modifiés ou résiliés depuis les Réglages à tout moment.",
+    "Free, with no end date": "Gratuit, sans date de fin",
+    "Main": "Principal",
+    "No card. The demo desk works the moment you land.": "Sans carte. Le pupitre de démonstration fonctionne dès votre arrivée.",
+    "One command bar": "Une seule barre de commande",
+    "POPULAR": "POPULAIRE",
+    "Pick your desk": "Choisissez votre pupitre",
+    "Price triggers and P&F pattern alerts — the anchor reads them the moment they fire.": "Déclencheurs de prix et alertes de figures P&F — le présentateur les lit dès qu'ils se déclenchent.",
+    "Pricing": "Tarifs",
+    "Product": "Produit",
+    "Sign in": "Se connecter",
+    "Start free": "Commencer gratuitement",
+    "The market,": "Le marché,",
+    "Type AMD and press Enter. Quote, chart, and a spoken read of the session in one motion.": "Tapez AMD et appuyez sur Entrée. Cotation, graphique et lecture parlée de la séance d'un seul geste.",
+    "Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know.": "Tapez un symbole et obtenez la cotation, le graphique et une lecture parlée de la séance — par un présentateur qui vous dit quand il ne sait pas.",
+    "Vantage — an AI market desk. Not investment advice.": "Vantage — un pupitre de marché IA. Ceci n'est pas un conseil en investissement.",
+    "forever": "à vie",
+    "on air.": "à l'antenne.",
+    "{who} is reading this answer": "{who} lit cette réponse",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -946,6 +1005,35 @@ const I18N = {
     "queen": "Dame",
     "king": "König",
     "piece": "Figur",
+    // --- settings: the plain-language sidebar ---
+    "AMD session, down 0.84%": "AMD-Sitzung, minus 0,84 %",
+    "Alert fired": "Alarm ausgelöst",
+    "Alerts, on air": "Alarme, auf Sendung",
+    "An AI news anchor for the markets": "Ein KI-Nachrichtensprecher für die Märkte",
+    "Answers with receipts": "Antworten mit Belegen",
+    "Change or cancel any time": "Jederzeit änderbar oder kündbar",
+    "Choose {plan}": "{plan} wählen",
+    "Down 0.84% on light volume. Support held at 156.": "Minus 0,84 % bei dünnem Volumen. Die Unterstützung hielt bei 156.",
+    "Every answer cites the catalog it came from. When the data isn't there, Sterling says so instead of guessing.": "Jede Antwort nennt den Katalog, aus dem sie stammt. Fehlen die Daten, sagt Sterling das, statt zu raten.",
+    "Explorer is free and stays free — no card, no expiry. Paid plans are billed monthly and can be changed or cancelled from Settings at any time.": "Explorer ist kostenlos und bleibt es — ohne Karte, ohne Ablauf. Bezahlte Tarife werden monatlich abgerechnet und lassen sich jederzeit in den Einstellungen ändern oder kündigen.",
+    "Free, with no end date": "Kostenlos, ohne Enddatum",
+    "Main": "Haupt",
+    "No card. The demo desk works the moment you land.": "Keine Karte. Der Demo-Desk läuft, sobald du hier bist.",
+    "One command bar": "Eine Befehlszeile",
+    "POPULAR": "BELIEBT",
+    "Pick your desk": "Wähle deinen Desk",
+    "Price triggers and P&F pattern alerts — the anchor reads them the moment they fire.": "Kursauslöser und P&F-Musteralarme — die Moderation liest sie vor, sobald sie auslösen.",
+    "Pricing": "Preise",
+    "Product": "Produkt",
+    "Sign in": "Anmelden",
+    "Start free": "Kostenlos starten",
+    "The market,": "Der Markt,",
+    "Type AMD and press Enter. Quote, chart, and a spoken read of the session in one motion.": "Tippe AMD und drück Enter. Kurs, Chart und eine gesprochene Lesung der Sitzung in einem Zug.",
+    "Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know.": "Tippe ein Kürzel und bekomm Kurs, Chart und eine gesprochene Lesung der Sitzung — von einer Moderation, die sagt, wenn sie es nicht weiß.",
+    "Vantage — an AI market desk. Not investment advice.": "Vantage — ein KI-Marktdesk. Keine Anlageberatung.",
+    "forever": "dauerhaft",
+    "on air.": "auf Sendung.",
+    "{who} is reading this answer": "{who} liest diese Antwort",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1224,6 +1312,35 @@ const I18N = {
     "queen": "dama",
     "king": "rei",
     "piece": "peça",
+    // --- settings: the plain-language sidebar ---
+    "AMD session, down 0.84%": "Sessão da AMD, a descer 0,84 %",
+    "Alert fired": "Alerta disparado",
+    "Alerts, on air": "Alertas, no ar",
+    "An AI news anchor for the markets": "Um apresentador de notícias com IA para os mercados",
+    "Answers with receipts": "Respostas com provas",
+    "Change or cancel any time": "Muda ou cancela quando quiseres",
+    "Choose {plan}": "Escolher {plan}",
+    "Down 0.84% on light volume. Support held at 156.": "A descer 0,84 % com pouco volume. O suporte aguentou nos 156.",
+    "Every answer cites the catalog it came from. When the data isn't there, Sterling says so instead of guessing.": "Cada resposta cita o catálogo de onde veio. Quando o dado não existe, o Sterling di-lo em vez de adivinhar.",
+    "Explorer is free and stays free — no card, no expiry. Paid plans are billed monthly and can be changed or cancelled from Settings at any time.": "O Explorer é grátis e continua grátis — sem cartão, sem prazo. Os planos pagos são faturados mensalmente e podem ser mudados ou cancelados nas Definições a qualquer momento.",
+    "Free, with no end date": "Grátis, sem data de fim",
+    "Main": "Principal",
+    "No card. The demo desk works the moment you land.": "Sem cartão. A bancada de demonstração funciona mal entras.",
+    "One command bar": "Uma única barra de comandos",
+    "POPULAR": "POPULAR",
+    "Pick your desk": "Escolhe a tua bancada",
+    "Price triggers and P&F pattern alerts — the anchor reads them the moment they fire.": "Gatilhos de preço e alertas de padrões P&F — o apresentador lê-os assim que disparam.",
+    "Pricing": "Preços",
+    "Product": "Produto",
+    "Sign in": "Iniciar sessão",
+    "Start free": "Começa grátis",
+    "The market,": "O mercado,",
+    "Type AMD and press Enter. Quote, chart, and a spoken read of the session in one motion.": "Escreve AMD e carrega em Enter. Cotação, gráfico e uma leitura falada da sessão de uma só vez.",
+    "Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know.": "Escreve um símbolo e recebe a cotação, o gráfico e uma leitura falada da sessão — de um apresentador que te diz quando não sabe.",
+    "Vantage — an AI market desk. Not investment advice.": "Vantage — uma bancada de mercados com IA. Não é aconselhamento de investimento.",
+    "forever": "para sempre",
+    "on air.": "no ar.",
+    "{who} is reading this answer": "{who} está a ler esta resposta",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -1502,6 +1619,35 @@ const I18N = {
     "queen": "donna",
     "king": "re",
     "piece": "pezzo",
+    // --- settings: the plain-language sidebar ---
+    "AMD session, down 0.84%": "Seduta di AMD, in calo dello 0,84%",
+    "Alert fired": "Avviso scattato",
+    "Alerts, on air": "Avvisi, in onda",
+    "An AI news anchor for the markets": "Un conduttore di notizie IA per i mercati",
+    "Answers with receipts": "Risposte con le fonti",
+    "Change or cancel any time": "Modificabile o annullabile in qualsiasi momento",
+    "Choose {plan}": "Scegli {plan}",
+    "Down 0.84% on light volume. Support held at 156.": "In calo dello 0,84% con volumi sottili. Il supporto ha tenuto a 156.",
+    "Every answer cites the catalog it came from. When the data isn't there, Sterling says so instead of guessing.": "Ogni risposta cita il catalogo da cui proviene. Quando il dato non c'è, Sterling lo dice invece di tirare a indovinare.",
+    "Explorer is free and stays free — no card, no expiry. Paid plans are billed monthly and can be changed or cancelled from Settings at any time.": "Explorer è gratuito e resta gratuito — nessuna carta, nessuna scadenza. I piani a pagamento sono fatturati ogni mese e si possono cambiare o annullare dalle Impostazioni quando vuoi.",
+    "Free, with no end date": "Gratis, senza scadenza",
+    "Main": "Principale",
+    "No card. The demo desk works the moment you land.": "Nessuna carta. Il desk demo funziona appena arrivi.",
+    "One command bar": "Una sola barra dei comandi",
+    "POPULAR": "POPOLARE",
+    "Pick your desk": "Scegli il tuo desk",
+    "Price triggers and P&F pattern alerts — the anchor reads them the moment they fire.": "Trigger di prezzo e avvisi sui pattern P&F — il conduttore li legge appena scattano.",
+    "Pricing": "Prezzi",
+    "Product": "Prodotto",
+    "Sign in": "Accedi",
+    "Start free": "Inizia gratis",
+    "The market,": "Il mercato,",
+    "Type AMD and press Enter. Quote, chart, and a spoken read of the session in one motion.": "Scrivi AMD e premi Invio. Quotazione, grafico e una lettura parlata della seduta in un solo gesto.",
+    "Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know.": "Scrivi un simbolo e ottieni quotazione, grafico e una lettura parlata della seduta — da un conduttore che ti dice quando non lo sa.",
+    "Vantage — an AI market desk. Not investment advice.": "Vantage — un desk di mercato IA. Non è consulenza finanziaria.",
+    "forever": "per sempre",
+    "on air.": "in onda.",
+    "{who} is reading this answer": "{who} sta leggendo questa risposta",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -11325,6 +11471,21 @@ export default function App() {
     }
   }, []);
 
+  // Signed-out visitors land on the marketing page, not on a form. The one
+  // exception is a deep link: somebody who bookmarked #markets asked for the
+  // app, and answering that with a sales pitch is the wrong reply.
+  const [showAuth, setShowAuth] = useState(() => {
+    try {
+      const h = (window.location.hash || "").replace(/^#\/?/, "");
+      return !!h && h !== "home";
+    } catch { return false; }
+  });
+  const goAuth = (intent) => {
+    // The gate reads this to open on the right tab. Harmless if it does not.
+    try { window.sessionStorage.setItem("vantage-auth-intent", intent); } catch { /* private mode */ }
+    setShowAuth(true);
+  };
+
   const signIn = (a) => { saveAccount(a); setAccount(a); };
   const signOut = () => {
     // best-effort backend logout; local state always clears
@@ -11349,9 +11510,11 @@ export default function App() {
 
   return (
     <I18nContext.Provider value={i18n}>
-      {!account
-        ? <AuthScreen onAuthed={signIn} />
-        : <MarketDashboard account={account} onSignOut={signOut} onChangePlan={changePlan} />}
+      {account
+        ? <MarketDashboard account={account} onSignOut={signOut} onChangePlan={changePlan} />
+        : showAuth
+          ? <AuthScreen onAuthed={signIn} />
+          : <HomePage plans={PLANS} t={t} onStart={() => goAuth("up")} onSignIn={() => goAuth("in")} />}
     </I18nContext.Provider>
   );
 }
