@@ -11023,7 +11023,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         <div role="dialog" aria-label="In-app browser" style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", zIndex: 60, display: "flex", flexDirection: "column", padding: 18 }} onClick={() => setEmbed(null)}>
           <div onClick={e => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", flex: 1, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.md, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "8px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-              <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.accentText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>🌐 {embed.title}</span>
+              {/* minWidth 0 on the row and the ellipsis on an inner span: a
+                  flex item will not shrink below its content by default, so
+                  the title would push the buttons off instead of truncating. */}
+              <span style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0, fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.accentText }}>
+                <span style={{ flexShrink: 0, display: "grid", placeItems: "center" }}><DeskIcon name="globe" size={14} /></span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{embed.title}</span>
+              </span>
               <span style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                 <a href={embed.url} target="_blank" rel="noopener noreferrer"
                   style={{ background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: MONO, fontSize: 12, fontWeight: 600, padding: "6px 14px", textDecoration: "none" }}>open in new tab ↗</a>
@@ -11189,11 +11195,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   </div>
                 )}
               </span>
-              {/* language rides last, keeping Export + More as an adjacent pair; it switches the whole UI, but above all the anchor's spoken answers */}
-              <select id="tour-lang" value={lang} onChange={e => setLang(e.target.value)} aria-label={t("Language")} title={t("Language")}
-                style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontWeight: 500, fontSize: 13, padding: "6px 8px", cursor: "pointer" }}>
-                {LANGS.map(l => <option key={l.code} value={l.code} style={{ background: C.surface, color: C.text }}>{l.code === "en" ? "🌐 " + l.label : l.label}</option>)}
-              </select>
+              {/* language rides last, keeping Export + More as an adjacent pair; it switches the whole UI, but above all the anchor's spoken answers
+
+                  The globe sits BESIDE the select, not inside it. An <option>
+                  renders as text on every platform, so the mark it used to
+                  carry could only ever be an emoji — and it was pinned to the
+                  English option, which meant the one language that did not
+                  need naming was the only one that got the icon. Out here it
+                  labels the control whatever language is showing. */}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: C.muted }}>
+                <DeskIcon name="globe" size={15} />
+                <select id="tour-lang" value={lang} onChange={e => setLang(e.target.value)} aria-label={t("Language")} title={t("Language")}
+                  style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontWeight: 500, fontSize: 13, padding: "6px 8px", cursor: "pointer" }}>
+                  {LANGS.map(l => <option key={l.code} value={l.code} style={{ background: C.surface, color: C.text }}>{l.label}</option>)}
+                </select>
+              </span>
             </span>
           </div>
 

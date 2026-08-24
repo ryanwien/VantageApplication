@@ -80,6 +80,18 @@ export default function DeskIcon({ name, size = 18 }) {
           <path d="M18 14.2v4.3a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6h4.3" />
         </svg>
       );
+    // A globe: the ring, the equator, and ONE meridian drawn as an ellipse.
+    // Two meridians is the conventional drawing and it is one too many here —
+    // at 15px the three curves close up into a filled blob. The ellipse is
+    // also what stops the circle-plus-line reading as a no-entry sign.
+    case "globe":
+      return (
+        <svg {...p}>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M3 12h18" />
+          <ellipse cx="12" cy="12" rx="4.2" ry="9" />
+        </svg>
+      );
     // Reading a story out loud is sound leaving the desk, so: a speaker.
     case "speaker":
       return (
