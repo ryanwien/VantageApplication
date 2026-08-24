@@ -3300,6 +3300,15 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       // Beat gestures while speaking. `gesture` is the one in flight, if any.
       gestureIn: 900 + Math.random() * 1200,
       gesture: null,   // { side: -1 | 1, t0, dur }
+      // Mouth SHAPE, independent of how far it is open. 0 = wide and flat
+      // (as in "see"), 1 = round and tall (as in "you"). Retargeted per
+      // spoken word; see the viseme block.
+      viseme: 0.45, visemeTarget: 0.45, lastWordT0: -1,
+      // Falling edge of speech: the beat where a person closes their mouth
+      // and swallows before the next thing.
+      settle: 0, wasTalking: false,
+      // True while the eyes are away from the lens and owe it a return.
+      returning: false,
     };
 
     const startAction = (type, t) => { s.action = type; s.actionStart = t; };
@@ -3658,6 +3667,44 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       } else s.ampTarget = 0;
       s.amp += (s.ampTarget - s.amp) * Math.min(1, dt / (an?.node ? 45 : 55));
 
+      // --- mouth SHAPE (viseme), independent of how far it is open ---
+      // Width used to be a function of opening — w = 7.5 + op * 1.5 — so the
+      // mouth was one ellipse scaling on both axes at once. That is a hinge
+      // flapping, and it is why the talking read as mechanical no matter how
+      // well the opening tracked the audio: every vowel had the same shape.
+      //
+      // Real vowels differ in ROUNDNESS far more than in size. "See" is wide
+      // and flat, "you" is small and round, and the two look nothing alike at
+      // the same volume. This retargets on each spoken word, so the shape
+      // changes at word boundaries rather than drifting.
+      {
+        const sm = propsRef.current.speechRef?.current;
+        if (TK && sm && sm.t0 !== s.lastWordT0) {
+          s.lastWordT0 = sm.t0;
+          s.visemeTarget = 0.12 + Math.random() * 0.82;
+        } else if (TK && !sm) {
+          // Network voices never fire boundary events. Two incommensurate
+          // periods so the shape still varies without a metronome under it.
+          s.visemeTarget = 0.45 + Math.sin(t / 430) * 0.22 + Math.sin(t / 197) * 0.14;
+        } else if (!TK) s.visemeTarget = 0.45;
+        // ~70ms: fast enough to land within a syllable, slow enough that the
+        // lips travel between shapes instead of snapping between them.
+        s.viseme += (s.visemeTarget - s.viseme) * Math.min(1, dt / 70);
+      }
+
+      // --- the beat after speaking ---
+      // Speech used to stop dead: the mouth was mid-word on one frame and back
+      // to the resting smile on the next. People close their mouth, press the
+      // lips and swallow before the face goes neutral again — it is the visual
+      // equivalent of a full stop, and its absence is why the anchor looked
+      // like it had been switched off rather than finished.
+      if (s.wasTalking && !TK) {
+        s.settle = 460;
+        if (s.blink <= 0) { s.blink = 130; s.nextBlink = 2400 + Math.random() * 3200; }
+      }
+      s.wasTalking = TK;
+      if (s.settle > 0) s.settle -= dt;
+
       // --- blinks ---
       s.nextBlink -= dt;
       if (s.nextBlink <= 0) { s.blink = 130; s.nextBlink = Math.random() < 0.22 ? 240 : 2400 + Math.random() * 3200; } // occasional double blink
@@ -3695,10 +3742,21 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       // then covers the whole distance on a decelerating curve, then holds.
       s.fixate -= dt;
       if (s.fixate <= 0) {
-        const far = Math.random() < 0.28;                  // an occasional proper look away
+        // A big look-away OWES the lens a return. Without this the eyes wander
+        // from one random point to another and never come back to camera,
+        // which for a presenter is the difference between glancing at a
+        // monitor and losing interest in you.
+        const far = !s.returning && Math.random() < 0.28;
         s.sacFromX = s.gazeX; s.sacFromY = s.gazeY;
-        s.gazeTX = (Math.random() - 0.6) * (far ? 3.2 : 1.4);
-        s.gazeTY = (Math.random() - 0.5) * (far ? 1.5 : 0.6);
+        if (s.returning) {
+          s.gazeTX = (Math.random() - 0.5) * 0.35;         // back to the lens, near enough
+          s.gazeTY = (Math.random() - 0.5) * 0.25;
+          s.returning = false;
+        } else {
+          s.gazeTX = (Math.random() - 0.6) * (far ? 3.2 : 1.4);
+          s.gazeTY = (Math.random() - 0.5) * (far ? 1.5 : 0.6);
+          s.returning = far;
+        }
         s.sacT = 0;
         s.sacDur = far ? 70 : 38;
         // People blink on a large gaze shift. Free realism — the blink is
@@ -3776,7 +3834,12 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       // The head rides the breath at a fraction of it — the neck absorbs the
       // rest — plus a slow drift of its own, so head and chest are never
       // exactly in phase. That tiny disagreement is most of the effect.
-      const headBob = reduced ? 0 : bob * 0.55 + Math.sin(t / 2600) * 0.6;
+      // 0.85, not 0.55. The head still travels less than the chest — which is
+      // the point, the neck takes up the difference — but the neck is drawn
+      // in the HEAD group and meets the collar at a fixed line, so every pixel
+      // of disagreement is a pixel of gap. 0.55 plus a 0.6px drift could open
+      // 1.2px of background at the seam.
+      const headBob = reduced ? 0 : bob * 0.85 + Math.sin(t / 2600) * 0.25;
       const m = Math.max(-1, Math.min(1, md / 2));
       const moodCol = m > 0.05 ? C.up : m < -0.05 ? C.down : C.amber;
       const surprised = act === "react";
@@ -3904,6 +3967,20 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       // the prop geometry would move the mug that is sitting on the desk.
       ctx.save();
       ctx.translate(lean, 0);
+      // Shoulders counter-rotate against the head turn, pivoting at the desk
+      // line where the body is anchored. Turning your head does not leave the
+      // torso untouched — it winds it very slightly the other way, and the
+      // absence of that is part of why a head that turns on a still body reads
+      // as a bust on a plinth. About a degree at full deflection.
+      if (!reduced) {
+        ctx.translate(cx, deskY);
+        // Small: the pivot is at the desk and the collar sits 74px above it, so
+        // this angle is multiplied by 74 at exactly the seam the neck has to
+        // stay inside. 0.007 moved the collar 1.6px and helped pull the head
+        // off the body.
+        ctx.rotate(-s.headFollow * 0.0025);
+        ctx.translate(-cx, -deskY);
+      }
       ctx.fillStyle = ch.suit;
       ctx.beginPath();
       ctx.moveTo(cx - 52 - chest, deskY); ctx.quadraticCurveTo(cx - 50 - chest, 128 + bob, cx - 26, 122 + bob);
@@ -4219,13 +4296,25 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         drawMug(mugRest.x, mugRest.y);
       }
 
-      // ---- head group: weight shift + gaze follow + tilt + nod + dip, as one transform ----
-      // The lateral part is the body's lean plus a fraction of where the eyes
-      // went. headFollow is an EASED copy of gazeX, so the head arrives after
-      // the eyes do — the lag is the whole point, and 0.9px of it is enough to
-      // read at this scale.
+      // ---- head group: weight shift + gaze follow + tilt + nod + dip ----
+      //
+      // The gaze follow was a TRANSLATE, and that was wrong. The neck is 20px
+      // wide at its base and the head group carries it, so sliding the group
+      // sideways slides the neck off the collar — reported, correctly, as the
+      // head coming away from the body.
+      //
+      // A head turn is a rotation, and its pivot is the base of the neck. Done
+      // there, the one point that must stay welded to the torso is the exact
+      // point that does not move: the bottom corners of the neck travel about
+      // 0.4px at full deflection instead of 3px.
+      //
+      // Two pivots, in order: yaw at the neck base, then tilt at the head's
+      // centre, which is where a tilt actually hinges.
       ctx.save();
-      ctx.translate(lean + s.headFollow * 0.9, 0);
+      ctx.translate(lean, 0);                       // the same lean the torso has, so they move together
+      ctx.translate(cx, cy + nod + headDip + 38);
+      ctx.rotate(s.headFollow * 0.014);
+      ctx.translate(-cx, -(cy + nod + headDip + 38));
       ctx.translate(cx, cy + nod + headDip);
       ctx.rotate(s.tilt);
       ctx.translate(-cx, -(cy + nod + headDip));
@@ -4356,8 +4445,18 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
           ctx.fillStyle = "#5B2B2B";
           ctx.beginPath(); ctx.ellipse(mcx, mouthY + 1, 4.5, 6 * e + 2, 0, 0, Math.PI * 2); ctx.fill();
         } else if (s.amp > 0.05) {
-          // natural speaking mouth: dark interior, upper teeth + tongue clipped inside, soft lower lip
-          const op = Math.min(1, s.amp), w = 7.5 + op * 1.5, oh = 1.2 + op * 7;
+          // Natural speaking mouth: dark interior, upper teeth + tongue clipped
+          // inside, soft lower lip.
+          //
+          // Width was `7.5 + op * 1.5` — a function of the opening — so the
+          // whole mouth was one ellipse scaling on both axes together, which
+          // is a hinge, not a mouth. s.viseme separates SHAPE from SIZE: at 0
+          // the mouth is wide and shallow ("see"), at 1 it is narrow and tall
+          // ("you"). The area stays roughly constant across that range, so a
+          // round vowel does not read as a quieter one.
+          const op = Math.min(1, s.amp), round = s.viseme;
+          const w = (9.6 - round * 3.6) + op * 0.8;
+          const oh = 1.2 + op * (4.8 + round * 3.6);
           ctx.save();
           ctx.fillStyle = "#40191C";
           ctx.beginPath(); ctx.ellipse(mcx, mouthY, w, oh, 0, 0, Math.PI * 2); ctx.fill();
@@ -4377,11 +4476,20 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         } else {
           // resting mouth: ALWAYS a friendly smile — this is a stocks app, not a mood ring.
           // It simply widens when the tape is green; it never frowns, even on a down day.
-          ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 2.4;
-          const lift = 6 + Math.max(0, m) * 4;
+          //
+          // Except in the half-second after speaking. Speech used to stop dead
+          // — mid-word on one frame, resting smile on the next — and a face
+          // that snaps to neutral reads as switched off rather than finished.
+          // For that beat the lips press: flatter, narrower, a touch heavier,
+          // easing back into the smile. It is a full stop for the face.
+          const st = Math.max(0, Math.min(1, s.settle / 460));
+          ctx.strokeStyle = `rgba(0,0,0,${0.35 + st * 0.12})`;
+          ctx.lineWidth = 2.4 + st * 0.5;
+          const lift = (6 + Math.max(0, m) * 4) * (1 - st * 0.82);
+          const half = 8 - st * 1.4;
           ctx.beginPath();
-          ctx.moveTo(mcx - 8, mouthY - 2);
-          ctx.quadraticCurveTo(mcx, mouthY + lift, mcx + 8, mouthY - 2);
+          ctx.moveTo(mcx - half, mouthY - 2);
+          ctx.quadraticCurveTo(mcx, mouthY + lift, mcx + half, mouthY - 2);
           ctx.stroke();
         }
 
