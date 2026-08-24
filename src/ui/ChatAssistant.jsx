@@ -277,6 +277,16 @@ export default function ChatAssistant({
   speakingId,       // id of the message currently being spoken, if any
   anchorName,       // who is presenting — named in the "on air" line while speaking
   toolbar,          // extra controls beside the composer (e.g. the mic button)
+  // ---- optional: let the host own the input ----
+  // Given together, these turn the composer into a controlled input the host
+  // drives. The desk uses them to hang a symbol typeahead off this box, which
+  // is what let it retire its separate command bar.
+  value,            // controlled draft text; omit and the composer keeps its own
+  onChange,         // (text) => void, required when `value` is given
+  onKeyDown,        // first refusal on keys; call preventDefault to take one over
+  onFocus, onBlur,  // the host needs these to know when to show its typeahead
+  overlay,          // positioned node inside the composer box (the typeahead)
+  status,           // a quiet line in the composer row (market open/closed)
   attachments,      // desk results that belong to the conversation — the streaming
                     // catalog, the games menu. Rendered at the TAIL of the thread,
                     // because a result arrives as the answer to something asked,
@@ -297,7 +307,14 @@ export default function ChatAssistant({
                       // the bar once there are messages. For hosts (the AI desk)
                       // that already say what this input is.
 }) {
-  const [draft, setDraft] = useState("");
+  // The draft is normally ours. It becomes the caller's when `value` is given,
+  // which is how the desk merged its command bar into this composer: the
+  // typeahead needs the text to rank symbols against, and two components
+  // holding two copies of one input's text is how they drift apart.
+  const [ownDraft, setOwnDraft] = useState("");
+  const controlled = value !== undefined;
+  const draft = controlled ? value : ownDraft;
+  const setDraft = controlled ? (onChange || (() => {})) : setOwnDraft;
   const [atBottom, setAtBottom] = useState(true);
   const [unread, setUnread] = useState(false);
   const scrollRef = useRef(null);
@@ -454,19 +471,27 @@ export default function ChatAssistant({
         <div
           className="cmdbar"
           style={{
+            position: "relative",
             display: "flex", alignItems: "flex-end", gap: 12,
             background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`,
             borderRadius: R.lg, padding: "8px 8px 8px 18px",
             transition: `border-color ${MOTION.fast} ${MOTION.ease}, box-shadow ${MOTION.fast} ${MOTION.ease}`,
           }}
         >
+          {overlay}
           <textarea
             ref={taRef}
             rows={1}
             value={draft}
             disabled={disabled}
             onChange={e => setDraft(e.target.value)}
+            onFocus={onFocus}
+            onBlur={onBlur}
             onKeyDown={e => {
+              // The host goes first. It owns the typeahead, so ArrowDown and
+              // Enter mean something to it before they mean anything here.
+              onKeyDown?.(e);
+              if (e.defaultPrevented) return;
               // Enter sends, Shift+Enter makes a newline — the convention every
               // chat UI has settled on.
               if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
@@ -489,6 +514,7 @@ export default function ChatAssistant({
               ↺
             </button>
           )}
+          {status}
           {toolbar}
           {/* While an answer is in flight the send button becomes stop. Waiting
               out a wrong answer with no way to cancel is the thing that makes an

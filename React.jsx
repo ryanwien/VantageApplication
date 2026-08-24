@@ -194,13 +194,9 @@ const I18N = {
     "Search": "Buscar",
     "The AI broadcast desk for the markets.": "La mesa de retransmisión con IA para los mercados.",
     "Create account": "Crear cuenta", "Log in": "Iniciar sesión",
-    'Ask about {sym} — or tap a suggestion below': 'Pregunta sobre {sym} — o toca una sugerencia',
     // settings tabs + guided tour
     "ACCOUNT": "CUENTA", "START": "INICIO", "DATA": "DATOS", "VOICE": "VOZ", "MEET": "REUNIÓN",
     "exit": "salir", "skip tour": "saltar recorrido", "Back": "Atrás", "Next": "Siguiente", "Done": "Listo",
-    "Command bar": "Barra de comandos",
-    "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Escribe cualquier símbolo aquí y pulsa Enter para graficarlo. “ADD TSLA” y “DEL TSLA” gestionan tu lista de seguimiento. Los nombres de empresa también funcionan.",
-    "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Esta es tu barra de comandos. Escribe un símbolo como Apple o Nvidia y pulsa Enter para graficarlo.",
     "Your anchor — that's me": "Tu presentador — ese soy yo",
     "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.": "Leo cada respuesta en directo. Elige entre 22 presentadores y 18 escenarios aquí mismo, cada uno con su propia voz y ambiente sonoro.",
     "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here.": "Ese soy yo, tu presentador. Veintidós presentadores y dieciocho escenarios para elegir, aquí mismo.",
@@ -211,8 +207,6 @@ const I18N = {
     "Add your events and I announce them on air when they're due. Market events merge in automatically.": "Añade tus eventos y los anuncio en directo cuando llegue su hora. Los eventos de mercado se añaden automáticamente.",
     "Add events to your calendar and I'll announce them on air when they're due.": "Añade eventos a tu calendario y los anunciaré en directo cuando llegue su hora.",
     "The AI desk": "La mesa de IA",
-    "Ask anything here. I also take commands: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Pregunta lo que quieras aquí. También acepto comandos: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.",
-    "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Pregúntame lo que quieras aquí. También entiendo comandos sencillos, como, take me to Robinhood, o, what's on Netflix.",
     "Answers, news & Watch": "Respuestas, noticias y Ver",
     "Answers, news, and the streaming catalog land here. Trailers play right inside.": "Las respuestas, las noticias y el catálogo de streaming aparecen aquí. Los tráileres se reproducen dentro.",
     "Answers, news, and the streaming catalog all appear here, in one place.": "Las respuestas, las noticias y el catálogo de streaming aparecen aquí, en un solo lugar.",
@@ -424,6 +418,9 @@ const I18N = {
     "Switch to": "Cambiar a",
     "Voice & settings": "Voz y ajustes",
     "on the desk": "en el escritorio",
+    // --- settings: the plain-language sidebar ---
+    "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.": "Una sola caja para todo. Escribe un símbolo y pulsa Enter para graficarlo, o pregunta con tus palabras: «llévame a Robinhood», «qué hay en netflix», «escribe un informe y expórtalo a ppt». «ADD TSLA» y «DEL TSLA» gestionan tu lista de seguimiento.",
+    "One box for everything. Type a ticker to chart it, or just ask me a question. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Una sola caja para todo. Escribe un símbolo para graficarlo, o simplemente pregúntame. También entiendo órdenes normales, como, llévame a Robinhood, o, qué hay en Netflix.",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -508,13 +505,9 @@ const I18N = {
     "Search": "Rechercher",
     "The AI broadcast desk for the markets.": "Le plateau de diffusion IA pour les marchés.",
     "Create account": "Créer un compte", "Log in": "Se connecter",
-    'Ask about {sym} — or tap a suggestion below': 'Posez une question sur {sym} — ou touchez une suggestion',
     // settings tabs + guided tour
     "ACCOUNT": "COMPTE", "START": "DÉMARRER", "DATA": "DONNÉES", "VOICE": "VOIX", "MEET": "RÉUNION",
     "exit": "quitter", "skip tour": "passer la visite", "Back": "Retour", "Next": "Suivant", "Done": "Terminé",
-    "Command bar": "Barre de commande",
-    "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Saisissez ici n'importe quel symbole et appuyez sur Entrée pour l'afficher. « ADD TSLA » et « DEL TSLA » gèrent votre liste de suivi. Les noms d'entreprise fonctionnent aussi.",
-    "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Voici votre barre de commande. Saisissez un symbole comme Apple ou Nvidia et appuyez sur Entrée pour l'afficher.",
     "Your anchor — that's me": "Votre présentateur — c'est moi",
     "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.": "Je lis chaque réponse à l'antenne. Choisissez parmi 22 présentateurs et 18 décors ici même, chacun avec sa voix et son ambiance sonore.",
     "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here.": "C'est moi, votre présentateur. Vingt-deux présentateurs et dix-huit décors au choix, ici même.",
@@ -525,8 +518,6 @@ const I18N = {
     "Add your events and I announce them on air when they're due. Market events merge in automatically.": "Ajoutez vos événements et je les annonce à l'antenne le moment venu. Les événements de marché s'ajoutent automatiquement.",
     "Add events to your calendar and I'll announce them on air when they're due.": "Ajoutez des événements à votre calendrier et je les annoncerai à l'antenne le moment venu.",
     "The AI desk": "Le plateau IA",
-    "Ask anything here. I also take commands: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Posez vos questions ici. J'accepte aussi des commandes : « take me to Robinhood », « what's on netflix », « write a report and export ppt ».",
-    "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Demandez-moi ce que vous voulez ici. Je comprends aussi les commandes simples, comme, take me to Robinhood, ou, what's on Netflix.",
     "Answers, news & Watch": "Réponses, actualités et Visionnage",
     "Answers, news, and the streaming catalog land here. Trailers play right inside.": "Les réponses, les actualités et le catalogue de streaming arrivent ici. Les bandes-annonces se lisent directement.",
     "Answers, news, and the streaming catalog all appear here, in one place.": "Les réponses, les actualités et le catalogue de streaming apparaissent tous ici, au même endroit.",
@@ -738,6 +729,9 @@ const I18N = {
     "Switch to": "Passer à",
     "Voice & settings": "Voix et réglages",
     "on the desk": "au pupitre",
+    // --- settings: the plain-language sidebar ---
+    "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.": "Une seule zone pour tout. Tapez un symbole et appuyez sur Entrée pour l'afficher, ou posez une question en langage courant — « emmène-moi sur Robinhood », « qu'y a-t-il sur netflix », « rédige un rapport et exporte en ppt ». « ADD TSLA » et « DEL TSLA » gèrent votre liste de suivi.",
+    "One box for everything. Type a ticker to chart it, or just ask me a question. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Une seule zone pour tout. Tapez un symbole pour l'afficher, ou posez-moi simplement une question. Je comprends aussi les commandes courantes, comme, emmène-moi sur Robinhood, ou, qu'y a-t-il sur Netflix.",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -822,13 +816,9 @@ const I18N = {
     "Search": "Suchen",
     "The AI broadcast desk for the markets.": "Das KI-Broadcast-Pult für die Märkte.",
     "Create account": "Konto erstellen", "Log in": "Anmelden",
-    'Ask about {sym} — or tap a suggestion below': 'Fragen zu {sym} — oder tippe unten auf einen Vorschlag',
     // settings tabs + guided tour
     "ACCOUNT": "KONTO", "START": "START", "DATA": "DATEN", "VOICE": "STIMME", "MEET": "MEETING",
     "exit": "beenden", "skip tour": "Tour überspringen", "Back": "Zurück", "Next": "Weiter", "Done": "Fertig",
-    "Command bar": "Befehlsleiste",
-    "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Geben Sie hier ein beliebiges Kürzel ein und drücken Sie Enter, um es zu charten. „ADD TSLA“ und „DEL TSLA“ verwalten Ihre Beobachtungsliste. Firmennamen funktionieren auch.",
-    "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Das ist Ihre Befehlsleiste. Geben Sie ein Kürzel wie Apple oder Nvidia ein und drücken Sie Enter, um es zu charten.",
     "Your anchor — that's me": "Ihr Moderator — das bin ich",
     "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.": "Ich lese jede Antwort auf Sendung vor. Wähle hier aus 22 Moderatoren und 18 Kulissen, jede mit eigener Stimme und eigenem Klang.",
     "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here.": "Das bin ich, dein Moderator. Zweiundzwanzig Moderatoren und achtzehn Kulissen zur Auswahl, direkt hier.",
@@ -839,8 +829,6 @@ const I18N = {
     "Add your events and I announce them on air when they're due. Market events merge in automatically.": "Füge deine Termine hinzu und ich melde sie auf Sendung, wenn sie fällig sind. Markttermine kommen automatisch dazu.",
     "Add events to your calendar and I'll announce them on air when they're due.": "Trag Termine in deinen Kalender ein und ich melde sie auf Sendung, wenn sie fällig sind.",
     "The AI desk": "Das KI-Pult",
-    "Ask anything here. I also take commands: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Frag hier, was du willst. Ich verstehe auch Befehle: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.",
-    "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Fragen Sie mich hier alles. Ich verstehe auch einfache Befehle, wie, take me to Robinhood, oder, what's on Netflix.",
     "Answers, news & Watch": "Antworten, Nachrichten & Ansehen",
     "Answers, news, and the streaming catalog land here. Trailers play right inside.": "Antworten, Nachrichten und der Streaming-Katalog landen hier. Trailer laufen direkt hier.",
     "Answers, news, and the streaming catalog all appear here, in one place.": "Antworten, Nachrichten und der Streaming-Katalog erscheinen alle hier, an einem Ort.",
@@ -1052,6 +1040,9 @@ const I18N = {
     "Switch to": "Wechseln zu",
     "Voice & settings": "Stimme & Einstellungen",
     "on the desk": "am Desk",
+    // --- settings: the plain-language sidebar ---
+    "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.": "Ein Feld für alles. Tippe ein Kürzel und drück Enter, um es zu charten, oder stell einfach eine Frage — „bring mich zu Robinhood“, „was läuft auf netflix“, „schreib einen Bericht und exportier als ppt“. „ADD TSLA“ und „DEL TSLA“ verwalten deine Beobachtungsliste.",
+    "One box for everything. Type a ticker to chart it, or just ask me a question. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Ein Feld für alles. Tippe ein Kürzel, um es zu charten, oder frag mich einfach etwas. Ich verstehe auch normale Befehle, etwa, bring mich zu Robinhood, oder, was läuft auf Netflix.",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1136,12 +1127,8 @@ const I18N = {
     "Search": "Pesquisar",
     "The AI broadcast desk for the markets.": "A mesa de transmissão com IA para os mercados.",
     "Create account": "Criar conta", "Log in": "Iniciar sessão",
-    'Ask about {sym} — or tap a suggestion below': 'Pergunte sobre {sym} — ou toque numa sugestão',
     "ACCOUNT": "CONTA", "START": "INÍCIO", "DATA": "DADOS", "VOICE": "VOZ", "MEET": "REUNIÃO",
     "exit": "sair", "skip tour": "ignorar visita", "Back": "Voltar", "Next": "Seguinte", "Done": "Concluído",
-    "Command bar": "Barra de comandos",
-    "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Escreva aqui qualquer símbolo e prima Enter para o representar no gráfico. “ADD TSLA” e “DEL TSLA” gerem a sua lista de acompanhamento. Nomes de empresas também funcionam.",
-    "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Esta é a sua barra de comandos. Escreva um símbolo como Apple ou Nvidia e prima Enter para o representar no gráfico.",
     "Your anchor — that's me": "O seu apresentador — sou eu",
     "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.": "Leio cada resposta no ar. Escolhe entre 22 apresentadores e 18 cenários aqui mesmo, cada um com a sua voz e ambiente sonoro.",
     "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here.": "Esse sou eu, o teu apresentador. Vinte e dois apresentadores e dezoito cenários à escolha, aqui mesmo.",
@@ -1152,8 +1139,6 @@ const I18N = {
     "Add your events and I announce them on air when they're due. Market events merge in automatically.": "Adiciona os teus eventos e eu anuncio-os no ar quando chegar a hora. Os eventos de mercado juntam-se automaticamente.",
     "Add events to your calendar and I'll announce them on air when they're due.": "Adiciona eventos ao teu calendário e eu anuncio-os no ar quando chegar a hora.",
     "The AI desk": "A mesa de IA",
-    "Ask anything here. I also take commands: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Pergunta o que quiseres aqui. Também aceito comandos: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.",
-    "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Pergunte-me o que quiser aqui. Também compreendo comandos simples, como, take me to Robinhood, ou, what's on Netflix.",
     "Answers, news & Watch": "Respostas, notícias e Ver",
     "Answers, news, and the streaming catalog land here. Trailers play right inside.": "As respostas, as notícias e o catálogo de streaming aparecem aqui. Os trailers reproduzem-se aqui dentro.",
     "Answers, news, and the streaming catalog all appear here, in one place.": "As respostas, as notícias e o catálogo de streaming aparecem todos aqui, num só lugar.",
@@ -1365,6 +1350,9 @@ const I18N = {
     "Switch to": "Mudar para",
     "Voice & settings": "Voz e definições",
     "on the desk": "na bancada",
+    // --- settings: the plain-language sidebar ---
+    "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.": "Uma só caixa para tudo. Escreve um símbolo e carrega em Enter para o traçar, ou faz uma pergunta por palavras tuas — «leva-me ao Robinhood», «o que há na netflix», «escreve um relatório e exporta em ppt». «ADD TSLA» e «DEL TSLA» gerem a tua lista de acompanhamento.",
+    "One box for everything. Type a ticker to chart it, or just ask me a question. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Uma só caixa para tudo. Escreve um símbolo para o traçar, ou simplesmente faz-me uma pergunta. Também percebo comandos normais, como, leva-me ao Robinhood, ou, o que há na Netflix.",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -1449,12 +1437,8 @@ const I18N = {
     "Search": "Cerca",
     "The AI broadcast desk for the markets.": "La postazione di trasmissione IA per i mercati.",
     "Create account": "Crea account", "Log in": "Accedi",
-    'Ask about {sym} — or tap a suggestion below': 'Chiedi di {sym} — o tocca un suggerimento',
     "ACCOUNT": "ACCOUNT", "START": "INIZIO", "DATA": "DATI", "VOICE": "VOCE", "MEET": "RIUNIONE",
     "exit": "esci", "skip tour": "salta il tour", "Back": "Indietro", "Next": "Avanti", "Done": "Fatto",
-    "Command bar": "Barra dei comandi",
-    "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.": "Digita qui un simbolo qualsiasi e premi Invio per rappresentarlo nel grafico. “ADD TSLA” e “DEL TSLA” gestiscono la tua lista di osservazione. Funzionano anche i nomi delle aziende.",
-    "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it.": "Questa è la tua barra dei comandi. Digita un simbolo come Apple o Nvidia e premi Invio per rappresentarlo nel grafico.",
     "Your anchor — that's me": "Il tuo conduttore — sono io",
     "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.": "Leggo ogni risposta in onda. Scegli tra 22 conduttori e 18 scenografie proprio qui, ognuna con voce e suono propri.",
     "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here.": "Sono io, il tuo conduttore. Ventidue conduttori e diciotto scenografie tra cui scegliere, proprio qui.",
@@ -1465,8 +1449,6 @@ const I18N = {
     "Add your events and I announce them on air when they're due. Market events merge in automatically.": "Aggiungi i tuoi eventi e li annuncio in onda quando è il momento. Gli eventi di mercato si aggiungono automaticamente.",
     "Add events to your calendar and I'll announce them on air when they're due.": "Aggiungi eventi al tuo calendario e li annuncerò in onda quando sarà il momento.",
     "The AI desk": "La postazione IA",
-    "Ask anything here. I also take commands: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.": "Chiedimi qualsiasi cosa qui. Accetto anche comandi: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.",
-    "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Chiedimi qualsiasi cosa qui. Capisco anche comandi semplici, come, take me to Robinhood, oppure, what's on Netflix.",
     "Answers, news & Watch": "Risposte, notizie e Guarda",
     "Answers, news, and the streaming catalog land here. Trailers play right inside.": "Risposte, notizie e il catalogo streaming arrivano qui. I trailer si riproducono all'interno.",
     "Answers, news, and the streaming catalog all appear here, in one place.": "Le risposte, le notizie e il catalogo di streaming appaiono tutti qui, in un unico posto.",
@@ -1678,6 +1660,9 @@ const I18N = {
     "Switch to": "Passa a",
     "Voice & settings": "Voce e impostazioni",
     "on the desk": "al desk",
+    // --- settings: the plain-language sidebar ---
+    "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.": "Una sola casella per tutto. Scrivi un simbolo e premi Invio per graficarlo, oppure fai una domanda a parole tue — «portami su Robinhood», «cosa c'è su netflix», «scrivi un report ed esporta in ppt». «ADD TSLA» e «DEL TSLA» gestiscono la tua lista di osservazione.",
+    "One box for everything. Type a ticker to chart it, or just ask me a question. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Una sola casella per tutto. Scrivi un simbolo per graficarlo, oppure fammi semplicemente una domanda. Capisco anche i comandi normali, tipo, portami su Robinhood, o, cosa c'è su Netflix.",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -2107,10 +2092,12 @@ function TickFlash({ value, children }) {
 }
 
 const TOUR_STEPS = [
-  { target: "tour-symbol", title: "Command bar", body: "Type any ticker here and press Enter to chart it. “ADD TSLA” and “DEL TSLA” manage your watchlist. Company names work too.", say: "This is your command bar. Type a ticker like Apple or Nvidia and press enter to chart it." },
+  // The command-bar step is gone with the command bar. Charting a symbol and
+  // asking a question are one control now, so they are one step — two stops on
+  // the tour pointing at the same box is the redundancy the merge removed.
   { target: "tour-anchor", title: "Your anchor — that's me", body: "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.", say: "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here." },
   { target: "tour-lang", title: "Speak your language", body: "Switches the interface and my spoken answers between six languages. Your choice is remembered.", say: "Switch the whole app, and my answers, into any of six languages right here." },
-  { target: "tour-ask", title: "The AI desk", body: "Ask anything here. I also take commands: “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”.", say: "Ask me anything here. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix." },
+  { target: "tour-ask", title: "The AI desk", body: "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.", say: "One box for everything. Type a ticker to chart it, or just ask me a question. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix." },
   { target: "tour-response", title: "Answers, news & Watch", body: "Answers, news, and the streaming catalog land here. Trailers play right inside.", say: "Answers, news, and the streaming catalog all appear here, in one place." },
   { target: "tour-export", title: "Export & edit anything", body: "Export the session as Word, PowerPoint or Excel. A review step lets you edit everything before it saves.", say: "Export your session as Word, PowerPoint or Excel. You can edit everything before it saves." },
   { target: "tour-ticker", title: "Ticker tape", body: "Your watchlist scrolls across the top. Flip DEMO to LIVE in settings for real Finnhub quotes.", say: "Your watchlist scrolls across the ticker tape. Switch to live Finnhub quotes in settings and it stays live." },
@@ -6618,15 +6605,31 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const cmdOpen = cmdFocus && cmdRows > 0;
   useEffect(() => { setCmdIdx(0); }, [cmd]);
 
-  // Enter on a highlighted row does what that row says. Anything else — a verb
-  // command, a closed dropdown — falls through to the behaviour the bar has
-  // always had, so nothing a user already knows how to type stops working.
+  // Enter on a highlighted row does what that row says.
+  //
+  // With the list closed this used to fall through to runCmd(), which treats
+  // anything that is not HELP/ADD/DEL as a symbol to chart. That was right when
+  // this was a command bar. It is wrong now that the same box is the chat
+  // composer: "why is the market down today" matches no symbol, so the list
+  // never opens, so the question went to chartQuery() and vanished.
+  //
+  // The rule: one bare word that could be a ticker gets charted — that is the
+  // "type any ticker and press Enter" promise, and it has to survive a symbol
+  // that is not in UNIVERSE. Anything with a space in it is a question.
   const runCmdRow = async () => {
-    if (!cmdOpen) return runCmd();
-    if (cmdIdx >= cmdMatches.length) { const q = cmd.trim(); setCmd(""); askDesk(q); return; }
-    const pick = cmdMatches[cmdIdx];
+    if (cmdOpen) {
+      if (cmdIdx >= cmdMatches.length) { const q = cmd.trim(); setCmd(""); askDesk(q); return; }
+      const pick = cmdMatches[cmdIdx];
+      setCmd("");
+      await chartQuery(pick.sym);
+      return;
+    }
+    const raw = cmd.trim();
+    if (!raw) return;
+    if (/^(help|add|del)\b/i.test(raw)) return runCmd();
+    if (/^[A-Za-z.]{1,6}$/.test(raw)) { setCmd(""); await chartQuery(raw); return; }
     setCmd("");
-    await chartQuery(pick.sym);
+    askDesk(raw);
   };
 
   const runCmd = async () => {
@@ -9761,108 +9764,24 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             </span>
           </div>
 
-          {/* ===== command bar =====
-               Brand, navigation, the clock and the account menu live in
-               AppShell's sticky header. What is left is the thing this row was
-               actually for: typing a symbol — and that belongs to the desk,
-               not to the page chrome. Typing a symbol and asking about it are
-               the same gesture, so they share a panel. */}
-          <div className="v-cmdrow" style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, borderBottom: `1px solid ${C.panelEdge}`, flexWrap: "wrap" }}>
-            <div id="tour-symbol" className="cmdbar" style={{ position: "relative", flex: 1, minWidth: 240, display: "flex", alignItems: "center", background: C.inputBg, border: `1px solid ${C.edgeStrong}`, borderRadius: R.md, padding: "0 8px 0 15px" }}>
-              {/* The prompt is furniture, not an accent. Green here was the same
-                  colour as the Ask button two inches to its right, which is how
-                  a screen ends up with no primary action. */}
-              <span aria-hidden="true" style={{ fontFamily: MONO, color: C.faint, fontSize: 13 }}>&gt;</span>
-              <input
-                value={cmd}
-                onChange={e => setCmd(e.target.value)}
-                onFocus={() => setCmdFocus(true)}
-                /* A blur that lands ON a row must not close the list before the
-                   click registers — the rows cancel mousedown, so by the time
-                   blur fires the pick has already run. The timeout covers the
-                   tab-away case. */
-                onBlur={() => setTimeout(() => setCmdFocus(false), 120)}
-                onKeyDown={e => {
-                  if (e.key === "Enter") { e.preventDefault(); runCmdRow(); }
-                  else if (e.key === "ArrowDown" && cmdOpen) { e.preventDefault(); setCmdIdx(i => (i + 1) % cmdRows); }
-                  else if (e.key === "ArrowUp" && cmdOpen) { e.preventDefault(); setCmdIdx(i => (i - 1 + cmdRows) % cmdRows); }
-                  else if (e.key === "Escape" && cmdOpen) { e.preventDefault(); setCmdFocus(false); }
-                }}
-                role="combobox" aria-expanded={cmdOpen} aria-controls="cmd-typeahead" aria-autocomplete="list"
-                aria-activedescendant={cmdOpen ? `cmd-row-${cmdIdx}` : undefined}
-                placeholder={t("Type a symbol and press Enter  ·  HELP for commands")}
-                aria-label="Command bar"
-                style={{ flex: 1, minWidth: 0, background: "transparent", border: "none", outline: "none", color: C.text, fontFamily: SANS, fontSize: 14.5, padding: "13px 10px" }}
-              />
-              {/* Not a chip: a bordered box inside an input reads as a second
-                  control. Dot plus sentence, the same one the header carries. */}
-              <span className="v-cmdstatus" style={{ display: "flex", alignItems: "center", gap: 6, color: C.faint, fontFamily: SANS, fontSize: 11.5, whiteSpace: "nowrap", marginRight: 10, flexShrink: 0 }}>
-                <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: marketStatus.open ? C.up : C.amber, flexShrink: 0 }} />
-                {marketStatus.label}
-              </span>
-              <button onClick={() => openPaletteRef.current?.()} aria-label="Open command palette" title={t("Search")}
-                style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: 6, color: C.faint, fontFamily: MONO, fontSize: 12, padding: "4px 8px", marginRight: 8, cursor: "pointer", whiteSpace: "nowrap", transition: "border-color .12s, color .12s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = C.faint; e.currentTarget.style.color = C.text; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.edgeStrong; e.currentTarget.style.color = C.faint; }}>
-                ⌘K
-              </button>
-              {/* The single primary action on this screen. "GO" was a terminal
-                  verb for a terminal UI; this one asks a question. */}
-              <button onClick={runCmdRow} style={{ ...button("primary", "sm"), padding: "10px 22px", fontSize: 14, fontWeight: 700, borderRadius: 9 }}>{t("Ask")}</button>
+          {/* ===== the command bar is gone =====
+               It and the chat composer were two inputs with two Ask buttons on
+               one screen, asking for the same thing in two ways. Typing a
+               symbol and asking about it were always the same gesture; the
+               typeahead is what made merging them safe, because it is what
+               tells a ticker from a question before you commit to either.
 
-              {/* Flush under the input and inset 8px, so it reads as the input
-                  growing rather than as a panel landing on top of it. Absolutely
-                  positioned on purpose: in the reference this sits in its own
-                  column, but here the desk is below it and a dropdown that
-                  pushed the whole conversation down every keystroke would be
-                  unusable. surfaceAlt is DARKER than the input — a dropdown is
-                  cut into the page, not lifted off it. */}
-              {cmdOpen && (
-                <div id="cmd-typeahead" role="listbox" aria-label="Symbol matches" className="vt-fadeup"
-                  style={{ position: "absolute", top: "calc(100% - 1px)", left: 8, right: 8, zIndex: 25, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderTop: "none", borderRadius: `0 0 ${R.md}px ${R.md}px`, overflow: "hidden", boxShadow: SHADOW.lg }}>
-                  {cmdMatches.map((m, i) => {
-                    const row = getRow(m.sym);
-                    const on = i === cmdIdx;
-                    return (
-                      <div
-                        key={m.sym} id={`cmd-row-${i}`} role="option" aria-selected={on}
-                        onMouseDown={e => { e.preventDefault(); setCmd(""); chartQuery(m.sym); }}
-                        onMouseEnter={() => setCmdIdx(i)}
-                        style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", cursor: "pointer", background: on ? "#131922" : "transparent", borderLeft: `2px solid ${on ? C.accent : "transparent"}` }}
-                      >
-                        <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 13, width: 54, flexShrink: 0, color: on ? C.text : C.muted }}>{m.sym}</span>
-                        <span style={{ fontFamily: SANS, fontSize: 13, color: on ? C.muted : C.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
-                        <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 13, color: on ? C.text : C.muted, whiteSpace: "nowrap" }}>
-                          {row?.price != null ? fmt(row.price) : "—"}{" "}
-                          <span style={{ color: dirColorN(row?.chg) }}>{row?.chgPct != null ? pct(row.chgPct) : ""}</span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                  {/* The escape hatch. Whatever you typed is a question if it is
-                      not a symbol, and this row is what says so. */}
-                  <div
-                    id={`cmd-row-${cmdMatches.length}`} role="option" aria-selected={cmdIdx === cmdMatches.length}
-                    onMouseDown={e => { e.preventDefault(); const q = cmd.trim(); setCmd(""); askDesk(q); }}
-                    onMouseEnter={() => setCmdIdx(cmdMatches.length)}
-                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", cursor: "pointer", borderTop: `1px solid ${C.edge}`, background: cmdIdx === cmdMatches.length ? "#131922" : "transparent", color: C.faint, fontFamily: SANS, fontSize: 12.5 }}
-                  >
-                    <span aria-hidden="true" style={{ fontFamily: MONO }}>↵</span>
-                    {t('ask the desk about "{q}"').replace("{q}", cmd.trim())}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {liveMeeting && (
+               Everything that row carried now lives on the composer at the
+               foot of the conversation: the typeahead, the market status, ⌘K.
+               See the <ChatAssistant> call below. */}
+          {liveMeeting && (
+            <div style={{ display: "flex", padding: "12px 12px 0" }}>
               <a href={liveMeeting} target="_blank" rel="noopener noreferrer" title="Rejoin your live meeting"
                 style={{ ...chip("live"), color: C.textOnLive, background: C.liveFill, borderColor: C.liveFill, textDecoration: "none" }}>
                 <span className="v-pulse" aria-hidden="true">🔴</span> ON AIR ↗
               </a>
-            )}
-
-          </div>
-
+            </div>
+          )}
 
           {/* embedded player — docked at the TOP of the desk so a trailer opened from a
               tall catalog grid is visible without scrolling */}
@@ -10083,10 +10002,79 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 true, and now this is where they land. */}
             <div id="tour-response" className="v-askrow-chat">
             <ChatAssistant
+
               embedded
               compact
               messages={chatThread}
               attachments={deskAttachments}
+              /* ===== the merged input =====
+                 This box is the desk's only input now. It owns its text so the
+                 typeahead can rank symbols against it, and Enter means what the
+                 highlighted row says — chart this ticker, or ask this question.
+                 Free text that matches no symbol never opens the list at all,
+                 so a question behaves exactly as it did in a chat composer. */
+              value={cmd}
+              onChange={setCmd}
+              onFocus={() => setCmdFocus(true)}
+              /* A blur that lands ON a row must not close the list before the
+                 click registers — the rows cancel mousedown, so by the time
+                 blur fires the pick has already run. The timeout covers the
+                 tab-away case. */
+              onBlur={() => setTimeout(() => setCmdFocus(false), 120)}
+              onKeyDown={e => {
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); runCmdRow(); }
+                else if (e.key === "ArrowDown" && cmdOpen) { e.preventDefault(); setCmdIdx(i => (i + 1) % cmdRows); }
+                else if (e.key === "ArrowUp" && cmdOpen) { e.preventDefault(); setCmdIdx(i => (i - 1 + cmdRows) % cmdRows); }
+                else if (e.key === "Escape" && cmdOpen) { e.preventDefault(); setCmdFocus(false); }
+              }}
+              /* The same status the header carries, said once more where the
+                 typing happens. Not a chip: a bordered box inside an input
+                 reads as a second control. */
+              status={
+                <span className="v-cmdstatus" style={{ display: "flex", alignItems: "center", gap: 6, color: C.faint, fontFamily: SANS, fontSize: 11.5, whiteSpace: "nowrap", flexShrink: 0, paddingBottom: 10 }}>
+                  <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: marketStatus.open ? C.up : C.amber, flexShrink: 0 }} />
+                  {marketStatus.label}
+                </span>
+              }
+              /* Opens UPWARD: this input sits at the foot of the conversation,
+                 so a list that dropped down would open off the bottom of the
+                 desk. surfaceAlt is DARKER than the composer — a dropdown is
+                 cut into the page, not lifted off it. */
+              overlay={cmdOpen && (
+                <div id="cmd-typeahead" role="listbox" aria-label="Symbol matches" className="vt-fadeup"
+                  style={{ position: "absolute", bottom: "calc(100% + 6px)", left: -1, right: -1, zIndex: 25, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.md, overflow: "hidden", boxShadow: SHADOW.lg }}>
+                  {cmdMatches.map((m, i) => {
+                    const row = getRow(m.sym);
+                    const on = i === cmdIdx;
+                    return (
+                      <div
+                        key={m.sym} id={`cmd-row-${i}`} role="option" aria-selected={on}
+                        onMouseDown={e => { e.preventDefault(); setCmd(""); chartQuery(m.sym); }}
+                        onMouseEnter={() => setCmdIdx(i)}
+                        style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", cursor: "pointer", background: on ? "#131922" : "transparent", borderLeft: `2px solid ${on ? C.accent : "transparent"}` }}
+                      >
+                        <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 13, width: 54, flexShrink: 0, color: on ? C.text : C.muted }}>{m.sym}</span>
+                        <span style={{ fontFamily: SANS, fontSize: 13, color: on ? C.muted : C.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
+                        <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 13, color: on ? C.text : C.muted, whiteSpace: "nowrap" }}>
+                          {row?.price != null ? fmt(row.price) : "—"}{" "}
+                          <span style={{ color: dirColorN(row?.chg) }}>{row?.chgPct != null ? pct(row.chgPct) : ""}</span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {/* The escape hatch. Whatever you typed is a question if it is
+                      not a symbol, and this row is what says so. */}
+                  <div
+                    id={`cmd-row-${cmdMatches.length}`} role="option" aria-selected={cmdIdx === cmdMatches.length}
+                    onMouseDown={e => { e.preventDefault(); const q = cmd.trim(); setCmd(""); askDesk(q); }}
+                    onMouseEnter={() => setCmdIdx(cmdMatches.length)}
+                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", cursor: "pointer", borderTop: `1px solid ${C.edge}`, background: cmdIdx === cmdMatches.length ? "#131922" : "transparent", color: C.faint, fontFamily: SANS, fontSize: 12.5 }}
+                  >
+                    <span aria-hidden="true" style={{ fontFamily: MONO }}>↵</span>
+                    {t('ask the desk about "{q}"').replace("{q}", cmd.trim())}
+                  </div>
+                </div>
+              )}
               onSend={(text) => askDesk(text)}
               onClear={() => { stopAsk(); setChatThread([]); }}
               /* Retry re-asks the question that produced the failed answer, not
@@ -10105,7 +10093,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               anchorName={anchorName}
               busy={aiResponses.desk?.status === "running" || reportBusy}
               subject={selected}
-              placeholder={t('Ask about {sym} — or tap a suggestion below').replace("{sym}", selected)}
+              /* The merged box says what it now does: a symbol charts, anything
+                 else is a question. This is the reference's own line. */
+              placeholder={t("Type a symbol and press Enter  ·  HELP for commands")}
               suggestions={[
                 { label: t("Summarize {sym} today").replace("{sym}", selected), value: `Summarize ${selected} today — price action and why` },
                 { label: t("What's moving today?"), value: "What's moving in the market today and why?" },
@@ -10113,7 +10103,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 { label: t("What's on Netflix?"), value: "what's on netflix" },
                 { label: t("Write a report → PPT"), value: "write a report and export ppt" },
               ]}
-              toolbar={voiceSupported ? (
+              toolbar={<>
+                {/* ⌘K came off the command bar with everything else. */}
+                <button onClick={() => openPaletteRef.current?.()} aria-label="Open command palette" title={t("Search")}
+                  className="v-interactive v-cmdpalette"
+                  style={{ display: "inline-flex", alignItems: "center", background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: 6, color: C.faint, fontFamily: MONO, fontSize: 12, padding: "7px 9px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+                  ⌘K
+                </button>
+                {voiceSupported ? (
                 <button onClick={toggleVoice} aria-label={listening ? "Stop listening" : "Talk to the desk"} title="Talk to the desk"
                   className={listening ? "v-tap v-pulse" : "v-tap"}
                   aria-pressed={listening}
@@ -10127,7 +10124,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <line x1="12" y1="18" x2="12" y2="22" />
                   </svg>
                 </button>
-              ) : null}
+                ) : null}
+              </>}
             />
             {exportMsg && (
               <div style={{ marginTop: 8, ...TYPE.bodySm, fontSize: 12, color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted }}>
