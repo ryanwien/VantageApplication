@@ -690,16 +690,11 @@ button:not(:disabled):active { transform: scale(0.97); }
 }
 
 /* ---------- the desk composer ----------
-   One input now: the command bar merged into it, bringing a market-status line
-   and a ⌘K chip along. Those are fixed-width and the textarea is the only
-   flexible thing in the row, so on a phone they add up to more than the row is
-   wide and the input collapses to nothing. Measured at 375px: 252px of
-   companions plus 60px of gaps inside a 297px bar.
-
-   Both are safe to drop here. The market status is already in the header, and
-   a ⌘K chip on a device with no ⌘ key is decoration. */
+   The market status has been removed from this row entirely (it is in the
+   header), so only the shortcut chip still needs dropping on a phone — a
+   keyboard shortcut on a device with no keyboard is decoration, and the
+   textarea is the one flexible thing in the row. */
 @media (max-width: 700px) {
-  .cmdbar .v-cmdstatus { display: none !important; }
   .v-cmdpalette { display: none !important; }
 }
 

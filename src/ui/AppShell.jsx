@@ -377,6 +377,24 @@ export default function AppShell({
     return () => document.removeEventListener("keydown", onKey);
   }, [mobileNav]);
 
+  // Cmd/Ctrl + K opens the palette.
+  //
+  // The composer has advertised "⌘K" on a chip since the command bar merged,
+  // and nothing was ever listening — the palette could only be opened by
+  // clicking that chip. Both modifiers are accepted rather than branching on
+  // the platform: a Mac user pressing Ctrl+K means the same thing, and this is
+  // the one shortcut every app in this category shares.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+      if ((e.key || "").toLowerCase() !== "k") return;
+      e.preventDefault();          // Firefox aims Ctrl+K at its own search bar
+      setPaletteOpen(v => !v);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
   // The palette trigger lives in the host's command bar, not this header — but
   // the palette itself stays here where the commands are.
   useEffect(() => {
