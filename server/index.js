@@ -396,6 +396,13 @@ const planFromStripeObject = (obj) => obj?.metadata?.plan || Object.entries(STRI
 // not a security boundary, so a restart clearing the counters is acceptable and
 // it keeps the backend dependency-free.
 const RATE_BUCKETS = new Map();
+// Intraday history, cached briefly. A watchlist of ten symbols re-selected a
+// few times a minute would otherwise be ten upstream calls a click, against an
+// endpoint that is doing us a favour by answering at all. Five minutes is well
+// inside a 5-minute candle's own resolution, so nothing is lost by it.
+const CANDLE_TTL_MS = 5 * 60 * 1000;
+const candleCache = new Map();
+
 function rateLimit(key, limit, windowMs) {
   const now = Date.now(), slot = Math.floor(now / windowMs), id = `${key}:${slot}`;
   const hits = (RATE_BUCKETS.get(id) || 0) + 1;
@@ -493,6 +500,77 @@ const server = http.createServer(async (req, res) => {
       // A key rejected upstream is our misconfiguration, not the caller's.
       if (pairs.every(([, v]) => v.error === "key")) return send(res, 502, { error: "The server's Finnhub key was rejected." });
       return send(res, 200, { quotes });
+    }
+
+    // ---- INTRADAY CANDLES ----
+    // The live chart could only ever draw what it had polled since page load,
+    // so a minute after opening it was a flat line across a squashed axis.
+    // Finnhub cannot fix that: /stock/candle answers 403 "You don't have
+    // access to this resource" on the free tier, verified against this
+    // server's own key. Yahoo's chart endpoint answers the same question for
+    // nothing and without a key, so that is what this proxies.
+    //
+    // It is an UNDOCUMENTED endpoint. It can change shape or start refusing us
+    // at any time, so every failure here is soft: the client falls back to the
+    // poll-only tape it used to have, and the chart still works.
+    if (p === "/api/candles" && req.method === "GET") {
+      const rl = rateLimit(`cd:${clientIp(req)}`, ANON_QUOTE_PER_HOUR, 3600000);
+      if (!rl.ok) return send(res, 429,
+        { error: `Rate limit reached (${rl.limit} per hour).`, retryInSec: Math.ceil(rl.resetMs / 1000) },
+        { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
+
+      const symbol = String(url.searchParams.get("symbol") || "").trim().toUpperCase();
+      if (!/^[A-Z.-]{1,10}$/.test(symbol)) return send(res, 400, { error: "Pass ?symbol=TICKER." });
+      // Two shapes only, both allow-listed — never interpolate a caller's
+      // string into the upstream URL.
+      const spans = {
+        "1d": { range: "1d", interval: "5m" },
+        "5d": { range: "5d", interval: "15m" },
+      };
+      const span = spans[String(url.searchParams.get("span") || "1d")] || spans["1d"];
+
+      const hit = candleCache.get(`${symbol}:${span.range}`);
+      if (hit && Date.now() - hit.at < CANDLE_TTL_MS) return send(res, 200, hit.body);
+
+      let r;
+      try {
+        r = await fetch(
+          `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${span.interval}&range=${span.range}`,
+          {
+            // Without a browser UA this endpoint returns 429 to some hosts.
+            headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36" },
+            signal: AbortSignal.timeout(8000),
+          });
+      } catch { return send(res, 502, { error: "Could not reach the history feed." }); }
+      if (!r.ok) return send(res, 502, { error: `History feed HTTP ${r.status}` });
+
+      let j;
+      try { j = await r.json(); } catch { return send(res, 502, { error: "History feed sent something unreadable." }); }
+      const result = j?.chart?.result?.[0];
+      const stamps = result?.timestamp;
+      const closes = result?.indicators?.quote?.[0]?.close;
+      if (!Array.isArray(stamps) || !Array.isArray(closes)) return send(res, 404, { error: `No history for ${symbol}.` });
+
+      // Yahoo pads the session with nulls for minutes that never traded. Drop
+      // them rather than plotting gaps or, worse, zeroes.
+      const points = [];
+      for (let i = 0; i < stamps.length; i++) {
+        const c = closes[i];
+        if (typeof c !== "number" || !Number.isFinite(c)) continue;
+        points.push({ t: stamps[i], c: +c.toFixed(4) });
+      }
+      if (!points.length) return send(res, 404, { error: `No history for ${symbol}.` });
+
+      const body = {
+        symbol,
+        span: span.range,
+        points,
+        prevClose: typeof result?.meta?.chartPreviousClose === "number" ? result.meta.chartPreviousClose : null,
+        tz: result?.meta?.exchangeTimezoneName || "America/New_York",
+        gmtoffset: typeof result?.meta?.gmtoffset === "number" ? result.meta.gmtoffset : 0,
+      };
+      candleCache.set(`${symbol}:${span.range}`, { at: Date.now(), body });
+      return send(res, 200, body);
     }
 
     // ---- GEMINI (server-held key) ----

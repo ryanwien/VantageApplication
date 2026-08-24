@@ -2672,6 +2672,36 @@ function fmtEventTime(ev) {
 */
 const ACTIONS = { sip: 2700, papers: 2600, adjust: 1500, react: 1300, stretch: 1900, write: 2800, bell: 3400, eat: 4600, break: 5200, cheer: 1700 };
 
+// Which P&F box grid a live tape deserves — decided by the DATA, not the mode.
+//
+// INTRADAY_BOX_PCT is a 4x finer grid, and its reason for existing was that "a
+// live tape only sees the minutes since page load", so the daily scale would
+// print one column and the panel would sit on its empty state all day. Seeding
+// the tape from real intraday candles makes that premise false: a live tape now
+// covers the same ground demo's 390 seeded bars do, and a 4x grid over a full
+// session prints a wall of noise instead of a chart.
+//
+// Reading it off the tape's own range covers both, including the case that
+// still matters — candle seeding failed and the tape really is poll-only.
+// 0.4% of price is about the smallest move that reads as a session rather than
+// as a few minutes of drift.
+function pnfOptsFor(prices) {
+  const ys = (prices || []).filter(Number.isFinite);
+  if (ys.length < 2) return { boxPct: INTRADAY_BOX_PCT };
+  const hi = Math.max(...ys), lo = Math.min(...ys);
+  return hi > 0 && (hi - lo) / hi >= 0.004 ? {} : { boxPct: INTRADAY_BOX_PCT };
+}
+
+// One clock for the tape's x-axis, and it is the exchange's, not the viewer's.
+// A market chart labelled in the reader's local time tells someone in Denver
+// that the opening bell rang at 07:30, which is a different flavour of wrong
+// from being merely unhelpful. Built once — constructing an Intl formatter per
+// point is the expensive way to do this, and the tape is hundreds of points.
+const TAPE_CLOCK = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/New_York", hour: "numeric", minute: "2-digit", hour12: true,
+});
+const tapeLabel = (ms) => TAPE_CLOCK.format(new Date(ms));
+
 // Current time on the exchange's clock (US/Eastern, auto-DST via Intl). The anchor's trading day runs
 // on NY time so the opening bell and meals stay coherent no matter where the viewer sits.
 // Returns { day: 0=Sun…6=Sat, mins: minutes since ET midnight, stamp: "YYYY-M-D" in ET }.
@@ -6316,8 +6346,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     if (!r.ok) { setLiveErr(r.status === 503 ? "live quotes are not configured on this server" : `HTTP ${r.status}`); return false; }
     let quotes = {};
     try { quotes = (await r.json())?.quotes || {}; } catch { return false; }
-    const now = new Date();
-    const stamp = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+    // Exchange time, matching the labels the seeded session carries — the two
+    // halves of one tape cannot be on two different clocks.
+    const stamp = tapeLabel(Date.now());
     let firstErr = "";
     for (const s of syms) {
       const q = quotes[s];
@@ -6343,6 +6374,43 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     setLiveErr(firstErr);
     return false;
   }, [live, watchlist, selected]);
+
+  // ---- seed the live tape with the session that already happened ----
+  // Without this the chart can only draw what it has polled since page load, so
+  // a minute after opening it is a flat line: six points spanning fifteen cents
+  // of a stock whose day covered nine dollars.
+  //
+  // Finnhub cannot supply this. /stock/candle answers 403 "You don't have
+  // access to this resource" on the free tier — verified against this project's
+  // own key — so the server proxies Yahoo's chart endpoint instead. That is an
+  // undocumented endpoint, so EVERY failure here is silent by design: the tape
+  // falls back to poll-only, which is exactly what it did before, and the chart
+  // still works. It is an upgrade, never a dependency.
+  // NB: `tapeSeededRef`, not `seededRef` — the chat-id seeder above already
+  // owns that name in this same scope.
+  const tapeSeededRef = useRef({});
+  useEffect(() => {
+    if (!live || !selected || tapeSeededRef.current[selected]) return;
+    tapeSeededRef.current[selected] = true;             // one attempt per symbol per session
+    const ac = new AbortController();
+    (async () => {
+      try {
+        const r = await fetch(`/api/candles?symbol=${encodeURIComponent(selected)}`, { signal: ac.signal });
+        if (!r.ok) return;
+        const j = await r.json();
+        const pts = Array.isArray(j?.points) ? j.points : [];
+        if (!pts.length) return;
+        setLiveTape(prev => {
+          const seeded = pts.map(p => ({ t: tapeLabel(p.t * 1000), price: p.c }));
+          // Anything already polled happened AFTER the session so far, so it
+          // keeps its place at the end rather than being thrown away.
+          const merged = [...seeded, ...(prev[selected] || [])].slice(-500);
+          return { ...prev, [selected]: merged.map((p, i) => ({ ...p, i })) };
+        });
+      } catch { /* soft by design — see above */ }
+    })();
+    return () => ac.abort();
+  }, [live, selected]);
 
   // Self-scheduling poll: exponential backoff on 429 (the shared demo key is easily rate-limited),
   // plus a much slower cadence when the market is closed — quotes aren't moving, so don't burn the quota.
@@ -7361,9 +7429,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     return st ? st.bars.slice(0, st.cursor + 1) : [];
   }, [live, liveTape, demoMkt, selected]);
 
-  // Live tapes only see the minutes since page load, so they get the finer
-  // intraday box grid; demo keeps the daily 0.1% scale its 390 seeded bars are tuned for.
-  const pnf = useMemo(() => (chartMode === "pnf" ? buildPnF(chartData.map(d => d.price), live ? { boxPct: INTRADAY_BOX_PCT } : {}) : null), [chartMode, chartData, live]);
+  const pnf = useMemo(() => (chartMode === "pnf" ? buildPnF(chartData.map(d => d.price), live ? pnfOptsFor(chartData.map(d => d.price)) : {}) : null), [chartMode, chartData, live]);
   const pnfPattern = useMemo(() => (pnf ? detectPattern(pnf.columns) : null), [pnf]);
   // Warming-up detail for the P&F empty state: where the tape sits on the box
   // grid and exactly what price prints enough columns to draw the chart.
@@ -7371,7 +7437,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     if (chartMode !== "pnf" || (pnf && pnf.columns.length >= 2)) return null;
     const prices = chartData.map(d => d.price).filter(v => Number.isFinite(v) && v > 0);
     if (!prices.length) return null;
-    const targets = pnfTargets(prices, live ? { boxPct: INTRADAY_BOX_PCT } : {});
+    const targets = pnfTargets(prices, live ? pnfOptsFor(prices) : {});
     if (!targets) return null;
     return { ...targets, last: prices[prices.length - 1], lo: Math.min(...prices), hi: Math.max(...prices) };
   }, [chartMode, chartData, pnf, live]);
@@ -7891,7 +7957,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     const next = {};
     let announced = false;
     for (const sym of syms) {
-      const pat = detectPattern(buildPnF(getCloses(sym), live ? { boxPct: INTRADAY_BOX_PCT } : {}).columns);
+      const closes = getCloses(sym);
+      const pat = detectPattern(buildPnF(closes, live ? pnfOptsFor(closes) : {}).columns);
       if (pat) next[sym] = pat;
       const prev = pnfSeenRef.current[sym];
       const wantsAnnounce = pat && prev !== undefined && pat.id !== prev;
