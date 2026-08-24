@@ -527,6 +527,16 @@ const I18N = {
     "write analyst report": "escribir informe de analista",
     "writing…": "escribiendo…",
     // --- settings: the plain-language sidebar ---
+    // --- settings: the plain-language sidebar ---
+    "Couldn't reach the live feed for {sym}.": "No se pudo contactar con el feed en directo para {sym}.",
+    "Live prices aren't set up on this server — the desk is on demo data.": "Los precios en directo no están configurados en este servidor: la mesa usa datos de demostración.",
+    "No quote for {sym} right now.": "Ahora mismo no hay cotización de {sym}.",
+    "The live feed is busy — slowing down and trying again.": "El feed en directo está saturado: bajando el ritmo y reintentando.",
+    "The live feed is having trouble. Prices will catch up on the next update.": "El feed en directo tiene problemas. Los precios se pondrán al día en la próxima actualización.",
+    "The live feed is rate-limiting us — {sym} will catch up on the next update.": "El feed en directo nos está limitando: {sym} se pondrá al día en la próxima actualización.",
+    "The live feed rejected this server's key.": "El feed en directo rechazó la clave de este servidor.",
+    "The live feed turned down that request.": "El feed en directo rechazó esa petición.",
+    "{sym} isn't a symbol the feed knows, so I've taken it off the watchlist.": "{sym} no es un símbolo que el feed reconozca, así que lo he quitado de la lista.",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -943,6 +953,16 @@ const I18N = {
     "write analyst report": "rédiger une note d'analyste",
     "writing…": "rédaction…",
     // --- settings: the plain-language sidebar ---
+    // --- settings: the plain-language sidebar ---
+    "Couldn't reach the live feed for {sym}.": "Impossible de joindre le flux en direct pour {sym}.",
+    "Live prices aren't set up on this server — the desk is on demo data.": "Les cours en direct ne sont pas configurés sur ce serveur — le desk utilise les données de démo.",
+    "No quote for {sym} right now.": "Pas de cours pour {sym} en ce moment.",
+    "The live feed is busy — slowing down and trying again.": "Le flux en direct est saturé — on ralentit et on réessaie.",
+    "The live feed is having trouble. Prices will catch up on the next update.": "Le flux en direct a un problème. Les cours se remettront à jour au prochain rafraîchissement.",
+    "The live feed is rate-limiting us — {sym} will catch up on the next update.": "Le flux en direct nous limite — {sym} se remettra à jour au prochain rafraîchissement.",
+    "The live feed rejected this server's key.": "Le flux en direct a refusé la clé de ce serveur.",
+    "The live feed turned down that request.": "Le flux en direct a refusé cette requête.",
+    "{sym} isn't a symbol the feed knows, so I've taken it off the watchlist.": "{sym} n'est pas un symbole connu du flux, je l'ai donc retiré de la liste.",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -1359,6 +1379,16 @@ const I18N = {
     "write analyst report": "Analystenbericht schreiben",
     "writing…": "wird geschrieben…",
     // --- settings: the plain-language sidebar ---
+    // --- settings: the plain-language sidebar ---
+    "Couldn't reach the live feed for {sym}.": "Der Live-Feed für {sym} war nicht erreichbar.",
+    "Live prices aren't set up on this server — the desk is on demo data.": "Live-Kurse sind auf diesem Server nicht eingerichtet — das Desk läuft auf Demo-Daten.",
+    "No quote for {sym} right now.": "Gerade kein Kurs für {sym}.",
+    "The live feed is busy — slowing down and trying again.": "Der Live-Feed ist ausgelastet — wir drosseln und versuchen es erneut.",
+    "The live feed is having trouble. Prices will catch up on the next update.": "Der Live-Feed hat gerade Probleme. Die Kurse holen beim nächsten Update auf.",
+    "The live feed is rate-limiting us — {sym} will catch up on the next update.": "Der Live-Feed drosselt uns — {sym} holt beim nächsten Update auf.",
+    "The live feed rejected this server's key.": "Der Live-Feed hat den Schlüssel dieses Servers abgelehnt.",
+    "The live feed turned down that request.": "Der Live-Feed hat diese Anfrage abgelehnt.",
+    "{sym} isn't a symbol the feed knows, so I've taken it off the watchlist.": "{sym} kennt der Feed nicht, also habe ich es von der Liste genommen.",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1774,6 +1804,16 @@ const I18N = {
     "write analyst report": "escrever relatório de analista",
     "writing…": "a escrever…",
     // --- settings: the plain-language sidebar ---
+    // --- settings: the plain-language sidebar ---
+    "Couldn't reach the live feed for {sym}.": "Não foi possível contactar o feed em direto para {sym}.",
+    "Live prices aren't set up on this server — the desk is on demo data.": "Os preços em direto não estão configurados neste servidor — a mesa está com dados de demonstração.",
+    "No quote for {sym} right now.": "Sem cotação para {sym} neste momento.",
+    "The live feed is busy — slowing down and trying again.": "O feed em direto está sobrecarregado — a abrandar e a tentar de novo.",
+    "The live feed is having trouble. Prices will catch up on the next update.": "O feed em direto está com problemas. Os preços atualizam-se na próxima ronda.",
+    "The live feed is rate-limiting us — {sym} will catch up on the next update.": "O feed em direto está a limitar-nos — {sym} atualiza na próxima ronda.",
+    "The live feed rejected this server's key.": "O feed em direto rejeitou a chave deste servidor.",
+    "The live feed turned down that request.": "O feed em direto recusou esse pedido.",
+    "{sym} isn't a symbol the feed knows, so I've taken it off the watchlist.": "{sym} não é um símbolo que o feed conheça, por isso tirei-o da lista.",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -2189,6 +2229,16 @@ const I18N = {
     "write analyst report": "scrivi un report da analista",
     "writing…": "in scrittura…",
     // --- settings: the plain-language sidebar ---
+    // --- settings: the plain-language sidebar ---
+    "Couldn't reach the live feed for {sym}.": "Non è stato possibile raggiungere il feed in diretta per {sym}.",
+    "Live prices aren't set up on this server — the desk is on demo data.": "I prezzi in tempo reale non sono configurati su questo server — la postazione usa i dati demo.",
+    "No quote for {sym} right now.": "Nessuna quotazione per {sym} in questo momento.",
+    "The live feed is busy — slowing down and trying again.": "Il feed in diretta è sovraccarico — rallento e riprovo.",
+    "The live feed is having trouble. Prices will catch up on the next update.": "Il feed in diretta ha problemi. I prezzi si aggiorneranno al prossimo giro.",
+    "The live feed is rate-limiting us — {sym} will catch up on the next update.": "Il feed in diretta ci sta limitando — {sym} si aggiornerà al prossimo giro.",
+    "The live feed rejected this server's key.": "Il feed in diretta ha rifiutato la chiave di questo server.",
+    "The live feed turned down that request.": "Il feed in diretta ha rifiutato quella richiesta.",
+    "{sym} isn't a symbol the feed knows, so I've taken it off the watchlist.": "{sym} non è un simbolo che il feed conosce, quindi l'ho tolto dalla lista.",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -6164,7 +6214,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [demoMkt, setDemoMkt] = useState(() => buildDemoMarket());
   const [liveQuotes, setLiveQuotes] = useState({});   // sym -> quote
   const [liveTape, setLiveTape] = useState({});       // sym -> [{t, price}]
-  const [liveErr, setLiveErr] = useState("");
+  // { text, soft } — soft means "this fixes itself, we are already handling it",
+  // which is a different message from "this is broken" and deserves a different
+  // colour. Null when there is nothing wrong.
+  const [liveErr, setLiveErr] = useState(null);
   const [liveBad, setLiveBad] = useState({});         // sym -> true when Finnhub doesn't recognize it
   const tickRef = useRef(null);
   // remember the DEMO/LIVE choice so the app reopens where you left it
@@ -6440,15 +6493,25 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     // hits for one refresh and drained the per-IP quota in minutes.
     let r;
     try { r = await fetch(`/api/quote?symbols=${syms.map(encodeURIComponent).join(",")}`); }
-    catch (e) { setLiveErr(humanizeError(e)); return false; }
-    if (r.status === 429) { setLiveErr("live feed is busy — easing off automatically."); return true; }
-    if (!r.ok) { setLiveErr(r.status === 503 ? "live quotes are not configured on this server" : `HTTP ${r.status}`); return false; }
+    catch (e) { setLiveErr({ text: humanizeError(e), soft: false }); return false; }
+    if (r.status === 429) { setLiveErr({ text: t("The live feed is busy — slowing down and trying again."), soft: true }); return true; }
+    if (!r.ok) {
+      // A status number tells the reader nothing they can act on. Say what
+      // happened and, where there is one, what to do about it.
+      setLiveErr({
+        text: r.status === 503 ? t("Live prices aren't set up on this server — the desk is on demo data.")
+          : r.status >= 500 ? t("The live feed is having trouble. Prices will catch up on the next update.")
+          : t("The live feed turned down that request."),
+        soft: r.status >= 500,
+      });
+      return false;
+    }
     let quotes = {};
     try { quotes = (await r.json())?.quotes || {}; } catch { return false; }
     // Exchange time, matching the labels the seeded session carries — the two
     // halves of one tape cannot be on two different clocks.
     const stamp = tapeLabel(Date.now());
-    let firstErr = "";
+    let firstErr = null;   // { text, soft } — the first thing that went wrong this tick
     for (const s of syms) {
       const q = quotes[s];
       if (!q) continue;
@@ -6458,8 +6521,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           setLiveBad(p => (p[s] ? p : { ...p, [s]: true }));
           setWatchlist(w => w.filter(x => x !== s));
           setSelected(sel => (sel === s ? (watchlist.find(x => x !== s) || "SPY") : sel));
-          if (!firstErr) firstErr = `${s}: unknown symbol`;
-        } else if (!firstErr) firstErr = `${s}: quote failed (${q.error})`;
+          if (!firstErr) firstErr = { text: t("{sym} isn't a symbol the feed knows, so I've taken it off the watchlist.").replace("{sym}", s), soft: false };
+        } else if (!firstErr) {
+          // q.error is an internal token — "http_429", "unreachable", "key" —
+          // and it was being interpolated straight into the banner. A reader
+          // seeing "AMD: quote failed (http_429)" learns nothing they can do
+          // anything about, and it reads as the app breaking rather than as
+          // the feed asking us to slow down.
+          firstErr = q.error === "key"
+            ? { text: t("The live feed rejected this server's key."), soft: false }
+            : q.error === "unreachable"
+              ? { text: t("Couldn't reach the live feed for {sym}.").replace("{sym}", s), soft: true }
+              : /^http_429$/.test(q.error)
+                ? { text: t("The live feed is rate-limiting us — {sym} will catch up on the next update.").replace("{sym}", s), soft: true }
+                : { text: t("No quote for {sym} right now.").replace("{sym}", s), soft: true };
+        }
         continue;
       }
       setLiveQuotes(p => ({ ...p, [s]: q }));
@@ -6470,7 +6546,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       });
       setLiveBad(p => { if (!p[s]) return p; const n = { ...p }; delete n[s]; return n; });
     }
-    setLiveErr(firstErr);
+    setLiveErr(firstErr || null);
     return false;
   }, [live, watchlist, selected]);
 
@@ -10822,8 +10898,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 13 }}>✕</button>
         </div>
       )}
+      {/* Sans, not mono, and no "live feed:" prefix — this is a sentence to a
+          person, not a line in a log. Amber when the feed is merely busy and
+          we are already handling it; red only when something is actually
+          broken and the numbers are not coming. */}
       {live && liveErr && (
-        <div style={{ padding: "6px 20px", fontFamily: MONO, fontSize: 12, color: C.down, borderBottom: `1px solid ${C.panelEdge}` }}>live feed: {liveErr}</div>
+        <div role="status" style={{
+          display: "flex", alignItems: "center", gap: 9, padding: "8px 20px",
+          fontFamily: SANS, fontSize: 13, color: liveErr.soft ? C.warn : C.down,
+          background: liveErr.soft ? C.warnSoft : C.dangerSoft,
+          borderBottom: `1px solid ${C.edge}`,
+        }}>
+          <span aria-hidden="true" className={liveErr.soft ? "v-pulse" : undefined}
+            style={{ width: 7, height: 7, borderRadius: "50%", background: "currentColor", flex: "0 0 auto" }} />
+          {liveErr.text}
+        </div>
       )}
 
       {/* ===== AI desk ===== */}
