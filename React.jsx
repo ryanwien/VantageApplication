@@ -3284,6 +3284,9 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       sacT: 0, sacDur: 1, sacFromX: 0, sacFromY: 0,
       headFollow: 0,   // eased, lagging copy of gazeX — the head trailing the eyes
       idleBrowIn: 3000 + Math.random() * 5000, // countdown to a small idle brow lift
+      // Beat gestures while speaking. `gesture` is the one in flight, if any.
+      gestureIn: 900 + Math.random() * 1200,
+      gesture: null,   // { side: -1 | 1, t0, dur }
     };
 
     const startAction = (type, t) => { s.action = type; s.actionStart = t; };
@@ -3583,6 +3586,27 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         }
       }
       if (TK && s.action && s.action !== "react") s.action = null; // drop props to speak
+
+      // --- beat gestures while speaking ---
+      // The default arm pose lays both hands flat on the desk and leaves them
+      // there, which is what the anchor did for the ENTIRE duration of every
+      // answer — the main state of the whole product. People gesture while
+      // they talk: short beats, usually one hand, back to rest between
+      // phrases. Not a wave; emphasis.
+      //
+      // The right hand leads roughly 60/40, because a speaker has a dominant
+      // hand and alternating perfectly reads as a metronome.
+      if (TK && !reduced) {
+        s.gestureIn -= dt;
+        if (!s.gesture && s.gestureIn <= 0) {
+          s.gesture = { side: Math.random() < 0.62 ? 1 : -1, t0: t, dur: 620 + Math.random() * 700 };
+          s.gestureIn = 700 + Math.random() * 1600;
+        }
+      } else {
+        s.gesture = null;
+        s.gestureIn = 500 + Math.random() * 900;
+      }
+      if (s.gesture && t - s.gesture.t0 > s.gesture.dur) s.gesture = null;
       const p = actionPhase(t);
       const e = env(p);
       const act = s.action;
@@ -4145,14 +4169,35 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         arm(cx - 30, deskY - 18, cx - 12, typeL); hand(cx - 12, typeL, 5.5);
         arm(cx + 30, deskY - 18, cx + 12, typeR); hand(cx + 12, typeR, 5.5);
       } else if (TK && !reduced) {
-        // gesturing right hand while talking
-        const gx = cx + 40 + Math.sin(t / 320) * 6;
-        const gy = deskY - 34 + Math.cos(t / 410) * 5;
-        arm(cx + 32, deskY - 14, gx, gy);
-        hand(gx, gy, 6.5);
-        arm(cx - 34, deskY - 18, cx - 26, deskY - 6);
-        hand(cx - 26, deskY - 6);
-        drawMug(mugRest.x - 14, mugRest.y); // mug pushed aside for the gesture
+        // Gesturing while talking.
+        //
+        // This was a continuous orbit — the right hand tracing sin(t/320)
+        // against cos(t/410), permanently aloft, for the entire length of
+        // every answer. It is the same failure the eyes had: always moving,
+        // never arriving. After a few seconds it stops reading as gesture and
+        // starts reading as a tic.
+        //
+        // Beats instead. The hand rises for a phrase, taps twice, and goes
+        // back to the desk; between beats both hands rest, which is what makes
+        // the next one land. Amplitude rides s.amp — the real audio RMS when
+        // an analyser is attached — so a loud phrase gets a bigger hand
+        // without anything having to parse the speech.
+        const g = s.gesture;
+        const gp = g ? Math.max(0, Math.min(1, (t - g.t0) / g.dur)) : 0;
+        const gAmt = g ? Math.sin(gp * Math.PI) * (0.55 + s.amp * 0.75) : 0;
+        const beat = (rx, ry, side) => {
+          if (!g || g.side !== side) return [rx, ry];
+          const wob = Math.sin(gp * Math.PI * 2.4) * 3 * gAmt;   // two taps inside one gesture
+          return [rx + side * 7 * gAmt, ry - 26 * gAmt + wob];
+        };
+        const [lx, ly] = beat(cx - 26, deskY - 6, -1);
+        const [rxh, ryh] = beat(cx + 26, deskY - 6, 1);
+        arm(cx - 34, deskY - 18, lx, ly);
+        arm(cx + 34, deskY - 18, rxh, ryh);
+        hand(lx, ly); hand(rxh, ryh);
+        // The mug only gets out of the way while the right hand is actually
+        // coming up for one, instead of being shoved aside for the whole answer.
+        drawMug(mugRest.x - (g && g.side === 1 ? 12 * gAmt : 0), mugRest.y);
       } else {
         // both hands resting on the desk
         arm(cx - 34, deskY - 18, cx - 26, deskY - 6);
@@ -4631,8 +4676,21 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
           background: "rgba(11,14,19,0.85)", color: talking ? C.accentText : C.muted,
           fontFamily: SANS, fontSize: 11.5, fontWeight: 600, padding: "4px 10px", borderRadius: 20,
         }}>
-          <span className={talking ? "v-pulse" : undefined} aria-hidden="true"
-            style={{ width: 6, height: 6, borderRadius: "50%", background: talking ? C.accentText : C.faint }} />
+          {/* On air is a waveform, standing by is a dot.
+              The handoff names vt-bars for exactly this — "'On air' waveform
+              bars", 0.9s, 0.15s stagger — and the animation, its stagger rules
+              and all, has been sitting in global.css used only by the
+              marketing page. A dot says "something is on". Bars say sound is
+              coming out, which is the thing that is actually happening. */}
+          {talking ? (
+            <span className="vt-bars" aria-hidden="true" style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 10 }}>
+              {[55, 100, 45, 80].map((h, i) => (
+                <span key={i} style={{ width: 2, height: `${h}%`, background: C.accentText, borderRadius: 1 }} />
+              ))}
+            </span>
+          ) : (
+            <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: C.faint }} />
+          )}
           {talking ? t("On air") : t("Standing by")}
         </span>
         {/* Who this is, named on the portrait rather than in a caption under
