@@ -538,10 +538,25 @@ a:hover { text-decoration: underline; }
 /* Every enabled button presses in — universal tactility for one rule. */
 button:not(:disabled):active { transform: scale(0.97); }
 
-/* Sparklines draw themselves in when a row first appears. Updates to an
-   already-mounted line just move the points; the draw plays once. */
-.v-spark-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: v-spark-draw 0.9s ease-out forwards; }
-@keyframes v-spark-draw { to { stroke-dashoffset: 0; } }
+/* Session lines draw themselves in: the sparkline in a watchlist row and the
+   big tape chart both. pathLength="1" is what makes one keyframe serve both —
+   it normalises the path to a length of 1, so the dash covers it exactly
+   whether the line is 64px wide or the full panel. The handoff's vt-draw
+   hard-codes stroke-dashoffset: 1400, which is only the right constant for the
+   one marketing polyline it was written against; anything longer than 1400
+   would finish drawing with its tail still missing.
+
+   Both play once, on mount. Updates to an already-mounted line just move the
+   points — a tape that redrew itself on every tick would be unreadable. */
+.v-spark-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: v-drawin 0.9s ease-out forwards; }
+@keyframes v-drawin { to { stroke-dashoffset: 0; } }
+
+/* The tape chart. Keyed on what it is showing, so the draw replays when you
+   change symbol or mode and not otherwise. The gradient fill can't be dashed,
+   so it fades in underneath rather than snapping in whole beneath a stroke
+   that has not arrived yet. */
+.v-chartdraw .recharts-area-curve { stroke-dasharray: 1; stroke-dashoffset: 1; animation: v-drawin 0.85s var(--v-ease) forwards; }
+.v-chartdraw .recharts-area-area  { animation: v-fade-in 0.85s var(--v-ease) both; }
 
 /* ---------- redesign motion vocabulary ----------
    The eight named animations from the design handoff. Durations live on the

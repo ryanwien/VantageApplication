@@ -7854,6 +7854,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [chartVs, setChartVs] = useState(null);
   useEffect(() => { if (chartVs === selected) setChartVs(null); }, [chartVs, selected]);
 
+  // What the chart is *showing*, as opposed to what it currently holds. The
+  // line draws itself in when this changes — a new symbol, a compare, a switch
+  // between demo and live — and stays put through the tape ticks in between.
+  // Remounting on this key is what restarts the CSS animation; new data alone
+  // moves the points without replaying it, which is the whole point.
+  const chartDrawKey = `${live ? "live" : "demo"}|${chartMode}|${selected}|${chartVs || ""}`;
+
   const sessionHL = useMemo(() => {
     if (!chartHL || chartData.length < 2) return null;
     const ys = chartData.map(d => d.price).filter(Number.isFinite);
@@ -11783,10 +11790,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     {!comparePlot && chartSMA && chartPlot.some(d => d.sma != null) && (
                       <Area type="monotone" dataKey="sma" stroke={C.info} strokeWidth={1.3} strokeDasharray="5 3" fill="transparent" isAnimationActive={false} dot={false} />
                     )}
-                    {!comparePlot && <Area type="monotone" dataKey="price" stroke={accent} strokeWidth={1.8} fill="url(#fillArea)" isAnimationActive={false} dot={false} />}
-                    {comparePlot && <Area type="monotone" dataKey="base" stroke={accent} strokeWidth={1.8} fill="url(#fillArea)" isAnimationActive={false} dot={false} />}
+                    {/* pathLength=1 + .v-chartdraw is the draw-on; recharts' own
+                        isAnimationActive stays off because it replays on every
+                        data change, and this tape changes every few seconds. */}
+                    {!comparePlot && <Area key={`price-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="price" stroke={accent} strokeWidth={1.8} fill="url(#fillArea)" isAnimationActive={false} dot={false} />}
+                    {comparePlot && <Area key={`base-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="base" stroke={accent} strokeWidth={1.8} fill="url(#fillArea)" isAnimationActive={false} dot={false} />}
                     {/* the comparison line owns purple — every other hue here has a meaning already */}
-                    {comparePlot && <Area type="monotone" dataKey="vs" stroke="#C08BFF" strokeWidth={1.5} fill="transparent" isAnimationActive={false} dot={false} />}
+                    {comparePlot && <Area key={`vs-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="vs" stroke="#C08BFF" strokeWidth={1.5} fill="transparent" isAnimationActive={false} dot={false} />}
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
