@@ -546,6 +546,28 @@ button:not(:disabled):active { transform: scale(0.97); }
   .v-coname { display: none; }
 }
 
+/* ---------- chess ----------
+   56px squares is the reference's spec and clears the 44px touch minimum with
+   room to spare. It is a custom property rather than a fixed value because the
+   board also has to survive a phone: 8 x 56 plus the rank gutter is 468px, and
+   the whole viewport there is 375. */
+.v-chessgrid { --sq: 56px; }
+
+@media (max-width: 900px) {
+  /* The rail stops fitting beside the board and wraps under it. */
+  .v-chessgrid { --sq: 46px; }
+}
+@media (max-width: 420px) {
+  /* 8 x 36 + 20 for the rank gutter = 308, inside 375 less the panel's padding.
+     This is the one place in the product that misses the 44px touch minimum,
+     and it cannot be met: eight files at 44px is 352px before any gutter or
+     padding, on a viewport of 375. Every chess app resolves this the same way,
+     because the alternative is a board you have to scroll to see. The
+     coordinates stay — without them the move list reads as noise. */
+  .v-chessgrid { --sq: 36px; }
+  .v-chessroom { padding: 14px !important; gap: 16px !important; }
+}
+
 /* ---------- settings ----------
    Layout lives here rather than inline because it has to respond, and an
    inline flex-direction can only be beaten with !important.

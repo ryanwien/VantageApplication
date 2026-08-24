@@ -349,6 +349,45 @@ const I18N = {
     "Analyst report": "Informe del analista",
     "Navigator": "Navegador",
     "Total": "Total",
+    // --- settings: the plain-language sidebar ---
+    "2 player": "2 jugadores",
+    "Bears are thinking": "Los Osos están pensando",
+    "Bears take": "Los Osos capturan",
+    "Bears to move": "Juegan los Osos",
+    "Bears win by checkmate": "Los Osos ganan por jaque mate",
+    "Bears · red": "Osos · rojo",
+    "Bulls take": "Los Toros capturan",
+    "Bulls to move": "Juegan los Toros",
+    "Bulls win by checkmate": "Los Toros ganan por jaque mate",
+    "Bulls · green": "Toros · verde",
+    "Captured": "Capturadas",
+    "Checkmate — you lose": "Jaque mate: has perdido",
+    "Checkmate — you win": "Jaque mate: has ganado",
+    "Hold on — the computer is choosing.": "Un momento: el ordenador está eligiendo.",
+    "How to play": "Cómo se juega",
+    "Moves": "Jugadas",
+    "New game": "Partida nueva",
+    "No moves yet": "Aún no hay jugadas",
+    "Opponent": "Rival",
+    "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "Los peones coronan dama automáticamente. Reglas informales: sin enroque ni captura al paso.",
+    "Stalemate — a draw": "Ahogado: tablas",
+    "Start a new game to play again.": "Empieza una partida nueva para volver a jugar.",
+    "Tap a piece to see where it can go.": "Toca una pieza para ver adónde puede ir.",
+    "The Bears' king is in check.": "El rey de los Osos está en jaque.",
+    "Two players, one screen: Bulls against Bears. Checkmate the other king to win.": "Dos jugadores, una pantalla: Toros contra Osos. Da jaque mate al otro rey para ganar.",
+    "You are the Bulls, in green. Checkmate the Bears' king to win — get checkmated and it's over.": "Eres los Toros, en verde. Da jaque mate al rey de los Osos para ganar; si te lo dan a ti, se acabó.",
+    "Your king is in check — you have to answer it.": "Tu rey está en jaque: tienes que responder.",
+    "Your move": "Te toca",
+    "move {n} · casual rules": "jugada {n} · reglas informales",
+    "vs Computer": "contra la máquina",
+    "{sq} {piece} selected. Tap a highlighted square to move.": "{piece} de {sq} seleccionado. Toca una casilla marcada para mover.",
+    "pawn": "peón",
+    "knight": "caballo",
+    "bishop": "alfil",
+    "rook": "torre",
+    "queen": "dama",
+    "king": "rey",
+    "piece": "pieza",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -589,6 +628,45 @@ const I18N = {
     "Analyst report": "Rapport d'analyste",
     "Navigator": "Navigateur",
     "Total": "Total",
+    // --- settings: the plain-language sidebar ---
+    "2 player": "2 joueurs",
+    "Bears are thinking": "Les Ours réfléchissent",
+    "Bears take": "Prises des Ours",
+    "Bears to move": "Aux Ours de jouer",
+    "Bears win by checkmate": "Les Ours gagnent par échec et mat",
+    "Bears · red": "Ours · rouge",
+    "Bulls take": "Prises des Taureaux",
+    "Bulls to move": "Aux Taureaux de jouer",
+    "Bulls win by checkmate": "Les Taureaux gagnent par échec et mat",
+    "Bulls · green": "Taureaux · vert",
+    "Captured": "Prises",
+    "Checkmate — you lose": "Échec et mat — vous perdez",
+    "Checkmate — you win": "Échec et mat — vous gagnez",
+    "Hold on — the computer is choosing.": "Un instant — l'ordinateur choisit.",
+    "How to play": "Comment jouer",
+    "Moves": "Coups",
+    "New game": "Nouvelle partie",
+    "No moves yet": "Aucun coup pour l'instant",
+    "Opponent": "Adversaire",
+    "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "Les pions sont promus dame automatiquement. Règles simplifiées — ni roque, ni prise en passant.",
+    "Stalemate — a draw": "Pat — partie nulle",
+    "Start a new game to play again.": "Lancez une nouvelle partie pour rejouer.",
+    "Tap a piece to see where it can go.": "Touchez une pièce pour voir où elle peut aller.",
+    "The Bears' king is in check.": "Le roi des Ours est en échec.",
+    "Two players, one screen: Bulls against Bears. Checkmate the other king to win.": "Deux joueurs, un écran : Taureaux contre Ours. Matez le roi adverse pour gagner.",
+    "You are the Bulls, in green. Checkmate the Bears' king to win — get checkmated and it's over.": "Vous êtes les Taureaux, en vert. Matez le roi des Ours pour gagner — si vous êtes maté, c'est fini.",
+    "Your king is in check — you have to answer it.": "Votre roi est en échec — vous devez y répondre.",
+    "Your move": "À vous de jouer",
+    "move {n} · casual rules": "coup {n} · règles simplifiées",
+    "vs Computer": "contre l'ordinateur",
+    "{sq} {piece} selected. Tap a highlighted square to move.": "{piece} en {sq} sélectionné. Touchez une case marquée pour jouer.",
+    "pawn": "pion",
+    "knight": "cavalier",
+    "bishop": "fou",
+    "rook": "tour",
+    "queen": "dame",
+    "king": "roi",
+    "piece": "pièce",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -829,6 +907,45 @@ const I18N = {
     "Analyst report": "Analystenbericht",
     "Navigator": "Navigator",
     "Total": "Gesamt",
+    // --- settings: the plain-language sidebar ---
+    "2 player": "2 Spieler",
+    "Bears are thinking": "Die Bären überlegen",
+    "Bears take": "Bären schlagen",
+    "Bears to move": "Bären am Zug",
+    "Bears win by checkmate": "Die Bären gewinnen durch Schachmatt",
+    "Bears · red": "Bären · Rot",
+    "Bulls take": "Bullen schlagen",
+    "Bulls to move": "Bullen am Zug",
+    "Bulls win by checkmate": "Die Bullen gewinnen durch Schachmatt",
+    "Bulls · green": "Bullen · Grün",
+    "Captured": "Geschlagen",
+    "Checkmate — you lose": "Schachmatt — du verlierst",
+    "Checkmate — you win": "Schachmatt — du gewinnst",
+    "Hold on — the computer is choosing.": "Moment — der Computer wählt gerade.",
+    "How to play": "Spielanleitung",
+    "Moves": "Züge",
+    "New game": "Neue Partie",
+    "No moves yet": "Noch keine Züge",
+    "Opponent": "Gegner",
+    "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "Bauern werden automatisch zur Dame. Lockere Regeln — keine Rochade, kein En passant.",
+    "Stalemate — a draw": "Patt — remis",
+    "Start a new game to play again.": "Starte eine neue Partie, um wieder zu spielen.",
+    "Tap a piece to see where it can go.": "Tippe auf eine Figur, um ihre Züge zu sehen.",
+    "The Bears' king is in check.": "Der König der Bären steht im Schach.",
+    "Two players, one screen: Bulls against Bears. Checkmate the other king to win.": "Zwei Spieler, ein Bildschirm: Bullen gegen Bären. Setze den anderen König matt, um zu gewinnen.",
+    "You are the Bulls, in green. Checkmate the Bears' king to win — get checkmated and it's over.": "Du bist die Bullen, in Grün. Setze den König der Bären matt, um zu gewinnen — wirst du mattgesetzt, ist Schluss.",
+    "Your king is in check — you have to answer it.": "Dein König steht im Schach — du musst darauf antworten.",
+    "Your move": "Du bist am Zug",
+    "move {n} · casual rules": "Zug {n} · lockere Regeln",
+    "vs Computer": "gegen den Computer",
+    "{sq} {piece} selected. Tap a highlighted square to move.": "{piece} auf {sq} ausgewählt. Tippe auf ein markiertes Feld, um zu ziehen.",
+    "pawn": "Bauer",
+    "knight": "Springer",
+    "bishop": "Läufer",
+    "rook": "Turm",
+    "queen": "Dame",
+    "king": "König",
+    "piece": "Figur",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1068,6 +1185,45 @@ const I18N = {
     "Analyst report": "Relatório do analista",
     "Navigator": "Navegador",
     "Total": "Total",
+    // --- settings: the plain-language sidebar ---
+    "2 player": "2 jogadores",
+    "Bears are thinking": "Os Ursos estão a pensar",
+    "Bears take": "Os Ursos capturam",
+    "Bears to move": "Jogam os Ursos",
+    "Bears win by checkmate": "Os Ursos ganham por xeque-mate",
+    "Bears · red": "Ursos · vermelho",
+    "Bulls take": "Os Touros capturam",
+    "Bulls to move": "Jogam os Touros",
+    "Bulls win by checkmate": "Os Touros ganham por xeque-mate",
+    "Bulls · green": "Touros · verde",
+    "Captured": "Capturadas",
+    "Checkmate — you lose": "Xeque-mate — perdeste",
+    "Checkmate — you win": "Xeque-mate — ganhaste",
+    "Hold on — the computer is choosing.": "Um momento — o computador está a escolher.",
+    "How to play": "Como jogar",
+    "Moves": "Jogadas",
+    "New game": "Novo jogo",
+    "No moves yet": "Ainda não há jogadas",
+    "Opponent": "Adversário",
+    "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "Os peões promovem a dama automaticamente. Regras informais — sem roque nem captura en passant.",
+    "Stalemate — a draw": "Empate por afogamento",
+    "Start a new game to play again.": "Começa um novo jogo para jogar outra vez.",
+    "Tap a piece to see where it can go.": "Toca numa peça para veres para onde pode ir.",
+    "The Bears' king is in check.": "O rei dos Ursos está em xeque.",
+    "Two players, one screen: Bulls against Bears. Checkmate the other king to win.": "Dois jogadores, um ecrã: Touros contra Ursos. Dá xeque-mate ao outro rei para ganhar.",
+    "You are the Bulls, in green. Checkmate the Bears' king to win — get checkmated and it's over.": "És os Touros, a verde. Dá xeque-mate ao rei dos Ursos para ganhar — se te derem a ti, acabou.",
+    "Your king is in check — you have to answer it.": "O teu rei está em xeque — tens de responder.",
+    "Your move": "É a tua vez",
+    "move {n} · casual rules": "jogada {n} · regras informais",
+    "vs Computer": "contra o computador",
+    "{sq} {piece} selected. Tap a highlighted square to move.": "{piece} em {sq} selecionado. Toca numa casa marcada para mover.",
+    "pawn": "peão",
+    "knight": "cavalo",
+    "bishop": "bispo",
+    "rook": "torre",
+    "queen": "dama",
+    "king": "rei",
+    "piece": "peça",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -1307,6 +1463,45 @@ const I18N = {
     "Analyst report": "Report dell'analista",
     "Navigator": "Navigatore",
     "Total": "Totale",
+    // --- settings: the plain-language sidebar ---
+    "2 player": "2 giocatori",
+    "Bears are thinking": "Gli Orsi stanno pensando",
+    "Bears take": "Prese degli Orsi",
+    "Bears to move": "Tocca agli Orsi",
+    "Bears win by checkmate": "Gli Orsi vincono per scacco matto",
+    "Bears · red": "Orsi · rosso",
+    "Bulls take": "Prese dei Tori",
+    "Bulls to move": "Tocca ai Tori",
+    "Bulls win by checkmate": "I Tori vincono per scacco matto",
+    "Bulls · green": "Tori · verde",
+    "Captured": "Catturati",
+    "Checkmate — you lose": "Scacco matto — hai perso",
+    "Checkmate — you win": "Scacco matto — hai vinto",
+    "Hold on — the computer is choosing.": "Un attimo — il computer sta scegliendo.",
+    "How to play": "Come si gioca",
+    "Moves": "Mosse",
+    "New game": "Nuova partita",
+    "No moves yet": "Ancora nessuna mossa",
+    "Opponent": "Avversario",
+    "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "I pedoni promuovono a donna automaticamente. Regole informali — niente arrocco, niente en passant.",
+    "Stalemate — a draw": "Stallo — patta",
+    "Start a new game to play again.": "Inizia una nuova partita per rigiocare.",
+    "Tap a piece to see where it can go.": "Tocca un pezzo per vedere dove può andare.",
+    "The Bears' king is in check.": "Il re degli Orsi è sotto scacco.",
+    "Two players, one screen: Bulls against Bears. Checkmate the other king to win.": "Due giocatori, uno schermo: Tori contro Orsi. Dai scacco matto all'altro re per vincere.",
+    "You are the Bulls, in green. Checkmate the Bears' king to win — get checkmated and it's over.": "Sei i Tori, in verde. Dai scacco matto al re degli Orsi per vincere — se lo prendi tu, è finita.",
+    "Your king is in check — you have to answer it.": "Il tuo re è sotto scacco — devi rispondere.",
+    "Your move": "Tocca a te",
+    "move {n} · casual rules": "mossa {n} · regole informali",
+    "vs Computer": "contro il computer",
+    "{sq} {piece} selected. Tap a highlighted square to move.": "{piece} in {sq} selezionato. Tocca una casa evidenziata per muovere.",
+    "pawn": "pedone",
+    "knight": "cavallo",
+    "bishop": "alfiere",
+    "rook": "torre",
+    "queen": "donna",
+    "king": "re",
+    "piece": "pezzo",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -1914,10 +2109,16 @@ function bjValue(cards) {
   return sum;
 }
 
+// Board coordinates. Rank 8 is row 0, because the board is authored from
+// Black's back rank downwards.
+const sqName = (r, c) => `${"abcdefgh"[c]}${8 - r}`;
+const PIECE_NAME = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
+
 // ---- Chess game component: pass-and-play, vs AI or 2-player ----
 // Rules live in src/chess/chess.js — full legality (check, checkmate, stalemate), casual scope
 // otherwise (no castling/en-passant, pawns auto-queen).
 function ChessGame({ onCheer, onWin, sfx }) {
+  const { t } = useI18n();
   const [vsAI, setVsAI] = useState(true);        // default: play the computer (Bears) — good for a lone player
   const [board, setBoard] = useState(chessInit);
   const [turn, setTurn] = useState("w");         // 'w' = Bulls (green, the human) move first
@@ -1925,6 +2126,11 @@ function ChessGame({ onCheer, onWin, sfx }) {
   const [targets, setTargets] = useState([]);
   const [winner, setWinner] = useState(null);
   const [captured, setCaptured] = useState({ w: [], b: [] });
+  // The move list the rail reads. It is the one record of what has happened in
+  // the game — before this the board was the only memory, so a move you looked
+  // away for was simply gone.
+  const [moves, setMoves] = useState([]);
+  const [showRules, setShowRules] = useState(false);
   // flying-piece overlay: the board state applies instantly, but the moved glyph slides
   // from→to on top of the grid (~180ms) before the destination square shows its piece
   const [anim, setAnim] = useState(null);        // { from, to, glyph, color, go }
@@ -1937,7 +2143,7 @@ function ChessGame({ onCheer, onWin, sfx }) {
   }, [anim]);
   useEffect(() => () => clearTimeout(animTimer.current), []);
 
-  const reset = (ai = vsAI) => { setVsAI(ai); setBoard(chessInit()); setTurn("w"); setSel(null); setTargets([]); setWinner(null); setCaptured({ w: [], b: [] }); clearTimeout(animTimer.current); setAnim(null); };
+  const reset = (ai = vsAI) => { setVsAI(ai); setBoard(chessInit()); setTurn("w"); setSel(null); setTargets([]); setWinner(null); setCaptured({ w: [], b: [] }); setMoves([]); clearTimeout(animTimer.current); setAnim(null); };
 
   // commit a move (from either the human or the AI), then end the game or pass the turn.
   // Endings are real chess: checkmate wins, stalemate draws. King capture stays only as a
@@ -1946,6 +2152,12 @@ function ChessGame({ onCheer, onWin, sfx }) {
     const opp = side === "w" ? "b" : "w";
     const outcome = taken?.t === "k" ? "checkmate" : gameStatus(next, opp);
     setBoard(next);
+    // Record it before anything can end the game — a checkmating move is still
+    // a move, and it is the one people most want to read back.
+    if (from && to) {
+      const moved = next[to.r][to.c];
+      setMoves(m => [...m, `${CHESS_GLYPH[moved.t]} ${sqName(from.r, from.c)}${taken ? "\u00d7" : "\u2192"}${sqName(to.r, to.c)}`]);
+    }
     // sounds land WITH the flying piece; checkmate adds the win/lose sting a beat later
     const landed = () => {
       setAnim(null);
@@ -1956,7 +2168,10 @@ function ChessGame({ onCheer, onWin, sfx }) {
     if (reducedMotion || !from || !to) landed();
     else {
       const moved = next[to.r][to.c];
-      setAnim({ from, to, glyph: CHESS_GLYPH[moved.t], color: moved.s === "w" ? "#3FE08A" : "#FF6B7A", go: false });
+      // C.up / C.down, not #3FE08A / #FF6B7A: the flying glyph was a different
+      // green and a different red from the piece it lands as, so every move
+      // ended in a colour snap on the destination square.
+      setAnim({ from, to, glyph: CHESS_GLYPH[moved.t], color: moved.s === "w" ? C.up : C.down, go: false });
       animTimer.current = setTimeout(landed, 200);
     }
     if (taken) {
@@ -2005,60 +2220,195 @@ function ChessGame({ onCheer, onWin, sfx }) {
     for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { const p = board[r][c]; if (p && p.t === "k" && p.s === turn) return { r, c }; }
     return null;
   }, [checkNow, board, turn]);
-  const status = winner
-    ? (winner === "draw" ? "🤝 Stalemate — draw"
-      : vsAI ? (winner === "w" ? "🎉 Checkmate — you win!" : "💀 Checkmate — you lose")
-      : (winner === "w" ? "🐂 Bulls win by checkmate!" : "🐻 Bears win by checkmate!"))
-    : (vsAI && turn === "b" ? "🐻 Computer thinking…" : `${turn === "w" ? "🐂 Bulls" : "🐻 Bears"} to move${checkNow ? " — ⚠️ CHECK" : ""}`);
-  const capLabel = (arr) => arr.map(t => CHESS_GLYPH[t]).join(" ");
-  const modeBtn = (ai, label) => (
-    <button onClick={() => reset(ai)}
-      style={{ background: vsAI === ai ? "rgba(255,255,255,0.09)" : "transparent", border: `1px solid ${vsAI === ai ? C.accent : C.panelEdge}`, color: vsAI === ai ? C.accentText : C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "4px 9px", cursor: "pointer" }}>{label}</button>
+  // ---- the rail's copy ----
+  // All of this used to be one grey 10px sentence under the board, which is
+  // where the state of the game, the rules and the capture tally all went to
+  // be ignored. Each is now its own thing at its own weight.
+  const sideNote = turn === "w" ? t("Bulls · green") : t("Bears · red");
+  const headline = winner
+    ? (winner === "draw" ? t("Stalemate — a draw")
+      : vsAI ? (winner === "w" ? t("Checkmate — you win") : t("Checkmate — you lose"))
+      : (winner === "w" ? t("Bulls win by checkmate") : t("Bears win by checkmate")))
+    : (vsAI && turn === "b" ? t("Bears are thinking")
+      : vsAI ? t("Your move")
+      : turn === "w" ? t("Bulls to move") : t("Bears to move"));
+  const hint = winner
+    ? t("Start a new game to play again.")
+    : checkNow
+      ? (vsAI && turn === "b" ? t("The Bears' king is in check.") : t("Your king is in check — you have to answer it."))
+      : sel
+        ? t("{sq} {piece} selected. Tap a highlighted square to move.")
+            .replace("{sq}", sqName(sel.r, sel.c))
+            // Spelled out as static literals rather than t(PIECE_NAME[t]): the
+            // i18n audit only sees literal arguments, and a dynamic key is a
+            // translation that falls back to English with nothing to catch it.
+            .replace("{piece}", {
+              p: t("pawn"), n: t("knight"), b: t("bishop"),
+              r: t("rook"), q: t("queen"), k: t("king"),
+            }[board[sel.r][sel.c]?.t] || t("piece"))
+        : (vsAI && turn === "b" ? t("Hold on — the computer is choosing.") : t("Tap a piece to see where it can go."));
+  // Live while it is someone's turn; still once the game is over.
+  const dotColor = winner ? (winner === "draw" ? C.warn : winner === "w" ? C.up : C.down) : turn === "w" ? C.up : C.down;
+
+  const RAIL_LABEL = { fontFamily: SANS, fontSize: 11.5, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", color: C.faint };
+  const railCard = { background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: 10 };
+  const tray = (label, taken, glyphColor) => (
+    <div style={{ ...railCard, flex: 1, minWidth: 0, minHeight: 40 }}>
+      <div style={{ fontFamily: SANS, fontSize: 11.5, color: C.faint }}>{label}</div>
+      <div style={{ fontSize: 18, lineHeight: 1.3, marginTop: 2, color: glyphColor, wordBreak: "break-all" }}>
+        {taken.length ? taken.map(x => CHESS_GLYPH[x]).join(" ") : "—"}
+      </div>
+    </div>
   );
+
+  // Moves read in pairs, the way a move list is actually written: white's move
+  // and black's reply on one numbered row.
+  const movePairs = [];
+  for (let i = 0; i < moves.length; i += 2) movePairs.push([moves[i], moves[i + 1]]);
+
   return (
-    <div style={{ padding: 12, fontFamily: SANS, display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <span style={{ display: "flex", gap: 5 }}>{modeBtn(true, "vs Computer")}{modeBtn(false, "2 Player")}</span>
-        <button onClick={() => reset()} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "5px 12px", cursor: "pointer" }}>new game ↻</button>
+    <div style={{ fontFamily: SANS }}>
+      {/* The move number and the rules scope. The reference puts these in the
+          panel's header bar; that bar belongs to the games shell, which cannot
+          see this component's state — and lifting a per-move counter into the
+          dashboard would re-render the whole desk on every move. */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "12px 20px", borderBottom: `1px solid ${C.edge}` }}>
+        <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>
+          {t("move {n} · casual rules").replace("{n}", String(Math.floor(moves.length / 2) + 1))}
+        </span>
+        <span style={{ marginLeft: "auto" }}>
+          <Segmented label={t("Opponent")} value={vsAI}
+            options={[[true, t("vs Computer")], [false, t("2 player")]]}
+            onChange={(v) => reset(v)} />
+        </span>
       </div>
-      <div style={{ fontSize: 12, fontWeight: 510, textAlign: "center", color: winner ? (winner === "draw" ? C.warn : winner === "w" ? C.up : C.down) : turn === "w" ? C.up : C.down }}>{status}</div>
-      <div style={{ position: "relative", width: "100%", maxWidth: 320, aspectRatio: "1 / 1", display: "grid", gridTemplateColumns: "repeat(8, 1fr)", border: `1px solid ${C.panelEdge}`, alignSelf: "center", opacity: (vsAI && turn === "b" && !winner) ? 0.75 : 1 }}>
-        {board.map((row, r) => row.map((p, c) => {
-          const light = (r + c) % 2 === 0;
-          const isSel = sel && sel.r === r && sel.c === c;
-          const isTarget = targets.some(t => t.r === r && t.c === c);
-          const inFlight = anim && anim.to.r === r && anim.to.c === c;   // real piece hides until the overlay lands
-          const inDanger = checkedKing && checkedKing.r === r && checkedKing.c === c; // this king is in check
-          return (
-            <button key={`${r}-${c}`} onClick={() => clickSquare(r, c)}
-              style={{
-                position: "relative", border: "none", cursor: winner ? "default" : "pointer", padding: 0,
-                background: light ? C.boardLight : C.boardDark,
-                // The selection ring was #e4f222 — the acid yellow this
-                // redesign exists to remove. Selection is an active state, and
-                // active states are the accent.
-                boxShadow: isSel ? `inset 0 0 0 2px ${C.accent}` : inDanger ? `inset 0 0 0 2px ${C.down}` : "none",
-                display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
-              }}>
-              {p && <span style={{ fontSize: 22, color: p.s === "w" ? C.up : C.down, textShadow: "0 1px 2px rgba(0,0,0,0.6)", opacity: inFlight ? 0 : 1 }}>{CHESS_GLYPH[p.t]}</span>}
-              {isTarget && <span style={{ position: "absolute", width: p ? "82%" : 10, height: p ? "82%" : 10, borderRadius: p ? 6 : "50%", boxSizing: "border-box", border: p ? `2px solid ${C.accent}` : "none", background: p ? "transparent" : C.accent }} />}
+
+      <div className="v-chessroom" style={{ display: "flex", gap: 24, alignItems: "flex-start", padding: 20, flexWrap: "wrap" }}>
+        {/* ---- board ---- */}
+        {/* The 8x8 stays a grid of its own so the flying-piece overlay's 12.5%
+            arithmetic still lands on a square; the rank and file gutters are
+            separate tracks around it rather than extra cells inside it. */}
+        <div className="v-chessgrid" style={{ display: "grid", gridTemplateColumns: "20px auto", gridTemplateRows: "auto 20px", flex: "0 0 auto" }}>
+          <div style={{ display: "grid", gridTemplateRows: "repeat(8, var(--sq))" }}>
+            {[8, 7, 6, 5, 4, 3, 2, 1].map(n => (
+              <span key={n} style={{ display: "grid", placeItems: "center", fontFamily: MONO, fontSize: 11, color: C.faint }}>{n}</span>
+            ))}
+          </div>
+          <div style={{
+            position: "relative", display: "grid",
+            gridTemplateColumns: "repeat(8, var(--sq))", gridTemplateRows: "repeat(8, var(--sq))",
+            opacity: (vsAI && turn === "b" && !winner) ? 0.75 : 1,
+            transition: `opacity ${MOTION.base} ${MOTION.ease}`,
+          }}>
+            {board.map((row, r) => row.map((p, c) => {
+              const light = (r + c) % 2 === 0;
+              const isSel = sel && sel.r === r && sel.c === c;
+              const isTarget = targets.some(t2 => t2.r === r && t2.c === c);
+              const inFlight = anim && anim.to.r === r && anim.to.c === c;   // real piece hides until the overlay lands
+              const inDanger = checkedKing && checkedKing.r === r && checkedKing.c === c; // this king is in check
+              return (
+                <button key={`${r}-${c}`} onClick={() => clickSquare(r, c)}
+                  aria-label={`${sqName(r, c)}${p ? ` — ${p.s === "w" ? "Bulls" : "Bears"} ${PIECE_NAME[p.t]}` : ""}`}
+                  style={{
+                    position: "relative", border: "none", cursor: winner ? "default" : "pointer", padding: 0,
+                    // The selected square FILLS as well as rings: a 2px ring
+                    // alone is easy to lose under a 30px glyph.
+                    background: isSel ? alpha(C.accent, 0.22) : light ? C.boardLight : C.boardDark,
+                    boxShadow: isSel ? `inset 0 0 0 2px ${C.accent}` : inDanger ? `inset 0 0 0 2px ${C.down}` : "none",
+                    display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
+                  }}>
+                  {p && <span style={{ fontSize: "calc(var(--sq) * 0.54)", color: p.s === "w" ? C.up : C.down, textShadow: "0 1px 2px rgba(0,0,0,0.6)", opacity: inFlight ? 0 : 1 }}>{CHESS_GLYPH[p.t]}</span>}
+                  {/* An empty destination gets a dot; an occupied one gets a
+                      ring around the piece, because "you can capture this" and
+                      "you can move here" are not the same offer. */}
+                  {isTarget && (
+                    <span aria-hidden="true" style={{
+                      position: "absolute", boxSizing: "border-box",
+                      width: p ? "82%" : 12, height: p ? "82%" : 12,
+                      borderRadius: p ? 6 : "50%",
+                      border: p ? `2px solid ${alpha(C.accent, 0.75)}` : "none",
+                      background: p ? "transparent" : alpha(C.accent, 0.55),
+                    }} />
+                  )}
+                </button>
+              );
+            }))}
+            {anim && (
+              <span aria-hidden="true" style={{
+                position: "absolute", width: "12.5%", height: "12.5%", pointerEvents: "none", zIndex: 2,
+                left: `${(anim.go ? anim.to.c : anim.from.c) * 12.5}%`,
+                top: `${(anim.go ? anim.to.r : anim.from.r) * 12.5}%`,
+                transition: "left 0.18s ease, top 0.18s ease",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "calc(var(--sq) * 0.54)", lineHeight: 1, color: anim.color, textShadow: "0 1px 2px rgba(0,0,0,0.6)",
+              }}>{anim.glyph}</span>
+            )}
+          </div>
+          <div />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(8, var(--sq))" }}>
+            {["a", "b", "c", "d", "e", "f", "g", "h"].map(f => (
+              <span key={f} style={{ display: "grid", placeItems: "center", fontFamily: MONO, fontSize: 11, color: C.faint }}>{f}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* ---- rail ---- */}
+        <div style={{ flex: "1 1 260px", minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span aria-hidden="true" className={winner ? undefined : "v-pulse"}
+                style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor, flex: "0 0 auto" }} />
+              <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 14, color: C.text }}>{headline}</span>
+              <span style={{ marginLeft: "auto", fontFamily: SANS, fontSize: 12, color: C.faint, whiteSpace: "nowrap" }}>{sideNote}</span>
+            </div>
+            <div role="status" style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.5, color: C.muted, marginTop: 8 }}>{hint}</div>
+          </div>
+
+          <div>
+            <div style={RAIL_LABEL}>{t("Captured")}</div>
+            <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+              {tray(t("Bulls take"), captured.w, C.down)}
+              {tray(t("Bears take"), captured.b, C.up)}
+            </div>
+          </div>
+
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <div style={RAIL_LABEL}>{t("Moves")}</div>
+            <div style={{ ...railCard, marginTop: 8, padding: 12, maxHeight: 190, overflowY: "auto" }}>
+              {movePairs.length === 0
+                ? <span style={{ fontFamily: MONO, fontSize: 12.5, color: C.faint }}>{t("No moves yet")}</span>
+                : movePairs.map(([w, b], i) => (
+                    <div key={i} style={{ display: "grid", gridTemplateColumns: "26px 1fr 1fr", gap: 8, fontFamily: MONO, fontSize: 12.5, padding: "2px 0" }}>
+                      <span style={{ color: C.faint }}>{i + 1}.</span>
+                      <span style={{ color: C.up }}>{w}</span>
+                      <span style={{ color: C.down }}>{b || ""}</span>
+                    </div>
+                  ))}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setShowRules(v => !v)} aria-expanded={showRules}
+              style={{ flex: 1, background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: 9, padding: 10, fontFamily: SANS, fontSize: 13, color: C.muted, cursor: "pointer" }}>
+              {t("How to play")}
             </button>
-          );
-        }))}
-        {anim && (
-          <span aria-hidden="true" style={{
-            position: "absolute", width: "12.5%", height: "12.5%", pointerEvents: "none", zIndex: 2,
-            left: `${(anim.go ? anim.to.c : anim.from.c) * 12.5}%`,
-            top: `${(anim.go ? anim.to.r : anim.from.r) * 12.5}%`,
-            transition: "left 0.18s ease, top 0.18s ease",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 22, lineHeight: 1, color: anim.color, textShadow: "0 1px 2px rgba(0,0,0,0.6)",
-          }}>{anim.glyph}</span>
-        )}
-      </div>
-      <div style={{ fontSize: 10, color: C.faint, lineHeight: 1.5 }}>
-        {vsAI ? "You are 🐂 Bulls (green). Checkmate the Bears' king to win — get checkmated and it's over." : "Two players, one screen: 🐂 Bulls vs 🐻 Bears. Checkmate the enemy king to win."} Pawns auto-promote to queens. (Casual rules — no castling or en-passant.)
-        {(captured.w.length > 0 || captured.b.length > 0) && <div style={{ marginTop: 4 }}>🐂 took: {capLabel(captured.w) || "—"} · 🐻 took: {capLabel(captured.b) || "—"}</div>}
+            <button onClick={() => reset()}
+              style={{ flex: 1, background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: 9, padding: 10, fontFamily: SANS, fontSize: 13, color: C.muted, cursor: "pointer" }}>
+              {t("New game")}
+            </button>
+          </div>
+
+          {/* The rules the grey sentence used to carry, on request rather than
+              permanently in the way of the game. */}
+          {showRules && (
+            <div style={{ ...railCard, fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: C.muted, padding: 12 }}>
+              {vsAI
+                ? t("You are the Bulls, in green. Checkmate the Bears' king to win — get checkmated and it's over.")
+                : t("Two players, one screen: Bulls against Bears. Checkmate the other king to win.")}
+              {" "}{t("Pawns promote to queens automatically. Casual rules — no castling, no en passant.")}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
