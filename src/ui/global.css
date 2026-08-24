@@ -553,3 +553,69 @@ button:not(:disabled):active { transform: scale(0.97); }
 @media (max-width: 860px) {
   .v-coname { display: none; }
 }
+
+/* ---------- settings ----------
+   Layout lives here rather than inline because it has to respond, and an
+   inline flex-direction can only be beaten with !important.
+
+   On a desk the dialog is a fixed 980 x 640: the six panes differ wildly in
+   length, and a modal that resizes on every click of its own sidebar is
+   disorienting in a way a page never is. */
+.v-setbody {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+}
+
+.v-setnav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 10px;
+  overflow-y: auto;
+  border-right: 1px solid var(--v-edge);
+}
+
+.v-setnav-item:hover { background: var(--v-surface-raised); color: var(--v-text); }
+
+/* Pinned to the foot of the rail — it belongs to the whole screen, not to
+   whichever section happens to be last. */
+.v-setnav-tail { margin-top: auto; }
+.v-setnav-tail:hover { color: var(--v-muted); }
+
+.v-setpane {
+  overflow-y: auto;
+  padding: 22px 26px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* A 224px rail on a 375px screen leaves 151px for the settings themselves, so
+   below the width where both fit the rail becomes a scrolling row of chips
+   above the pane. */
+@media (max-width: 720px) {
+  .v-setwrap { height: 100% !important; border-radius: var(--v-r-lg) !important; }
+  .v-setbody {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .v-setnav {
+    flex-direction: row;
+    gap: 6px;
+    padding: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid var(--v-edge);
+  }
+  .v-setnav > button { flex: 0 0 auto; white-space: nowrap; }
+  .v-setnav-tail { margin-top: 0; }
+  .v-setpane { padding: 18px 16px 22px; gap: 20px; }
+}
+
+/* The header's status line is the first thing to drop: the Getting started
+   pane states the same fact, and at this width the title and the close button
+   need the room more than a second telling does. */
+@media (max-width: 480px) {
+  .v-setstatus { display: none !important; }
+}

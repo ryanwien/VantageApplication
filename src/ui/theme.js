@@ -338,17 +338,86 @@ export function panelHead(opts = {}) {
 export const panelNote = { fontFamily: SANS, fontWeight: 400, fontSize: 12, color: C.faint };
 
 export function field(opts = {}) {
-  const { invalid = false } = opts;
+  const { invalid = false, size = "md" } = opts;
+  // The default is byte-for-byte what it was, so every existing caller is
+  // untouched. `sm` is the settings-row variant: transparent, so it reads as a
+  // value you can change rather than a box waiting to be filled in.
+  const sizes = {
+    sm: { background: "transparent", borderRadius: R.sm, fontSize: 13, padding: "8px 14px" },
+    md: { background: C.inputBg, borderRadius: R.md, fontSize: 14, padding: "13px 15px" },
+  };
   return {
     width: "100%", boxSizing: "border-box",
-    background: C.inputBg,
     border: `1px solid ${invalid ? C.danger : C.edgeStrong}`,
-    borderRadius: R.md,
     color: C.text,
-    fontFamily: SANS, fontSize: 14,
-    padding: "13px 15px",
+    fontFamily: SANS,
     outline: "none",
     transition: `border-color ${MOTION.base} ${MOTION.ease}, box-shadow ${MOTION.base} ${MOTION.ease}`,
+    ...sizes[size],
+  };
+}
+
+// ============================================================
+//  CHOICE CONTROLS — one control type per kind of choice.
+//
+//  segmented   one of a few, all options short and worth showing at once
+//  pill        a set: several independent members of one group
+//  Toggle      a single on/off                     (src/ui/Toggle.jsx)
+//  field "sm"  one of many, where showing them all would be a wall
+//
+//  Getting this wrong is the failure the redesign names by name: the previous
+//  settings screen used outlined buttons for the refresh interval, outlined
+//  buttons for demo/live, and outlined buttons for the voice engine — three
+//  different kinds of decision wearing one costume, so none of them read as
+//  the kind of decision it was.
+// ============================================================
+
+// The track. Two buttons in a hairline box do not say "one question answered
+// two ways"; a shared inset track carrying a single raised thumb does.
+export function segmentTrack(opts = {}) {
+  const { pad = 3 } = opts;
+  return {
+    display: "inline-flex", alignItems: "center",
+    background: C.surfaceRaised, borderRadius: R.sm, padding: pad,
+  };
+}
+
+// The thumb. `tone: "accent"` is for a choice that changes what the product IS
+// — demo numbers versus real ones — and it is the only place a segment earns
+// green. Everything else is a preference and takes the neutral raised thumb.
+export function segmentItem(active, tone = "neutral", opts = {}) {
+  const { pad = "5px 14px" } = opts;
+  const on = tone === "accent"
+    ? { background: C.accent, color: C.textOnAccent }
+    : { background: C.edgeStrong, color: C.text };
+  return {
+    border: "none", borderRadius: 6, cursor: "pointer", whiteSpace: "nowrap",
+    fontFamily: SANS, fontSize: 12.5, fontWeight: 600, padding: pad,
+    transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}`,
+    ...(active ? on : { background: "transparent", color: C.muted }),
+  };
+}
+
+// One member of a set. Radius is 20 rather than R.pill because at this height
+// the two are indistinguishable and 20 is the value the reference already
+// carries.
+//
+// `tone` exists for the same reason it does on segmentItem: accent is the
+// default, but a screen that has already spent its one accent elsewhere takes
+// the neutral variant rather than adding a second green. The Markets chart
+// indicators are neutral because the green on that screen belongs to "Full
+// chart" — the action that leaves it.
+export function pill(on, opts = {}) {
+  const { pad = "7px 14px", tone = "accent" } = opts;
+  const onStyle = tone === "accent"
+    ? { border: `1px solid ${C.accent}`, background: C.accentGlow, color: C.text }
+    : { border: `1px solid ${C.edgeStrong}`, background: C.surfaceRaised, color: C.text };
+  return {
+    display: "inline-flex", alignItems: "center", gap: 7,
+    borderRadius: 20, padding: pad,
+    fontFamily: SANS, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap",
+    transition: `background ${MOTION.fast} ${MOTION.ease}, border-color ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}`,
+    ...(on ? onStyle : { border: `1px solid ${C.edgeStrong}`, background: "transparent", color: C.muted }),
   };
 }
 

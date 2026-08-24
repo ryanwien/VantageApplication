@@ -9,7 +9,7 @@ import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage,
 import { buildPnF, pnfTargets, visibleWindow, INTRADAY_BOX_PCT } from "./src/pnf/pnf.js";
 import { detectPattern } from "./src/pnf/patterns.js";
 import { CHESS_GLYPH, chessInit, legalMoves, chessApply, gameStatus, inCheck, chessAIMove } from "./src/chess/chess.js";
-import { C, GRAD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, button, panel, panelHead, panelNote, field as fieldRecipe, chip } from "./src/ui/theme.js";
+import { C, GRAD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, button, panel, panelHead, panelNote, field as fieldRecipe, chip, segmentTrack, segmentItem, pill } from "./src/ui/theme.js";
 import { passwordCheck, PW_MIN } from "./src/auth/password.js";
 import Sparkline from "./src/ui/Sparkline.jsx";
 import RichText from "./src/ui/RichText.jsx";
@@ -176,12 +176,9 @@ const I18N = {
     "Language": "Idioma",
     "Desk": "Mesa", "Markets": "Mercados", "News": "Noticias", "Portfolio": "Cartera",
     "Price alerts": "Alertas de precio", "Getting started": "Primeros pasos",
-    "Live quotes are provided by this server — no key needed on this device.": "Las cotizaciones en vivo las proporciona este servidor — no se necesita clave en este dispositivo.",
     "Live quotes are not configured on this server.": "Las cotizaciones en vivo no están configuradas en este servidor.",
-    "VIDEO SEARCH": "BÚSQUEDA DE VÍDEO",
     "Real, embeddable video results are provided by this server — no key needed on this device.": "Los resultados de vídeo reales e insertables los proporciona este servidor — no se necesita clave en este dispositivo.",
     "Not configured on this server — \"show videos of …\" asks the AI to guess instead.": "No configurado en este servidor — \"muéstrame vídeos de …\" pide a la IA que adivine.",
-    "STREAMING CATALOG": "CATÁLOGO DE STREAMING",
     "Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.": "Los catálogos de Netflix / Disney+ / Hulu y los tráileres los proporciona este servidor — no se necesita clave en este dispositivo.",
     "Not configured on this server — public-domain films via \"free movies …\" still play in-desk.": "No configurado en este servidor — las películas de dominio público con \"free movies …\" siguen reproduciéndose en el desk.",
     "Studio voice is provided by this server — no key needed on this device.": "La voz de estudio la proporciona este servidor — no se necesita clave en este dispositivo.",
@@ -191,9 +188,8 @@ const I18N = {
  "Pick a studio voice in settings": "Elige una voz de estudio en los ajustes",
     "Video search is not configured on this server, and no key is set in this browser.": "La búsqueda de vídeos no está configurada en este servidor y no hay clave en este navegador.",
     "The AI desk is part of": "La mesa de IA forma parte de",
-    "not configured": "sin configurar", "Demo mode needs no keys — everything below works right now.": "El modo demo no necesita claves — todo lo de abajo ya funciona.",
-    "AI DESK IS OFF": "LA MESA DE IA ESTÁ APAGADA", "Answers run on this server's model key. Nothing to set up.": "Las respuestas usan la clave de modelo de este servidor. Nada que configurar.", "Answers run on your local model. Nothing leaves this device.": "Las respuestas usan tu modelo local. Nada sale de este dispositivo.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Este servidor aún no tiene una clave de modelo, así que la mesa no puede responder. Todo lo demás funciona.",
-    "This server holds the model key, so the desk can already answer.": "Este servidor guarda la clave del modelo, así que la mesa ya puede responder.",
+    "not configured": "sin configurar",
+ "Answers run on this server's model key. Nothing to set up.": "Las respuestas usan la clave de modelo de este servidor. Nada que configurar.", "Answers run on your local model. Nothing leaves this device.": "Las respuestas usan tu modelo local. Nada sale de este dispositivo.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Este servidor aún no tiene una clave de modelo, así que la mesa no puede responder. Todo lo demás funciona.",
     "Read on air": "Leer en directo",
     "Search": "Buscar",
     "The AI broadcast desk for the markets.": "La mesa de retransmisión con IA para los mercados.",
@@ -226,10 +222,9 @@ const I18N = {
     "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Una última cosa. Mis respuestas vienen de modelos externos facturados a tu cuenta, así que necesitan tu clave. Todo lo demás es opcional. ¡Fin del recorrido!",
     // settings footer + MEET tab
     "Close": "Cerrar", "Apply": "Aplicar",
-    "Go Live — no setup": "En directo — sin configuración",
     "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Inicia al instante una nueva reunión en una pestaña del navegador (usa la sesión que ya tengas iniciada) y comparte la pantalla de Vantage. Sin claves, sin OAuth.",
     "New Google Meet": "Nueva Google Meet", "New Zoom meeting": "Nueva reunión de Zoom",
-    "Join": "Unirse", "copy link": "copiar enlace", "end": "finalizar",
+    "Join": "Unirse", "end": "finalizar",
     "paste your meeting link to pin it as LIVE…": "pega el enlace de tu reunión para fijarla como EN DIRECTO…",
     "Pin": "Fijar",
     "connected": "conectado", "disconnect": "desconectar",
@@ -237,53 +232,119 @@ const I18N = {
     "AI desk": "Mesa de IA", "ready": "listo", "Voice": "Voz", "browser": "navegador",
     "Live quotes": "Cotizaciones en directo", "live": "en directo", "demo": "demo", "Real videos": "Vídeos reales",
     "on": "activado", "optional": "opcional", "Streaming": "Streaming", "Calendar": "Calendario", "built-in": "integrado", "Meetings": "Reuniones",
-    "You're already set up.": "Ya está todo listo.",
-    "AI DESK IS ON": "LA MESA DE IA ESTÁ ACTIVA",
-    "WHAT'S SET UP": "QUÉ ESTÁ CONFIGURADO", "tap to configure": "toca para configurar",
-    "tour · demo · missions": "recorrido · demo · misiones", "pick your anchor": "elige tu presentador",
     "skip — I'll explore on my own": "omitir — exploraré por mi cuenta",
     // DATA tab
-    "PANELS": "PANELES", "ticker tape": "cinta de cotizaciones", "watchlist": "lista de seguimiento", "top movers": "mayores movimientos", "news & video": "noticias y vídeo", "calendar": "calendario", "portfolio": "cartera",
-    "in-app alerts": "alertas en la aplicación", "price triggers": "activadores de precio", "breaking news": "última hora",
+ "breaking news": "última hora",
     "P&F SIGNALS": "SEÑALES P&F", "P&F signals": "Señales P&F", "P&F pattern alerts": "alertas de patrones P&F",
-    "color-blind mode (blue/orange + ▲▼)": "modo para daltónicos (azul/naranja + ▲▼)",
-    "privacy mode — blur balances": "modo privacidad — difuminar saldos",
     "hidden": "oculto",
-    "CLOCK TIMEZONE": "ZONA HORARIA DEL RELOJ",
-    "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Ajusta el reloj de la cabecera. La insignia de mercado ABIERTO/CERRADO siempre sigue el horario del NYSE (hora del Este).",
-    "refresh interval": "intervalo de actualización", "Manual": "Manual", "refresh now": "actualizar ahora",
+    "refresh interval": "intervalo de actualización", "Manual": "Manual",
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "EN DIRECTO",
-    "Demo mode is a seeded random-walk session: reproducible, no key or network needed.": "El modo demo es una sesión de paseo aleatorio con semilla: reproducible, sin clave ni red.",
  "needs": "requiere",
     "at": "a las", "off": "desactivar",
     // AI tab
-    "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Las respuestas de la mesa de IA requieren {plan}. Los modelos de abajo están desactivados hasta que mejores tu plan (o actives el modo desarrollador en CUENTA).",
  "use only this": "usar solo este", "BASE URL": "BASE URL", "MODEL": "MODELO",
-    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "La mesa recuerda esta conversación localmente (solo en este dispositivo) para que funcionen las preguntas de seguimiento.", "forget conversation": "olvidar conversación", "Desk memory cleared — the conversation is forgotten.": "Memoria de la mesa borrada — la conversación queda olvidada.", "MEMORY": "MEMORIA", "{n} turns remembered on this device": "{n} turnos recordados en este dispositivo", "Memory": "Memoria", "empty": "vacío",
+ "Desk memory cleared — the conversation is forgotten.": "Memoria de la mesa borrada — la conversación queda olvidada.", "MEMORY": "MEMORIA", "Memory": "Memoria", "empty": "vacío",
     "format:": "formato:", "e.g.": "p. ej.",
     "API KEY": "CLAVE API",
  "or": "o",
-    "ANCHOR": "PRESENTADOR", "ENVIRONMENT": "ENTORNO", "BACKGROUND CREW": "EQUIPO DE FONDO",
+ "ENVIRONMENT": "ENTORNO",
     "Auto — whoever isn't anchoring": "Auto — quien no esté presentando", "Off — solo broadcast": "Desactivado — transmisión en solitario",
-    "VOICE ENGINE": "MOTOR DE VOZ", "BROWSER · free": "NAVEGADOR · gratis",
-    "ELEVENLABS VOICE": "VOZ DE ELEVENLABS",
-    "READING SPEED": "VELOCIDAD DE LECTURA", "auto-read the first answer that finishes": "leer automáticamente la primera respuesta que termine",
-    "UI click sounds — terminal blips on every button": "sonidos de clic de la interfaz — pitidos de terminal en cada botón", "SOUND VOLUME": "VOLUMEN DEL SONIDO",
-    "ambient music": "música ambiental", "your Spotify playlist, docked bottom-right": "tu lista de Spotify, anclada abajo a la derecha",
-    "generative synth, ducks under the anchor's voice": "sintetizador generativo, baja bajo la voz del presentador", "MUSIC SOURCE": "FUENTE DE MÚSICA",
+    "ambient music": "música ambiental",
     "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Sin necesidad de iniciar sesión — activa ♪ y el reproductor se ancla abajo a la derecha. (El reproductor incrustado de Spotify reproduce vistas previas de 30 segundos sin cuenta; las canciones completas suenan automáticamente si ya has iniciado sesión en Spotify en este navegador.)",
-    "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "OPCIONAL · CONECTA UNA CUENTA PREMIUM PARA CANCIONES COMPLETAS", "FULL PLAYBACK · SPOTIFY PREMIUM": "REPRODUCCIÓN COMPLETA · SPOTIFY PREMIUM",
     "create an app ↗": "crear una app ↗", "● connected — full tracks enabled": "● conectado — canciones completas activadas",
     "Spotify app Client ID": "Client ID de la app de Spotify", "In your Spotify app settings, add this exact Redirect URI:": "En la configuración de tu app de Spotify, añade esta Redirect URI exacta:",
     "Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.": "Spotify requiere https o 127.0.0.1 — abre esta app en http://127.0.0.1:5173 (no localhost) y registra esa dirección.",
-    "Connect Spotify": "Conectar Spotify", "connecting…": "conectando…", "MUSIC VOLUME": "VOLUMEN DE MÚSICA", "preview voice": "escuchar voz",
+    "Connect Spotify": "Conectar Spotify", "connecting…": "conectando…",
     "You're exploring as a guest": "Estás explorando como invitado",
     "Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.": "Crea una cuenta gratuita para guardar tu plan entre visitas. Tu lista de seguimiento, cartera y ajustes ya se conservan en este dispositivo de todos modos.",
     "Sign in / create account": "Iniciar sesión / crear cuenta", "secured on server": "protegido en el servidor", "stored on this device": "guardado en este dispositivo",
-    "YOUR PLAN": "TU PLAN", "CURRENT": "ACTUAL", "Upgrade": "Mejorar", "Switch": "Cambiar",
+ "Upgrade": "Mejorar", "Switch": "Cambiar",
     "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "Las mejoras de pago abren el pago seguro de Stripe (modo prueba). Los datos de la tarjeta se introducen en Stripe, nunca aquí.",
     "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "No hay ningún procesador de pagos conectado, así que los planes de pago se desbloquean como simulación — no se pide ninguna tarjeta y no se cobra nada.",
-    "Sign out": "Cerrar sesión", "Terms & Privacy accepted": "Términos y Privacidad aceptados", "This account UI is a prototype; see the security note in the code.": "Esta interfaz de cuenta es un prototipo; consulta la nota de seguridad en el código.",
+    "Sign out": "Cerrar sesión", "Terms & Privacy accepted": "Términos y Privacidad aceptados",
+    // --- settings: the plain-language sidebar ---
+    "A second voice to react and hand over to.": "Una segunda voz para reaccionar y dar paso.",
+    "A seeded random-walk session — reproducible, and it needs no key or network.": "Una sesión de paseo aleatorio con semilla: reproducible y sin clave ni red.",
+    "AI & memory": "IA y memoria",
+    "AI desk answers need {plan}.": "Las respuestas del escritorio de IA necesitan {plan}.",
+    "AI market-brief agent": "Agente de informe de mercado con IA",
+    "Accessibility": "Accesibilidad",
+    "Account & plan": "Cuenta y plan",
+    "Ambient music": "Música ambiental",
+    "Anchor": "Presentador",
+    "Background crew": "Equipo de fondo",
+    "Blue/orange + ▲▼": "Azul/naranja + ▲▼",
+    "Blur balances": "Difumina los saldos",
+    "Breaking news": "Última hora",
+    "Browser": "Navegador",
+    "Browser voice": "Voz del navegador",
+    "Chart type": "Tipo de gráfico",
+    "Clock timezone": "Zona horaria del reloj",
+    "Color-blind mode": "Modo daltónico",
+    "Copy link": "Copiar enlace",
+    "Current": "Actual",
+    "Demo mode — nothing to set up": "Modo demo: nada que configurar",
+    "Disconnect": "Desconectar",
+    "Display & data": "Pantalla y datos",
+    "Enable": "Activar",
+    "End": "Terminar",
+    "Everything optional is marked so. Choose one to open its settings.": "Todo lo opcional está marcado como tal. Elige uno para abrir sus ajustes.",
+    "Forget conversation": "Olvidar la conversación",
+    "Generative synth that ducks under the anchor's voice.": "Sintetizador generativo que baja bajo la voz del presentador.",
+    "Go live — no setup": "Sal en directo: sin configuración",
+    "In-app alerts": "Avisos en la app",
+    "Music source": "Fuente de música",
+    "Music volume": "Volumen de la música",
+    "News & video": "Noticias y vídeo",
+    "Nothing here is required — the demo works untouched.": "Nada de esto es obligatorio: la demo funciona sin tocar nada.",
+    "Nothing is stored — links open in a new tab.": "No se guarda nada: los enlaces se abren en una pestaña nueva.",
+    "Off": "Apagado",
+    "Only the first — after that, ask.": "Solo la primera: después, pídelo.",
+    "Optional · connect a Premium account for full tracks": "Opcional · conecta una cuenta Premium para pistas completas",
+    "Panels": "Paneles",
+    "Pause": "Pausar",
+    "Paused": "En pausa",
+    "Pick your anchor": "Elige tu presentador",
+    "Preview voice": "Escuchar la voz",
+    "Price triggers": "Disparadores de precio",
+    "Privacy mode": "Modo privado",
+    "Provided by this server. No key needed on this device.": "Los proporciona este servidor. No hace falta clave en este dispositivo.",
+    "Quotes": "Cotizaciones",
+    "Read the first answer aloud": "Leer en voz alta la primera respuesta",
+    "Reading speed": "Velocidad de lectura",
+    "Refresh every": "Actualizar cada",
+    "Refresh now": "Actualizar ahora",
+    "Runs daily on your current watchlist, stores a factual brief, and never trades or makes recommendations.": "Se ejecuta a diario sobre tu lista de seguimiento, guarda un informe factual y nunca opera ni recomienda.",
+    "Saved in this browser.": "Guardado en este navegador.",
+    "Set": "Plató",
+    "Show me around": "Enséñame la app",
+    "Shown on the Markets screen.": "Se muestran en la pantalla Mercados.",
+    "Sound": "Sonido",
+    "Sound volume": "Volumen del sonido",
+    "Studio voice": "Voz de estudio",
+    "Take the tour": "Hacer el recorrido",
+    "Terminal blips on every button.": "Pitidos de terminal en cada botón.",
+    "The AI desk is part of a paid plan. Everything else on this screen works now.": "El escritorio de IA forma parte de un plan de pago. Todo lo demás de esta pantalla ya funciona.",
+    "The OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "La etiqueta ABIERTO/CERRADO siempre sigue el horario del NYSE (Este).",
+    "The desk model": "El modelo del escritorio",
+    "The desk remembers this conversation locally, on this device only, so follow-up questions work.": "El escritorio recuerda esta conversación localmente, solo en este dispositivo, para que funcionen las preguntas de seguimiento.",
+    "The guided tour, the demo market and the missions.": "El recorrido guiado, el mercado de demostración y las misiones.",
+    "The room behind the anchor.": "La sala detrás del presentador.",
+    "The voice built into your browser. Free, instant, no account.": "La voz integrada en tu navegador. Gratis, instantánea, sin cuenta.",
+    "UI click sounds": "Sonidos de clic de la interfaz",
+    "Video search · streaming catalog": "Búsqueda de vídeo · catálogo de streaming",
+    "Voice & sound": "Voz y sonido",
+    "Voice engine": "Motor de voz",
+    "Watching": "Vigilando",
+    "What's set up": "Qué está configurado",
+    "Who reads your answers.": "Quién lee tus respuestas.",
+    "You're already set up": "Ya está todo listo",
+    "Your Spotify playlist, docked bottom-right.": "Tu lista de Spotify, anclada abajo a la derecha.",
+    "Your plan": "Tu plan",
+    "Your plan follows your account.": "Tu plan va con tu cuenta.",
+    "no symbols": "sin símbolos",
+    "{n} available on this device": "{n} disponibles en este dispositivo",
+    "{n} turns remembered": "{n} turnos recordados",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -351,12 +412,9 @@ const I18N = {
     "Language": "Langue",
     "Desk": "Plateau", "Markets": "Marchés", "News": "Actualités", "Portfolio": "Portefeuille",
     "Price alerts": "Alertes de prix", "Getting started": "Premiers pas",
-    "Live quotes are provided by this server — no key needed on this device.": "Les cotations en direct sont fournies par ce serveur — aucune clé requise sur cet appareil.",
     "Live quotes are not configured on this server.": "Les cotations en direct ne sont pas configurées sur ce serveur.",
-    "VIDEO SEARCH": "RECHERCHE VIDÉO",
     "Real, embeddable video results are provided by this server — no key needed on this device.": "Les résultats vidéo réels et intégrables sont fournis par ce serveur — aucune clé requise sur cet appareil.",
     "Not configured on this server — \"show videos of …\" asks the AI to guess instead.": "Non configuré sur ce serveur — « montre des vidéos de … » demande à l'IA de deviner.",
-    "STREAMING CATALOG": "CATALOGUE STREAMING",
     "Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.": "Les catalogues Netflix / Disney+ / Hulu et les bandes-annonces sont fournis par ce serveur — aucune clé requise sur cet appareil.",
     "Not configured on this server — public-domain films via \"free movies …\" still play in-desk.": "Non configuré sur ce serveur — les films du domaine public via « free movies … » se lisent toujours dans le desk.",
     "Studio voice is provided by this server — no key needed on this device.": "La voix studio est fournie par ce serveur — aucune clé requise sur cet appareil.",
@@ -366,9 +424,8 @@ const I18N = {
  "Pick a studio voice in settings": "Choisissez une voix studio dans les réglages",
     "Video search is not configured on this server, and no key is set in this browser.": "La recherche vidéo n'est pas configurée sur ce serveur et aucune clé n'est définie dans ce navigateur.",
     "The AI desk is part of": "Le plateau IA fait partie de",
-    "not configured": "non configuré", "Demo mode needs no keys — everything below works right now.": "Le mode démo ne demande aucune clé — tout ci-dessous fonctionne déjà.",
-    "AI DESK IS OFF": "LE PLATEAU IA EST ÉTEINT", "Answers run on this server's model key. Nothing to set up.": "Les réponses utilisent la clé de modèle de ce serveur. Rien à configurer.", "Answers run on your local model. Nothing leaves this device.": "Les réponses utilisent votre modèle local. Rien ne quitte cet appareil.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Ce serveur n'a pas encore de clé de modèle, le plateau ne peut donc pas répondre. Tout le reste fonctionne.",
-    "This server holds the model key, so the desk can already answer.": "Ce serveur détient la clé du modèle, le plateau peut donc déjà répondre.",
+    "not configured": "non configuré",
+ "Answers run on this server's model key. Nothing to set up.": "Les réponses utilisent la clé de modèle de ce serveur. Rien à configurer.", "Answers run on your local model. Nothing leaves this device.": "Les réponses utilisent votre modèle local. Rien ne quitte cet appareil.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Ce serveur n'a pas encore de clé de modèle, le plateau ne peut donc pas répondre. Tout le reste fonctionne.",
     "Read on air": "Lire à l'antenne",
     "Search": "Rechercher",
     "The AI broadcast desk for the markets.": "Le plateau de diffusion IA pour les marchés.",
@@ -401,10 +458,9 @@ const I18N = {
     "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Une dernière chose. Mes réponses viennent de modèles externes facturés sur votre compte, il leur faut donc votre clé. Tout le reste est optionnel. Fin de la visite !",
     // settings footer + MEET tab
     "Close": "Fermer", "Apply": "Appliquer",
-    "Go Live — no setup": "En direct — sans configuration",
     "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Démarrez instantanément une nouvelle réunion dans un onglet du navigateur (utilise la session déjà ouverte), puis partagez l'écran de Vantage. Aucune clé, aucun OAuth.",
     "New Google Meet": "Nouveau Google Meet", "New Zoom meeting": "Nouvelle réunion Zoom",
-    "Join": "Rejoindre", "copy link": "copier le lien", "end": "terminer",
+    "Join": "Rejoindre", "end": "terminer",
     "paste your meeting link to pin it as LIVE…": "collez le lien de votre réunion pour l'épingler comme EN DIRECT…",
     "Pin": "Épingler",
     "connected": "connecté", "disconnect": "déconnecter",
@@ -412,53 +468,119 @@ const I18N = {
     "AI desk": "Plateau IA", "ready": "prêt", "Voice": "Voix", "browser": "navigateur",
     "Live quotes": "Cotations en direct", "live": "en direct", "demo": "démo", "Real videos": "Vraies vidéos",
     "on": "activé", "optional": "optionnel", "Streaming": "Streaming", "Calendar": "Calendrier", "built-in": "intégré", "Meetings": "Réunions",
-    "You're already set up.": "Tout est déjà prêt.",
-    "AI DESK IS ON": "LE PLATEAU IA EST ACTIF",
-    "WHAT'S SET UP": "CE QUI EST CONFIGURÉ", "tap to configure": "touchez pour configurer",
-    "tour · demo · missions": "visite · démo · missions", "pick your anchor": "choisissez votre présentateur",
     "skip — I'll explore on my own": "passer — je vais explorer par moi-même",
     // DATA tab
-    "PANELS": "PANNEAUX", "ticker tape": "bandeau de cotation", "watchlist": "liste de suivi", "top movers": "plus fortes variations", "news & video": "actualités et vidéo", "calendar": "calendrier", "portfolio": "portefeuille",
-    "in-app alerts": "alertes dans l'application", "price triggers": "seuils de prix", "breaking news": "dernière minute",
+ "breaking news": "dernière minute",
     "P&F SIGNALS": "SIGNAUX P&F", "P&F signals": "Signaux P&F", "P&F pattern alerts": "alertes de figures P&F",
-    "color-blind mode (blue/orange + ▲▼)": "mode daltonien (bleu/orange + ▲▼)",
-    "privacy mode — blur balances": "mode privé — flouter les soldes",
     "hidden": "masqué",
-    "CLOCK TIMEZONE": "FUSEAU HORAIRE DE L'HORLOGE",
-    "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Règle l'horloge de l'en-tête. Le badge de marché OUVERT/FERMÉ suit toujours les heures du NYSE (heure de l'Est).",
-    "refresh interval": "intervalle d'actualisation", "Manual": "Manuel", "refresh now": "actualiser maintenant",
+    "refresh interval": "intervalle d'actualisation", "Manual": "Manuel",
     "replay tutorial": "revoir le tutoriel", "DEMO": "DÉMO", "LIVE": "EN DIRECT",
-    "Demo mode is a seeded random-walk session: reproducible, no key or network needed.": "Le mode démo est une session à marche aléatoire avec graine : reproductible, sans clé ni réseau.",
  "needs": "nécessite",
     "at": "à", "off": "désactiver",
     // AI tab
-    "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Les réponses du plateau IA nécessitent {plan}. Les modèles ci-dessous sont désactivés jusqu'à ce que vous passiez à l'offre supérieure (ou activiez le mode développeur dans COMPTE).",
  "use only this": "utiliser seulement celui-ci", "BASE URL": "BASE URL", "MODEL": "MODÈLE",
-    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "Le plateau mémorise cette conversation localement (uniquement sur cet appareil) pour que les questions de suivi fonctionnent.", "forget conversation": "oublier la conversation", "Desk memory cleared — the conversation is forgotten.": "Mémoire du plateau effacée — la conversation est oubliée.", "MEMORY": "MÉMOIRE", "{n} turns remembered on this device": "{n} tours mémorisés sur cet appareil", "Memory": "Mémoire", "empty": "vide",
+ "Desk memory cleared — the conversation is forgotten.": "Mémoire du plateau effacée — la conversation est oubliée.", "MEMORY": "MÉMOIRE", "Memory": "Mémoire", "empty": "vide",
     "format:": "format :", "e.g.": "par ex.",
     "API KEY": "CLÉ API",
  "or": "ou",
-    "ANCHOR": "PRÉSENTATEUR", "ENVIRONMENT": "ENVIRONNEMENT", "BACKGROUND CREW": "ÉQUIPE EN FOND",
+ "ENVIRONMENT": "ENVIRONNEMENT",
     "Auto — whoever isn't anchoring": "Auto — celui qui ne présente pas", "Off — solo broadcast": "Désactivé — diffusion en solo",
-    "VOICE ENGINE": "MOTEUR VOCAL", "BROWSER · free": "NAVIGATEUR · gratuit",
-    "ELEVENLABS VOICE": "VOIX ELEVENLABS",
-    "READING SPEED": "VITESSE DE LECTURE", "auto-read the first answer that finishes": "lire automatiquement la première réponse terminée",
-    "UI click sounds — terminal blips on every button": "sons de clic de l'interface — bips de terminal sur chaque bouton", "SOUND VOLUME": "VOLUME DU SON",
-    "ambient music": "musique d'ambiance", "your Spotify playlist, docked bottom-right": "votre playlist Spotify, ancrée en bas à droite",
-    "generative synth, ducks under the anchor's voice": "synthé génératif, s'atténue sous la voix du présentateur", "MUSIC SOURCE": "SOURCE MUSICALE",
+    "ambient music": "musique d'ambiance",
     "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Aucune connexion requise — activez ♪ et le lecteur s'ancre en bas à droite. (Le lecteur intégré de Spotify diffuse des extraits de 30 secondes sans compte ; les titres complets se lisent automatiquement si vous êtes déjà connecté à Spotify dans ce navigateur.)",
-    "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "FACULTATIF · CONNECTEZ UN COMPTE PREMIUM POUR LES TITRES COMPLETS", "FULL PLAYBACK · SPOTIFY PREMIUM": "LECTURE COMPLÈTE · SPOTIFY PREMIUM",
     "create an app ↗": "créer une app ↗", "● connected — full tracks enabled": "● connecté — titres complets activés",
     "Spotify app Client ID": "Client ID de l'app Spotify", "In your Spotify app settings, add this exact Redirect URI:": "Dans les paramètres de votre app Spotify, ajoutez cette Redirect URI exacte :",
     "Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.": "Spotify exige https ou 127.0.0.1 — ouvrez cette app sur http://127.0.0.1:5173 (pas localhost) et enregistrez cette adresse.",
-    "Connect Spotify": "Connecter Spotify", "connecting…": "connexion…", "MUSIC VOLUME": "VOLUME MUSIQUE", "preview voice": "écouter la voix",
+    "Connect Spotify": "Connecter Spotify", "connecting…": "connexion…",
     "You're exploring as a guest": "Vous explorez en tant qu'invité",
     "Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.": "Créez un compte gratuit pour conserver votre offre d'une visite à l'autre. Votre liste de suivi, votre portefeuille et vos réglages persistent déjà sur cet appareil de toute façon.",
     "Sign in / create account": "Se connecter / créer un compte", "secured on server": "sécurisé sur le serveur", "stored on this device": "stocké sur cet appareil",
-    "YOUR PLAN": "VOTRE OFFRE", "CURRENT": "ACTUELLE", "Upgrade": "Passer à supérieur", "Switch": "Changer",
+ "Upgrade": "Passer à supérieur", "Switch": "Changer",
     "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "Les mises à niveau payantes ouvrent le paiement sécurisé de Stripe (mode test). Les informations de carte sont saisies sur Stripe, jamais ici.",
     "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "Aucun processeur de paiement n'est connecté, donc les offres payantes sont débloquées en simulation — aucune carte n'est demandée et rien n'est facturé.",
-    "Sign out": "Se déconnecter", "Terms & Privacy accepted": "Conditions et confidentialité acceptées", "This account UI is a prototype; see the security note in the code.": "Cette interface de compte est un prototype ; voir la note de sécurité dans le code.",
+    "Sign out": "Se déconnecter", "Terms & Privacy accepted": "Conditions et confidentialité acceptées",
+    // --- settings: the plain-language sidebar ---
+    "A second voice to react and hand over to.": "Une deuxième voix pour réagir et passer l'antenne.",
+    "A seeded random-walk session — reproducible, and it needs no key or network.": "Une séance en marche aléatoire à graine fixe : reproductible, sans clé ni réseau.",
+    "AI & memory": "IA et mémoire",
+    "AI desk answers need {plan}.": "Les réponses du pupitre IA nécessitent {plan}.",
+    "AI market-brief agent": "Agent de briefing marché IA",
+    "Accessibility": "Accessibilité",
+    "Account & plan": "Compte et forfait",
+    "Ambient music": "Musique d'ambiance",
+    "Anchor": "Présentateur",
+    "Background crew": "Équipe en fond",
+    "Blue/orange + ▲▼": "Bleu/orange + ▲▼",
+    "Blur balances": "Floute les soldes",
+    "Breaking news": "Alerte info",
+    "Browser": "Navigateur",
+    "Browser voice": "Voix du navigateur",
+    "Chart type": "Type de graphique",
+    "Clock timezone": "Fuseau horaire de l'horloge",
+    "Color-blind mode": "Mode daltonien",
+    "Copy link": "Copier le lien",
+    "Current": "Actuel",
+    "Demo mode — nothing to set up": "Mode démo — rien à configurer",
+    "Disconnect": "Déconnecter",
+    "Display & data": "Affichage et données",
+    "Enable": "Activer",
+    "End": "Terminer",
+    "Everything optional is marked so. Choose one to open its settings.": "Tout ce qui est facultatif est indiqué. Choisissez-en un pour ouvrir ses réglages.",
+    "Forget conversation": "Oublier la conversation",
+    "Generative synth that ducks under the anchor's voice.": "Synthé génératif qui s'efface sous la voix du présentateur.",
+    "Go live — no setup": "Passez en direct — sans configuration",
+    "In-app alerts": "Alertes dans l'app",
+    "Music source": "Source musicale",
+    "Music volume": "Volume de la musique",
+    "News & video": "Actualités et vidéo",
+    "Nothing here is required — the demo works untouched.": "Rien ici n'est obligatoire — la démo fonctionne telle quelle.",
+    "Nothing is stored — links open in a new tab.": "Rien n'est enregistré — les liens s'ouvrent dans un nouvel onglet.",
+    "Off": "Éteint",
+    "Only the first — after that, ask.": "Seulement la première — ensuite, demandez.",
+    "Optional · connect a Premium account for full tracks": "Facultatif · connectez un compte Premium pour les titres complets",
+    "Panels": "Panneaux",
+    "Pause": "Mettre en pause",
+    "Paused": "En pause",
+    "Pick your anchor": "Choisissez votre présentateur",
+    "Preview voice": "Écouter la voix",
+    "Price triggers": "Déclencheurs de prix",
+    "Privacy mode": "Mode confidentialité",
+    "Provided by this server. No key needed on this device.": "Fournis par ce serveur. Aucune clé nécessaire sur cet appareil.",
+    "Quotes": "Cotations",
+    "Read the first answer aloud": "Lire la première réponse à voix haute",
+    "Reading speed": "Vitesse de lecture",
+    "Refresh every": "Actualiser toutes les",
+    "Refresh now": "Actualiser maintenant",
+    "Runs daily on your current watchlist, stores a factual brief, and never trades or makes recommendations.": "S'exécute chaque jour sur votre liste de suivi, enregistre un briefing factuel, et ne passe jamais d'ordre ni de recommandation.",
+    "Saved in this browser.": "Enregistré dans ce navigateur.",
+    "Set": "Plateau",
+    "Show me around": "Faites-moi visiter",
+    "Shown on the Markets screen.": "Affichés sur l'écran Marchés.",
+    "Sound": "Son",
+    "Sound volume": "Volume du son",
+    "Studio voice": "Voix studio",
+    "Take the tour": "Faire la visite",
+    "Terminal blips on every button.": "Bips de terminal sur chaque bouton.",
+    "The AI desk is part of a paid plan. Everything else on this screen works now.": "Le pupitre IA fait partie d'un forfait payant. Tout le reste de cet écran fonctionne déjà.",
+    "The OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Le badge OUVERT/FERMÉ suit toujours les horaires du NYSE (Est).",
+    "The desk model": "Le modèle du pupitre",
+    "The desk remembers this conversation locally, on this device only, so follow-up questions work.": "Le pupitre garde cette conversation en local, sur cet appareil uniquement, pour que les questions de suivi fonctionnent.",
+    "The guided tour, the demo market and the missions.": "La visite guidée, le marché de démonstration et les missions.",
+    "The room behind the anchor.": "La pièce derrière le présentateur.",
+    "The voice built into your browser. Free, instant, no account.": "La voix intégrée à votre navigateur. Gratuite, instantanée, sans compte.",
+    "UI click sounds": "Sons de clic de l'interface",
+    "Video search · streaming catalog": "Recherche vidéo · catalogue de streaming",
+    "Voice & sound": "Voix et son",
+    "Voice engine": "Moteur vocal",
+    "Watching": "Surveille",
+    "What's set up": "Ce qui est configuré",
+    "Who reads your answers.": "Qui lit vos réponses.",
+    "You're already set up": "Tout est déjà prêt",
+    "Your Spotify playlist, docked bottom-right.": "Votre playlist Spotify, ancrée en bas à droite.",
+    "Your plan": "Votre forfait",
+    "Your plan follows your account.": "Votre forfait suit votre compte.",
+    "no symbols": "aucun symbole",
+    "{n} available on this device": "{n} disponibles sur cet appareil",
+    "{n} turns remembered": "{n} tours mémorisés",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -526,12 +648,9 @@ const I18N = {
     "Language": "Sprache",
     "Desk": "Pult", "Markets": "Märkte", "News": "Nachrichten", "Portfolio": "Portfolio",
     "Price alerts": "Preisalarme", "Getting started": "Erste Schritte",
-    "Live quotes are provided by this server — no key needed on this device.": "Live-Kurse liefert dieser Server — kein Schlüssel auf diesem Gerät nötig.",
     "Live quotes are not configured on this server.": "Live-Kurse sind auf diesem Server nicht eingerichtet.",
-    "VIDEO SEARCH": "VIDEOSUCHE",
     "Real, embeddable video results are provided by this server — no key needed on this device.": "Echte, einbettbare Videoergebnisse liefert dieser Server — kein Schlüssel auf diesem Gerät nötig.",
     "Not configured on this server — \"show videos of …\" asks the AI to guess instead.": "Auf diesem Server nicht eingerichtet — „zeig Videos von …“ lässt stattdessen die KI raten.",
-    "STREAMING CATALOG": "STREAMING-KATALOG",
     "Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.": "Netflix- / Disney+- / Hulu-Kataloge und Trailer liefert dieser Server — kein Schlüssel auf diesem Gerät nötig.",
     "Not configured on this server — public-domain films via \"free movies …\" still play in-desk.": "Auf diesem Server nicht eingerichtet — gemeinfreie Filme über „free movies …“ laufen weiter im Desk.",
     "Studio voice is provided by this server — no key needed on this device.": "Die Studio-Stimme liefert dieser Server — kein Schlüssel auf diesem Gerät nötig.",
@@ -541,9 +660,8 @@ const I18N = {
  "Pick a studio voice in settings": "Wähle in den Einstellungen eine Studiostimme",
     "Video search is not configured on this server, and no key is set in this browser.": "Die Videosuche ist auf diesem Server nicht eingerichtet und in diesem Browser ist kein Schlüssel hinterlegt.",
     "The AI desk is part of": "Das KI-Pult gehört zu",
-    "not configured": "nicht eingerichtet", "Demo mode needs no keys — everything below works right now.": "Der Demo-Modus braucht keine Schlüssel — alles unten funktioniert schon.",
-    "AI DESK IS OFF": "KI-PULT IST AUS", "Answers run on this server's model key. Nothing to set up.": "Antworten laufen über den Modellschlüssel dieses Servers. Nichts einzurichten.", "Answers run on your local model. Nothing leaves this device.": "Antworten laufen über dein lokales Modell. Nichts verlässt dieses Gerät.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Auf diesem Server ist noch kein Modellschlüssel hinterlegt, das Pult kann also nicht antworten. Alles andere funktioniert.",
-    "This server holds the model key, so the desk can already answer.": "Dieser Server hält den Modellschlüssel, das Pult kann also schon antworten.",
+    "not configured": "nicht eingerichtet",
+ "Answers run on this server's model key. Nothing to set up.": "Antworten laufen über den Modellschlüssel dieses Servers. Nichts einzurichten.", "Answers run on your local model. Nothing leaves this device.": "Antworten laufen über dein lokales Modell. Nichts verlässt dieses Gerät.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Auf diesem Server ist noch kein Modellschlüssel hinterlegt, das Pult kann also nicht antworten. Alles andere funktioniert.",
     "Read on air": "Live vorlesen",
     "Search": "Suchen",
     "The AI broadcast desk for the markets.": "Das KI-Broadcast-Pult für die Märkte.",
@@ -576,10 +694,9 @@ const I18N = {
     "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Noch etwas. Meine Antworten kommen von externen Modellen auf deine Rechnung, sie brauchen also deinen Schlüssel. Alles andere ist optional. Das war die Tour!",
     // settings footer + MEET tab
     "Close": "Schließen", "Apply": "Übernehmen",
-    "Go Live — no setup": "Live gehen — ohne Einrichtung",
     "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Starten Sie sofort ein neues Meeting in einem Browser-Tab (nutzt Ihre bestehende Anmeldung) und teilen Sie dann den Vantage-Bildschirm. Keine Schlüssel, kein OAuth.",
     "New Google Meet": "Neues Google Meet", "New Zoom meeting": "Neues Zoom-Meeting",
-    "Join": "Beitreten", "copy link": "Link kopieren", "end": "beenden",
+    "Join": "Beitreten", "end": "beenden",
     "paste your meeting link to pin it as LIVE…": "Meeting-Link einfügen, um ihn als LIVE anzuheften…",
     "Pin": "Anheften",
     "connected": "verbunden", "disconnect": "trennen",
@@ -587,53 +704,119 @@ const I18N = {
     "AI desk": "KI-Pult", "ready": "bereit", "Voice": "Stimme", "browser": "Browser",
     "Live quotes": "Live-Kurse", "live": "live", "demo": "Demo", "Real videos": "Echte Videos",
     "on": "an", "optional": "optional", "Streaming": "Streaming", "Calendar": "Kalender", "built-in": "integriert", "Meetings": "Meetings",
-    "You're already set up.": "Sie sind bereits startklar.",
-    "AI DESK IS ON": "DAS KI-PULT IST AN",
-    "WHAT'S SET UP": "WAS EINGERICHTET IST", "tap to configure": "zum Konfigurieren tippen",
-    "tour · demo · missions": "Tour · Demo · Missionen", "pick your anchor": "Moderator wählen",
     "skip — I'll explore on my own": "überspringen — ich erkunde selbst",
     // DATA tab
-    "PANELS": "PANELS", "ticker tape": "Kursband", "watchlist": "Beobachtungsliste", "top movers": "größte Bewegungen", "news & video": "Nachrichten & Video", "calendar": "Kalender", "portfolio": "Portfolio",
-    "in-app alerts": "In-App-Benachrichtigungen", "price triggers": "Preisauslöser", "breaking news": "Eilmeldungen",
+ "breaking news": "Eilmeldungen",
     "P&F SIGNALS": "P&F-SIGNALE", "P&F signals": "P&F-Signale", "P&F pattern alerts": "P&F-Muster-Benachrichtigungen",
-    "color-blind mode (blue/orange + ▲▼)": "Modus für Farbenblindheit (Blau/Orange + ▲▼)",
-    "privacy mode — blur balances": "Privatsphärenmodus — Salden verwischen",
     "hidden": "ausgeblendet",
-    "CLOCK TIMEZONE": "ZEITZONE DER UHR",
-    "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Stellt die Kopfzeilen-Uhr ein. Das OFFEN/GESCHLOSSEN-Abzeichen folgt immer den NYSE-Zeiten (Eastern).",
-    "refresh interval": "Aktualisierungsintervall", "Manual": "Manuell", "refresh now": "jetzt aktualisieren",
+    "refresh interval": "Aktualisierungsintervall", "Manual": "Manuell",
     "replay tutorial": "Tutorial wiederholen", "DEMO": "DEMO", "LIVE": "LIVE",
-    "Demo mode is a seeded random-walk session: reproducible, no key or network needed.": "Der Demo-Modus ist eine geseedete Random-Walk-Sitzung: reproduzierbar, ohne Schlüssel und Netz.",
  "needs": "erfordert",
     "at": "um", "off": "aus",
     // AI tab
-    "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "KI-Pult-Antworten erfordern {plan}. Die Modelle unten sind deaktiviert, bis Sie upgraden (oder den Entwicklermodus in KONTO aktivieren).",
  "use only this": "nur dieses verwenden", "BASE URL": "BASE URL", "MODEL": "MODELL",
-    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "Das Pult merkt sich dieses Gespräch lokal (nur auf diesem Gerät), damit Anschlussfragen funktionieren.", "forget conversation": "Gespräch vergessen", "Desk memory cleared — the conversation is forgotten.": "Pult-Gedächtnis gelöscht — das Gespräch ist vergessen.", "MEMORY": "GEDÄCHTNIS", "{n} turns remembered on this device": "{n} Runden auf diesem Gerät gespeichert", "Memory": "Gedächtnis", "empty": "leer",
+ "Desk memory cleared — the conversation is forgotten.": "Pult-Gedächtnis gelöscht — das Gespräch ist vergessen.", "MEMORY": "GEDÄCHTNIS", "Memory": "Gedächtnis", "empty": "leer",
     "format:": "Format:", "e.g.": "z. B.",
     "API KEY": "API-SCHLÜSSEL",
  "or": "oder",
-    "ANCHOR": "MODERATOR", "ENVIRONMENT": "UMGEBUNG", "BACKGROUND CREW": "HINTERGRUND-TEAM",
+ "ENVIRONMENT": "UMGEBUNG",
     "Auto — whoever isn't anchoring": "Auto — wer gerade nicht moderiert", "Off — solo broadcast": "Aus — Solo-Sendung",
-    "VOICE ENGINE": "SPRACH-ENGINE", "BROWSER · free": "BROWSER · kostenlos",
-    "ELEVENLABS VOICE": "ELEVENLABS-STIMME",
-    "READING SPEED": "LESEGESCHWINDIGKEIT", "auto-read the first answer that finishes": "die erste fertige Antwort automatisch vorlesen",
-    "UI click sounds — terminal blips on every button": "UI-Klickgeräusche — Terminal-Pieptöne bei jedem Button", "SOUND VOLUME": "TON-LAUTSTÄRKE",
-    "ambient music": "Hintergrundmusik", "your Spotify playlist, docked bottom-right": "deine Spotify-Playlist, angedockt unten rechts",
-    "generative synth, ducks under the anchor's voice": "generativer Synth, senkt sich unter die Stimme des Moderators", "MUSIC SOURCE": "MUSIKQUELLE",
+    "ambient music": "Hintergrundmusik",
     "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Keine Anmeldung nötig — schalte ♪ ein und der Player dockt unten rechts an. (Spotifys Embed spielt 30-Sekunden-Vorschauen ohne Konto; vollständige Titel laufen automatisch, wenn du in diesem Browser bereits bei Spotify angemeldet bist.)",
-    "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "OPTIONAL · PREMIUM-KONTO FÜR VOLLSTÄNDIGE TITEL VERBINDEN", "FULL PLAYBACK · SPOTIFY PREMIUM": "VOLLSTÄNDIGE WIEDERGABE · SPOTIFY PREMIUM",
     "create an app ↗": "App erstellen ↗", "● connected — full tracks enabled": "● verbunden — vollständige Titel aktiviert",
     "Spotify app Client ID": "Client-ID der Spotify-App", "In your Spotify app settings, add this exact Redirect URI:": "Füge in den Einstellungen deiner Spotify-App genau diese Redirect-URI hinzu:",
     "Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.": "Spotify verlangt https oder 127.0.0.1 — öffne diese App unter http://127.0.0.1:5173 (nicht localhost) und registriere das.",
-    "Connect Spotify": "Spotify verbinden", "connecting…": "verbinde…", "MUSIC VOLUME": "MUSIK-LAUTSTÄRKE", "preview voice": "Stimme anhören",
+    "Connect Spotify": "Spotify verbinden", "connecting…": "verbinde…",
     "You're exploring as a guest": "Du erkundest als Gast",
     "Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.": "Erstelle ein kostenloses Konto, um deinen Tarif über Besuche hinweg zu speichern. Deine Watchlist, dein Portfolio und deine Einstellungen bleiben ohnehin auf diesem Gerät erhalten.",
     "Sign in / create account": "Anmelden / Konto erstellen", "secured on server": "auf dem Server gesichert", "stored on this device": "auf diesem Gerät gespeichert",
-    "YOUR PLAN": "DEIN TARIF", "CURRENT": "AKTUELL", "Upgrade": "Upgrade", "Switch": "Wechseln",
+ "Upgrade": "Upgrade", "Switch": "Wechseln",
     "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "Kostenpflichtige Upgrades öffnen den sicheren Checkout von Stripe (Testmodus). Kartendaten werden bei Stripe eingegeben, niemals hier.",
     "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "Es ist kein Zahlungsdienstleister verbunden, daher werden kostenpflichtige Tarife als Simulation freigeschaltet — es wird keine Karte verlangt und nichts berechnet.",
-    "Sign out": "Abmelden", "Terms & Privacy accepted": "AGB & Datenschutz akzeptiert", "This account UI is a prototype; see the security note in the code.": "Diese Konto-Oberfläche ist ein Prototyp; siehe den Sicherheitshinweis im Code.",
+    "Sign out": "Abmelden", "Terms & Privacy accepted": "AGB & Datenschutz akzeptiert",
+    // --- settings: the plain-language sidebar ---
+    "A second voice to react and hand over to.": "Eine zweite Stimme, die reagiert und übergibt.",
+    "A seeded random-walk session — reproducible, and it needs no key or network.": "Eine Random-Walk-Sitzung mit festem Startwert — reproduzierbar, ohne Schlüssel oder Netz.",
+    "AI & memory": "KI & Gedächtnis",
+    "AI desk answers need {plan}.": "Antworten vom KI-Desk brauchen {plan}.",
+    "AI market-brief agent": "KI-Marktbriefing-Agent",
+    "Accessibility": "Barrierefreiheit",
+    "Account & plan": "Konto & Tarif",
+    "Ambient music": "Hintergrundmusik",
+    "Anchor": "Moderation",
+    "Background crew": "Team im Hintergrund",
+    "Blue/orange + ▲▼": "Blau/Orange + ▲▼",
+    "Blur balances": "Beträge unscharf",
+    "Breaking news": "Eilmeldungen",
+    "Browser": "Browser",
+    "Browser voice": "Browser-Stimme",
+    "Chart type": "Diagrammtyp",
+    "Clock timezone": "Zeitzone der Uhr",
+    "Color-blind mode": "Farbenblind-Modus",
+    "Copy link": "Link kopieren",
+    "Current": "Aktuell",
+    "Demo mode — nothing to set up": "Demo-Modus — nichts einzurichten",
+    "Disconnect": "Trennen",
+    "Display & data": "Anzeige & Daten",
+    "Enable": "Aktivieren",
+    "End": "Beenden",
+    "Everything optional is marked so. Choose one to open its settings.": "Alles Optionale ist so gekennzeichnet. Wähle eines, um seine Einstellungen zu öffnen.",
+    "Forget conversation": "Konversation vergessen",
+    "Generative synth that ducks under the anchor's voice.": "Generativer Synth, der sich unter die Stimme der Moderation duckt.",
+    "Go live — no setup": "Live gehen — ohne Einrichtung",
+    "In-app alerts": "Hinweise in der App",
+    "Music source": "Musikquelle",
+    "Music volume": "Musiklautstärke",
+    "News & video": "Nachrichten & Video",
+    "Nothing here is required — the demo works untouched.": "Nichts davon ist nötig — die Demo läuft unverändert.",
+    "Nothing is stored — links open in a new tab.": "Nichts wird gespeichert — Links öffnen in einem neuen Tab.",
+    "Off": "Aus",
+    "Only the first — after that, ask.": "Nur die erste — danach auf Zuruf.",
+    "Optional · connect a Premium account for full tracks": "Optional · Premium-Konto verbinden für vollständige Titel",
+    "Panels": "Panels",
+    "Pause": "Pausieren",
+    "Paused": "Pausiert",
+    "Pick your anchor": "Moderation wählen",
+    "Preview voice": "Stimme anhören",
+    "Price triggers": "Kursauslöser",
+    "Privacy mode": "Privatsphäre-Modus",
+    "Provided by this server. No key needed on this device.": "Von diesem Server bereitgestellt. Auf diesem Gerät ist kein Schlüssel nötig.",
+    "Quotes": "Kurse",
+    "Read the first answer aloud": "Die erste Antwort vorlesen",
+    "Reading speed": "Lesegeschwindigkeit",
+    "Refresh every": "Aktualisieren alle",
+    "Refresh now": "Jetzt aktualisieren",
+    "Runs daily on your current watchlist, stores a factual brief, and never trades or makes recommendations.": "Läuft täglich über deine Beobachtungsliste, speichert ein sachliches Briefing und handelt oder empfiehlt nie.",
+    "Saved in this browser.": "In diesem Browser gespeichert.",
+    "Set": "Studio-Set",
+    "Show me around": "Zeig mir alles",
+    "Shown on the Markets screen.": "Werden im Markt-Bildschirm angezeigt.",
+    "Sound": "Ton",
+    "Sound volume": "Tonlautstärke",
+    "Studio voice": "Studiostimme",
+    "Take the tour": "Tour starten",
+    "Terminal blips on every button.": "Terminal-Pieptöne bei jedem Knopf.",
+    "The AI desk is part of a paid plan. Everything else on this screen works now.": "Der KI-Desk gehört zu einem kostenpflichtigen Tarif. Alles andere auf diesem Bildschirm läuft bereits.",
+    "The OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Das Abzeichen OFFEN/GESCHLOSSEN folgt immer den NYSE-Zeiten (Eastern).",
+    "The desk model": "Das Modell des Desks",
+    "The desk remembers this conversation locally, on this device only, so follow-up questions work.": "Der Desk merkt sich dieses Gespräch lokal, nur auf diesem Gerät, damit Rückfragen funktionieren.",
+    "The guided tour, the demo market and the missions.": "Die geführte Tour, der Demo-Markt und die Missionen.",
+    "The room behind the anchor.": "Der Raum hinter der Moderation.",
+    "The voice built into your browser. Free, instant, no account.": "Die im Browser eingebaute Stimme. Kostenlos, sofort, ohne Konto.",
+    "UI click sounds": "Klickgeräusche der Oberfläche",
+    "Video search · streaming catalog": "Videosuche · Streaming-Katalog",
+    "Voice & sound": "Stimme & Ton",
+    "Voice engine": "Sprach-Engine",
+    "Watching": "Beobachtet",
+    "What's set up": "Was eingerichtet ist",
+    "Who reads your answers.": "Wer deine Antworten liest.",
+    "You're already set up": "Alles ist schon eingerichtet",
+    "Your Spotify playlist, docked bottom-right.": "Deine Spotify-Playlist, unten rechts angedockt.",
+    "Your plan": "Dein Tarif",
+    "Your plan follows your account.": "Dein Tarif hängt an deinem Konto.",
+    "no symbols": "keine Symbole",
+    "{n} available on this device": "{n} auf diesem Gerät verfügbar",
+    "{n} turns remembered": "{n} Runden gemerkt",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -701,12 +884,9 @@ const I18N = {
     "Language": "Idioma",
     "Desk": "Mesa", "Markets": "Mercados", "News": "Notícias", "Portfolio": "Carteira",
     "Price alerts": "Alertas de preço", "Getting started": "Primeiros passos",
-    "Live quotes are provided by this server — no key needed on this device.": "As cotações em tempo real são fornecidas por este servidor — nenhuma chave é necessária neste dispositivo.",
     "Live quotes are not configured on this server.": "As cotações em tempo real não estão configuradas neste servidor.",
-    "VIDEO SEARCH": "PESQUISA DE VÍDEO",
     "Real, embeddable video results are provided by this server — no key needed on this device.": "Resultados de vídeo reais e incorporáveis são fornecidos por este servidor — nenhuma chave é necessária neste dispositivo.",
     "Not configured on this server — \"show videos of …\" asks the AI to guess instead.": "Não configurado neste servidor — \"mostra vídeos de …\" pede à IA para adivinhar.",
-    "STREAMING CATALOG": "CATÁLOGO DE STREAMING",
     "Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.": "Os catálogos Netflix / Disney+ / Hulu e os trailers são fornecidos por este servidor — nenhuma chave é necessária neste dispositivo.",
     "Not configured on this server — public-domain films via \"free movies …\" still play in-desk.": "Não configurado neste servidor — filmes de domínio público via \"free movies …\" continuam a tocar no desk.",
     "Studio voice is provided by this server — no key needed on this device.": "A voz de estúdio é fornecida por este servidor — nenhuma chave é necessária neste dispositivo.",
@@ -716,9 +896,8 @@ const I18N = {
  "Pick a studio voice in settings": "Escolhe uma voz de estúdio nas definições",
     "Video search is not configured on this server, and no key is set in this browser.": "A pesquisa de vídeos não está configurada neste servidor e não há chave neste navegador.",
     "The AI desk is part of": "A mesa de IA faz parte de",
-    "not configured": "não configurado", "Demo mode needs no keys — everything below works right now.": "O modo demo não precisa de chaves — tudo abaixo já funciona.",
-    "AI DESK IS OFF": "A MESA DE IA ESTÁ DESLIGADA", "Answers run on this server's model key. Nothing to set up.": "As respostas usam a chave de modelo deste servidor. Nada para configurar.", "Answers run on your local model. Nothing leaves this device.": "As respostas usam o teu modelo local. Nada sai deste dispositivo.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Este servidor ainda não tem uma chave de modelo, por isso a mesa não consegue responder. Tudo o resto funciona.",
-    "This server holds the model key, so the desk can already answer.": "Este servidor guarda a chave do modelo, por isso a mesa já consegue responder.",
+    "not configured": "não configurado",
+ "Answers run on this server's model key. Nothing to set up.": "As respostas usam a chave de modelo deste servidor. Nada para configurar.", "Answers run on your local model. Nothing leaves this device.": "As respostas usam o teu modelo local. Nada sai deste dispositivo.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Este servidor ainda não tem uma chave de modelo, por isso a mesa não consegue responder. Tudo o resto funciona.",
     "Read on air": "Ler em direto",
     "Search": "Pesquisar",
     "The AI broadcast desk for the markets.": "A mesa de transmissão com IA para os mercados.",
@@ -750,10 +929,9 @@ const I18N = {
     "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Uma última coisa. As minhas respostas vêm de modelos externos faturados à tua conta, por isso precisam da tua chave. Tudo o resto é opcional. Fim da visita!",
     // settings footer + MEET tab
     "Close": "Fechar", "Apply": "Aplicar",
-    "Go Live — no setup": "Ao vivo — sem configuração",
     "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Inicie instantaneamente uma nova reunião num separador do navegador (usa a sessão que já tem iniciada) e depois partilhe o ecrã do Vantage. Sem chaves, sem OAuth.",
     "New Google Meet": "Novo Google Meet", "New Zoom meeting": "Nova reunião Zoom",
-    "Join": "Entrar", "copy link": "copiar ligação", "end": "terminar",
+    "Join": "Entrar", "end": "terminar",
     "paste your meeting link to pin it as LIVE…": "cole a ligação da sua reunião para a fixar como AO VIVO…",
     "Pin": "Fixar",
     "connected": "ligado", "disconnect": "desligar",
@@ -761,53 +939,119 @@ const I18N = {
     "AI desk": "Mesa de IA", "ready": "pronto", "Voice": "Voz", "browser": "navegador",
     "Live quotes": "Cotações ao vivo", "live": "ao vivo", "demo": "demo", "Real videos": "Vídeos reais",
     "on": "ligado", "optional": "opcional", "Streaming": "Streaming", "Calendar": "Calendário", "built-in": "integrado", "Meetings": "Reuniões",
-    "You're already set up.": "Já está tudo pronto.",
-    "AI DESK IS ON": "A MESA DE IA ESTÁ ATIVA",
-    "WHAT'S SET UP": "O QUE ESTÁ CONFIGURADO", "tap to configure": "toque para configurar",
-    "tour · demo · missions": "visita · demo · missões", "pick your anchor": "escolha o seu apresentador",
     "skip — I'll explore on my own": "ignorar — vou explorar sozinho",
     // DATA tab
-    "PANELS": "PAINÉIS", "ticker tape": "fita de cotações", "watchlist": "lista de acompanhamento", "top movers": "maiores variações", "news & video": "notícias e vídeo", "calendar": "calendário", "portfolio": "carteira",
-    "in-app alerts": "alertas no aplicativo", "price triggers": "gatilhos de preço", "breaking news": "última hora",
+ "breaking news": "última hora",
     "P&F SIGNALS": "SINAIS P&F", "P&F signals": "Sinais P&F", "P&F pattern alerts": "alertas de padrões P&F",
-    "color-blind mode (blue/orange + ▲▼)": "modo para daltônicos (azul/laranja + ▲▼)",
-    "privacy mode — blur balances": "modo privacidade — desfocar saldos",
     "hidden": "oculto",
-    "CLOCK TIMEZONE": "FUSO HORÁRIO DO RELÓGIO",
-    "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Define o relógio do cabeçalho. O crachá de mercado ABERTO/FECHADO segue sempre o horário da NYSE (hora do Leste).",
-    "refresh interval": "intervalo de atualização", "Manual": "Manual", "refresh now": "atualizar agora",
+    "refresh interval": "intervalo de atualização", "Manual": "Manual",
     "replay tutorial": "repetir tutorial", "DEMO": "DEMO", "LIVE": "AO VIVO",
-    "Demo mode is a seeded random-walk session: reproducible, no key or network needed.": "O modo demo é uma sessão de passeio aleatório com semente: reproduzível, sem chave nem rede.",
  "needs": "requer",
     "at": "às", "off": "desativar",
     // AI tab
-    "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "As respostas da mesa de IA requerem {plan}. Os modelos abaixo estão desativados até fazer o upgrade (ou ativar o modo programador em CONTA).",
  "use only this": "usar apenas este", "BASE URL": "BASE URL", "MODEL": "MODELO",
-    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "A mesa lembra esta conversa localmente (apenas neste dispositivo) para que as perguntas de seguimento funcionem.", "forget conversation": "esquecer conversa", "Desk memory cleared — the conversation is forgotten.": "Memória da mesa limpa — a conversa foi esquecida.", "MEMORY": "MEMÓRIA", "{n} turns remembered on this device": "{n} turnos lembrados neste dispositivo", "Memory": "Memória", "empty": "vazio",
+ "Desk memory cleared — the conversation is forgotten.": "Memória da mesa limpa — a conversa foi esquecida.", "MEMORY": "MEMÓRIA", "Memory": "Memória", "empty": "vazio",
     "format:": "formato:", "e.g.": "por ex.",
     "API KEY": "CHAVE API",
  "or": "ou",
-    "ANCHOR": "APRESENTADOR", "ENVIRONMENT": "AMBIENTE", "BACKGROUND CREW": "EQUIPA DE FUNDO",
+ "ENVIRONMENT": "AMBIENTE",
     "Auto — whoever isn't anchoring": "Auto — quem não estiver a apresentar", "Off — solo broadcast": "Desligado — transmissão a solo",
-    "VOICE ENGINE": "MOTOR DE VOZ", "BROWSER · free": "NAVEGADOR · grátis",
-    "ELEVENLABS VOICE": "VOZ DA ELEVENLABS",
-    "READING SPEED": "VELOCIDADE DE LEITURA", "auto-read the first answer that finishes": "ler automaticamente a primeira resposta que terminar",
-    "UI click sounds — terminal blips on every button": "sons de clique da interface — bips de terminal em cada botão", "SOUND VOLUME": "VOLUME DO SOM",
-    "ambient music": "música ambiente", "your Spotify playlist, docked bottom-right": "a tua playlist do Spotify, ancorada em baixo à direita",
-    "generative synth, ducks under the anchor's voice": "sintetizador generativo, baixa sob a voz do apresentador", "MUSIC SOURCE": "FONTE DE MÚSICA",
+    "ambient music": "música ambiente",
     "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Sem necessidade de iniciar sessão — ativa ♪ e o leitor ancora em baixo à direita. (O leitor incorporado do Spotify reproduz pré-visualizações de 30 segundos sem conta; as faixas completas tocam automaticamente se já tiveres sessão iniciada no Spotify neste navegador.)",
-    "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "OPCIONAL · LIGA UMA CONTA PREMIUM PARA FAIXAS COMPLETAS", "FULL PLAYBACK · SPOTIFY PREMIUM": "REPRODUÇÃO COMPLETA · SPOTIFY PREMIUM",
     "create an app ↗": "criar uma app ↗", "● connected — full tracks enabled": "● ligado — faixas completas ativadas",
     "Spotify app Client ID": "Client ID da app do Spotify", "In your Spotify app settings, add this exact Redirect URI:": "Nas definições da tua app do Spotify, adiciona esta Redirect URI exata:",
     "Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.": "O Spotify exige https ou 127.0.0.1 — abre esta app em http://127.0.0.1:5173 (não localhost) e regista esse endereço.",
-    "Connect Spotify": "Ligar o Spotify", "connecting…": "a ligar…", "MUSIC VOLUME": "VOLUME DA MÚSICA", "preview voice": "ouvir a voz",
+    "Connect Spotify": "Ligar o Spotify", "connecting…": "a ligar…",
     "You're exploring as a guest": "Estás a explorar como convidado",
     "Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.": "Cria uma conta gratuita para guardar o teu plano entre visitas. A tua lista de acompanhamento, carteira e definições já persistem neste dispositivo de qualquer forma.",
     "Sign in / create account": "Iniciar sessão / criar conta", "secured on server": "protegido no servidor", "stored on this device": "guardado neste dispositivo",
-    "YOUR PLAN": "O TEU PLANO", "CURRENT": "ATUAL", "Upgrade": "Melhorar", "Switch": "Mudar",
+ "Upgrade": "Melhorar", "Switch": "Mudar",
     "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "As melhorias pagas abrem o checkout seguro do Stripe (modo de teste). Os dados do cartão são introduzidos no Stripe, nunca aqui.",
     "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "Não há nenhum processador de pagamentos ligado, por isso os planos pagos são desbloqueados como simulação — não é pedido nenhum cartão e nada é cobrado.",
-    "Sign out": "Terminar sessão", "Terms & Privacy accepted": "Termos e Privacidade aceites", "This account UI is a prototype; see the security note in the code.": "Esta interface de conta é um protótipo; consulta a nota de segurança no código.",
+    "Sign out": "Terminar sessão", "Terms & Privacy accepted": "Termos e Privacidade aceites",
+    // --- settings: the plain-language sidebar ---
+    "A second voice to react and hand over to.": "Uma segunda voz para reagir e passar a palavra.",
+    "A seeded random-walk session — reproducible, and it needs no key or network.": "Uma sessão de passeio aleatório com semente — reproduzível e sem chave nem rede.",
+    "AI & memory": "IA e memória",
+    "AI desk answers need {plan}.": "As respostas da bancada de IA precisam de {plan}.",
+    "AI market-brief agent": "Agente de resumo de mercado com IA",
+    "Accessibility": "Acessibilidade",
+    "Account & plan": "Conta e plano",
+    "Ambient music": "Música ambiente",
+    "Anchor": "Apresentador",
+    "Background crew": "Equipa de fundo",
+    "Blue/orange + ▲▼": "Azul/laranja + ▲▼",
+    "Blur balances": "Desfoca os saldos",
+    "Breaking news": "Última hora",
+    "Browser": "Navegador",
+    "Browser voice": "Voz do navegador",
+    "Chart type": "Tipo de gráfico",
+    "Clock timezone": "Fuso horário do relógio",
+    "Color-blind mode": "Modo daltónico",
+    "Copy link": "Copiar ligação",
+    "Current": "Atual",
+    "Demo mode — nothing to set up": "Modo demo — nada para configurar",
+    "Disconnect": "Desligar",
+    "Display & data": "Ecrã e dados",
+    "Enable": "Ativar",
+    "End": "Terminar",
+    "Everything optional is marked so. Choose one to open its settings.": "Tudo o que é opcional está assinalado. Escolhe um para abrir as suas definições.",
+    "Forget conversation": "Esquecer a conversa",
+    "Generative synth that ducks under the anchor's voice.": "Sintetizador generativo que baixa sob a voz do apresentador.",
+    "Go live — no setup": "Entra em direto — sem configuração",
+    "In-app alerts": "Alertas na app",
+    "Music source": "Fonte de música",
+    "Music volume": "Volume da música",
+    "News & video": "Notícias e vídeo",
+    "Nothing here is required — the demo works untouched.": "Nada aqui é obrigatório — a demo funciona sem mexer em nada.",
+    "Nothing is stored — links open in a new tab.": "Nada é guardado — as ligações abrem num separador novo.",
+    "Off": "Desligado",
+    "Only the first — after that, ask.": "Só a primeira — depois, pede.",
+    "Optional · connect a Premium account for full tracks": "Opcional · liga uma conta Premium para faixas completas",
+    "Panels": "Painéis",
+    "Pause": "Pausar",
+    "Paused": "Em pausa",
+    "Pick your anchor": "Escolhe o teu apresentador",
+    "Preview voice": "Ouvir a voz",
+    "Price triggers": "Gatilhos de preço",
+    "Privacy mode": "Modo privado",
+    "Provided by this server. No key needed on this device.": "Fornecidas por este servidor. Não é preciso chave neste dispositivo.",
+    "Quotes": "Cotações",
+    "Read the first answer aloud": "Ler a primeira resposta em voz alta",
+    "Reading speed": "Velocidade de leitura",
+    "Refresh every": "Atualizar a cada",
+    "Refresh now": "Atualizar agora",
+    "Runs daily on your current watchlist, stores a factual brief, and never trades or makes recommendations.": "Corre diariamente sobre a tua lista de acompanhamento, guarda um resumo factual e nunca negoceia nem recomenda.",
+    "Saved in this browser.": "Guardado neste navegador.",
+    "Set": "Cenário",
+    "Show me around": "Mostra-me a app",
+    "Shown on the Markets screen.": "Mostrados no ecrã Mercados.",
+    "Sound": "Som",
+    "Sound volume": "Volume do som",
+    "Studio voice": "Voz de estúdio",
+    "Take the tour": "Fazer a visita",
+    "Terminal blips on every button.": "Bips de terminal em cada botão.",
+    "The AI desk is part of a paid plan. Everything else on this screen works now.": "A bancada de IA faz parte de um plano pago. Tudo o resto neste ecrã já funciona.",
+    "The OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "A etiqueta ABERTO/FECHADO segue sempre o horário da NYSE (Leste).",
+    "The desk model": "O modelo da bancada",
+    "The desk remembers this conversation locally, on this device only, so follow-up questions work.": "A bancada guarda esta conversa localmente, só neste dispositivo, para que as perguntas de seguimento funcionem.",
+    "The guided tour, the demo market and the missions.": "A visita guiada, o mercado de demonstração e as missões.",
+    "The room behind the anchor.": "A sala atrás do apresentador.",
+    "The voice built into your browser. Free, instant, no account.": "A voz integrada no teu navegador. Grátis, instantânea, sem conta.",
+    "UI click sounds": "Sons de clique da interface",
+    "Video search · streaming catalog": "Pesquisa de vídeo · catálogo de streaming",
+    "Voice & sound": "Voz e som",
+    "Voice engine": "Motor de voz",
+    "Watching": "A vigiar",
+    "What's set up": "O que está configurado",
+    "Who reads your answers.": "Quem lê as tuas respostas.",
+    "You're already set up": "Já está tudo pronto",
+    "Your Spotify playlist, docked bottom-right.": "A tua playlist do Spotify, ancorada em baixo à direita.",
+    "Your plan": "O teu plano",
+    "Your plan follows your account.": "O teu plano acompanha a tua conta.",
+    "no symbols": "sem símbolos",
+    "{n} available on this device": "{n} disponíveis neste dispositivo",
+    "{n} turns remembered": "{n} turnos recordados",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -875,12 +1119,9 @@ const I18N = {
     "Language": "Lingua",
     "Desk": "Postazione", "Markets": "Mercati", "News": "Notizie", "Portfolio": "Portafoglio",
     "Price alerts": "Avvisi di prezzo", "Getting started": "Primi passi",
-    "Live quotes are provided by this server — no key needed on this device.": "Le quotazioni live sono fornite da questo server — nessuna chiave necessaria su questo dispositivo.",
     "Live quotes are not configured on this server.": "Le quotazioni live non sono configurate su questo server.",
-    "VIDEO SEARCH": "RICERCA VIDEO",
     "Real, embeddable video results are provided by this server — no key needed on this device.": "I risultati video reali e incorporabili sono forniti da questo server — nessuna chiave necessaria su questo dispositivo.",
     "Not configured on this server — \"show videos of …\" asks the AI to guess instead.": "Non configurato su questo server — \"mostrami video di …\" chiede all'IA di indovinare.",
-    "STREAMING CATALOG": "CATALOGO STREAMING",
     "Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.": "I cataloghi Netflix / Disney+ / Hulu e i trailer sono forniti da questo server — nessuna chiave necessaria su questo dispositivo.",
     "Not configured on this server — public-domain films via \"free movies …\" still play in-desk.": "Non configurato su questo server — i film di pubblico dominio via \"free movies …\" continuano a riprodursi nel desk.",
     "Studio voice is provided by this server — no key needed on this device.": "La voce da studio è fornita da questo server — nessuna chiave necessaria su questo dispositivo.",
@@ -890,9 +1131,8 @@ const I18N = {
  "Pick a studio voice in settings": "Scegli una voce studio nelle impostazioni",
     "Video search is not configured on this server, and no key is set in this browser.": "La ricerca video non è configurata su questo server e non c'è alcuna chiave in questo browser.",
     "The AI desk is part of": "La postazione IA fa parte di",
-    "not configured": "non configurato", "Demo mode needs no keys — everything below works right now.": "La modalità demo non richiede chiavi — tutto qui sotto funziona già.",
-    "AI DESK IS OFF": "LA POSTAZIONE IA È SPENTA", "Answers run on this server's model key. Nothing to set up.": "Le risposte usano la chiave del modello di questo server. Niente da configurare.", "Answers run on your local model. Nothing leaves this device.": "Le risposte usano il tuo modello locale. Nulla lascia questo dispositivo.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Questo server non ha ancora una chiave del modello, quindi la postazione non può rispondere. Tutto il resto funziona.",
-    "This server holds the model key, so the desk can already answer.": "Questo server conserva la chiave del modello, quindi la postazione può già rispondere.",
+    "not configured": "non configurato",
+ "Answers run on this server's model key. Nothing to set up.": "Le risposte usano la chiave del modello di questo server. Niente da configurare.", "Answers run on your local model. Nothing leaves this device.": "Le risposte usano il tuo modello locale. Nulla lascia questo dispositivo.", "This server has no model key configured yet, so the desk can't answer. Everything else works.": "Questo server non ha ancora una chiave del modello, quindi la postazione non può rispondere. Tutto il resto funziona.",
     "Read on air": "Leggi in onda",
     "Search": "Cerca",
     "The AI broadcast desk for the markets.": "La postazione di trasmissione IA per i mercati.",
@@ -924,10 +1164,9 @@ const I18N = {
     "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Un'ultima cosa. Le mie risposte vengono da modelli esterni fatturati sul tuo conto, quindi serve la tua chiave. Tutto il resto è facoltativo. Fine del tour!",
     // settings footer + MEET tab
     "Close": "Chiudi", "Apply": "Applica",
-    "Go Live — no setup": "Vai in diretta — nessuna configurazione",
     "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Avvia all'istante una nuova riunione in una scheda del browser (usa la sessione con cui hai già effettuato l'accesso), poi condividi lo schermo di Vantage. Nessuna chiave, nessun OAuth.",
     "New Google Meet": "Nuovo Google Meet", "New Zoom meeting": "Nuova riunione Zoom",
-    "Join": "Partecipa", "copy link": "copia link", "end": "termina",
+    "Join": "Partecipa", "end": "termina",
     "paste your meeting link to pin it as LIVE…": "incolla il link della tua riunione per fissarlo come IN DIRETTA…",
     "Pin": "Fissa",
     "connected": "connesso", "disconnect": "disconnetti",
@@ -935,53 +1174,119 @@ const I18N = {
     "AI desk": "Postazione IA", "ready": "pronto", "Voice": "Voce", "browser": "browser",
     "Live quotes": "Quotazioni in diretta", "live": "in diretta", "demo": "demo", "Real videos": "Video reali",
     "on": "attivo", "optional": "opzionale", "Streaming": "Streaming", "Calendar": "Calendario", "built-in": "integrato", "Meetings": "Riunioni",
-    "You're already set up.": "Sei già pronto.",
-    "AI DESK IS ON": "LA POSTAZIONE IA È ATTIVA",
-    "WHAT'S SET UP": "COSA È CONFIGURATO", "tap to configure": "tocca per configurare",
-    "tour · demo · missions": "tour · demo · missioni", "pick your anchor": "scegli il tuo conduttore",
     "skip — I'll explore on my own": "salta — esplorerò da solo",
     // DATA tab
-    "PANELS": "PANNELLI", "ticker tape": "nastro delle quotazioni", "watchlist": "lista di osservazione", "top movers": "maggiori variazioni", "news & video": "notizie e video", "calendar": "calendario", "portfolio": "portafoglio",
-    "in-app alerts": "avvisi nell'app", "price triggers": "soglie di prezzo", "breaking news": "ultima ora",
+ "breaking news": "ultima ora",
     "P&F SIGNALS": "SEGNALI P&F", "P&F signals": "Segnali P&F", "P&F pattern alerts": "avvisi di pattern P&F",
-    "color-blind mode (blue/orange + ▲▼)": "modalità per daltonici (blu/arancione + ▲▼)",
-    "privacy mode — blur balances": "modalità privacy — sfoca i saldi",
     "hidden": "nascosto",
-    "CLOCK TIMEZONE": "FUSO ORARIO DELL'OROLOGIO",
-    "Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "Imposta l'orologio dell'intestazione. Il badge di mercato APERTO/CHIUSO segue sempre gli orari del NYSE (ora orientale).",
-    "refresh interval": "intervallo di aggiornamento", "Manual": "Manuale", "refresh now": "aggiorna ora",
+    "refresh interval": "intervallo di aggiornamento", "Manual": "Manuale",
     "replay tutorial": "rivedi il tutorial", "DEMO": "DEMO", "LIVE": "IN DIRETTA",
-    "Demo mode is a seeded random-walk session: reproducible, no key or network needed.": "La modalità demo è una sessione random-walk con seed: riproducibile, senza chiave né rete.",
  "needs": "richiede",
     "at": "alle", "off": "disattiva",
     // AI tab
-    "AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).": "Le risposte della postazione IA richiedono {plan}. I modelli qui sotto sono disattivati finché non esegui l'upgrade (o attivi la modalità sviluppatore in ACCOUNT).",
  "use only this": "usa solo questo", "BASE URL": "BASE URL", "MODEL": "MODELLO",
-    "The desk remembers this conversation locally (this device only) so follow-up questions work.": "La postazione ricorda questa conversazione localmente (solo su questo dispositivo) così le domande di seguito funzionano.", "forget conversation": "dimentica conversazione", "Desk memory cleared — the conversation is forgotten.": "Memoria della postazione cancellata — la conversazione è dimenticata.", "MEMORY": "MEMORIA", "{n} turns remembered on this device": "{n} turni memorizzati su questo dispositivo", "Memory": "Memoria", "empty": "vuoto",
+ "Desk memory cleared — the conversation is forgotten.": "Memoria della postazione cancellata — la conversazione è dimenticata.", "MEMORY": "MEMORIA", "Memory": "Memoria", "empty": "vuoto",
     "format:": "formato:", "e.g.": "es.",
     "API KEY": "CHIAVE API",
  "or": "o",
-    "ANCHOR": "CONDUTTORE", "ENVIRONMENT": "AMBIENTE", "BACKGROUND CREW": "TROUPE DI SOTTOFONDO",
+ "ENVIRONMENT": "AMBIENTE",
     "Auto — whoever isn't anchoring": "Auto — chi non sta conducendo", "Off — solo broadcast": "Off — trasmissione in solitaria",
-    "VOICE ENGINE": "MOTORE VOCALE", "BROWSER · free": "BROWSER · gratis",
-    "ELEVENLABS VOICE": "VOCE ELEVENLABS",
-    "READING SPEED": "VELOCITÀ DI LETTURA", "auto-read the first answer that finishes": "leggi automaticamente la prima risposta completata",
-    "UI click sounds — terminal blips on every button": "suoni di clic dell'interfaccia — bip da terminale su ogni pulsante", "SOUND VOLUME": "VOLUME AUDIO",
-    "ambient music": "musica d'ambiente", "your Spotify playlist, docked bottom-right": "la tua playlist Spotify, ancorata in basso a destra",
-    "generative synth, ducks under the anchor's voice": "synth generativo, si abbassa sotto la voce del conduttore", "MUSIC SOURCE": "SORGENTE MUSICALE",
+    "ambient music": "musica d'ambiente",
     "No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)": "Nessun accesso necessario — attiva ♪ e il player si ancora in basso a destra. (L'embed di Spotify riproduce anteprime di 30 secondi senza account; i brani completi partono automaticamente se hai già effettuato l'accesso a Spotify in questo browser.)",
-    "OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS": "OPZIONALE · COLLEGA UN ACCOUNT PREMIUM PER I BRANI COMPLETI", "FULL PLAYBACK · SPOTIFY PREMIUM": "RIPRODUZIONE COMPLETA · SPOTIFY PREMIUM",
     "create an app ↗": "crea un'app ↗", "● connected — full tracks enabled": "● collegato — brani completi attivati",
     "Spotify app Client ID": "Client ID dell'app Spotify", "In your Spotify app settings, add this exact Redirect URI:": "Nelle impostazioni della tua app Spotify, aggiungi esattamente questa Redirect URI:",
     "Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.": "Spotify richiede https o 127.0.0.1 — apri questa app su http://127.0.0.1:5173 (non localhost) e registra quell'indirizzo.",
-    "Connect Spotify": "Collega Spotify", "connecting…": "connessione…", "MUSIC VOLUME": "VOLUME MUSICA", "preview voice": "ascolta la voce",
+    "Connect Spotify": "Collega Spotify", "connecting…": "connessione…",
     "You're exploring as a guest": "Stai esplorando come ospite",
     "Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.": "Crea un account gratuito per conservare il tuo piano tra una visita e l'altra. La tua watchlist, il portafoglio e le impostazioni restano comunque su questo dispositivo.",
     "Sign in / create account": "Accedi / crea un account", "secured on server": "protetto sul server", "stored on this device": "salvato su questo dispositivo",
-    "YOUR PLAN": "IL TUO PIANO", "CURRENT": "ATTUALE", "Upgrade": "Passa a superiore", "Switch": "Cambia",
+ "Upgrade": "Passa a superiore", "Switch": "Cambia",
     "Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.": "Gli upgrade a pagamento aprono il checkout sicuro di Stripe (modalità test). I dati della carta si inseriscono su Stripe, mai qui.",
     "No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.": "Nessun elaboratore di pagamenti è collegato, quindi i piani a pagamento vengono sbloccati come simulazione — non viene chiesta alcuna carta e non viene addebitato nulla.",
-    "Sign out": "Esci", "Terms & Privacy accepted": "Termini e Privacy accettati", "This account UI is a prototype; see the security note in the code.": "Questa interfaccia dell'account è un prototipo; vedi la nota di sicurezza nel codice.",
+    "Sign out": "Esci", "Terms & Privacy accepted": "Termini e Privacy accettati",
+    // --- settings: the plain-language sidebar ---
+    "A second voice to react and hand over to.": "Una seconda voce che reagisce e passa la linea.",
+    "A seeded random-walk session — reproducible, and it needs no key or network.": "Una sessione random-walk con seed — riproducibile, senza chiave né rete.",
+    "AI & memory": "IA e memoria",
+    "AI desk answers need {plan}.": "Le risposte del desk IA richiedono {plan}.",
+    "AI market-brief agent": "Agente di brief di mercato IA",
+    "Accessibility": "Accessibilità",
+    "Account & plan": "Account e piano",
+    "Ambient music": "Musica d'ambiente",
+    "Anchor": "Conduttore",
+    "Background crew": "Troupe di sottofondo",
+    "Blue/orange + ▲▼": "Blu/arancione + ▲▼",
+    "Blur balances": "Sfoca i saldi",
+    "Breaking news": "Ultim'ora",
+    "Browser": "Browser",
+    "Browser voice": "Voce del browser",
+    "Chart type": "Tipo di grafico",
+    "Clock timezone": "Fuso orario dell'orologio",
+    "Color-blind mode": "Modalità daltonici",
+    "Copy link": "Copia link",
+    "Current": "Attuale",
+    "Demo mode — nothing to set up": "Modalità demo — nulla da configurare",
+    "Disconnect": "Disconnetti",
+    "Display & data": "Schermo e dati",
+    "Enable": "Attiva",
+    "End": "Termina",
+    "Everything optional is marked so. Choose one to open its settings.": "Tutto ciò che è facoltativo è indicato. Scegline uno per aprirne le impostazioni.",
+    "Forget conversation": "Dimentica la conversazione",
+    "Generative synth that ducks under the anchor's voice.": "Synth generativo che si abbassa sotto la voce del conduttore.",
+    "Go live — no setup": "Vai in diretta — senza configurazione",
+    "In-app alerts": "Avvisi nell'app",
+    "Music source": "Sorgente musicale",
+    "Music volume": "Volume della musica",
+    "News & video": "Notizie e video",
+    "Nothing here is required — the demo works untouched.": "Nulla qui è obbligatorio — la demo funziona così com'è.",
+    "Nothing is stored — links open in a new tab.": "Non viene salvato nulla — i link si aprono in una nuova scheda.",
+    "Off": "Spento",
+    "Only the first — after that, ask.": "Solo la prima — poi, chiedi.",
+    "Optional · connect a Premium account for full tracks": "Facoltativo · collega un account Premium per i brani interi",
+    "Panels": "Pannelli",
+    "Pause": "Metti in pausa",
+    "Paused": "In pausa",
+    "Pick your anchor": "Scegli il tuo conduttore",
+    "Preview voice": "Ascolta la voce",
+    "Price triggers": "Trigger di prezzo",
+    "Privacy mode": "Modalità privacy",
+    "Provided by this server. No key needed on this device.": "Fornite da questo server. Su questo dispositivo non serve alcuna chiave.",
+    "Quotes": "Quotazioni",
+    "Read the first answer aloud": "Leggi ad alta voce la prima risposta",
+    "Reading speed": "Velocità di lettura",
+    "Refresh every": "Aggiorna ogni",
+    "Refresh now": "Aggiorna adesso",
+    "Runs daily on your current watchlist, stores a factual brief, and never trades or makes recommendations.": "Gira ogni giorno sulla tua lista di osservazione, salva un brief fattuale e non opera né consiglia mai.",
+    "Saved in this browser.": "Salvato in questo browser.",
+    "Set": "Set",
+    "Show me around": "Fammi fare un giro",
+    "Shown on the Markets screen.": "Mostrati nella schermata Mercati.",
+    "Sound": "Suono",
+    "Sound volume": "Volume del suono",
+    "Studio voice": "Voce da studio",
+    "Take the tour": "Fai il tour",
+    "Terminal blips on every button.": "Bip da terminale su ogni pulsante.",
+    "The AI desk is part of a paid plan. Everything else on this screen works now.": "Il desk IA fa parte di un piano a pagamento. Tutto il resto in questa schermata funziona già.",
+    "The OPEN/CLOSED badge always tracks NYSE (Eastern) hours.": "L'etichetta APERTO/CHIUSO segue sempre l'orario del NYSE (Est).",
+    "The desk model": "Il modello del desk",
+    "The desk remembers this conversation locally, on this device only, so follow-up questions work.": "Il desk ricorda questa conversazione in locale, solo su questo dispositivo, così le domande di follow-up funzionano.",
+    "The guided tour, the demo market and the missions.": "Il tour guidato, il mercato demo e le missioni.",
+    "The room behind the anchor.": "La stanza dietro il conduttore.",
+    "The voice built into your browser. Free, instant, no account.": "La voce integrata nel tuo browser. Gratis, immediata, senza account.",
+    "UI click sounds": "Suoni di clic dell'interfaccia",
+    "Video search · streaming catalog": "Ricerca video · catalogo streaming",
+    "Voice & sound": "Voce e suono",
+    "Voice engine": "Motore vocale",
+    "Watching": "Sta seguendo",
+    "What's set up": "Cosa è configurato",
+    "Who reads your answers.": "Chi legge le tue risposte.",
+    "You're already set up": "È già tutto pronto",
+    "Your Spotify playlist, docked bottom-right.": "La tua playlist Spotify, ancorata in basso a destra.",
+    "Your plan": "Il tuo piano",
+    "Your plan follows your account.": "Il tuo piano segue il tuo account.",
+    "no symbols": "nessun simbolo",
+    "{n} available on this device": "{n} disponibili su questo dispositivo",
+    "{n} turns remembered": "{n} turni ricordati",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -2967,16 +3272,36 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       else if (busy === "teach") { cap = "TEACHING…"; capA = s.busyAmt; }
       else if (busy === "present") { cap = "PRESENTING…"; capA = s.busyAmt; }
       if (cap) {
+        // The caption used to sit at the top of the frame, centred — which is
+        // the one band of this set that is already spoken for: the station
+        // logo occupies x 10-74, the wall monitor x 128-182, and the framed
+        // variant lays a DOM "On air / Standing by" badge over the top-right
+        // corner as well. "BREAKFAST BREAK" measures ~108px in a 190px canvas,
+        // so it ran straight through all three. The desk front is the only
+        // full-width band with nothing in it: the mug rests ON the surface, so
+        // it draws above y=196, not below.
+        const CAP_Y = deskY + 6, CAP_H = 18;
         ctx.globalAlpha = capA; // fades with the action envelope, or the eased busy amount
-        ctx.font = "700 10px monospace";
-        const w = ctx.measureText(cap).width + 18;
-        ctx.fillStyle = "rgba(11,14,20,0.85)";
+        // cueLabel comes from what the user typed, so the pill has to survive a
+        // long one rather than assume "OPENING BELL".
+        const MAXW = W - 16;
+        ctx.font = `700 10px ${MONO}`;
+        let text = cap;
+        if (ctx.measureText(text).width + 18 > MAXW) {
+          ctx.font = `700 9px ${MONO}`;
+          while (text.length > 1 && ctx.measureText(text + "…").width + 16 > MAXW) text = text.slice(0, -1);
+          if (text !== cap) text += "…";
+        }
+        const w = Math.min(MAXW, ctx.measureText(text).width + 18);
+        ctx.fillStyle = "rgba(11,14,19,0.88)";
         ctx.beginPath();
-        (ctx.roundRect ? ctx.roundRect(cx - w / 2, 6, w, 18, 9) : ctx.rect(cx - w / 2, 6, w, 18));
+        (ctx.roundRect ? ctx.roundRect(cx - w / 2, CAP_Y, w, CAP_H, 9) : ctx.rect(cx - w / 2, CAP_Y, w, CAP_H));
         ctx.fill();
-        ctx.strokeStyle = C.amber; ctx.lineWidth = 1; ctx.stroke();
-        ctx.fillStyle = C.amber; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.fillText(cap, cx, 16);
+        // Neutral, not amber. These are stage directions — the anchor is eating
+        // or ringing a bell — and amber in this system means "be careful".
+        ctx.strokeStyle = C.edgeStrong; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = C.text; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(text, cx, CAP_Y + CAP_H / 2);
         ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
         ctx.globalAlpha = 1;
       }
@@ -3567,6 +3892,22 @@ const FEATURE_PLAN = { ai: "pro", finnhub: "pro", youtube: "pro", tmdb: "pro", s
 // Plain-language legal copy shown behind the "I agree" gate. Intentionally short and
 // honest for a prototype — it names the app's real behaviour (keys stay in the browser).
 const LEGAL_VERSION = "2026-07-14";
+
+// The dashboard panels, in the order Settings shows them. Both cases are
+// carried because they are two different jobs: the settings pill is a heading
+// ("Top movers") and the command-palette item is mid-sentence ("Show top
+// movers"). A toLowerCase() would do it for six of the seven and quietly
+// mangle "P&F signals", so this is a table. The list used to be written out
+// twice, which is how two lists drift.
+const PANEL_DEFS = [
+  { key: "tape", title: "Ticker tape", inline: "ticker tape" },
+  { key: "watchlist", title: "Watchlist", inline: "watchlist" },
+  { key: "movers", title: "Top movers", inline: "top movers" },
+  { key: "news", title: "News & video", inline: "news & video" },
+  { key: "calendar", title: "Calendar", inline: "calendar" },
+  { key: "portfolio", title: "Portfolio", inline: "portfolio" },
+  { key: "pnf", title: "P&F signals", inline: "P&F signals" },
+];
 const LEGAL_TERMS = [
   "Vantage is a market-information and entertainment dashboard. It is NOT financial advice, and nothing shown here is a recommendation to buy or sell any security.",
   "Market data may be delayed, simulated, or inaccurate. Do not rely on it for trading decisions.",
@@ -4088,6 +4429,66 @@ function PnFChart({ columns, boxSize, up, down }) {
 }
 
 // ============================================================
+// ============================================================
+//  Settings vocabulary
+//
+//  A pane is a stack of sections; a section is a stack of rows; a row is a
+//  label (optionally with the sentence that explains it) and exactly one
+//  control. Naming those three shapes is what stops twenty preferences from
+//  inventing twenty layouts — which is precisely what the previous screen did,
+//  and why scanning it meant re-learning the pattern at every heading.
+// ============================================================
+
+function SetSection({ title, note, children }) {
+  return (
+    <section>
+      <h3 style={{ margin: 0, fontFamily: SANS, fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: "-0.008em" }}>{title}</h3>
+      {note && <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.muted, margin: "3px 0 12px", lineHeight: 1.5 }}>{note}</div>}
+      <div style={{ marginTop: note ? 0 : 12 }}>{children}</div>
+    </section>
+  );
+}
+
+// `stack` drops the control onto its own line, for the ones that want the full
+// width (sliders, a select of many). Everything else is label-left,
+// control-right — the shape that lets the eye run down a column of controls
+// instead of hunting for each one at the end of a different-length label.
+function SetRow({ label, note, htmlFor, stack = false, children }) {
+  const Label = htmlFor ? "label" : "div";
+  const text = (
+    <div style={{ minWidth: 0 }}>
+      <Label {...(htmlFor ? { htmlFor } : {})} style={{ display: "block", fontFamily: SANS, fontSize: 14, color: C.text, cursor: htmlFor ? "pointer" : undefined }}>{label}</Label>
+      {note && <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, marginTop: 2, lineHeight: 1.5 }}>{note}</div>}
+    </div>
+  );
+  if (stack) return <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{text}{children}</div>;
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, minHeight: 30 }}>
+      {text}
+      <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 8 }}>{children}</div>
+    </div>
+  );
+}
+
+// One of a few. `options` is [value, label] pairs; an option may carry a third
+// truthy element meaning "locked", which still fires onChange so the call site
+// can nudge toward the plan rather than presenting a dead control. A disabled
+// button swallows its own click, which is how the previous LIVE button ended up
+// with an upgrade nudge that could never run.
+function Segmented({ value, onChange, options, tone = "neutral", label, labelledBy }) {
+  return (
+    <div role="radiogroup" aria-label={label} aria-labelledby={labelledBy} style={segmentTrack()}>
+      {options.map(([v, text, locked]) => (
+        <button key={v} role="radio" aria-checked={value === v} aria-disabled={locked || undefined}
+          onClick={() => onChange(v, !!locked)}
+          style={{ ...segmentItem(value === v, tone), opacity: locked ? 0.55 : 1 }}>
+          {text}{locked ? " \u{1F512}" : ""}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const { lang, setLang, t } = useI18n();               // UI translation + AI-answer language
   const [billingCfg, setBillingCfg] = useState(null);    // Stripe availability (Layer 3), probed on demand
@@ -7969,9 +8370,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     { id: "cmd:export-xlsx", label: "Export to Excel", icon: "📊", group: "Export", keywords: ["xlsx", "spreadsheet", "download"], run: () => openExportPreview("xlsx") },
     { id: "cmd:export-docx", label: "Export to Word", icon: "📄", group: "Export", keywords: ["docx", "document", "download"], run: () => openExportPreview("docx") },
     { id: "cmd:export-pptx", label: "Export to PowerPoint", icon: "📽", group: "Export", keywords: ["pptx", "slides", "deck", "download"], run: () => openExportPreview("pptx") },
-    ...[["tape", "ticker tape"], ["watchlist", "watchlist"], ["movers", "top movers"], ["news", "news & video"], ["calendar", "calendar"], ["portfolio", "portfolio"], ["pnf", "P&F signals"]].map(([k, name]) => ({
+    ...PANEL_DEFS.map(({ key: k, inline }) => ({
       id: `panel:${k}`,
-      label: `${panels[k] ? "Hide" : "Show"} ${name}`,
+      label: `${panels[k] ? "Hide" : "Show"} ${inline}`,
       icon: panels[k] ? "◻" : "◼",
       group: "Panel",
       keywords: ["panel", "toggle", "layout", "show", "hide"],
@@ -9245,11 +9646,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               {/* A segmented control on its own track, not two buttons in a
                   hairline box: the track says these two are the same question
                   answered differently, and the raised thumb says which. */}
-              <div style={{ marginLeft: "auto", display: "flex", background: C.surfaceRaised, borderRadius: R.sm, padding: 3 }}>
+              <div role="radiogroup" aria-label={t("Chart type")} style={{ ...segmentTrack(), marginLeft: "auto" }}>
                 {[["line", t("Line")], ["pnf", "P&F"]].map(([m, label]) => (
-                  <button key={m} onClick={() => setChartMode(m)} className="v-tap" aria-pressed={chartMode === m}
+                  <button key={m} onClick={() => setChartMode(m)} className="v-tap" role="radio" aria-checked={chartMode === m}
                     title={m === "pnf" ? "Point & Figure — X/O columns, 3-box reversal" : "Line chart of the session tape"}
-                    style={{ background: chartMode === m ? C.edgeStrong : "transparent", border: "none", borderRadius: 6, color: chartMode === m ? C.text : C.muted, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, padding: "5px 14px", cursor: "pointer", transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}` }}>
+                    style={segmentItem(chartMode === m)}>
                     {label}
                   </button>
                 ))}
@@ -9266,13 +9667,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   ["hl", t("High / Low"), chartHL, () => setChartHL(v => !v), "session high / low lines"],
                 ].map(([k, label, isOn, toggle, hint]) => (
                   <button key={k} onClick={toggle} title={hint} aria-pressed={isOn}
-                    style={{ background: isOn ? C.surfaceRaised : "transparent", border: `1px solid ${isOn ? C.edgeStrong : C.edgeStrong}`, color: isOn ? C.text : C.muted, fontFamily: SANS, fontSize: 12.5, borderRadius: 20, padding: "5px 12px", cursor: "pointer", transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}` }}>
+                    style={{ ...pill(isOn, { tone: "neutral", pad: "5px 12px" }), fontSize: 12.5 }}>
                     {label}
                   </button>
                 ))}
                 <select value={chartVs || ""} onChange={e => setChartVs(e.target.value || null)} aria-label="Compare with"
                   title="Overlay another symbol — both plotted as % change"
-                  style={{ background: chartVs ? C.surfaceRaised : "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: 20, color: chartVs ? "#C08BFF" : C.muted, fontFamily: SANS, fontSize: 12.5, padding: "5px 10px", cursor: "pointer" }}>
+                  style={{ ...pill(!!chartVs, { tone: "neutral", pad: "5px 10px" }), fontSize: 12.5, color: chartVs ? "#C08BFF" : C.muted }}>
                   <option value="" style={{ background: C.surface, color: C.text }}>{t("Compare")}</option>
                   {watchlist.filter(x => x !== selected).map(x => <option key={x} value={x} style={{ background: C.surface, color: C.text }}>vs {x}</option>)}
                 </select>
@@ -9842,633 +10243,649 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       )}
 
       {/* ===== settings modal ===== */}
-      {showSettings && (
-        <div role="dialog" aria-label="Settings"
-          style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: Z.header + 1 }}
-          onClick={() => setShowSettings(false)}>
-          <div onClick={e => e.stopPropagation()} className="v-rise"
-            style={{ width: 520, maxWidth: "94vw", maxHeight: "86vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg }}>
+      {/* ============================================================
+           SETTINGS
 
-            {/* tab bar */}
-            <div style={{ display: "flex", gap: 4, padding: "0 6px", borderBottom: `1px solid ${C.panelEdge}`, position: "sticky", top: 0, zIndex: 2, background: C.panel }}>
-              {[["account", "ACCOUNT"], ["quick", "START"], ["data", "DATA"], ["models", "AI"], ["anchor", "VOICE"], ["meetings", "MEET"]].map(([id, label]) => (
-                <button key={id} onClick={() => setSettingsTab(id)}
-                  style={{
-                    flex: 1, padding: "12px 6px", background: "transparent", cursor: "pointer",
-                    border: "none", borderBottom: `2px solid ${settingsTab === id ? C.accent : "transparent"}`,
-                    color: settingsTab === id ? C.accentText : C.muted,
-                    ...TYPE.eyebrow,
-                  }}>{t(label)}</button>
-              ))}
-              {/* The tab bar is sticky, so this closes from any scroll position —
-                  the footer "Close" sits below six tabs of content. */}
-              <button onClick={() => setShowSettings(false)} aria-label="Close settings"
-                style={{ flex: "0 0 auto", marginLeft: 4, padding: "0 12px", background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 13, cursor: "pointer" }}>✕</button>
+           Six mono tabs (ACCOUNT / START / DATA / AI / VOICE / MEET) became a
+           plain-language sidebar. The tabs were the screen's real problem:
+           abbreviated, shouted, and named after the system rather than the
+           decision — "DATA" held the colour-blind switch and "VOICE" held the
+           UI click sounds, so finding anything meant opening all six.
+
+           The dialog is a fixed 980 x 640 rather than shrink-wrapping its pane.
+           Six tabs of wildly different lengths made the old one jump size on
+           every click, which is disorienting in a modal that is meant to be a
+           place you move around inside.
+           ============================================================ */}
+      {showSettings && (() => {
+        const serverAi = !!meetStatus?.ai?.configured;
+        const aiReady = planAllows("ai") && (serverAi || aiModels.some(m => m.enabled && (isLocalModel(m) || (m.kind === "claude" ? anthropicApiKey.trim() : (m.apiKey || "").trim()))));
+        const meetOn = !!(meetStatus?.zoom?.connected || meetStatus?.google?.connected);
+        const nav = [
+          ["quick", t("Getting started")],
+          ["account", t("Account & plan")],
+          ["data", t("Display & data")],
+          ["anchor", t("Voice & sound")],
+          ["models", t("AI & memory")],
+          ["meetings", t("Meetings")],
+        ];
+        // The footer's quiet half. Where a setting is stored is the question
+        // people actually have about a settings screen, and it was answered
+        // nowhere in the old one.
+        const paneNote = {
+          quick: t("Nothing here is required — the demo works untouched."),
+          account: t("Your plan follows your account."),
+          data: t("Saved in this browser."),
+          anchor: t("Saved in this browser."),
+          models: t("Saved in this browser."),
+          meetings: t("Nothing is stored — links open in a new tab."),
+        }[settingsTab];
+
+        return (
+        <div role="dialog" aria-modal="true" aria-labelledby="set-title"
+          style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: Z.header + 1 }}
+          onClick={() => setShowSettings(false)}>
+          <div onClick={e => e.stopPropagation()} className="v-rise v-setwrap"
+            style={{ width: 980, maxWidth: "100%", height: 640, maxHeight: "100%", display: "flex", flexDirection: "column", overflow: "hidden", background: C.base, border: `1px solid ${C.edge}`, borderRadius: 14, boxShadow: SHADOW.xl }}>
+
+            {/* ---- header: the title, and the one thing people open this to learn ---- */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, padding: "18px 24px", borderBottom: `1px solid ${C.edge}`, flex: "0 0 auto" }}>
+              <span id="set-title" style={{ fontFamily: SANS, fontSize: 17, fontWeight: 700, color: C.text, letterSpacing: "-0.010em" }}>{t("Settings")}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                {/* Promoted out of the old START tab. "Am I set up?" is the
+                    question the screen exists to answer, so it is answered
+                    before you have chosen anything to look at. */}
+                <span className="v-setstatus" style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 13, fontWeight: 500, color: aiReady ? C.up : C.warn }}>
+                  <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: "50%", background: aiReady ? C.up : C.warn, flex: "0 0 auto" }} />
+                  {aiReady ? t("You're already set up") : t("Demo mode — nothing to set up")}
+                </span>
+                <button onClick={() => setShowSettings(false)} aria-label="Close settings" className="v-tap"
+                  style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 15, lineHeight: 1, padding: 4, cursor: "pointer" }}>✕</button>
+              </div>
             </div>
 
-            <div style={{ padding: 18 }}>
-              {/* ---- START HERE tab: the easy path — one key + a plain-language status board ---- */}
-              {settingsTab === "quick" && (() => {
-                const serverAi = !!meetStatus?.ai?.configured;
-                const localAi = aiModels.some(m => m.enabled && isLocalModel(m));
-                const aiReady = planAllows("ai") && (!!meetStatus?.ai?.configured || aiModels.some(m => m.enabled && (isLocalModel(m) || (m.kind === "claude" ? anthropicApiKey.trim() : (m.apiKey || "").trim()))));
-                const meetOn = !!(meetStatus?.zoom?.connected || meetStatus?.google?.connected);
-                const chips = [
-                  { label: t("AI desk"), ready: aiReady, note: aiReady ? t("ready") : t("not configured"), tab: "models" },
-                  { label: t("Voice"), ready: true, note: voiceEngine === "elevenlabs" && canUseStudioVoice ? "ElevenLabs" : t("browser"), tab: "anchor" },
-                  { label: t("Live quotes"), ready: mode === "live" && quotesReady, note: (mode === "live" && quotesReady) ? t("live") : t("demo"), tab: "data" },
-                  { label: t("Real videos"), ready: canSearchVideos, note: canSearchVideos ? t("on") : t("optional"), tab: "data" },
-                  { label: t("Streaming"), ready: canBrowseCatalog, note: canBrowseCatalog ? t("on") : t("optional"), tab: "data" },
-                  { label: t("Calendar"), ready: true, note: t("built-in"), tab: "data" },
-                  { label: t("Meetings"), ready: meetOn, note: meetOn ? t("connected") : t("optional"), tab: "meetings" },
-                  { label: t("Memory"), ready: memoryTurns > 0, note: memoryTurns > 0 ? `${memoryTurns}` : t("empty"), tab: "models" },
-                ];
-                return (
-                  <div style={{ display: "grid", gap: 16 }}>
-                    <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.7, color: C.text, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "10px 12px" }}>
-                      👋 <b style={{ color: C.accentText }}>{t("You're already set up.")}</b>{" "}
-                      {aiReady ? t("This server holds the model key, so the desk can already answer.") : t("Demo mode needs no keys — everything below works right now.")}
-                    </div>
+            {/* Layout for these three lives in global.css, not inline: below
+                720px the rail becomes a scrolling row of chips, and an inline
+                flex-direction can only be beaten with !important. */}
+            <div className="v-setbody" style={{ flex: "1 1 auto", minHeight: 0 }}>
 
-                    {/* The desk's model key is the operator's to configure, not the
-                        visitor's to obtain. Asking every user to go and create an
-                        OpenRouter account before the product answers anything is a
-                        dev-tool flow, and on a phone it is close to unusable — so
-                        this reports state and nothing else. Bring-your-own-key and
-                        local models still live in the AI tab for people who want them. */}
-                    <div>
-                      <div style={{ ...TYPE.eyebrow, color: aiReady ? C.up : C.muted }}>
-                        {aiReady ? `● ${t("AI DESK IS ON")}` : `○ ${t("AI DESK IS OFF")}`}
-                      </div>
-                      <div style={{ fontFamily: SANS, fontSize: 12, color: C.muted, marginTop: 6, lineHeight: 1.6 }}>
-                        {aiReady
+              {/* ---- sidebar ---- */}
+              <nav aria-label="Settings sections" className="v-setnav" style={{ minHeight: 0 }}>
+                {nav.map(([id, label]) => {
+                  const on = settingsTab === id;
+                  return (
+                    <button key={id} onClick={() => setSettingsTab(id)} aria-current={on ? "page" : undefined}
+                      className="v-setnav-item"
+                      style={{
+                        textAlign: "left", padding: "10px 14px", borderRadius: R.sm, border: "none", cursor: "pointer",
+                        fontFamily: SANS, fontSize: 14, fontWeight: on ? 600 : 400,
+                        background: on ? C.surfaceRaised : "transparent",
+                        color: on ? C.text : C.muted,
+                        transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}`,
+                      }}>{label}</button>
+                  );
+                })}
+                {/* Belongs to the whole screen rather than to Display & data,
+                    where it used to hide under a heading about panels. */}
+                <button onClick={() => { setShowSettings(false); setTutStep(0); replayTutorial(); }} className="v-setnav-tail"
+                  style={{ textAlign: "left", padding: "10px 14px", background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 13, cursor: "pointer" }}>
+                  ↺ {t("replay tutorial")}
+                </button>
+              </nav>
+
+              {/* ---- pane ---- */}
+              <div style={{ display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0 }}>
+                <div className="v-setpane" style={{ flex: "1 1 auto", minHeight: 0 }}>
+
+                  {/* ================= Getting started ================= */}
+                  {settingsTab === "quick" && (() => {
+                    const chips = [
+                      { label: t("AI desk"), ready: aiReady, note: aiReady ? t("ready") : t("not configured"), tab: "models" },
+                      { label: t("Voice"), ready: true, note: voiceEngine === "elevenlabs" && canUseStudioVoice ? "ElevenLabs" : t("browser"), tab: "anchor" },
+                      { label: t("Live quotes"), ready: mode === "live" && quotesReady, note: (mode === "live" && quotesReady) ? t("live") : t("demo"), tab: "data" },
+                      { label: t("Real videos"), ready: canSearchVideos, note: canSearchVideos ? t("on") : t("optional"), tab: "data" },
+                      { label: t("Streaming"), ready: canBrowseCatalog, note: canBrowseCatalog ? t("on") : t("optional"), tab: "data" },
+                      { label: t("Calendar"), ready: true, note: t("built-in"), tab: "data" },
+                      { label: t("Meetings"), ready: meetOn, note: meetOn ? t("connected") : t("optional"), tab: "meetings" },
+                      { label: t("Memory"), ready: memoryTurns > 0, note: memoryTurns > 0 ? `${memoryTurns}` : t("empty"), tab: "models" },
+                    ];
+                    return (<>
+                      {/* The desk's model key is the operator's to configure, not
+                          the visitor's to obtain. Asking every user to open an
+                          OpenRouter account before the product answers anything
+                          is a dev-tool flow, and on a phone it is close to
+                          unusable — so this reports state and nothing else. */}
+                      <SetSection title={t("The AI desk")}
+                        note={aiReady
                           ? (serverAi
                               ? t("Answers run on this server's model key. Nothing to set up.")
                               : t("Answers run on your local model. Nothing leaves this device."))
                           : !planAllows("ai")
-                            // The key is not the blocker here — the plan is. Saying
-                            // "not configured" would send people hunting for a setting.
-                            ? <>{t("The AI desk is part of")} {planFor("ai")}. {lockChip("ai")}</>
-                            : t("This server has no model key configured yet, so the desk can't answer. Everything else works.")}
-                      </div>
-                    </div>
+                            // The key is not the blocker here — the plan is.
+                            // "Not configured" would send people hunting for a
+                            // setting that would not have helped.
+                            ? t("The AI desk is part of a paid plan. Everything else on this screen works now.")
+                            : t("This server has no model key configured yet, so the desk can't answer. Everything else works.")}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", background: aiReady ? C.up : C.faint }} />
+                          <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: aiReady ? C.up : C.muted }}>
+                            {aiReady ? t("On air") : t("Off")}
+                          </span>
+                          {!planAllows("ai") && lockChip("ai")}
+                        </div>
+                      </SetSection>
 
-                    {/* status board */}
-                    <div>
-                      <div id="start-setup-lbl" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("WHAT'S SET UP")} <span style={{ color: C.faint, textTransform: "none" }}>· {t("tap to configure")}</span></div>
-                      <div role="group" aria-labelledby="start-setup-lbl" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 8 }}>
-                        {chips.map(c => (
-                          <button key={c.label} onClick={() => setSettingsTab(c.tab)}
-                            style={{ display: "flex", alignItems: "center", gap: 7, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: 5, padding: "8px 10px", cursor: "pointer", textAlign: "left" }}>
-                            <span style={{ color: c.ready ? C.up : C.faint, fontSize: 12 }}>{c.ready ? "●" : "○"}</span>
-                            <span style={{ fontFamily: SANS, fontSize: 11, color: C.text }}>{c.label}</span>
-                            <span style={{ fontFamily: SANS, fontSize: 10, color: c.ready ? C.up : C.faint, marginLeft: "auto" }}>{c.note}</span>
+                      <SetSection title={t("What's set up")} note={t("Everything optional is marked so. Choose one to open its settings.")}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 8 }}>
+                          {chips.map(c => (
+                            <button key={c.label} onClick={() => setSettingsTab(c.tab)} className="v-interactive"
+                              style={{ display: "flex", alignItems: "center", gap: 9, background: C.surfaceRaised, border: `1px solid ${C.edge}`, borderRadius: R.sm, padding: "10px 12px", cursor: "pointer", textAlign: "left" }}>
+                              <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: "50%", flex: "0 0 auto", background: c.ready ? C.up : C.faint }} />
+                              <span style={{ fontFamily: SANS, fontSize: 13, color: C.text }}>{c.label}</span>
+                              <span style={{ fontFamily: SANS, fontSize: 12.5, color: c.ready ? C.up : C.faint, marginLeft: "auto" }}>{c.note}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </SetSection>
+
+                      <SetSection title={t("Show me around")} note={t("The guided tour, the demo market and the missions.")}>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          <button onClick={() => { setShowSettings(false); setTutStep(0); replayTutorial(); }}
+                            style={{ ...button("ghost", "sm"), color: C.accentText, borderColor: C.accentEdge, padding: "9px 16px", fontSize: 13 }}>
+                            ↺ {t("Take the tour")}
                           </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* quick actions */}
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <button onClick={() => { setShowSettings(false); setTutStep(0); replayTutorial(); }}
-                        style={{ flex: 1, minWidth: 140, background: "transparent", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "9px 0", cursor: "pointer" }}>
-                        ↺ {t("tour · demo · missions")}
-                      </button>
-                      <button onClick={() => setSettingsTab("anchor")}
-                        style={{ flex: 1, minWidth: 140, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "9px 0", cursor: "pointer" }}>
-                        🎙️ {t("pick your anchor")}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* ---- DATA tab ---- */}
-              {settingsTab === "data" && (
-                <>
-                  <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: `1px solid ${C.panelEdge}` }}>
-                    <div id="data-panels-lbl" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("PANELS")}</div>
-                    <div role="group" aria-labelledby="data-panels-lbl" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
-                      {[["tape", "ticker tape"], ["watchlist", "watchlist"], ["movers", "top movers"], ["news", "news & video"], ["calendar", "calendar"], ["portfolio", "portfolio"], ["pnf", "P&F signals"]].map(([k, label]) => (
-                        <label key={k} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 12, color: panels[k] ? C.text : C.faint, cursor: "pointer" }}>
-                          <Toggle checked={panels[k]} onChange={() => togglePanel(k)} />
-                          {t(label)}
-                        </label>
-                      ))}
-                    </div>
-                    <div style={{ marginTop: 14, ...TYPE.eyebrow, color: C.muted }}>{t("in-app alerts")}</div>
-                    {[["priceTriggers", "price triggers"], ["breakingNews", "breaking news"], ["pnfPatterns", "P&F pattern alerts"]].map(([key, label]) => (
-                      <label key={key} style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontFamily: SANS, fontSize: 12, color: prefs.notify[key] ? C.text : C.faint, cursor: "pointer" }}>
-                        <Toggle checked={prefs.notify[key]}
-                          onChange={() => setPref("notify", { ...prefs.notify, [key]: !prefs.notify[key] })} />
-                        {t(label)}
-                      </label>
-                    ))}
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: SANS, fontSize: 12, color: C.text, cursor: "pointer" }}>
-                      <Toggle checked={prefs.colorBlind} onChange={() => setPref("colorBlind", !prefs.colorBlind)} />
-                      {t("color-blind mode (blue/orange + ▲▼)")}
-                    </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: SANS, fontSize: 12, color: C.text, cursor: "pointer" }}>
-                      <Toggle checked={prefs.privacy} onChange={() => setPref("privacy", !prefs.privacy)} />
-                      {t("privacy mode — blur balances")}
-                    </label>
-                    <div style={{ marginTop: 14 }}>
-                      <label htmlFor="data-clock-tz" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("CLOCK TIMEZONE")}</label>
-                      <select id="data-clock-tz" value={clockTz} onChange={e => setClockTz(e.target.value)}
-                        style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, padding: "8px 10px" }}>
-                        <optgroup label="Americas">
-                          {TIMEZONES.filter(z => z.group === "Americas").map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
-                        </optgroup>
-                        <optgroup label="Europe">
-                          {TIMEZONES.filter(z => z.group === "Europe").map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
-                        </optgroup>
-                      </select>
-                      <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginTop: 6, lineHeight: 1.6 }}>
-                        {t("Sets the header clock. The market OPEN/CLOSED badge always tracks NYSE (Eastern) hours.")}
-                      </div>
-                    </div>
-                    <div style={{ marginTop: 12 }}>
-                      <div style={{ ...TYPE.eyebrow, color: C.muted, marginBottom: 6 }}>{t("refresh interval")}</div>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        {[["Manual", 0], ["5s", 5000], ["15s", 15000], ["30s", 30000]].map(([label, ms]) => (
-                          <button key={ms} onClick={() => setPref("refreshMs", coerceRefreshMs(ms))}
-                            style={{ flex: 1, padding: "6px 0", borderRadius: R.sm, cursor: "pointer", fontFamily: SANS, fontSize: 11,
-                              border: `1px solid ${prefs.refreshMs === ms ? C.accent : C.panelEdge}`,
-                              background: prefs.refreshMs === ms ? "rgba(255,255,255,0.05)" : "transparent",
-                              color: prefs.refreshMs === ms ? C.accentText : C.muted }}>{ms === 0 ? t(label) : label}</button>
-                        ))}
-                      </div>
-                      {prefs.refreshMs === 0 && (
-                        <button onClick={() => pollLive()} disabled={!live}
-                          style={{ marginTop: 8, width: "100%", padding: "7px 0", borderRadius: R.sm, cursor: live ? "pointer" : "not-allowed",
-                            fontFamily: SANS, fontSize: 11, background: "transparent", border: `1px solid ${C.panelEdge}`,
-                            color: live ? C.muted : C.faint }}>
-                          ↻ {t("refresh now")}
-                        </button>
-                      )}
-                    </div>
-                    <button onClick={() => { setTutStep(0); replayTutorial(); setShowSettings(false); }}
-                      style={{ marginTop: 12, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "7px 12px", cursor: "pointer" }}>
-                      ↺ {t("replay tutorial")}
-                    </button>
-                  </div>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 14, alignItems: "center" }}>
-                    {["demo", "live"].map(mm => {
-                      const locked = mm === "live" && !planAllows("finnhub"); // LIVE needs Pro Desk
-                      return (
-                      <button key={mm} disabled={locked} onClick={() => {
-                        if (locked) { setSettingsTab("account"); return; } // nudge upgrade instead of enabling
-                        setMode(mm);
-                      }}
-                        style={{
-                          flex: 1, padding: "9px 0", borderRadius: R.sm, cursor: locked ? "not-allowed" : "pointer", fontFamily: SANS, fontSize: 12, fontWeight: 510,
-                          background: mode === mm ? C.accent : "transparent",
-                          color: locked ? C.faint : mode === mm ? "#08090a" : C.muted,
-                          border: `1px solid ${mode === mm ? C.accent : C.panelEdge}`,
-                          opacity: locked ? 0.6 : 1,
-                        }}>{t(mm.toUpperCase())}{locked ? " 🔒" : ""}</button>
-                      );
-                    })}
-                    {lockChip("finnhub")}
-                  </div>
-                  {mode === "demo" && (
-                    <div style={{ fontFamily: SANS, fontSize: 12, color: C.muted, lineHeight: 1.7 }}>
-                      {t("Demo mode is a seeded random-walk session: reproducible, no key or network needed.")}
-                    </div>
-                  )}
-                  {mode === "live" && (
-                    <div style={{ fontFamily: SANS, fontSize: 12, color: quotesReady ? C.muted : C.down, lineHeight: 1.7 }}>
-                      {quotesReady
-                        ? `● ${t("Live quotes are provided by this server — no key needed on this device.")}`
-                        : `○ ${t("Live quotes are not configured on this server.")}`}
-                    </div>
-                  )}
-
-                  <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.panelEdge}` }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, ...TYPE.eyebrow, color: C.muted }}>
-                      {t("VIDEO SEARCH")} {lockChip("youtube")}
-                    </label>
-                    <div style={{ fontFamily: SANS, fontSize: 12, color: canSearchVideos ? C.muted : C.faint, lineHeight: 1.7, marginTop: 6 }}>
-                      {canSearchVideos
-                        ? `● ${t("Real, embeddable video results are provided by this server — no key needed on this device.")}`
-                        : `○ ${t("Not configured on this server — \"show videos of …\" asks the AI to guess instead.")}`}
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.panelEdge}` }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, ...TYPE.eyebrow, color: C.muted }}>
-                      {t("STREAMING CATALOG")} {lockChip("tmdb")}
-                    </label>
-                    <div style={{ fontFamily: SANS, fontSize: 12, color: canBrowseCatalog ? C.muted : C.faint, lineHeight: 1.7, marginTop: 6 }}>
-                      {canBrowseCatalog
-                        ? `● ${t("Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.")}`
-                        : `○ ${t("Not configured on this server — public-domain films via \"free movies …\" still play in-desk.")}`}
-                    </div>
-                  </div>
-
-                </>
-              )}
-
-              {/* ---- AI tab: one engine, provided by this server ----
-                   The old developer surface (model cards, BYOK key fields, local
-                   Ollama / LM Studio wiring, fallback chains) is gone from the UI:
-                   people using this product should not have to choose an inference
-                   stack. The desk speaks through the server's OpenRouter key; the
-                   only thing left to manage here is memory. */}
-              {settingsTab === "models" && (
-                <div style={{ display: "grid", gap: 12 }}>
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    padding: "9px 11px", borderRadius: R.md,
-                    border: `1px solid ${meetStatus?.ai?.configured ? C.up : C.faint}`, background: "rgba(255,255,255,0.02)",
-                    fontFamily: SANS, fontWeight: 510, fontSize: 11, letterSpacing: "-0.010em",
-                    color: meetStatus?.ai?.configured ? C.up : C.faint,
-                  }}>
-                    <span>{meetStatus?.ai?.configured ? "●" : "○"}</span>
-                    <span>{meetStatus?.ai?.configured ? t("AI DESK IS ON") : t("AI DESK IS OFF")}</span>
-                  </div>
-                  <div style={{ fontFamily: SANS, fontSize: 12, color: C.muted, lineHeight: 1.7 }}>
-                    {meetStatus?.ai?.configured
-                      ? t("Answers run on this server's model key. Nothing to set up.")
-                      : t("This server has no model key configured yet, so the desk can't answer. Everything else works.")}
-                  </div>
-                  {!planAllows("ai") && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 11, lineHeight: 1.6, color: C.accentText, background: "rgba(255,255,255,0.05)", border: `1px solid ${C.accent}`, borderRadius: R.md, padding: "8px 10px" }}>
-                      {lockChip("ai")} {t("AI desk answers need {plan}. Models below are disabled until you upgrade (or turn on developer mode in ACCOUNT).").replace("{plan}", planFor("ai"))}
-                    </div>
-                  )}
-                  {/* local multi-turn memory: lives only in this browser; one click forgets it */}
-                  <div style={{ marginTop: 4, padding: "10px 11px", border: `1px solid ${C.panelEdge}`, borderRadius: R.md }}>
-                    <div style={{ ...TYPE.eyebrow, color: C.muted, marginBottom: 6 }}>
-                      {t("MEMORY")}
-                    </div>
-                    <div style={{ fontFamily: SANS, fontSize: 11, color: C.text, marginBottom: 8 }}>
-                      {t("{n} turns remembered on this device").replace("{n}", String(memoryTurns))}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: SANS, fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
-                      <span>🧠 {t("The desk remembers this conversation locally (this device only) so follow-up questions work.")}</span>
-                      <button onClick={() => { forgetConversation(); setCmdMsg(t("Desk memory cleared — the conversation is forgotten.")); }}
-                        style={{ flex: "0 0 auto", background: "transparent", color: C.muted, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>
-                        {t("forget conversation")}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ---- ANCHOR tab ---- */}
-              {settingsTab === "anchor" && (
-                <div style={{ display: "grid", gap: 16 }}>
-                  <div>
-                    <div id="voice-anchor-lbl" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("ANCHOR")}</div>
-                    <div role="radiogroup" aria-labelledby="voice-anchor-lbl" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(84px, 1fr))", gap: 8, marginTop: 8 }}>
-                      {CHARACTERS.map(c => (
-                        <button key={c.id} role="radio" aria-checked={characterId === c.id} onClick={() => setCharacterId(c.id)}
-                          style={{
-                            padding: "10px 0", borderRadius: R.md, cursor: "pointer",
-                            fontFamily: SANS, fontSize: 11, fontWeight: 510,
-                            background: characterId === c.id ? "rgba(255,255,255,0.07)" : "transparent",
-                            color: characterId === c.id ? C.accentText : C.muted,
-                            border: `1px solid ${characterId === c.id ? C.accent : C.panelEdge}`,
-                          }}>{c.name}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <div id="voice-env-lbl" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("ENVIRONMENT")}</div>
-                    <div role="radiogroup" aria-labelledby="voice-env-lbl" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(84px, 1fr))", gap: 8, marginTop: 8 }}>
-                      {ENVIRONMENTS.map(ev => (
-                        <button key={ev.id} role="radio" aria-checked={envId === ev.id} onClick={() => setEnvId(ev.id)}
-                          style={{
-                            padding: "10px 0", borderRadius: R.md, cursor: "pointer",
-                            fontFamily: SANS, fontSize: 11, fontWeight: 510,
-                            background: envId === ev.id ? "rgba(255,255,255,0.07)" : "transparent",
-                            color: envId === ev.id ? C.accentText : C.muted,
-                            border: `1px solid ${envId === ev.id ? C.accent : C.panelEdge}`,
-                          }}>{ev.name}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label htmlFor="voice-crew" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("BACKGROUND CREW")}</label>
-                    <select
-                      id="voice-crew" value={crewId} onChange={e => setCrewId(e.target.value)}
-                      style={{ width: "100%", marginTop: 6, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, padding: "8px" }}>
-                      <option value="auto">{t("Auto — whoever isn't anchoring")}</option>
-                      <option value="off">{t("Off — solo broadcast")}</option>
-                      {CHARACTERS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <div id="voice-engine-lbl" style={{ display: "flex", alignItems: "center", gap: 8, ...TYPE.eyebrow, color: C.muted }}>{t("VOICE ENGINE")} {lockChip("elevenlabs")}</div>
-                    <div role="radiogroup" aria-labelledby="voice-engine-lbl" style={{ display: "flex", gap: 8, marginTop: 6 }}>
-                      {[["browser", t("BROWSER · free")], ["elevenlabs", "ELEVENLABS"]].map(([id, label]) => {
-                        const locked = id === "elevenlabs" && !planAllows("elevenlabs"); // studio voice needs Trading Floor
-                        return (
-                        <button key={id} role="radio" aria-checked={voiceEngine === id} disabled={locked} onClick={() => { if (locked) { setSettingsTab("account"); return; } setVoiceEngine(id); }}
-                          style={{
-                            flex: 1, padding: "9px 0", borderRadius: R.sm, cursor: locked ? "not-allowed" : "pointer", fontFamily: SANS, fontSize: 11, fontWeight: 510,
-                            background: voiceEngine === id ? C.accent : "transparent",
-                            color: locked ? C.faint : voiceEngine === id ? "#08090a" : C.muted,
-                            border: `1px solid ${voiceEngine === id ? C.accent : C.panelEdge}`,
-                            opacity: locked ? 0.6 : 1,
-                          }}>{label}{locked ? " 🔒" : ""}</button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  {voiceEngine === "elevenlabs" && (
-                    <div style={{ display: "grid", gap: 10 }}>
-                      <div style={{ fontFamily: SANS, fontSize: 12, color: (canUseStudioVoice && !elevenErr) ? C.muted : C.down, lineHeight: 1.7 }}>
-                        {!canUseStudioVoice
-                          ? `○ ${t("Studio voice is not configured on this server.")}`
-                          : elevenErr
-                            ? `○ ${t("This server has a studio-voice key set, but the last call to it failed.")}`
-                            : `● ${t("Studio voice is provided by this server — no key needed on this device.")}`}
-                      </div>
-                      {elevenVoices.length > 0 && (
-                        <div>
-                          <label htmlFor="voice-eleven" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("ELEVENLABS VOICE")}</label>
-                          <select
-                            id="voice-eleven" value={elevenVoiceId} onChange={e => setElevenVoiceId(e.target.value)}
-                            style={{ width: "100%", marginTop: 6, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, padding: "8px" }}>
-                            {elevenVoices.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                          </select>
-                        </div>
-                      )}
-                      {elevenErr && <div style={{ fontFamily: SANS, fontSize: 12, color: C.down, lineHeight: 1.6 }}>{elevenErr}</div>}
-                      {canUseStudioVoice && elevenVoices.length === 0 && !elevenErr && (
-                        <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint }}>{t("Loading voices…")}</div>
-                      )}
-                    </div>
-                  )}
-                  {voiceEngine === "browser" && (
-                  <div>
-                    <label htmlFor="voice-browser" style={{ ...TYPE.eyebrow, color: C.muted }}>
-                      {t("VOICE")} {voices.length > 0 && <span style={{ color: C.faint, letterSpacing: 0, textTransform: "none" }}>· {voices.length} {t("free")}</span>}
-                    </label>
-                    <select
-                      id="voice-browser" value={voiceName} onChange={e => setVoiceName(e.target.value)}
-                      style={{ width: "100%", marginTop: 6, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, padding: "8px" }}>
-                      {(() => {
-                        // every voice the OS/browser exposes is free — group them all by language, current language first
-                        const cur = (TTS_LANG[lang] || "en-US").slice(0, 2);
-                        const langName = (code) => { try { return new Intl.DisplayNames([lang], { type: "language" }).of(code) || code; } catch { return code; } };
-                        const groups = {};
-                        for (const v of voices) { const k = (v.lang || "").slice(0, 2) || "··"; (groups[k] = groups[k] || []).push(v); }
-                        const keys = Object.keys(groups).sort((a, b) => (a === cur ? -1 : b === cur ? 1 : (langName(a)).localeCompare(langName(b))));
-                        return keys.map(k => (
-                          <optgroup key={k} label={langName(k)}>
-                            {groups[k].map(v => <option key={v.name} value={v.name}>{v.name} {v.localService ? "· local" : "· network"}</option>)}
-                          </optgroup>
-                        ));
-                      })()}
-                    </select>
-                  </div>
-                  )}
-                  <div>
-                    <label htmlFor="voice-rate" style={{ ...TYPE.eyebrow, color: C.muted }}>
-                      {t("READING SPEED")} · <span style={{ fontFamily: MONO, fontWeight: 510 }}>{speechRate.toFixed(2)}x</span>
-                    </label>
-                    <input id="voice-rate" type="range" min="0.7" max="1.5" step="0.02" value={speechRate}
-                      onChange={e => setSpeechRate(+e.target.value)}
-                      style={{ width: "100%", marginTop: 6, accentColor: C.accent }} />
-                  </div>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 12, color: C.text, cursor: "pointer" }}>
-                    <Toggle checked={autoSpeak} onChange={e => setAutoSpeak(e.target.checked)} />
-                    {t("auto-read the first answer that finishes")}
-                  </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 12, color: C.text, cursor: "pointer" }}>
-                    <Toggle checked={uiSounds} onChange={e => setUiSounds(e.target.checked)} />
-                    {t("UI click sounds — terminal blips on every button")}
-                  </label>
-                  <div>
-                    <label htmlFor="voice-sound-vol" style={{ ...TYPE.eyebrow, color: C.muted }}>
-                      {t("SOUND VOLUME")} · {(soundVolume * 100).toFixed(0)}%
-                    </label>
-                    <input id="voice-sound-vol" type="range" min="0" max="1" step="0.01" value={soundVolume}
-                      onChange={e => setSoundVolume(+e.target.value)}
-                      style={{ width: "100%", marginTop: 6, accentColor: C.accent }} />
-                  </div>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 12, color: C.text, cursor: "pointer" }}>
-                    <Toggle checked={musicOn} onChange={e => toggleMusic(e.target.checked)} />
-                    ♪ {t("ambient music")} — {musicSource === "spotify" ? t("your Spotify playlist, docked bottom-right") : t("generative synth, ducks under the anchor's voice")}
-                  </label>
-                  <div>
-                    <div id="voice-music-src-lbl" style={{ ...TYPE.eyebrow, color: C.muted }}>{t("MUSIC SOURCE")}</div>
-                    <div role="radiogroup" aria-labelledby="voice-music-src-lbl" style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                      {[["synth", "Synth"], ["spotify", "Spotify"]].map(([id, label]) => (
-                        <button key={id} role="radio" aria-checked={musicSource === id} onClick={() => setMusicSource(id)}
-                          style={{ flex: 1, background: musicSource === id ? "rgba(255,255,255,0.08)" : "transparent", border: `1px solid ${musicSource === id ? C.accent : C.panelEdge}`, color: musicSource === id ? C.accentText : C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "7px 0", cursor: "pointer" }}>
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {musicSource === "spotify" ? (
-                    <div>
-                      <div style={{ fontFamily: SANS, fontSize: 12, color: C.faint, lineHeight: 1.6 }}>
-                        {t("No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)")}
-                      </div>
-
-                      {/* Optional full playback via OAuth (Premium) — collapsed so it never demands a login */}
-                      <details style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.panelEdge}` }}>
-                        <summary style={{ ...TYPE.eyebrow, color: C.muted, cursor: "pointer" }}>
-                          {t("OPTIONAL · CONNECT A PREMIUM ACCOUNT FOR FULL TRACKS")}
-                        </summary>
-                        <label style={{ display: "block", marginTop: 10, ...TYPE.eyebrow, color: C.muted }}>
-                          {t("FULL PLAYBACK · SPOTIFY PREMIUM")}{" "}
-                          <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ color: C.accentText, letterSpacing: "-0.010em" }}>{t("create an app ↗")}</a>
-                          {" "}{lockChip("spotify")}
-                        </label>
-                        {spotifyReady ? (
-                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-                            <span style={{ fontFamily: SANS, fontSize: 11, color: C.up }}>{t("● connected — full tracks enabled")}</span>
-                            <button onClick={disconnectSpotify}
-                              style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>{t("disconnect")}</button>
-                          </div>
-                        ) : (
-                          <>
-                            <input
-                              value={spotifyClientId}
-                              onChange={e => setSpotifyClientId(e.target.value)}
-                              placeholder={t("Spotify app Client ID")}
-                              style={{ width: "100%", boxSizing: "border-box", marginTop: 6, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "8px 10px" }}
-                            />
-                            <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginTop: 6, lineHeight: 1.6 }}>
-                              {lang === "en"
-                                ? <>In your Spotify app settings, add this exact <b style={{ color: C.muted }}>Redirect URI</b>:</>
-                                : <>{t("In your Spotify app settings, add this exact Redirect URI:")}</>}<br />
-                              <code style={{ color: C.accentText, wordBreak: "break-all" }}>{spotifyRedirect()}</code>
-                              {!/^https:|127\.0\.0\.1/.test(spotifyRedirect()) && (
-                                <span style={{ color: C.down }}><br />⚠ {t("Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.")}</span>
-                              )}
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-                              {(() => { const ok = planAllows("spotify") && spotifyClientId.trim(); return (
-                              <button onClick={() => { if (!planAllows("spotify")) { setSettingsTab("account"); return; } connectSpotify(); }} disabled={!ok}
-                                style={{ background: ok ? "#1DB954" : C.panelEdge, color: ok ? "#ffffff" : C.faint, border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "8px 16px", cursor: ok ? "pointer" : "default" }}>
-                                {planAllows("spotify") ? t("Connect Spotify") : `${t("Connect Spotify")} 🔒`}
-                              </button>
-                              ); })()}
-                              {spotifyAuth && !spotifyReady && <span style={{ fontFamily: SANS, fontSize: 10, color: C.muted }}>{t("connecting…")}</span>}
-                            </div>
-                          </>
-                        )}
-                        {spotifyErr && <div style={{ fontFamily: SANS, fontSize: 10, color: C.down, marginTop: 8 }}>{spotifyErr}</div>}
-                      </details>
-                    </div>
-                  ) : (
-                    <div>
-                      <label htmlFor="voice-music-vol" style={{ ...TYPE.eyebrow, color: C.muted }}>
-                        {t("MUSIC VOLUME")} · {(musicVolume * 100).toFixed(0)}%
-                      </label>
-                      <input id="voice-music-vol" type="range" min="0" max="1" step="0.01" value={musicVolume}
-                        onChange={e => setMusicVolume(+e.target.value)}
-                        style={{ width: "100%", marginTop: 6, accentColor: C.accent }} />
-                    </div>
-                  )}
-                  <button
-                    onClick={() => speak("preview", `This is ${CHARACTERS.find(c => c.id === characterId)?.name} at the Vantage desk. ${selected} is currently trading at ${fmt(selectedRow?.price)}.`)}
-                    style={{ background: "transparent", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "9px 0", cursor: "pointer" }}>
-                    ▶ {t("preview voice")}
-                  </button>
-                </div>
-              )}
-
-              {/* ---- MEETINGS tab ---- */}
-              {settingsTab === "meetings" && (
-                <div style={{ display: "grid", gap: 12 }}>
-                  {/* zero-setup: just open a new meeting in a tab (uses your existing Zoom/Google login, no OAuth app) */}
-                  <div style={{ border: `1px solid ${C.liveEdge}`, background: C.liveGlow, borderRadius: R.md, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <span style={{ ...TYPE.subhead, fontSize: 12, fontWeight: 510, color: C.live }}>⚡ {t("Go Live — no setup")}</span>
-                    <span style={{ ...TYPE.bodySm, fontSize: 13, color: C.muted }}>{t("Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.")}</span>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <button onClick={() => window.open("https://meet.new", "_blank", "noopener")}
-                        style={{ background: "#00796B", color: "#fff", border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 12, fontWeight: 510, padding: "9px 16px", cursor: "pointer" }}>{t("New Google Meet")} ↗</button>
-                      <button onClick={() => window.open("https://zoom.us/start/videomeeting", "_blank", "noopener")}
-                        style={{ background: "#1567D3", color: "#fff", border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 12, fontWeight: 510, padding: "9px 16px", cursor: "pointer" }}>{t("New Zoom meeting")} ↗</button>
-                    </div>
-                    {/* pin the link the tab created, so Vantage shows a live badge you can rejoin/share */}
-                    <div style={{ borderTop: `1px solid ${C.panelEdge}`, paddingTop: 8, marginTop: 2 }}>
-                      {liveMeeting ? (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                          <a href={liveMeeting} target="_blank" rel="noopener noreferrer"
-                            style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 12, color: C.amber, textDecoration: "none", overflow: "hidden" }}>
-                            <span style={{ color: C.down, flexShrink: 0 }}>🔴 LIVE</span>
-                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{meetingLabel(liveMeeting)} ↗</span>
-                          </a>
-                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                            <a href={liveMeeting} target="_blank" rel="noopener noreferrer" style={{ background: C.down, color: "#08090a", border: "none", borderRadius: R.sm, fontFamily: MONO, fontSize: 12, fontWeight: 510, padding: "6px 16px", cursor: "pointer", textDecoration: "none" }}>{t("Join")} ↗</a>
-                            <button onClick={() => navigator.clipboard?.writeText(liveMeeting)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "6px 12px", cursor: "pointer" }}>{t("copy link")}</button>
-                            <button onClick={() => setLiveMeeting("")} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "6px 12px", cursor: "pointer" }}>{t("end")}</button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                          <input value={liveMeetDraft} onChange={e => setLiveMeetDraft(e.target.value)}
-                            placeholder={t("paste your meeting link to pin it as LIVE…")}
-                            style={{ flex: 1, minWidth: 160, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "7px 9px" }} />
-                          <button onClick={() => { const u = liveMeetDraft.trim(); if (/^https?:\/\//.test(u)) { setLiveMeeting(u); setLiveMeetDraft(""); } }}
-                            style={{ background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "7px 14px", cursor: "pointer" }}>{t("Pin")}</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                </div>
-              )}
-
-              {/* ---- ACCOUNT tab: who's signed in, plan management, sign out (Layers 1 & 3) ---- */}
-              {settingsTab === "account" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  {!account ? (
-                    // guest: no account yet — offer to sign out (which returns to the auth gate)
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
-                      <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 15, color: C.text }}>{t("You're exploring as a guest")}</div>
-                      <div style={{ fontFamily: SANS, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>{t("Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.")}</div>
-                      <button onClick={() => { setShowSettings(false); onSignOut?.(); }}
-                        style={{ background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.md, fontFamily: SANS, fontWeight: 510, fontSize: 13, padding: "10px 18px", cursor: "pointer" }}>{t("Sign in / create account")}</button>
-                    </div>
-                  ) : (<>
-                    {/* identity card */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: 14 }}>
-                      <span style={{ width: 40, height: 40, borderRadius: "50%", background: C.text, color: C.bg, display: "grid", placeItems: "center", fontWeight: 510, fontSize: 17, fontFamily: SANS, flex: "0 0 auto" }}>
-                        {(account.name || account.email).trim().charAt(0).toUpperCase()}
-                      </span>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 15, color: C.text }}>{account.name || account.email.split("@")[0]}</div>
-                        <div style={{ fontFamily: MONO, fontSize: 12, color: C.faint, wordBreak: "break-all" }}>{account.email}</div>
-                        <div style={{ fontFamily: SANS, fontSize: 10, color: C.up, marginTop: 3 }}>{account.backend ? t("secured on server") : t("stored on this device")}</div>
-                      </div>
-                    </div>
-
-                    {account.backend && (
-                      <div style={{ border: `1px solid ${agentPrefs?.enabled ? C.accent : C.panelEdge}`, borderRadius: R.md, padding: 12, background: agentPrefs?.enabled ? "rgba(255,255,255,0.05)" : "transparent" }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                          <div>
-                            <div style={{ ...TYPE.eyebrow, color: C.accentText }}>AI MARKET-BRIEF AGENT</div>
-                            <div style={{ marginTop: 5, fontFamily: SANS, fontSize: 10, lineHeight: 1.55, color: C.muted }}>Runs daily on your current watchlist, stores a factual brief, and never trades or makes recommendations.</div>
-                          </div>
-                          <button onClick={() => saveAgentPrefs(!agentPrefs?.enabled)} disabled={agentBusy || !agentPrefs}
-                            style={{ background: agentPrefs?.enabled ? "transparent" : C.accent, color: agentPrefs?.enabled ? C.accentText : "#08090a", border: agentPrefs?.enabled ? `1px solid ${C.accent}` : "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "6px 10px", cursor: agentBusy ? "default" : "pointer", opacity: agentBusy || !agentPrefs ? 0.6 : 1, whiteSpace: "nowrap" }}>
-                            {agentBusy ? "…" : agentPrefs?.enabled ? "PAUSE" : "ENABLE"}
+                          <button onClick={() => setSettingsTab("anchor")}
+                            style={{ ...button("ghost", "sm"), padding: "9px 16px", fontSize: 13 }}>
+                            {t("Pick your anchor")}
                           </button>
                         </div>
-                        {agentPrefs?.enabled && <div style={{ marginTop: 8, fontFamily: MONO, fontSize: 12, color: C.faint }}>Watching: {agentPrefs.symbols?.join(" · ") || "no symbols"}</div>}
-                      </div>
-                    )}
+                      </SetSection>
+                    </>);
+                  })()}
 
-                    {/* plan chooser */}
-                    <div>
-                      <label style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>{t("YOUR PLAN")}</label>
-                      <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-                        {PLANS.map(p => {
-                          const on = account.plan === p.id;
-                          const paid = p.id !== "free";
+                  {/* ================= Display & data ================= */}
+                  {settingsTab === "data" && (<>
+                    {/* A set of independent members of one group, so: pills.
+                        Seven switches in two columns read as seven unrelated
+                        decisions; a row of pills reads as one layout. */}
+                    <SetSection title={t("Panels")} note={t("Shown on the Markets screen.")}>
+                      <div role="group" aria-label={t("Panels")} style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {/* The titles are spelled out as static t() literals
+                            rather than looked up as t(p.title): the i18n audit
+                            can only see literal arguments, and a dynamic key is
+                            a translation that silently falls back to English
+                            with nothing anywhere to catch it. PANEL_DEFS still
+                            owns the set and the order. */}
+                        {PANEL_DEFS.map(p => {
+                          const title = {
+                            tape: t("Ticker tape"), watchlist: t("Watchlist"), movers: t("Top movers"),
+                            news: t("News & video"), calendar: t("Calendar"), portfolio: t("Portfolio"),
+                            pnf: t("P&F signals"),
+                          }[p.key] || p.title;
                           return (
-                            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, border: `1.5px solid ${on ? C.accent : C.panelEdge}`, borderRadius: R.md, padding: "10px 12px", background: on ? "rgba(255,255,255,0.04)" : "transparent" }}>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 14, color: C.text }}>{p.label} <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint, fontWeight: 400 }}>{p.price}{p.cadence === "forever" ? "" : p.cadence}</span></div>
-                                <div style={{ fontFamily: SANS, fontSize: 10, color: C.muted, lineHeight: 1.5 }}>{p.tagline}</div>
-                              </div>
-                              {on ? (
-                                <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 510, color: C.accentText, whiteSpace: "nowrap" }}>{t("CURRENT")}</span>
-                              ) : (
-                                <button onClick={() => startPlanChange(p.id)} disabled={!!billingBusy}
-                                  style={{ background: paid ? C.accent : "transparent", color: paid ? "#08090a" : C.accentText, border: paid ? "none" : `1px solid ${C.accent}`, borderRadius: 5, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "7px 14px", cursor: billingBusy ? "default" : "pointer", opacity: billingBusy ? 0.6 : 1, whiteSpace: "nowrap" }}>
-                                  {billingBusy === p.id ? "…" : paid ? t("Upgrade") : t("Switch")}
-                                </button>
-                              )}
-                            </div>
+                            <button key={p.key} onClick={() => togglePanel(p.key)} aria-pressed={!!panels[p.key]}
+                              style={pill(!!panels[p.key])}>
+                              {panels[p.key] ? "✓ " : ""}{title}
+                            </button>
                           );
                         })}
                       </div>
-                      {/* billing honesty: say plainly whether a real charge could happen */}
-                      <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
-                        {billingCfg?.enabled
-                          ? t("Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.")
-                          : t("No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.")}
+                    </SetSection>
+
+                    <SetSection title={t("In-app alerts")}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {[["priceTriggers", t("Price triggers")], ["breakingNews", t("Breaking news")], ["pnfPatterns", t("P&F pattern alerts")]].map(([key, label]) => (
+                          <SetRow key={key} label={label}>
+                            <Toggle checked={prefs.notify[key]}
+                              onChange={() => setPref("notify", { ...prefs.notify, [key]: !prefs.notify[key] })} />
+                          </SetRow>
+                        ))}
                       </div>
-                    </div>
+                    </SetSection>
 
-                    <button onClick={() => { setShowSettings(false); onSignOut?.(); }}
-                      style={{ alignSelf: "flex-start", background: "transparent", border: `1px solid ${C.panelEdge}`, color: "#f28080", borderRadius: R.md, fontFamily: SANS, fontSize: 11, padding: "8px 14px", cursor: "pointer" }}>{t("Sign out")}</button>
-                    <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint, lineHeight: 1.6 }}>{t("Terms & Privacy accepted")} {account.agreedAt ? "· v" + LEGAL_VERSION : ""}. {t("This account UI is a prototype; see the security note in the code.")}</div>
+                    <SetSection title={t("Data")}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                        <SetRow label={t("Quotes")}
+                          note={mode === "live"
+                            ? (quotesReady
+                                ? t("Provided by this server. No key needed on this device.")
+                                : t("Live quotes are not configured on this server."))
+                            : t("A seeded random-walk session — reproducible, and it needs no key or network.")}>
+                          {/* The one segment on this screen that earns green:
+                              it decides whether the numbers are real. */}
+                          <Segmented label={t("Quotes")} tone="accent" value={mode}
+                            options={[["demo", t("Demo")], ["live", t("Live"), !planAllows("finnhub")]]}
+                            onChange={(v, locked) => { if (locked) { setSettingsTab("account"); return; } setMode(v); }} />
+                        </SetRow>
+
+                        <SetRow label={t("Refresh every")}>
+                          <Segmented label={t("Refresh every")} value={prefs.refreshMs}
+                            options={[[0, t("Manual")], [5000, "5s"], [15000, "15s"], [30000, "30s"]]}
+                            onChange={(v) => setPref("refreshMs", coerceRefreshMs(v))} />
+                          {prefs.refreshMs === 0 && (
+                            <button onClick={() => pollLive()} disabled={!live}
+                              style={{ ...button("ghost", "sm"), fontSize: 12.5, opacity: live ? 1 : 0.5, cursor: live ? "pointer" : "not-allowed" }}>
+                              ↻ {t("Refresh now")}
+                            </button>
+                          )}
+                        </SetRow>
+
+                        <SetRow label={t("Clock timezone")} htmlFor="data-clock-tz"
+                          note={t("The OPEN/CLOSED badge always tracks NYSE (Eastern) hours.")}>
+                          <select id="data-clock-tz" value={clockTz} onChange={e => setClockTz(e.target.value)}
+                            style={{ ...fieldRecipe({ size: "sm" }), width: "auto", maxWidth: 240, cursor: "pointer" }}>
+                            <optgroup label="Americas">
+                              {TIMEZONES.filter(z => z.group === "Americas").map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
+                            </optgroup>
+                            <optgroup label="Europe">
+                              {TIMEZONES.filter(z => z.group === "Europe").map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
+                            </optgroup>
+                          </select>
+                        </SetRow>
+                      </div>
+                    </SetSection>
+
+                    {/* These two lived under "DATA" with the panel switches,
+                        which is how a colour-blind mode ends up filed beside a
+                        polling interval. */}
+                    <SetSection title={t("Accessibility")}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        <SetRow label={t("Color-blind mode")} note={t("Blue/orange + ▲▼")}>
+                          <Toggle checked={prefs.colorBlind} onChange={() => setPref("colorBlind", !prefs.colorBlind)} />
+                        </SetRow>
+                        <SetRow label={t("Privacy mode")} note={t("Blur balances")}>
+                          <Toggle checked={prefs.privacy} onChange={() => setPref("privacy", !prefs.privacy)} />
+                        </SetRow>
+                      </div>
+                    </SetSection>
+
+                    {/* Not settings: two facts about what this server can reach.
+                        Collapsed, because reading them changes nothing. */}
+                    <details style={{ borderTop: `1px solid ${C.edge}`, paddingTop: 14 }}>
+                      <summary style={{ fontFamily: SANS, fontSize: 13, color: C.faint, cursor: "pointer" }}>
+                        {t("Video search · streaming catalog")}
+                      </summary>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12, fontFamily: SANS, fontSize: 13, lineHeight: 1.6 }}>
+                        <div style={{ color: canSearchVideos ? C.muted : C.faint }}>
+                          {canSearchVideos
+                            ? `● ${t("Real, embeddable video results are provided by this server — no key needed on this device.")}`
+                            : `○ ${t("Not configured on this server — \"show videos of …\" asks the AI to guess instead.")}`}
+                          {" "}{lockChip("youtube")}
+                        </div>
+                        <div style={{ color: canBrowseCatalog ? C.muted : C.faint }}>
+                          {canBrowseCatalog
+                            ? `● ${t("Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.")}`
+                            : `○ ${t("Not configured on this server — public-domain films via \"free movies …\" still play in-desk.")}`}
+                          {" "}{lockChip("tmdb")}
+                        </div>
+                      </div>
+                    </details>
                   </>)}
+
+                  {/* ================= AI & memory ================= */}
+                  {settingsTab === "models" && (<>
+                    <SetSection title={t("The desk model")}
+                      note={serverAi
+                        ? t("Answers run on this server's model key. Nothing to set up.")
+                        : t("This server has no model key configured yet, so the desk can't answer. Everything else works.")}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", background: serverAi ? C.up : C.faint }} />
+                        <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: serverAi ? C.up : C.muted }}>
+                          {serverAi ? t("On air") : t("Off")}
+                        </span>
+                      </div>
+                      {!planAllows("ai") && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontFamily: SANS, fontSize: 13, lineHeight: 1.6, color: C.accentText, background: C.accentGlow, border: `1px solid ${C.accentEdge}`, borderRadius: R.md, padding: "10px 12px" }}>
+                          {lockChip("ai")} {t("AI desk answers need {plan}.").replace("{plan}", planFor("ai"))}
+                        </div>
+                      )}
+                    </SetSection>
+
+                    {/* Multi-turn memory: lives only in this browser, and one
+                        click forgets it. */}
+                    <SetSection title={t("Memory")}
+                      note={t("The desk remembers this conversation locally, on this device only, so follow-up questions work.")}>
+                      <SetRow label={t("{n} turns remembered").replace("{n}", String(memoryTurns))}>
+                        <button onClick={() => { forgetConversation(); setCmdMsg(t("Desk memory cleared — the conversation is forgotten.")); }}
+                          style={{ ...button("ghost", "sm"), fontSize: 12.5 }}>
+                          {t("Forget conversation")}
+                        </button>
+                      </SetRow>
+                    </SetSection>
+                  </>)}
+
+                  {/* ================= Voice & sound ================= */}
+                  {settingsTab === "anchor" && (<>
+                    <SetSection title={t("Anchor")} note={t("Who reads your answers.")}>
+                      <div role="radiogroup" aria-label={t("Anchor")} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))", gap: 8 }}>
+                        {CHARACTERS.map(c => {
+                          const on = characterId === c.id;
+                          return (
+                            // A square tile, not a pill: round means a member of
+                            // a set you switch on and off, square means one of
+                            // these and only one.
+                            <button key={c.id} role="radio" aria-checked={on} onClick={() => setCharacterId(c.id)}
+                              style={{ padding: "10px 0", borderRadius: R.sm, cursor: "pointer", fontFamily: SANS, fontSize: 13, fontWeight: on ? 600 : 400,
+                                background: on ? C.surfaceRaised : "transparent", color: on ? C.text : C.muted,
+                                border: `1px solid ${on ? C.accent : C.edgeStrong}` }}>{c.name}</button>
+                          );
+                        })}
+                      </div>
+                    </SetSection>
+
+                    <SetSection title={t("Set")} note={t("The room behind the anchor.")}>
+                      <div role="radiogroup" aria-label={t("Set")} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))", gap: 8 }}>
+                        {ENVIRONMENTS.map(ev => {
+                          const on = envId === ev.id;
+                          return (
+                            <button key={ev.id} role="radio" aria-checked={on} onClick={() => setEnvId(ev.id)}
+                              style={{ padding: "10px 0", borderRadius: R.sm, cursor: "pointer", fontFamily: SANS, fontSize: 13, fontWeight: on ? 600 : 400,
+                                background: on ? C.surfaceRaised : "transparent", color: on ? C.text : C.muted,
+                                border: `1px solid ${on ? C.accent : C.edgeStrong}` }}>{ev.name}</button>
+                          );
+                        })}
+                      </div>
+                    </SetSection>
+
+                    <SetSection title={t("Voice")}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                        <SetRow label={t("Voice engine")}
+                          note={voiceEngine === "elevenlabs"
+                            ? (!canUseStudioVoice
+                                ? t("Studio voice is not configured on this server.")
+                                : elevenErr
+                                  ? t("This server has a studio-voice key set, but the last call to it failed.")
+                                  : t("Studio voice is provided by this server — no key needed on this device."))
+                            : t("The voice built into your browser. Free, instant, no account.")}>
+                          <Segmented label={t("Voice engine")} value={voiceEngine}
+                            options={[["browser", t("Browser")], ["elevenlabs", "ElevenLabs", !planAllows("elevenlabs")]]}
+                            onChange={(v, locked) => { if (locked) { setSettingsTab("account"); return; } setVoiceEngine(v); }} />
+                        </SetRow>
+
+                        {voiceEngine === "elevenlabs" && elevenVoices.length > 0 && (
+                          <SetRow label={t("Studio voice")} htmlFor="voice-eleven">
+                            <select id="voice-eleven" value={elevenVoiceId} onChange={e => setElevenVoiceId(e.target.value)}
+                              style={{ ...fieldRecipe({ size: "sm" }), width: "auto", maxWidth: 240, cursor: "pointer" }}>
+                              {elevenVoices.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                            </select>
+                          </SetRow>
+                        )}
+                        {voiceEngine === "elevenlabs" && elevenErr && (
+                          <div style={{ fontFamily: SANS, fontSize: 13, color: C.down, lineHeight: 1.6 }}>{elevenErr}</div>
+                        )}
+                        {voiceEngine === "elevenlabs" && canUseStudioVoice && elevenVoices.length === 0 && !elevenErr && (
+                          <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint }}>{t("Loading voices…")}</div>
+                        )}
+
+                        {voiceEngine === "browser" && (
+                          <SetRow label={t("Browser voice")} htmlFor="voice-browser"
+                            note={voices.length > 0 ? t("{n} available on this device").replace("{n}", String(voices.length)) : undefined}>
+                            <select id="voice-browser" value={voiceName} onChange={e => setVoiceName(e.target.value)}
+                              style={{ ...fieldRecipe({ size: "sm" }), width: "auto", maxWidth: 240, cursor: "pointer" }}>
+                              {(() => {
+                                // Every voice the OS/browser exposes is free — group them all by language, current language first
+                                const cur = (TTS_LANG[lang] || "en-US").slice(0, 2);
+                                const langName = (code) => { try { return new Intl.DisplayNames([lang], { type: "language" }).of(code) || code; } catch { return code; } };
+                                const groups = {};
+                                for (const v of voices) { const k = (v.lang || "").slice(0, 2) || "··"; (groups[k] = groups[k] || []).push(v); }
+                                const keys = Object.keys(groups).sort((a, b) => (a === cur ? -1 : b === cur ? 1 : (langName(a)).localeCompare(langName(b))));
+                                return keys.map(k => (
+                                  <optgroup key={k} label={langName(k)}>
+                                    {groups[k].map(v => <option key={v.name} value={v.name}>{v.name} {v.localService ? "· local" : "· network"}</option>)}
+                                  </optgroup>
+                                ));
+                              })()}
+                            </select>
+                          </SetRow>
+                        )}
+
+                        <SetRow label={t("Background crew")} htmlFor="voice-crew" note={t("A second voice to react and hand over to.")}>
+                          <select id="voice-crew" value={crewId} onChange={e => setCrewId(e.target.value)}
+                            style={{ ...fieldRecipe({ size: "sm" }), width: "auto", maxWidth: 240, cursor: "pointer" }}>
+                            <option value="auto">{t("Auto — whoever isn't anchoring")}</option>
+                            <option value="off">{t("Off — solo broadcast")}</option>
+                            {CHARACTERS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                          </select>
+                        </SetRow>
+
+                        <SetRow label={t("Reading speed")} htmlFor="voice-rate" stack>
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <input id="voice-rate" type="range" min="0.7" max="1.5" step="0.02" value={speechRate}
+                              onChange={e => setSpeechRate(+e.target.value)}
+                              style={{ flex: 1, minWidth: 0, accentColor: C.accent }} />
+                            <span style={{ fontFamily: MONO, fontSize: 12.5, color: C.muted, minWidth: 46, textAlign: "right" }}>{speechRate.toFixed(2)}×</span>
+                          </div>
+                        </SetRow>
+
+                        <SetRow label={t("Read the first answer aloud")} note={t("Only the first — after that, ask.")}>
+                          <Toggle checked={autoSpeak} onChange={e => setAutoSpeak(e.target.checked)} />
+                        </SetRow>
+
+                        <button
+                          onClick={() => speak("preview", `This is ${CHARACTERS.find(c => c.id === characterId)?.name} at the Vantage desk. ${selected} is currently trading at ${fmt(selectedRow?.price)}.`)}
+                          style={{ ...button("ghost", "sm"), alignSelf: "flex-start", color: C.accentText, borderColor: C.accentEdge, padding: "9px 16px", fontSize: 13 }}>
+                          ▶ {t("Preview voice")}
+                        </button>
+                      </div>
+                    </SetSection>
+
+                    <SetSection title={t("Sound")}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                        <SetRow label={t("UI click sounds")} note={t("Terminal blips on every button.")}>
+                          <Toggle checked={uiSounds} onChange={e => setUiSounds(e.target.checked)} />
+                        </SetRow>
+                        <SetRow label={t("Sound volume")} htmlFor="voice-sound-vol" stack>
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <input id="voice-sound-vol" type="range" min="0" max="1" step="0.01" value={soundVolume}
+                              onChange={e => setSoundVolume(+e.target.value)}
+                              style={{ flex: 1, minWidth: 0, accentColor: C.accent }} />
+                            <span style={{ fontFamily: MONO, fontSize: 12.5, color: C.muted, minWidth: 46, textAlign: "right" }}>{(soundVolume * 100).toFixed(0)}%</span>
+                          </div>
+                        </SetRow>
+                        <SetRow label={t("Ambient music")}
+                          note={musicSource === "spotify" ? t("Your Spotify playlist, docked bottom-right.") : t("Generative synth that ducks under the anchor's voice.")}>
+                          <Toggle checked={musicOn} onChange={e => toggleMusic(e.target.checked)} />
+                        </SetRow>
+                        <SetRow label={t("Music source")}>
+                          <Segmented label={t("Music source")} value={musicSource}
+                            options={[["synth", "Synth"], ["spotify", "Spotify"]]}
+                            onChange={(v) => setMusicSource(v)} />
+                        </SetRow>
+                        {musicSource === "synth" ? (
+                          <SetRow label={t("Music volume")} htmlFor="voice-music-vol" stack>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              <input id="voice-music-vol" type="range" min="0" max="1" step="0.01" value={musicVolume}
+                                onChange={e => setMusicVolume(+e.target.value)}
+                                style={{ flex: 1, minWidth: 0, accentColor: C.accent }} />
+                              <span style={{ fontFamily: MONO, fontSize: 12.5, color: C.muted, minWidth: 46, textAlign: "right" }}>{(musicVolume * 100).toFixed(0)}%</span>
+                            </div>
+                          </SetRow>
+                        ) : (
+                          <div>
+                            <div style={{ fontFamily: SANS, fontSize: 13, color: C.faint, lineHeight: 1.6 }}>
+                              {t("No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)")}
+                            </div>
+
+                            {/* Optional full playback via OAuth (Premium) — collapsed so it never demands a login */}
+                            <details style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.edge}` }}>
+                              <summary style={{ fontFamily: SANS, fontSize: 13, color: C.faint, cursor: "pointer" }}>
+                                {t("Optional · connect a Premium account for full tracks")}
+                              </summary>
+                              <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 13, color: C.muted }}>
+                                <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ color: C.accentText }}>{t("create an app ↗")}</a>
+                                {lockChip("spotify")}
+                              </div>
+                              {spotifyReady ? (
+                                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+                                  <span style={{ fontFamily: SANS, fontSize: 13, color: C.up }}>{t("● connected — full tracks enabled")}</span>
+                                  <button onClick={disconnectSpotify} style={{ ...button("ghost", "sm"), fontSize: 12.5 }}>{t("Disconnect")}</button>
+                                </div>
+                              ) : (
+                                <>
+                                  <input
+                                    value={spotifyClientId}
+                                    onChange={e => setSpotifyClientId(e.target.value)}
+                                    placeholder={t("Spotify app Client ID")}
+                                    style={{ ...fieldRecipe({ size: "sm" }), marginTop: 10, fontFamily: MONO, background: C.surface }}
+                                  />
+                                  <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
+                                    {lang === "en"
+                                      ? <>In your Spotify app settings, add this exact <b style={{ color: C.muted }}>Redirect URI</b>:</>
+                                      : <>{t("In your Spotify app settings, add this exact Redirect URI:")}</>}<br />
+                                    <code style={{ color: C.accentText, wordBreak: "break-all" }}>{spotifyRedirect()}</code>
+                                    {!/^https:|127\.0\.0\.1/.test(spotifyRedirect()) && (
+                                      <span style={{ color: C.down }}><br />⚠ {t("Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.")}</span>
+                                    )}
+                                  </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+                                    {(() => { const ok = planAllows("spotify") && spotifyClientId.trim(); return (
+                                    <button onClick={() => { if (!planAllows("spotify")) { setSettingsTab("account"); return; } connectSpotify(); }} disabled={!ok}
+                                      style={{ background: ok ? "#1DB954" : C.edgeStrong, color: ok ? "#ffffff" : C.faint, border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 13, fontWeight: 600, padding: "9px 16px", cursor: ok ? "pointer" : "default" }}>
+                                      {planAllows("spotify") ? t("Connect Spotify") : `${t("Connect Spotify")} 🔒`}
+                                    </button>
+                                    ); })()}
+                                    {spotifyAuth && !spotifyReady && <span style={{ fontFamily: SANS, fontSize: 12.5, color: C.muted }}>{t("connecting…")}</span>}
+                                  </div>
+                                </>
+                              )}
+                              {spotifyErr && <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.down, marginTop: 8 }}>{spotifyErr}</div>}
+                            </details>
+                          </div>
+                        )}
+                      </div>
+                    </SetSection>
+                  </>)}
+
+                  {/* ================= Meetings ================= */}
+                  {settingsTab === "meetings" && (
+                    <SetSection title={t("Go live — no setup")}
+                      note={t("Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.")}>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <button onClick={() => window.open("https://meet.new", "_blank", "noopener")}
+                          style={{ background: "#00796B", color: "#fff", border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 13, fontWeight: 600, padding: "9px 16px", cursor: "pointer" }}>{t("New Google Meet")} ↗</button>
+                        <button onClick={() => window.open("https://zoom.us/start/videomeeting", "_blank", "noopener")}
+                          style={{ background: "#1567D3", color: "#fff", border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 13, fontWeight: 600, padding: "9px 16px", cursor: "pointer" }}>{t("New Zoom meeting")} ↗</button>
+                      </div>
+
+                      {/* pin the link the tab created, so Vantage shows a live badge you can rejoin/share */}
+                      <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${C.edge}` }}>
+                        {liveMeeting ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                            <a href={liveMeeting} target="_blank" rel="noopener noreferrer"
+                              style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 12.5, color: C.text, textDecoration: "none", overflow: "hidden" }}>
+                              <span style={{ color: C.down, flexShrink: 0 }}>🔴 LIVE</span>
+                              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{meetingLabel(liveMeeting)} ↗</span>
+                            </a>
+                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                              <a href={liveMeeting} target="_blank" rel="noopener noreferrer"
+                                style={{ ...button("primary", "sm"), textDecoration: "none", fontSize: 13 }}>{t("Join")} ↗</a>
+                              <button onClick={() => navigator.clipboard?.writeText(liveMeeting)} style={{ ...button("ghost", "sm"), fontSize: 12.5 }}>{t("Copy link")}</button>
+                              <button onClick={() => setLiveMeeting("")} style={{ ...button("ghost", "sm"), fontSize: 12.5 }}>{t("End")}</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            <input value={liveMeetDraft} onChange={e => setLiveMeetDraft(e.target.value)}
+                              placeholder={t("paste your meeting link to pin it as LIVE…")}
+                              style={{ ...fieldRecipe({ size: "sm" }), flex: 1, minWidth: 160, width: "auto", fontFamily: MONO, background: C.surface }} />
+                            <button onClick={() => { const u = liveMeetDraft.trim(); if (/^https?:\/\//.test(u)) { setLiveMeeting(u); setLiveMeetDraft(""); } }}
+                              style={{ ...button("primary", "sm"), fontSize: 13 }}>{t("Pin")}</button>
+                          </div>
+                        )}
+                      </div>
+                    </SetSection>
+                  )}
+
+                  {/* ================= Account & plan ================= */}
+                  {settingsTab === "account" && (
+                    !account ? (
+                      <SetSection title={t("You're exploring as a guest")}
+                        note={t("Create a free account to save your plan across visits. Your watchlist, portfolio and settings already persist on this device either way.")}>
+                        <button onClick={() => { setShowSettings(false); onSignOut?.(); }}
+                          style={{ ...button("primary", "md"), fontSize: 13.5 }}>{t("Sign in / create account")}</button>
+                      </SetSection>
+                    ) : (<>
+                      <div style={{ display: "flex", alignItems: "center", gap: 14, background: C.surfaceRaised, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: 16 }}>
+                        <span aria-hidden="true" style={{ width: 44, height: 44, borderRadius: "50%", background: C.surface, border: `1px solid ${C.edgeStrong}`, color: C.text, display: "grid", placeItems: "center", fontWeight: 600, fontSize: 18, fontFamily: SANS, flex: "0 0 auto" }}>
+                          {(account.name || account.email).trim().charAt(0).toUpperCase()}
+                        </span>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 15, color: C.text }}>{account.name || account.email.split("@")[0]}</div>
+                          <div style={{ fontFamily: MONO, fontSize: 12.5, color: C.faint, wordBreak: "break-all" }}>{account.email}</div>
+                          <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.up, marginTop: 3 }}>{account.backend ? t("secured on server") : t("stored on this device")}</div>
+                        </div>
+                      </div>
+
+                      {account.backend && (
+                        <SetSection title={t("AI market-brief agent")}
+                          note={t("Runs daily on your current watchlist, stores a factual brief, and never trades or makes recommendations.")}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
+                            <span style={{ fontFamily: SANS, fontSize: 13, color: agentPrefs?.enabled ? C.up : C.faint }}>
+                              {agentPrefs?.enabled
+                                ? `${t("Watching")} ${agentPrefs.symbols?.join(" · ") || t("no symbols")}`
+                                : t("Paused")}
+                            </span>
+                            <button onClick={() => saveAgentPrefs(!agentPrefs?.enabled)} disabled={agentBusy || !agentPrefs}
+                              style={{ ...(agentPrefs?.enabled ? button("ghost", "sm") : button("primary", "sm")), fontSize: 12.5, opacity: agentBusy || !agentPrefs ? 0.6 : 1 }}>
+                              {agentBusy ? "…" : agentPrefs?.enabled ? t("Pause") : t("Enable")}
+                            </button>
+                          </div>
+                        </SetSection>
+                      )}
+
+                      <SetSection title={t("Your plan")}
+                        note={billingCfg?.enabled
+                          ? t("Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.")
+                          : t("No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.")}>
+                        <div style={{ display: "grid", gap: 8 }}>
+                          {PLANS.map(p => {
+                            const on = account.plan === p.id;
+                            const paid = p.id !== "free";
+                            return (
+                              <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 14, border: `1px solid ${on ? C.accent : C.edge}`, borderRadius: R.md, padding: "12px 14px", background: on ? C.accentGlow : "transparent" }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 14, color: C.text }}>
+                                    {p.label} <span style={{ fontFamily: MONO, fontSize: 12.5, color: C.faint, fontWeight: 400 }}>{p.price}{p.cadence === "forever" ? "" : p.cadence}</span>
+                                  </div>
+                                  <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.muted, lineHeight: 1.5, marginTop: 2 }}>{p.tagline}</div>
+                                </div>
+                                {on ? (
+                                  <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: C.accentText, whiteSpace: "nowrap" }}>{t("Current")}</span>
+                                ) : (
+                                  <button onClick={() => startPlanChange(p.id)} disabled={!!billingBusy}
+                                    style={{ ...(paid ? button("primary", "sm") : button("ghost", "sm")), fontSize: 12.5, opacity: billingBusy ? 0.6 : 1 }}>
+                                    {billingBusy === p.id ? "…" : paid ? t("Upgrade") : t("Switch")}
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </SetSection>
+
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, borderTop: `1px solid ${C.edge}`, paddingTop: 16 }}>
+                        <span style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, lineHeight: 1.6 }}>
+                          {t("Terms & Privacy accepted")}{account.agreedAt ? " · v" + LEGAL_VERSION : ""}
+                        </span>
+                        <button onClick={() => { setShowSettings(false); onSignOut?.(); }}
+                          style={{ ...button("danger", "sm"), fontSize: 12.5 }}>{t("Sign out")}</button>
+                      </div>
+                    </>)
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* footer */}
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "0 18px 18px" }}>
-              <button onClick={() => setShowSettings(false)}
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, padding: "8px 14px", cursor: "pointer" }}>{t("Close")}</button>
-
+                {/* ---- footer: pinned, so Done never scrolls out of a long pane ---- */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, padding: "14px 26px", borderTop: `1px solid ${C.edge}`, flex: "0 0 auto" }}>
+                  <span style={{ fontFamily: SANS, fontSize: 13, color: C.faint }}>{paneNote}</span>
+                  <button onClick={() => setShowSettings(false)}
+                    style={{ ...button("primary", "sm"), padding: "9px 22px", fontSize: 13.5, fontWeight: 700 }}>{t("Done")}</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
       </AppShell>
     </div>
   );
