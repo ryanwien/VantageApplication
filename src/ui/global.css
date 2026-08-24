@@ -156,8 +156,68 @@ a:hover { text-decoration: underline; }
    on a near-black bar, where they were technically present and practically
    invisible. */
 .v-gamectl { transition: background var(--v-fast) var(--v-ease), border-color var(--v-fast) var(--v-ease), color var(--v-fast) var(--v-ease); }
-.v-gamectl:hover { background: rgba(255,255,255,0.09); border-color: var(--v-edge-strong); color: #ffffff; }
+/* Tokens, not a white wash. This system has no #ffffff — pure white against
+   these near-blacks glares — and a translucent-white hover is the previous
+   palette's idiom, which is why it outlived the retheme here. */
+.v-gamectl:hover { background: var(--v-edge-strong); border-color: var(--v-edge-strong); color: var(--v-text); }
 .v-gamectl:active { transform: translateY(1px); }
+
+/* ---------- getting started ----------
+   Each row is one choice, so the whole row is the target and the button inside
+   it is a label. The lift is 3px: the handoff gives cards 4-6px, but these are
+   row-shaped and a 6px hop on a 70px strip inside a modal reads as a bounce.
+   The tile lightens with the row so the pair moves as one object. */
+.v-tutrow {
+  transition: transform var(--v-base-dur) var(--v-ease), border-color var(--v-base-dur) var(--v-ease);
+}
+.v-tutrow:hover { transform: translateY(-3px); border-color: var(--v-edge-strong); }
+.v-tutrow:active { transform: translateY(0); }
+.v-tutrow:focus-visible { border-color: var(--v-accent); }
+.v-tuttile { transition: background var(--v-base-dur) var(--v-ease); }
+.v-tutrow:hover .v-tuttile { background: var(--v-edge-strong); }
+
+/* ---------- anchor roster ----------
+   The centre face is the anchor on the desk; the two either side are the steps
+   you could take. Size and opacity carry that, so the row reads as one choice
+   with two offers rather than three equal circles with a ring on one.
+
+   The scale lives on an inner span, not on the button: transitioning a
+   button's own width would relayout the row on every step, and transform on a
+   fixed-size box costs nothing. The button keeps its full 44px hit area at
+   every size — a shoulder is drawn at 80% but is still a 44px target. */
+.v-anchorface {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--v-surface-raised);
+  border: 2px solid transparent;
+  color: var(--v-muted);
+  transform: scale(0.8);
+  opacity: 0.72;
+  transition: transform var(--v-base-dur) var(--v-ease), opacity var(--v-base-dur) var(--v-ease),
+              border-color var(--v-base-dur) var(--v-ease), color var(--v-base-dur) var(--v-ease),
+              box-shadow var(--v-base-dur) var(--v-ease), background var(--v-fast) var(--v-ease);
+}
+.v-anchorface.is-on {
+  transform: scale(1);
+  opacity: 1;
+  border-color: var(--v-accent);
+  color: var(--v-text);
+  /* The ring alone is 2px on a 40px circle. The glow is what makes it read as
+     lit rather than merely outlined, at the same cost as a shadow. */
+  box-shadow: 0 0 0 4px var(--v-accent-glow);
+}
+/* A shoulder has to answer the pointer — an offer that does not respond does
+   not read as clickable. It comes forward without ever reaching the centre's
+   size, so the hierarchy survives the hover. */
+.v-anchorstep:hover .v-anchorface {
+  transform: scale(0.9); opacity: 1;
+  color: var(--v-text); border-color: var(--v-edge-strong);
+  background: var(--v-edge-strong);
+}
+.v-anchorstep:active .v-anchorface { transform: scale(0.82); }
+/* The centre is already chosen, so it acknowledges rather than promises. */
+.v-anchorstep:hover .v-anchorface.is-on { transform: scale(1.05); border-color: var(--v-accent); background: var(--v-surface-raised); }
+.v-anchorstep:active .v-anchorface.is-on { transform: scale(0.96); }
 
 /* Row hover for dense tables (watchlist, movers, positions). */
 .v-row { transition: background var(--v-fast) var(--v-ease); }
@@ -329,12 +389,31 @@ a:hover { text-decoration: underline; }
 }
 .v-flip { animation: v-flip 300ms cubic-bezier(0.4, 0, 0.2, 1) both; backface-visibility: hidden; }
 
-/* The result line fades up under the hand instead of snapping in. */
+/* The result banner fades up under the hand instead of snapping in. */
 @keyframes v-settle {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: none; }
 }
 .v-settle { animation: v-settle 200ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+/* The payout, leaving the bankroll. A total that simply becomes a different
+   number says the hand ended but not what it was worth, and the one moment a
+   player actually cares about is the moment the chips move. It rises and fades
+   rather than lingering, because it is an event, not a field. */
+@keyframes v-chipfly {
+  0%   { opacity: 0; transform: translateY(6px); }
+  22%  { opacity: 1; transform: translateY(0); }
+  70%  { opacity: 1; transform: translateY(-4px); }
+  100% { opacity: 0; transform: translateY(-14px); }
+}
+.v-chipfly { animation: v-chipfly 1500ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+/* The table and the chip rail sit side by side while there is room for both.
+   Below that the rail wraps under the table, and the bet stepper and actions
+   go full width rather than staying in a 210px column with nothing beside it. */
+@media (max-width: 620px) {
+  .v-bjroom { padding: 14px !important; gap: 16px !important; }
+}
 
 /* ---------- accessibility ----------
    Respect the OS setting. Anything decorative stops; nothing becomes unusable. */
@@ -564,6 +643,43 @@ button:not(:disabled):active { transform: scale(0.97); }
   color: var(--v-base) !important;
 }
 .v-verbcard:disabled .v-verbtile { background: var(--v-surface-raised) !important; color: var(--v-faint) !important; }
+
+/* ---------- Algorithm Wars ----------
+   Deploying spends capital, and spending is the thing the player is judging
+   every second of the match. Both outcomes get an answer:
+
+   v-spend — the deploy took. A short squash-and-settle, so a rapid-fire rush
+   still reads as N separate presses rather than one held button.
+   v-nope  — you could not afford it. The card refuses sideways. The button is
+   deliberately NOT disabled for this case (see the markup): a control that
+   does nothing is indistinguishable from a broken one, and "no" is
+   information the player needs while they are counting capital. */
+@keyframes v-spend {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+.v-spend { animation: v-spend 260ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+@keyframes v-nope {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-4px); }
+  50%      { transform: translateX(4px); }
+  80%      { transform: translateX(-2px); }
+}
+.v-nope { animation: v-nope 240ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+/* The match-over curtain arrives rather than appearing — the sim was moving a
+   moment ago, and a hard cut over live motion reads as a crash. */
+@keyframes v-awover {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.v-awover { animation: v-awover 260ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+@media (max-width: 620px) {
+  .v-awroom { padding: 14px !important; }
+}
 
 /* ---------- the desk composer ----------
    One input now: the command bar merged into it, bringing a market-status line

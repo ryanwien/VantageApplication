@@ -227,7 +227,6 @@ const I18N = {
     "AI desk": "Mesa de IA", "ready": "listo", "Voice": "Voz", "browser": "navegador",
     "Live quotes": "Cotizaciones en directo", "live": "en directo", "demo": "demo", "Real videos": "Vídeos reales",
     "on": "activado", "optional": "opcional", "Streaming": "Streaming", "Calendar": "Calendario", "built-in": "integrado", "Meetings": "Reuniones",
-    "skip — I'll explore on my own": "omitir — exploraré por mi cuenta",
     // DATA tab
  "breaking news": "última hora",
     "P&F SIGNALS": "SEÑALES P&F", "P&F signals": "Señales P&F", "P&F pattern alerts": "alertas de patrones P&F",
@@ -437,6 +436,95 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "Terms": "Términos",
     "Privacy": "Privacidad",
+    // --- settings: the plain-language sidebar ---
+    "Aggressive": "Agresiva",
+    "Algorithms crushed": "Algoritmos aplastados",
+    "Army logic": "Lógica del ejército",
+    "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "La lógica del ejército cambia lo que hacen todos tus bots, en directo. El enemigo adapta la suya, así que adapta la tuya.",
+    "Balanced": "Equilibrada",
+    "Bankroll": "Fondos",
+    "Bet": "Apuesta",
+    "Blackjack — pays 3 to 2": "Blackjack: paga 3 a 2",
+    "Bust at {n} — you lose": "Te pasas con {n}: pierdes",
+    "Buy back in": "Recargar fichas",
+    "Capital": "Capital",
+    "Capital regenerates on its own — spend it to deploy bots that march and fight without you. Destroy the enemy server to win.": "El capital se regenera solo: gástalo para desplegar bots que marchan y combaten sin ti. Destruye el servidor enemigo para ganar.",
+    "Day-Trader": "Day-trader",
+    "Deal": "Repartir",
+    "Dealer": "Crupier",
+    "Dealer busts at {n} — you win": "El crupier se pasa con {n}: ganas",
+    "Defensive": "Defensiva",
+    "Deploy": "Desplegar",
+    "Enemy server": "Servidor enemigo",
+    "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Acércate más a 21 que el crupier sin pasarte. Las figuras valen 10; el as vale 11 salvo que te haga pasarte, y entonces vale 1.",
+    "Hand settled": "Mano resuelta",
+    "Hit": "Pedir",
+    "Index-Fund": "Fondo indexado",
+    "Lower the bet": "Bajar la apuesta",
+    "Market dominated": "Mercado dominado",
+    "New hand": "Nueva mano",
+    "Place your bet": "Haz tu apuesta",
+    "Push at {n} — your bet comes back": "Empate a {n}: recuperas tu apuesta",
+    "Raise the bet": "Subir la apuesta",
+    "Rematch": "Revancha",
+    "Restart": "Reiniciar",
+    "Sniper": "Francotirador",
+    "Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers.": "Los francotiradores funden a los fondos indexados, los fondos indexados absorben a los day-traders y los day-traders enjambran a los francotiradores.",
+    "Stand": "Plantarse",
+    "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "El crupier pide hasta 17 y se planta. Un 21 con dos cartas es blackjack y paga 3 a 2.",
+    "The enemy overran your server.": "El enemigo arrasó tu servidor.",
+    "You": "Tú",
+    "You lose, {a} against {b}": "Pierdes, {a} contra {b}",
+    "You win, {a} against {b}": "Ganas, {a} contra {b}",
+    "Your bots took the enemy server.": "Tus bots tomaron el servidor enemigo.",
+    "Your server": "Tu servidor",
+    "engage nearest, then advance": "ataca al más cercano y luego avanza",
+    "fast, cheap, fragile — swarm and rush": "rápido, barato y frágil: enjambre y avalancha",
+    "hand {n} · dealer stands on 17": "mano {n} · el crupier se planta en 17",
+    "hold your line, counter-punch": "mantén la línea y contraataca",
+    "long range, high burst — melts tanks, dies fast": "largo alcance y mucho daño: funde tanques, muere rápido",
+    "push the enemy server": "avanza hacia el servidor enemigo",
+    "spend it to deploy": "gástalo para desplegar",
+    "tanky, slow — soaks damage, holds the line": "resistente y lento: absorbe daño y aguanta la línea",
+    "{n} bots": "{n} bots",
+    // --- settings: the plain-language sidebar ---
+    "21 against the dealer, with a chip bankroll.": "21 contra el crupier, con fondos en fichas.",
+    "A trading-floor RTS: script bot armies in real time.": "Un RTS de parqué: programa ejércitos de bots en tiempo real.",
+    "Algorithm Wars": "Guerra de algoritmos",
+    "Battlefield": "Campo de batalla",
+    "Bull or Bear": "Alcista o bajista",
+    "Bulls vs Bears Chess": "Ajedrez: toros contra osos",
+    "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Los gráficos, las noticias, los juegos, la música y el calendario funcionan, pero la mesa no puede responder preguntas hasta que añadas una.",
+    "Close games": "Cerrar los juegos",
+    "Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.": "El modo demo funciona sin nada, y la mesa de IA, los precios en directo, la música y el vídeo se activan solos cuando este servidor los ofrece: no hay claves que pegar.",
+    "Eight short lessons on stocks, prices and P&L.": "Ocho lecciones breves sobre acciones, precios y resultados.",
+    "Game room": "Sala de juegos",
+    "I'll spotlight each part of the screen, step by step.": "Iré señalando cada parte de la pantalla, paso a paso.",
+    "Market Blackjack": "Blackjack del mercado",
+    "Match companies to their tickers.": "Relaciona cada empresa con su símbolo.",
+    "No AI key set up yet.": "Todavía no hay clave de IA.",
+    "No account needed": "No hace falta cuenta",
+    "No setup required.": "No hay nada que configurar.",
+    "Play demo": "Reproducir demo",
+    "Read a headline, call it up or down.": "Lee un titular y di si sube o baja.",
+    "Replay anytime from Settings → Getting started": "Puedes repetirla desde Ajustes → Primeros pasos",
+    "Set it up": "Configurarla",
+    "Set it up (keys & options)": "Configurarla (claves y opciones)",
+    "Setup guide": "Guía de configuración",
+    "Show missions": "Ver misiones",
+    "Sit back — I'll chart a stock, ask a question, ring the bell.": "Relájate: haré un gráfico, haré una pregunta y tocaré la campana.",
+    "Six hands-on tasks that check off as you do them.": "Seis tareas prácticas que se van marcando al hacerlas.",
+    "Skip": "Omitir",
+    "Start tour": "Empezar visita",
+    "Stock School": "Escuela de bolsa",
+    "Take the guided tour": "Hacer la visita guiada",
+    "Ticker Match": "Empareja tickers",
+    "Try the missions": "Probar las misiones",
+    "Two-player chess: Bulls against Bears.": "Ajedrez para dos: toros contra osos.",
+    "Watch me demo it": "Ver una demostración",
+    "What each key does and where to get it.": "Qué hace cada clave y dónde conseguirla.",
+    "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "Tu mesa de mercados con IA: un presentador animado que hace gráficos, responde en voz alta, lee las noticias e incluso pone tráilers. Elige cómo quieres aprenderla:",
+    "games": "juegos",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -553,7 +641,6 @@ const I18N = {
     "AI desk": "Plateau IA", "ready": "prêt", "Voice": "Voix", "browser": "navigateur",
     "Live quotes": "Cotations en direct", "live": "en direct", "demo": "démo", "Real videos": "Vraies vidéos",
     "on": "activé", "optional": "optionnel", "Streaming": "Streaming", "Calendar": "Calendrier", "built-in": "intégré", "Meetings": "Réunions",
-    "skip — I'll explore on my own": "passer — je vais explorer par moi-même",
     // DATA tab
  "breaking news": "dernière minute",
     "P&F SIGNALS": "SIGNAUX P&F", "P&F signals": "Signaux P&F", "P&F pattern alerts": "alertes de figures P&F",
@@ -763,6 +850,95 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "Terms": "Conditions",
     "Privacy": "Confidentialité",
+    // --- settings: the plain-language sidebar ---
+    "Aggressive": "Agressive",
+    "Algorithms crushed": "Algorithmes écrasés",
+    "Army logic": "Logique de l'armée",
+    "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "La logique de l'armée change ce que font tous vos bots, en direct. L'ennemi adapte la sienne — adaptez la vôtre.",
+    "Balanced": "Équilibrée",
+    "Bankroll": "Cagnotte",
+    "Bet": "Mise",
+    "Blackjack — pays 3 to 2": "Blackjack — paie 3 contre 2",
+    "Bust at {n} — you lose": "Vous sautez à {n} — perdu",
+    "Buy back in": "Recharger les jetons",
+    "Capital": "Capital",
+    "Capital regenerates on its own — spend it to deploy bots that march and fight without you. Destroy the enemy server to win.": "Le capital se régénère tout seul — dépensez-le pour déployer des bots qui avancent et combattent sans vous. Détruisez le serveur ennemi pour gagner.",
+    "Day-Trader": "Day-trader",
+    "Deal": "Distribuer",
+    "Dealer": "Croupier",
+    "Dealer busts at {n} — you win": "Le croupier saute à {n} — gagné",
+    "Defensive": "Défensive",
+    "Deploy": "Déployer",
+    "Enemy server": "Serveur ennemi",
+    "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Approchez-vous de 21 plus que le croupier sans dépasser. Les figures valent 10 ; l'as vaut 11, sauf s'il vous fait sauter, auquel cas il vaut 1.",
+    "Hand settled": "Main réglée",
+    "Hit": "Tirer",
+    "Index-Fund": "Fonds indiciel",
+    "Lower the bet": "Baisser la mise",
+    "Market dominated": "Marché dominé",
+    "New hand": "Nouvelle main",
+    "Place your bet": "Faites vos jeux",
+    "Push at {n} — your bet comes back": "Égalité à {n} — votre mise revient",
+    "Raise the bet": "Augmenter la mise",
+    "Rematch": "Revanche",
+    "Restart": "Recommencer",
+    "Sniper": "Tireur d'élite",
+    "Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers.": "Les tireurs d'élite fondent les fonds indiciels, les fonds indiciels encaissent les day-traders, les day-traders submergent les tireurs d'élite.",
+    "Stand": "Rester",
+    "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "Le croupier tire jusqu'à 17 puis reste. Un 21 en deux cartes est un blackjack et paie 3 contre 2.",
+    "The enemy overran your server.": "L'ennemi a submergé votre serveur.",
+    "You": "Vous",
+    "You lose, {a} against {b}": "Perdu, {a} contre {b}",
+    "You win, {a} against {b}": "Gagné, {a} contre {b}",
+    "Your bots took the enemy server.": "Vos bots ont pris le serveur ennemi.",
+    "Your server": "Votre serveur",
+    "engage nearest, then advance": "engager le plus proche, puis avancer",
+    "fast, cheap, fragile — swarm and rush": "rapide, bon marché, fragile — en essaim, à la charge",
+    "hand {n} · dealer stands on 17": "main {n} · le croupier reste à 17",
+    "hold your line, counter-punch": "tenir la ligne, contre-attaquer",
+    "long range, high burst — melts tanks, dies fast": "longue portée, gros dégâts — fond les tanks, meurt vite",
+    "push the enemy server": "foncer sur le serveur ennemi",
+    "spend it to deploy": "à dépenser pour déployer",
+    "tanky, slow — soaks damage, holds the line": "résistant, lent — encaisse et tient la ligne",
+    "{n} bots": "{n} bots",
+    // --- settings: the plain-language sidebar ---
+    "21 against the dealer, with a chip bankroll.": "21 contre le croupier, avec une cagnotte de jetons.",
+    "A trading-floor RTS: script bot armies in real time.": "Un RTS de salle des marchés : programmez des armées de bots en temps réel.",
+    "Algorithm Wars": "Guerre des algorithmes",
+    "Battlefield": "Champ de bataille",
+    "Bull or Bear": "Haussier ou baissier",
+    "Bulls vs Bears Chess": "Échecs : taureaux contre ours",
+    "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Les graphiques, les actualités, les jeux, le streaming et le calendrier fonctionnent — mais le desk ne peut pas répondre tant que vous n'en ajoutez pas une.",
+    "Close games": "Fermer les jeux",
+    "Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.": "Le mode démo fonctionne sans rien, et le desk IA, les cours en direct, le streaming et la vidéo s'activent d'eux-mêmes quand ce serveur les fournit — aucune clé à coller.",
+    "Eight short lessons on stocks, prices and P&L.": "Huit courtes leçons sur les actions, les cours et le résultat.",
+    "Game room": "Salle de jeux",
+    "I'll spotlight each part of the screen, step by step.": "Je mettrai en lumière chaque partie de l'écran, étape par étape.",
+    "Market Blackjack": "Blackjack du marché",
+    "Match companies to their tickers.": "Reliez chaque société à son symbole.",
+    "No AI key set up yet.": "Aucune clé IA pour l'instant.",
+    "No account needed": "Aucun compte requis",
+    "No setup required.": "Aucune configuration.",
+    "Play demo": "Lancer la démo",
+    "Read a headline, call it up or down.": "Lisez un titre, dites si ça monte ou descend.",
+    "Replay anytime from Settings → Getting started": "À revoir quand vous voulez depuis Réglages → Premiers pas",
+    "Set it up": "La configurer",
+    "Set it up (keys & options)": "La configurer (clés et options)",
+    "Setup guide": "Guide de configuration",
+    "Show missions": "Voir les missions",
+    "Sit back — I'll chart a stock, ask a question, ring the bell.": "Installez-vous — je trace un graphique, pose une question, sonne la cloche.",
+    "Six hands-on tasks that check off as you do them.": "Six tâches pratiques qui se cochent au fur et à mesure.",
+    "Skip": "Passer",
+    "Start tour": "Démarrer la visite",
+    "Stock School": "École de la bourse",
+    "Take the guided tour": "Faire la visite guidée",
+    "Ticker Match": "Associez les tickers",
+    "Try the missions": "Essayer les missions",
+    "Two-player chess: Bulls against Bears.": "Échecs à deux : taureaux contre ours.",
+    "Watch me demo it": "Regarder la démo",
+    "What each key does and where to get it.": "Ce que fait chaque clé et où l'obtenir.",
+    "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "Votre desk de marché IA — un présentateur animé qui trace des graphiques, répond à voix haute, lit les actualités et passe même des bandes-annonces. Choisissez comment l'apprendre :",
+    "games": "jeux",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -879,7 +1055,6 @@ const I18N = {
     "AI desk": "KI-Pult", "ready": "bereit", "Voice": "Stimme", "browser": "Browser",
     "Live quotes": "Live-Kurse", "live": "live", "demo": "Demo", "Real videos": "Echte Videos",
     "on": "an", "optional": "optional", "Streaming": "Streaming", "Calendar": "Kalender", "built-in": "integriert", "Meetings": "Meetings",
-    "skip — I'll explore on my own": "überspringen — ich erkunde selbst",
     // DATA tab
  "breaking news": "Eilmeldungen",
     "P&F SIGNALS": "P&F-SIGNALE", "P&F signals": "P&F-Signale", "P&F pattern alerts": "P&F-Muster-Benachrichtigungen",
@@ -1089,6 +1264,95 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "Terms": "Bedingungen",
     "Privacy": "Datenschutz",
+    // --- settings: the plain-language sidebar ---
+    "Aggressive": "Aggressiv",
+    "Algorithms crushed": "Algorithmen zerschlagen",
+    "Army logic": "Armee-Logik",
+    "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "Die Armee-Logik ändert live, was jeder deiner Bots tut. Der Gegner passt seine an — also passe deine an.",
+    "Balanced": "Ausgewogen",
+    "Bankroll": "Guthaben",
+    "Bet": "Einsatz",
+    "Blackjack — pays 3 to 2": "Blackjack — zahlt 3 zu 2",
+    "Bust at {n} — you lose": "Überkauft mit {n} — verloren",
+    "Buy back in": "Chips nachkaufen",
+    "Capital": "Kapital",
+    "Capital regenerates on its own — spend it to deploy bots that march and fight without you. Destroy the enemy server to win.": "Kapital wächst von selbst nach — gib es aus, um Bots auszuspielen, die ohne dich marschieren und kämpfen. Zerstöre den gegnerischen Server, um zu gewinnen.",
+    "Day-Trader": "Daytrader",
+    "Deal": "Geben",
+    "Dealer": "Geber",
+    "Dealer busts at {n} — you win": "Geber überkauft mit {n} — gewonnen",
+    "Defensive": "Defensiv",
+    "Deploy": "Ausspielen",
+    "Enemy server": "Gegnerischer Server",
+    "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Komm näher an 21 als der Geber, ohne zu überkaufen. Bildkarten zählen 10; ein Ass zählt 11, außer das würde dich überkaufen — dann 1.",
+    "Hand settled": "Hand abgerechnet",
+    "Hit": "Karte",
+    "Index-Fund": "Indexfonds",
+    "Lower the bet": "Einsatz senken",
+    "Market dominated": "Markt beherrscht",
+    "New hand": "Neue Hand",
+    "Place your bet": "Setz deinen Einsatz",
+    "Push at {n} — your bet comes back": "Unentschieden bei {n} — Einsatz zurück",
+    "Raise the bet": "Einsatz erhöhen",
+    "Rematch": "Revanche",
+    "Restart": "Neu starten",
+    "Sniper": "Scharfschütze",
+    "Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers.": "Scharfschützen schmelzen Indexfonds, Indexfonds stecken Daytrader weg, Daytrader überrennen Scharfschützen.",
+    "Stand": "Halten",
+    "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "Der Geber zieht bis 17 und hält dann. Ein 21 aus zwei Karten ist ein Blackjack und zahlt 3 zu 2.",
+    "The enemy overran your server.": "Der Gegner hat deinen Server überrannt.",
+    "You": "Du",
+    "You lose, {a} against {b}": "Verloren, {a} gegen {b}",
+    "You win, {a} against {b}": "Gewonnen, {a} gegen {b}",
+    "Your bots took the enemy server.": "Deine Bots haben den gegnerischen Server genommen.",
+    "Your server": "Dein Server",
+    "engage nearest, then advance": "nächsten Gegner binden, dann vorrücken",
+    "fast, cheap, fragile — swarm and rush": "schnell, billig, zerbrechlich — im Schwarm überrennen",
+    "hand {n} · dealer stands on 17": "Hand {n} · Geber hält bei 17",
+    "hold your line, counter-punch": "Linie halten, kontern",
+    "long range, high burst — melts tanks, dies fast": "große Reichweite, hoher Schaden — schmilzt Tanks, stirbt schnell",
+    "push the enemy server": "auf den gegnerischen Server vorstoßen",
+    "spend it to deploy": "zum Ausspielen ausgeben",
+    "tanky, slow — soaks damage, holds the line": "zäh, langsam — steckt Schaden weg, hält die Linie",
+    "{n} bots": "{n} Bots",
+    // --- settings: the plain-language sidebar ---
+    "21 against the dealer, with a chip bankroll.": "21 gegen den Geber, mit einem Chip-Guthaben.",
+    "A trading-floor RTS: script bot armies in real time.": "Ein Trading-Floor-RTS: Bot-Armeen in Echtzeit programmieren.",
+    "Algorithm Wars": "Algorithmen-Krieg",
+    "Battlefield": "Schlachtfeld",
+    "Bull or Bear": "Bulle oder Bär",
+    "Bulls vs Bears Chess": "Schach: Bullen gegen Bären",
+    "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Charts, Nachrichten, Spiele, Streaming und Kalender funktionieren — aber das Desk kann erst antworten, wenn du einen hinzufügst.",
+    "Close games": "Spiele schließen",
+    "Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.": "Der Demo-Modus läuft ganz ohne alles, und KI-Desk, Live-Kurse, Streaming und Video schalten sich von selbst ein, sobald dieser Server sie bereitstellt — es gibt keine Schlüssel zum Einfügen.",
+    "Eight short lessons on stocks, prices and P&L.": "Acht kurze Lektionen zu Aktien, Kursen und Ergebnis.",
+    "Game room": "Spieleraum",
+    "I'll spotlight each part of the screen, step by step.": "Ich hebe jeden Teil des Bildschirms hervor, Schritt für Schritt.",
+    "Market Blackjack": "Markt-Blackjack",
+    "Match companies to their tickers.": "Ordne jedem Unternehmen sein Kürzel zu.",
+    "No AI key set up yet.": "Noch kein KI-Schlüssel eingerichtet.",
+    "No account needed": "Kein Konto nötig",
+    "No setup required.": "Keine Einrichtung nötig.",
+    "Play demo": "Demo abspielen",
+    "Read a headline, call it up or down.": "Lies eine Schlagzeile und sag: rauf oder runter.",
+    "Replay anytime from Settings → Getting started": "Jederzeit erneut unter Einstellungen → Erste Schritte",
+    "Set it up": "Einrichten",
+    "Set it up (keys & options)": "Einrichten (Schlüssel & Optionen)",
+    "Setup guide": "Einrichtungshilfe",
+    "Show missions": "Missionen zeigen",
+    "Sit back — I'll chart a stock, ask a question, ring the bell.": "Lehn dich zurück — ich zeichne einen Chart, stelle eine Frage und läute die Glocke.",
+    "Six hands-on tasks that check off as you do them.": "Sechs praktische Aufgaben, die sich beim Erledigen abhaken.",
+    "Skip": "Überspringen",
+    "Start tour": "Tour starten",
+    "Stock School": "Börsenschule",
+    "Take the guided tour": "Geführte Tour machen",
+    "Ticker Match": "Ticker zuordnen",
+    "Try the missions": "Missionen ausprobieren",
+    "Two-player chess: Bulls against Bears.": "Schach zu zweit: Bullen gegen Bären.",
+    "Watch me demo it": "Demo ansehen",
+    "What each key does and where to get it.": "Was jeder Schlüssel tut und wo du ihn bekommst.",
+    "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "Dein KI-Marktdesk — ein animierter Moderator, der Charts zeichnet, laut antwortet, die Nachrichten liest und sogar Trailer abspielt. Wähle, wie du es lernen willst:",
+    "games": "Spiele",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1204,7 +1468,6 @@ const I18N = {
     "AI desk": "Mesa de IA", "ready": "pronto", "Voice": "Voz", "browser": "navegador",
     "Live quotes": "Cotações ao vivo", "live": "ao vivo", "demo": "demo", "Real videos": "Vídeos reais",
     "on": "ligado", "optional": "opcional", "Streaming": "Streaming", "Calendar": "Calendário", "built-in": "integrado", "Meetings": "Reuniões",
-    "skip — I'll explore on my own": "ignorar — vou explorar sozinho",
     // DATA tab
  "breaking news": "última hora",
     "P&F SIGNALS": "SINAIS P&F", "P&F signals": "Sinais P&F", "P&F pattern alerts": "alertas de padrões P&F",
@@ -1414,6 +1677,95 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "Terms": "Termos",
     "Privacy": "Privacidade",
+    // --- settings: the plain-language sidebar ---
+    "Aggressive": "Agressiva",
+    "Algorithms crushed": "Algoritmos esmagados",
+    "Army logic": "Lógica do exército",
+    "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "A lógica do exército muda o que todos os teus bots fazem, ao vivo. O inimigo adapta a dele — adapta a tua.",
+    "Balanced": "Equilibrada",
+    "Bankroll": "Fundos",
+    "Bet": "Aposta",
+    "Blackjack — pays 3 to 2": "Blackjack — paga 3 para 2",
+    "Bust at {n} — you lose": "Rebentaste com {n} — perdes",
+    "Buy back in": "Recarregar fichas",
+    "Capital": "Capital",
+    "Capital regenerates on its own — spend it to deploy bots that march and fight without you. Destroy the enemy server to win.": "O capital regenera-se sozinho — gasta-o para destacar bots que marcham e lutam sem ti. Destrói o servidor inimigo para ganhar.",
+    "Day-Trader": "Day-trader",
+    "Deal": "Distribuir",
+    "Dealer": "Crupiê",
+    "Dealer busts at {n} — you win": "O crupiê rebenta com {n} — ganhas",
+    "Defensive": "Defensiva",
+    "Deploy": "Destacar",
+    "Enemy server": "Servidor inimigo",
+    "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Chega mais perto de 21 do que o crupiê sem passar. As figuras valem 10; o ás vale 11, a não ser que te faça rebentar, e então vale 1.",
+    "Hand settled": "Mão resolvida",
+    "Hit": "Pedir",
+    "Index-Fund": "Fundo de índice",
+    "Lower the bet": "Baixar a aposta",
+    "Market dominated": "Mercado dominado",
+    "New hand": "Nova mão",
+    "Place your bet": "Faz a tua aposta",
+    "Push at {n} — your bet comes back": "Empate em {n} — recuperas a aposta",
+    "Raise the bet": "Aumentar a aposta",
+    "Rematch": "Desforra",
+    "Restart": "Reiniciar",
+    "Sniper": "Franco-atirador",
+    "Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers.": "Os franco-atiradores derretem os fundos de índice, os fundos de índice absorvem os day-traders e os day-traders enxameiam os franco-atiradores.",
+    "Stand": "Parar",
+    "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "O crupiê pede até 17 e para. Um 21 com duas cartas é blackjack e paga 3 para 2.",
+    "The enemy overran your server.": "O inimigo arrasou o teu servidor.",
+    "You": "Tu",
+    "You lose, {a} against {b}": "Perdes, {a} contra {b}",
+    "You win, {a} against {b}": "Ganhas, {a} contra {b}",
+    "Your bots took the enemy server.": "Os teus bots tomaram o servidor inimigo.",
+    "Your server": "O teu servidor",
+    "engage nearest, then advance": "ataca o mais próximo e depois avança",
+    "fast, cheap, fragile — swarm and rush": "rápido, barato e frágil — enxame e investida",
+    "hand {n} · dealer stands on 17": "mão {n} · o crupiê para nos 17",
+    "hold your line, counter-punch": "segura a linha e contra-ataca",
+    "long range, high burst — melts tanks, dies fast": "longo alcance e muito dano — derrete tanques, morre depressa",
+    "push the enemy server": "avança para o servidor inimigo",
+    "spend it to deploy": "gasta-o para destacar",
+    "tanky, slow — soaks damage, holds the line": "resistente e lento — absorve dano e segura a linha",
+    "{n} bots": "{n} bots",
+    // --- settings: the plain-language sidebar ---
+    "21 against the dealer, with a chip bankroll.": "21 contra o crupiê, com fundos em fichas.",
+    "A trading-floor RTS: script bot armies in real time.": "Um RTS de pregão: programa exércitos de bots em tempo real.",
+    "Algorithm Wars": "Guerra de algoritmos",
+    "Battlefield": "Campo de batalha",
+    "Bull or Bear": "Alta ou baixa",
+    "Bulls vs Bears Chess": "Xadrez: touros contra ursos",
+    "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Os gráficos, as notícias, os jogos, o streaming e o calendário funcionam — mas a mesa não consegue responder até adicionares uma.",
+    "Close games": "Fechar os jogos",
+    "Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.": "O modo demo funciona sem nada, e a mesa de IA, os preços em direto, o streaming e o vídeo ligam-se sozinhos quando este servidor os fornece — não há chaves para colar.",
+    "Eight short lessons on stocks, prices and P&L.": "Oito lições curtas sobre ações, preços e resultado.",
+    "Game room": "Sala de jogos",
+    "I'll spotlight each part of the screen, step by step.": "Vou destacar cada parte do ecrã, passo a passo.",
+    "Market Blackjack": "Blackjack do mercado",
+    "Match companies to their tickers.": "Liga cada empresa ao seu símbolo.",
+    "No AI key set up yet.": "Ainda não há chave de IA.",
+    "No account needed": "Não é preciso conta",
+    "No setup required.": "Nada para configurar.",
+    "Play demo": "Reproduzir demo",
+    "Read a headline, call it up or down.": "Lê um título e diz se sobe ou desce.",
+    "Replay anytime from Settings → Getting started": "Podes repetir em Definições → Primeiros passos",
+    "Set it up": "Configurar",
+    "Set it up (keys & options)": "Configurar (chaves e opções)",
+    "Setup guide": "Guia de configuração",
+    "Show missions": "Ver missões",
+    "Sit back — I'll chart a stock, ask a question, ring the bell.": "Descontrai — faço um gráfico, faço uma pergunta e toco o sino.",
+    "Six hands-on tasks that check off as you do them.": "Seis tarefas práticas que se marcam à medida que as fazes.",
+    "Skip": "Ignorar",
+    "Start tour": "Começar visita",
+    "Stock School": "Escola da bolsa",
+    "Take the guided tour": "Fazer a visita guiada",
+    "Ticker Match": "Associa os tickers",
+    "Try the missions": "Experimentar as missões",
+    "Two-player chess: Bulls against Bears.": "Xadrez a dois: touros contra ursos.",
+    "Watch me demo it": "Ver a demonstração",
+    "What each key does and where to get it.": "O que faz cada chave e onde a obter.",
+    "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "A tua mesa de mercados com IA — um pivô animado que faz gráficos, responde em voz alta, lê as notícias e até passa trailers. Escolhe como queres aprender:",
+    "games": "jogos",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -1529,7 +1881,6 @@ const I18N = {
     "AI desk": "Postazione IA", "ready": "pronto", "Voice": "Voce", "browser": "browser",
     "Live quotes": "Quotazioni in diretta", "live": "in diretta", "demo": "demo", "Real videos": "Video reali",
     "on": "attivo", "optional": "opzionale", "Streaming": "Streaming", "Calendar": "Calendario", "built-in": "integrato", "Meetings": "Riunioni",
-    "skip — I'll explore on my own": "salta — esplorerò da solo",
     // DATA tab
  "breaking news": "ultima ora",
     "P&F SIGNALS": "SEGNALI P&F", "P&F signals": "Segnali P&F", "P&F pattern alerts": "avvisi di pattern P&F",
@@ -1739,6 +2090,95 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "Terms": "Termini",
     "Privacy": "Privacy",
+    // --- settings: the plain-language sidebar ---
+    "Aggressive": "Aggressiva",
+    "Algorithms crushed": "Algoritmi schiacciati",
+    "Army logic": "Logica dell'esercito",
+    "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "La logica dell'esercito cambia dal vivo ciò che fa ogni tuo bot. Il nemico adatta la sua — adatta la tua.",
+    "Balanced": "Equilibrata",
+    "Bankroll": "Fondi",
+    "Bet": "Puntata",
+    "Blackjack — pays 3 to 2": "Blackjack — paga 3 a 2",
+    "Bust at {n} — you lose": "Sballi a {n} — hai perso",
+    "Buy back in": "Ricompra fiches",
+    "Capital": "Capitale",
+    "Capital regenerates on its own — spend it to deploy bots that march and fight without you. Destroy the enemy server to win.": "Il capitale si rigenera da solo — spendilo per schierare bot che avanzano e combattono senza di te. Distruggi il server nemico per vincere.",
+    "Day-Trader": "Day-trader",
+    "Deal": "Distribuisci",
+    "Dealer": "Banco",
+    "Dealer busts at {n} — you win": "Il banco sballa a {n} — hai vinto",
+    "Defensive": "Difensiva",
+    "Deploy": "Schiera",
+    "Enemy server": "Server nemico",
+    "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Avvicinati a 21 più del banco senza sballare. Le figure valgono 10; l'asso vale 11, a meno che non ti faccia sballare, e allora vale 1.",
+    "Hand settled": "Mano conclusa",
+    "Hit": "Carta",
+    "Index-Fund": "Fondo indicizzato",
+    "Lower the bet": "Riduci la puntata",
+    "Market dominated": "Mercato dominato",
+    "New hand": "Nuova mano",
+    "Place your bet": "Fai la tua puntata",
+    "Push at {n} — your bet comes back": "Pareggio a {n} — la puntata torna",
+    "Raise the bet": "Aumenta la puntata",
+    "Rematch": "Rivincita",
+    "Restart": "Ricomincia",
+    "Sniper": "Cecchino",
+    "Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers.": "I cecchini sciolgono i fondi indicizzati, i fondi indicizzati assorbono i day-trader, i day-trader sciamano sui cecchini.",
+    "Stand": "Stare",
+    "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "Il banco chiede fino a 17 e poi sta. Un 21 con due carte è blackjack e paga 3 a 2.",
+    "The enemy overran your server.": "Il nemico ha travolto il tuo server.",
+    "You": "Tu",
+    "You lose, {a} against {b}": "Hai perso, {a} contro {b}",
+    "You win, {a} against {b}": "Hai vinto, {a} contro {b}",
+    "Your bots took the enemy server.": "I tuoi bot hanno preso il server nemico.",
+    "Your server": "Il tuo server",
+    "engage nearest, then advance": "ingaggia il più vicino, poi avanza",
+    "fast, cheap, fragile — swarm and rush": "veloce, economico, fragile — sciame e carica",
+    "hand {n} · dealer stands on 17": "mano {n} · il banco sta a 17",
+    "hold your line, counter-punch": "tieni la linea e contrattacca",
+    "long range, high burst — melts tanks, dies fast": "lunga gittata, danno alto — scioglie i tank, muore in fretta",
+    "push the enemy server": "punta al server nemico",
+    "spend it to deploy": "spendilo per schierare",
+    "tanky, slow — soaks damage, holds the line": "resistente, lento — assorbe danni e tiene la linea",
+    "{n} bots": "{n} bot",
+    // --- settings: the plain-language sidebar ---
+    "21 against the dealer, with a chip bankroll.": "21 contro il banco, con fondi in fiches.",
+    "A trading-floor RTS: script bot armies in real time.": "Un RTS da sala mercati: programma eserciti di bot in tempo reale.",
+    "Algorithm Wars": "Guerra degli algoritmi",
+    "Battlefield": "Campo di battaglia",
+    "Bull or Bear": "Toro o orso",
+    "Bulls vs Bears Chess": "Scacchi: tori contro orsi",
+    "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Grafici, notizie, giochi, streaming e calendario funzionano — ma la postazione non può rispondere finché non ne aggiungi una.",
+    "Close games": "Chiudi i giochi",
+    "Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.": "La modalità demo funziona senza nulla, e la postazione IA, i prezzi in tempo reale, lo streaming e i video si attivano da soli quando questo server li fornisce — non c'è nessuna chiave da incollare.",
+    "Eight short lessons on stocks, prices and P&L.": "Otto brevi lezioni su azioni, prezzi e risultato.",
+    "Game room": "Sala giochi",
+    "I'll spotlight each part of the screen, step by step.": "Metterò in evidenza ogni parte dello schermo, passo dopo passo.",
+    "Market Blackjack": "Blackjack di mercato",
+    "Match companies to their tickers.": "Collega ogni società al suo simbolo.",
+    "No AI key set up yet.": "Nessuna chiave IA configurata.",
+    "No account needed": "Non serve un account",
+    "No setup required.": "Nessuna configurazione.",
+    "Play demo": "Riproduci la demo",
+    "Read a headline, call it up or down.": "Leggi un titolo e di' se sale o scende.",
+    "Replay anytime from Settings → Getting started": "Puoi rivederla da Impostazioni → Primi passi",
+    "Set it up": "Configurala",
+    "Set it up (keys & options)": "Configurala (chiavi e opzioni)",
+    "Setup guide": "Guida alla configurazione",
+    "Show missions": "Mostra le missioni",
+    "Sit back — I'll chart a stock, ask a question, ring the bell.": "Rilassati — traccio un grafico, faccio una domanda e suono la campana.",
+    "Six hands-on tasks that check off as you do them.": "Sei compiti pratici che si spuntano man mano.",
+    "Skip": "Salta",
+    "Start tour": "Avvia il tour",
+    "Stock School": "Scuola di borsa",
+    "Take the guided tour": "Fai il tour guidato",
+    "Ticker Match": "Abbina i ticker",
+    "Try the missions": "Prova le missioni",
+    "Two-player chess: Bulls against Bears.": "Scacchi in due: tori contro orsi.",
+    "Watch me demo it": "Guarda la demo",
+    "What each key does and where to get it.": "Cosa fa ogni chiave e dove ottenerla.",
+    "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "La tua postazione di mercato con IA — un conduttore animato che traccia grafici, risponde ad alta voce, legge le notizie e manda pure i trailer. Scegli come impararla:",
+    "games": "giochi",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -2649,6 +3089,71 @@ function ChessGame({ onCheer, onWin, sfx }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ============================================================
+//  AnchorRoster — previous, current, next, and the step between them.
+//
+//  A picker that rewrites ALL THREE of its own labels on every click is a hard
+//  thing to read. Clicking the left face swapped the whole row instantly, so
+//  the one fact the control exists to give — which way the roster just moved —
+//  was the fact it threw away.
+//
+//  Two changes fix that, and both are motion rather than copy:
+//
+//   1. THE CENTRE IS THE CHOICE. It sits at full size and full opacity; the
+//      shoulders sit back at 80% and 72%. So the row reads as one anchor with
+//      two offers instead of three equal circles with a ring on one. Because
+//      the slots are keyed by POSITION, React keeps each DOM node across a
+//      step — the face you picked grows into the centre while the one you left
+//      shrinks to a shoulder, on a transition it gets for free.
+//
+//   2. THE ROW TRAVELS. A step is worth 12px in the direction the roster
+//      moved, applied with transitions OFF and released on the next frame.
+//      Same trick as the chess board's flying piece: paint the new state where
+//      the old one was, then ease it home. 12px and not a full slot because a
+//      transform does not reserve space — a real slot's worth would swing the
+//      row out over the card's padding on its way back.
+// ============================================================
+function AnchorRoster({ characterId, onPick }) {
+  const { t } = useI18n();
+  const [shift, setShift] = useState(0);   // -1 | 0 | +1 — the offset to ease back from
+  useLayoutEffect(() => {
+    if (!shift) return;
+    const id = requestAnimationFrame(() => setShift(0));
+    return () => cancelAnimationFrame(id);
+  }, [shift]);
+
+  const i = CHARACTERS.findIndex(c => c.id === characterId);
+  const at = (step) => CHARACTERS[(i + step + CHARACTERS.length) % CHARACTERS.length];
+  // Picking the previous anchor moves every face one slot to the RIGHT, so the
+  // row starts 12px left of where it lands. Picking the next one mirrors that.
+  const pick = (dir, id) => { if (id === characterId) return; setShift(dir); onPick(id); };
+
+  return (
+    <div role="radiogroup" aria-label={t("Anchor")} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+      {[at(-1), at(0), at(1)].map((ch, k) => {
+        const on = k === 1;
+        return (
+          <button key={k} className="v-tap v-anchorstep" role="radio" aria-checked={on}
+            onClick={() => pick(k === 0 ? -1 : 1, ch.id)}
+            aria-label={on ? `${ch.name} — ${t("on the desk")}` : `${t("Switch to")} ${ch.name}`}
+            title={ch.name}
+            style={{
+              width: 44, height: 44, padding: 0, flexShrink: 0,
+              background: "transparent", border: "none", borderRadius: "50%", cursor: "pointer",
+              transform: shift ? `translateX(${shift * 12}px)` : "none",
+              transition: shift ? "none" : `transform ${MOTION.slow} ${MOTION.ease}`,
+            }}>
+            <span aria-hidden="true" className={on ? "v-anchorface is-on" : "v-anchorface"}
+              style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: on ? 700 : 600 }}>
+              {ch.name.slice(0, 2)}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -4022,22 +4527,53 @@ function ArchiveFrame({ id, title }) {
     </div>
   );
 }
-// ---- Market Blackjack: play 21 against the dealer with a chip bankroll ----
-// Its OWN component so its hooks are stable (an inline IIFE with useState would break the rules of hooks).
+// ============================================================
+//  Market Blackjack — 21 against the dealer, with a chip bankroll.
+//
+//  Its OWN component so its hooks are stable (an inline IIFE with useState
+//  would break the rules of hooks).
+//
+//  ON THE REDESIGN
+//  This screen predates the type system and set EVERYTHING in mono — its
+//  buttons, its result line, its labels — which is the exact flatness the
+//  redesign exists to undo. Sans carries the words now. Mono carries what mono
+//  is for here: money, hand totals and the hand counter.
+//
+//  Layout follows the chess room, because they are the same kind of screen: a
+//  status strip across the top, the play area on the left, and a rail on the
+//  right holding the things you do between moves. Learning one teaches the
+//  other.
+//
+//  THE CARD FACES ARE NOT UI
+//  A playing card is a printed object — white stock, black pips, red hearts
+//  and diamonds. Those four values are named below and deliberately do NOT
+//  track the palette, so a future retheme sweep does not "fix" them into the
+//  app's greys and leave the player holding slate-coloured cards.
+// ============================================================
+const BJ_FACE = { paper: "#EDEFF4", edge: "#C7CEDB", ink: "#141821", suit: "#C0392B" };
+
 function BlackjackGame({ onCheer, onWin }) {
+  const { t } = useI18n();
   const [bankroll, setBankroll] = useState(500);
   const [bet, setBet] = useState(50);
   const [deck, setDeck] = useState([]);
   const [player, setPlayer] = useState([]);
   const [dealer, setDealer] = useState([]);
   const [phase, setPhase] = useState("bet");   // bet | player | done
-  const [result, setResult] = useState(null);   // { kind:'win'|'lose'|'push', text }
+  const [result, setResult] = useState(null);  // { kind:'win'|'lose'|'push', text }
+  const [hands, setHands] = useState(1);
+  const [showRules, setShowRules] = useState(false);
+  // The payout, shown as it happens. A bankroll that simply becomes a different
+  // number tells you the hand ended but not what it was worth — so the delta
+  // floats off the total for a beat. `id` increments rather than holding a
+  // timestamp so that re-winning the same amount still replays the animation.
+  const [delta, setDelta] = useState(null);    // { n, id }
 
   const deal = () => {
     if (bet <= 0 || bet > bankroll) return;
     const d = bjDeck();
     const p = [d.pop(), d.pop()], dl = [d.pop(), d.pop()];
-    setDeck(d); setPlayer(p); setDealer(dl); setResult(null);
+    setDeck(d); setPlayer(p); setDealer(dl); setResult(null); setDelta(null);
     if (bjValue(p) === 21) resolve(p, dl, d); // natural blackjack resolves immediately
     else setPhase("player");
   };
@@ -4053,80 +4589,160 @@ function BlackjackGame({ onCheer, onWin }) {
     const d = dk.slice(), dl = dlInit.slice(), pV = bjValue(p);
     if (pV <= 21) while (bjValue(dl) < 17) dl.push(d.pop()); // dealer only plays if the player didn't bust
     const dV = bjValue(dl), pBJ = p.length === 2 && pV === 21, dBJ = dl.length === 2 && dV === 21;
-    let kind, text, delta;
-    if (pV > 21) { kind = "lose"; text = `Bust at ${pV} — you lose`; delta = -bet; }
-    else if (pBJ && !dBJ) { kind = "win"; text = "Blackjack! 🃏 (pays 3:2)"; delta = Math.round(bet * 1.5); }
-    else if (dV > 21) { kind = "win"; text = `Dealer busts at ${dV} — you win`; delta = bet; }
-    else if (pV > dV) { kind = "win"; text = `You win, ${pV} vs ${dV}`; delta = bet; }
-    else if (pV < dV) { kind = "lose"; text = `You lose, ${pV} vs ${dV}`; delta = -bet; }
-    else { kind = "push"; text = `Push at ${pV}`; delta = 0; }
+    let kind, text, amount;
+    if (pV > 21) { kind = "lose"; text = t("Bust at {n} — you lose").replace("{n}", String(pV)); amount = -bet; }
+    else if (pBJ && !dBJ) { kind = "win"; text = t("Blackjack — pays 3 to 2"); amount = Math.round(bet * 1.5); }
+    else if (dV > 21) { kind = "win"; text = t("Dealer busts at {n} — you win").replace("{n}", String(dV)); amount = bet; }
+    else if (pV > dV) { kind = "win"; text = t("You win, {a} against {b}").replace("{a}", String(pV)).replace("{b}", String(dV)); amount = bet; }
+    else if (pV < dV) { kind = "lose"; text = t("You lose, {a} against {b}").replace("{a}", String(pV)).replace("{b}", String(dV)); amount = -bet; }
+    else { kind = "push"; text = t("Push at {n} — your bet comes back").replace("{n}", String(pV)); amount = 0; }
     setDeck(d); setDealer(dl); setPhase("done"); setResult({ kind, text });
-    setBankroll(b => b + delta);
+    setBankroll(b => b + amount);
+    setDelta(prev => ({ n: amount, id: (prev?.id || 0) + 1 }));
     if (kind === "win") { onCheer?.(); if (pBJ) onWin?.(); }
   };
-  const newHand = () => { setPhase("bet"); setPlayer([]); setDealer([]); setResult(null); };
+  const newHand = () => { setPhase("bet"); setPlayer([]); setDealer([]); setResult(null); setDelta(null); setHands(n => n + 1); };
 
   const hideHole = phase === "player";                 // dealer's 2nd card stays down until the player stands
+  const broke = bankroll < 10;                         // 10 is the minimum bet, so this really is out
+
+  // ---- the table ----
   const card = (c, key, hidden, delay = 0, flip = false) => (
-    <div key={key} className={flip ? "v-flip" : "v-deal"} style={{ animationDelay: `${delay}ms`, width: 34, height: 48, borderRadius: R.xs, border: `1px solid ${hidden ? C.edgeStrong : "#C7CEDB"}`, flexShrink: 0,
-      background: hidden ? C.surfaceRaised : "#EDEFF4", color: hidden ? C.faint : (c.s === "♥" || c.s === "♦" ? "#C0392B" : "#141821"),
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontWeight: 600 }}>
-      {hidden ? <span style={{ fontSize: 18 }}>★</span> : <><span style={{ fontSize: 12 }}>{c.r}</span><span style={{ fontSize: 14 }}>{c.s}</span></>}
+    <div key={key} className={flip ? "v-flip" : "v-deal"}
+      style={{
+        animationDelay: `${delay}ms`, width: 46, height: 64, borderRadius: R.sm, flexShrink: 0,
+        border: `1px solid ${hidden ? C.edgeStrong : BJ_FACE.edge}`,
+        background: hidden ? C.surfaceRaised : BJ_FACE.paper,
+        color: hidden ? C.faint : (c.s === "♥" || c.s === "♦" ? BJ_FACE.suit : BJ_FACE.ink),
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
+        fontFamily: MONO, fontWeight: 700,
+      }}>
+      {hidden
+        // A hatched back, not a star glyph: face-down has to read as the same
+        // object seen from the other side, and a star reads as a badge.
+        ? <span aria-hidden="true" style={{ width: "70%", height: "70%", borderRadius: 4, background: `repeating-linear-gradient(45deg, ${C.edgeStrong} 0 3px, transparent 3px 6px)` }} />
+        : <><span style={{ fontSize: 15, lineHeight: 1 }}>{c.r}</span><span style={{ fontSize: 17, lineHeight: 1 }}>{c.s}</span></>}
     </div>
   );
-  const btn = (label, on, kind = "primary") => (
-    <button onClick={on} style={kind === "primary"
-      ? { background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 600, fontSize: 12, padding: "9px 18px", cursor: "pointer" }
-      : { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, padding: "9px 14px", cursor: "pointer" }}>{label}</button>
+  // An empty seat is drawn, not left blank — otherwise the table before the
+  // first deal is an unexplained gap rather than a table waiting for cards.
+  const slot = (k) => <div key={k} aria-hidden="true" style={{ width: 46, height: 64, borderRadius: R.sm, border: `1px dashed ${C.edge}`, flexShrink: 0 }} />;
+  const zone = (label, cards, value, tone) => (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 8 }}>
+        <span style={{ ...TYPE.eyebrowSm, color: C.faint }}>{label}</span>
+        {value != null && <span style={chip(tone)}>{value}</span>}
+      </div>
+      <div style={{ display: "flex", gap: 7, minHeight: 64 }}>{cards.length ? cards : [slot("a"), slot("b")]}</div>
+    </div>
   );
-  const resultCol = result ? (result.kind === "win" ? C.up : result.kind === "lose" ? C.down : C.text) : C.muted;
-  const broke = bankroll < 10;
+
+  // ---- the rail ----
+  const railLabel = { ...TYPE.eyebrowSm, color: C.faint };
+  const railCard = { background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: 14 };
+  const stepBtn = (label, on, off) => (
+    <button onClick={on} disabled={off} aria-label={label === "+" ? t("Raise the bet") : t("Lower the bet")} className="v-tap"
+      style={{ ...button("ghost", "sm", { disabled: off }), width: 38, height: 34, padding: 0, fontSize: 15, fontWeight: 600 }}>{label}</button>
+  );
+
+  const statusDot = phase === "done"
+    ? (result?.kind === "win" ? C.up : result?.kind === "lose" ? C.down : C.warn)
+    : phase === "player" ? C.accentText : C.faint;
+  const statusLine = phase === "bet" ? t("Place your bet") : phase === "player" ? t("Your move") : t("Hand settled");
+
   return (
-    <div style={{ padding: 14, fontFamily: MONO, display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
-        <span style={{ color: C.text }}>💰 Bankroll: <b style={{ color: broke ? C.down : C.textStrong }}>${bankroll}</b></span>
-        <span style={{ color: C.muted }}>bet ${bet}</span>
+    <div style={{ fontFamily: SANS }}>
+      {/* The house rule and where you are in the session. Both belong on the
+          game, not in the games shell's header — that bar cannot see this
+          component's state. */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "12px 20px", borderBottom: `1px solid ${C.edge}` }}>
+        <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>
+          {t("hand {n} · dealer stands on 17").replace("{n}", String(hands))}
+        </span>
+        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+          <span aria-hidden="true" className={phase === "player" ? "v-pulse" : undefined}
+            style={{ width: 8, height: 8, borderRadius: "50%", background: statusDot, flex: "0 0 auto" }} />
+          <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 13.5, color: C.text }}>{statusLine}</span>
+        </span>
       </div>
 
-      {/* dealer */}
-      <div>
-        <div style={{ fontSize: 10, letterSpacing: "-0.010em", color: C.faint, marginBottom: 4 }}>DEALER {phase !== "bet" && !hideHole ? `· ${bjValue(dealer)}` : ""}</div>
-        <div style={{ display: "flex", gap: 6, minHeight: 48 }}>
-          {dealer.map((c, i) => card(c, `d${i}${hideHole && i === 1 ? "-back" : ""}`, hideHole && i === 1, i * 90, i === 1 && !hideHole))}
+      <div className="v-bjroom" style={{ display: "flex", gap: 24, alignItems: "flex-start", padding: 20, flexWrap: "wrap" }}>
+        {/* ---- table ---- */}
+        <div style={{ flex: "1 1 300px", minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
+          {zone(t("Dealer"),
+            dealer.map((c, i) => card(c, `d${i}${hideHole && i === 1 ? "-back" : ""}`, hideHole && i === 1, i * 90, i === 1 && !hideHole)),
+            phase !== "bet" && !hideHole ? bjValue(dealer) : null, "neutral")}
+
+          <div style={{ height: 1, background: C.edge }} />
+
+          {zone(t("You"),
+            player.map((c, i) => card(c, `p${i}`, false, i * 90)),
+            player.length ? bjValue(player) : null,
+            bjValue(player) > 21 ? "down" : bjValue(player) === 21 ? "up" : "neutral")}
+
+          {result && (
+            <div role="status" className="v-settle" style={{
+              padding: "11px 14px", borderRadius: R.md,
+              background: result.kind === "win" ? C.upSoft : result.kind === "lose" ? C.downSoft : C.surfaceRaised,
+              border: `1px solid ${result.kind === "win" ? alpha(C.up, 0.34) : result.kind === "lose" ? C.downEdge : C.edge}`,
+              color: result.kind === "win" ? C.up : result.kind === "lose" ? C.down : C.text,
+              fontFamily: SANS, fontWeight: 600, fontSize: 13.5,
+            }}>{result.text}</div>
+          )}
+        </div>
+
+        {/* ---- rail ---- */}
+        <div style={{ flex: "1 1 210px", minWidth: 0, maxWidth: 280, display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={railCard}>
+            <div style={railLabel}>{t("Bankroll")}</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 9, marginTop: 6 }}>
+              <span style={{ ...TYPE.numLg, fontSize: 28, color: broke ? C.down : C.text }}>${bankroll}</span>
+              {delta && delta.n !== 0 && (
+                <span key={delta.id} className="v-chipfly" style={{ ...TYPE.numSm, fontWeight: 700, color: delta.n > 0 ? C.up : C.down }}>
+                  {delta.n > 0 ? `+$${delta.n}` : `−$${Math.abs(delta.n)}`}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <div style={railLabel}>{t("Bet")}</div>
+            {/* Locked once the cards are out — you cannot raise a bet you are
+                already playing, and a stepper that silently ignores you is
+                worse than one that says it is closed. */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+              {stepBtn("−", () => setBet(b => Math.max(10, b - 10)), phase !== "bet" || bet <= 10)}
+              <span style={{ ...TYPE.num, flex: 1, textAlign: "center", color: phase === "bet" ? C.text : C.muted }}>${bet}</span>
+              {stepBtn("+", () => setBet(b => Math.min(bankroll, b + 10)), phase !== "bet" || bet >= bankroll)}
+            </div>
+          </div>
+
+          {/* One primary action per phase — the redesign's accent rule. Stand
+              is the alternative to Hit, not a second headline. */}
+          <div style={{ display: "flex", gap: 8 }}>
+            {phase === "bet" && (broke
+              ? <button onClick={() => setBankroll(500)} style={{ ...button("primary", "md", { full: true }) }}>{t("Buy back in")}</button>
+              : <button onClick={deal} style={{ ...button("primary", "md", { full: true }) }}>{t("Deal")}</button>)}
+            {phase === "player" && (<>
+              <button onClick={hit} style={{ ...button("primary", "md"), flex: 1 }}>{t("Hit")}</button>
+              <button onClick={stand} style={{ ...button("ghost", "md"), flex: 1 }}>{t("Stand")}</button>
+            </>)}
+            {phase === "done" && (broke
+              ? <button onClick={() => setBankroll(500)} style={{ ...button("primary", "md", { full: true }) }}>{t("Buy back in")}</button>
+              : <button onClick={newHand} style={{ ...button("primary", "md", { full: true }) }}>{t("New hand")}</button>)}
+          </div>
+
+          <button onClick={() => setShowRules(v => !v)} aria-expanded={showRules}
+            style={{ ...button("solid", "md", { full: true }) }}>{t("How to play")}</button>
+
+          {showRules && (
+            <div style={{ ...railCard, fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: C.muted, padding: 12 }}>
+              {t("Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.")}
+              {" "}{t("The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.")}
+            </div>
+          )}
         </div>
       </div>
-      {/* player */}
-      <div>
-        <div style={{ fontSize: 10, letterSpacing: "-0.010em", color: C.faint, marginBottom: 4 }}>YOU {player.length ? `· ${bjValue(player)}` : ""}</div>
-        <div style={{ display: "flex", gap: 6, minHeight: 48 }}>
-          {player.map((c, i) => card(c, `p${i}`, false, i * 90))}
-        </div>
-      </div>
-
-      {result && <div className="v-settle" style={{ fontSize: 13, fontWeight: 600, color: resultCol }}>{result.text}</div>}
-
-      {/* controls */}
-      {phase === "bet" && (
-        broke ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 12, color: C.down }}>Out of chips!</span>{btn("Buy in ($500)", () => setBankroll(500))}
-          </div>
-        ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            {btn("−", () => setBet(b => Math.max(10, b - 10)), "ghost")}
-            <span style={{ fontSize: 12, color: C.text, minWidth: 44, textAlign: "center" }}>${bet}</span>
-            {btn("＋", () => setBet(b => Math.min(bankroll, b + 10)), "ghost")}
-            {btn("Deal", deal)}
-          </div>
-        )
-      )}
-      {phase === "player" && (
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{btn("Hit", hit)}{btn("Stand", stand, "ghost")}</div>
-      )}
-      {phase === "done" && (
-        <div style={{ display: "flex", gap: 8 }}>{btn(broke ? "Out of chips" : "New hand ↻", broke ? () => {} : newHand)}</div>
-      )}
-
     </div>
   );
 }
@@ -4136,22 +4752,56 @@ function BlackjackGame({ onCheer, onWin }) {
 // automated bots (RTS units) and flip your army's AI logic (stance) live to counter the enemy AI.
 // Self-contained (canvas + rAF); sim state lives in a ref so the loop never restarts on render.
 const AW_W = 560, AW_H = 300;
+// A bot is told apart by SHAPE, not by hue.
+//
+// The three used to be a white circle, a cyan circle and an indigo circle —
+// two of those colours belonged to the previous palette, and all three sat on
+// top of a fill that already carries a meaning (green = yours, red = theirs).
+// So the battlefield asked the eye to read two colours per unit at 7px, and
+// the second one vanished on a colourblind screen entirely.
+//
+// Shape is free of all that: a swarm is round, a tank is a block, a sniper is
+// a dart aimed at the other side. The same three marks label the deploy cards,
+// so the card teaches the battlefield.
 const AW_BOTS = {
-  day:    { name: "Day-Trader",  cost: 14, hp: 24, dmg: 6,  range: 26, speed: 48, rate: 0.55, r: 7,  color: "#ffffff", blurb: "fast, cheap, fragile — swarm and rush" },
-  index:  { name: "Index-Fund",  cost: 28, hp: 92, dmg: 4,  range: 22, speed: 22, rate: 0.9,  r: 11, color: "#02b8cc", blurb: "tanky, slow — soaks damage, holds the line" },
-  sniper: { name: "Sniper",      cost: 24, hp: 12, dmg: 22, range: 96, speed: 32, rate: 1.5,  r: 6,  color: "#6366f1", blurb: "long range, high burst — melts tanks, dies fast" },
+  day:    { name: "Day-Trader",  cost: 14, hp: 24, dmg: 6,  range: 26, speed: 48, rate: 0.55, r: 7,  shape: "circle",   blurb: "fast, cheap, fragile — swarm and rush" },
+  index:  { name: "Index-Fund",  cost: 28, hp: 92, dmg: 4,  range: 22, speed: 22, rate: 0.9,  r: 10, shape: "square",   blurb: "tanky, slow — soaks damage, holds the line" },
+  sniper: { name: "Sniper",      cost: 24, hp: 12, dmg: 22, range: 96, speed: 32, rate: 1.5,  r: 7,  shape: "triangle", blurb: "long range, high burst — melts tanks, dies fast" },
 };
+const AW_CAP_MAX = 150, AW_BASE_HP = 200;
 const AW_STANCES = [
   { id: "aggressive", label: "Aggressive", hint: "push the enemy server" },
   { id: "balanced",   label: "Balanced",   hint: "engage nearest, then advance" },
   { id: "defensive",  label: "Defensive",  hint: "hold your line, counter-punch" },
 ];
+// The DOM half of the shape vocabulary — the mark on a deploy card is the same
+// mark the unit wears on the field. currentColor, so the tile decides.
+function AwBotMark({ shape, size = 18 }) {
+  const p = { width: size, height: size, viewBox: "0 0 24 24", fill: "currentColor", "aria-hidden": true, focusable: "false" };
+  if (shape === "square") return <svg {...p}><rect x="5" y="5" width="14" height="14" rx="2" /></svg>;
+  if (shape === "triangle") return <svg {...p}><path d="M20 12 6.5 4.5v15L20 12Z" /></svg>;
+  return <svg {...p}><circle cx="12" cy="12" r="6.5" /></svg>;
+}
+// The canvas half. `dir` points a triangle at the enemy: a dart that always
+// aimed up would say nothing about which side it belongs to.
+function awPath(ctx, shape, x, y, r, dir) {
+  ctx.beginPath();
+  if (shape === "square") ctx.rect(x - r, y - r, r * 2, r * 2);
+  else if (shape === "triangle") {
+    ctx.moveTo(x + dir * r * 1.25, y);
+    ctx.lineTo(x - dir * r * 0.85, y - r);
+    ctx.lineTo(x - dir * r * 0.85, y + r);
+    ctx.closePath();
+  } else ctx.arc(x, y, r, 0, Math.PI * 2);
+}
 // spend capital to spawn one bot of `type` for `side` at its base; returns false if unaffordable
 function awDeploy(sim, side, type) {
   const b = AW_BOTS[type], S = sim[side];
   if (!sim || sim.over || S.cap < b.cost) return false;
   S.cap -= b.cost;
-  sim.units.push({ side, type, hp: b.hp, maxHp: b.hp, x: S.spawnX, y: AW_H / 2 + (Math.random() * 2 - 1) * (AW_H * 0.34), cd: Math.random() * 0.3 });
+  // `born` drives the spawn pop — a unit that simply exists on one frame and
+  // not the previous one reads as a rendering glitch, not as an arrival.
+  sim.units.push({ side, type, hp: b.hp, maxHp: b.hp, born: sim.t, x: S.spawnX, y: AW_H / 2 + (Math.random() * 2 - 1) * (AW_H * 0.34), cd: Math.random() * 0.3 });
   return true;
 }
 // enemy (CPU) AI: read the board to pick a stance, then periodically deploy a counter-unit
@@ -4179,8 +4829,8 @@ function awBrain(sim, dt) {
 function awStep(sim, dt, youStance) {
   if (sim.over) return;
   sim.t += dt;
-  sim.you.cap = Math.min(150, sim.you.cap + dt * 5.6);
-  sim.cpu.cap = Math.min(150, sim.cpu.cap + dt * 5.2);
+  sim.you.cap = Math.min(AW_CAP_MAX, sim.you.cap + dt * 5.6);
+  sim.cpu.cap = Math.min(AW_CAP_MAX, sim.cpu.cap + dt * 5.2);
   awBrain(sim, dt);
   const aggro = 140;
   for (const u of sim.units) {
@@ -4213,50 +4863,74 @@ function awStep(sim, dt, youStance) {
     u.y += chase ? (dy / dd) * sp : Math.sin((sim.t + u.x) * 0.6) * 5 * dt;
     u.y = Math.max(22, Math.min(AW_H - 22, u.y));
   }
+  // A kill leaves a mark. Without it a unit you were watching is simply absent
+  // on the next frame and the fight reads as things blinking out.
+  for (const u of sim.units) if (u.hp <= 0) sim.puffs.push({ x: u.x, y: u.y, r: AW_BOTS[u.type].r, side: u.side, life: 0.34 });
   sim.units = sim.units.filter(u => u.hp > 0);
   for (const tr of sim.tracers) tr.life -= dt;
   sim.tracers = sim.tracers.filter(tr => tr.life > 0);
+  for (const pf of sim.puffs) pf.life -= dt;
+  sim.puffs = sim.puffs.filter(pf => pf.life > 0);
   if (sim.cpu.baseHp <= 0) sim.over = "you";
   else if (sim.you.baseHp <= 0) sim.over = "cpu";
 }
-// render one frame: grid + dashed center line, both servers (with HP bars), shot tracers, then units
+// render one frame: grid + dashed centre line, both servers (with HP bars), shot tracers,
+// death puffs, then units. Every colour here is a token — the previous version hard-coded
+// #0f1011, #23252a and #ffffff, which is how a canvas survives a retheme unchanged.
 function awDraw(ctx, sim) {
-  ctx.fillStyle = "#0f1011"; ctx.fillRect(0, 0, AW_W, AW_H);
-  ctx.strokeStyle = C.surfaceRaised; ctx.lineWidth = 1;
+  ctx.fillStyle = C.base; ctx.fillRect(0, 0, AW_W, AW_H);
+  ctx.strokeStyle = C.edge; ctx.lineWidth = 1;
   for (let x = 0; x <= AW_W; x += 28) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, AW_H); ctx.stroke(); }
   for (let y = 0; y <= AW_H; y += 28) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(AW_W, y); ctx.stroke(); }
-  ctx.strokeStyle = "#23252a"; ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.moveTo(AW_W / 2, 0); ctx.lineTo(AW_W / 2, AW_H); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = C.edgeStrong; ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.moveTo(AW_W / 2, 0); ctx.lineTo(AW_W / 2, AW_H); ctx.stroke(); ctx.setLineDash([]);
   const base = (x, color, hp) => {
     ctx.fillStyle = color; ctx.globalAlpha = 0.85; ctx.fillRect(x - 10, AW_H / 2 - 42, 20, 84); ctx.globalAlpha = 1;
-    ctx.fillStyle = "#0009"; ctx.fillRect(x - 15, AW_H / 2 - 56, 30, 5);
-    ctx.fillStyle = color; ctx.fillRect(x - 15, AW_H / 2 - 56, 30 * Math.max(0, hp) / 200, 5);
+    ctx.fillStyle = alpha(C.base, 0.6); ctx.fillRect(x - 15, AW_H / 2 - 56, 30, 5);
+    ctx.fillStyle = color; ctx.fillRect(x - 15, AW_H / 2 - 56, 30 * Math.max(0, hp) / AW_BASE_HP, 5);
   };
   base(sim.you.baseX, C.up, sim.you.baseHp);
   base(sim.cpu.baseX, C.down, sim.cpu.baseHp);
-  for (const tr of sim.tracers) { ctx.strokeStyle = `rgba(208,214,224,${Math.max(0, tr.life / 0.12) * 0.8})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(tr.x1, tr.y1); ctx.lineTo(tr.x2, tr.y2); ctx.stroke(); }
+  for (const tr of sim.tracers) { ctx.strokeStyle = alpha(C.text, Math.max(0, tr.life / 0.12) * 0.8); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(tr.x1, tr.y1); ctx.lineTo(tr.x2, tr.y2); ctx.stroke(); }
+  for (const pf of sim.puffs) {
+    const k = Math.max(0, pf.life / 0.34);                  // 1 at death, 0 when spent
+    ctx.strokeStyle = alpha(pf.side === "you" ? C.up : C.down, k * 0.7);
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(pf.x, pf.y, pf.r + (1 - k) * 12, 0, Math.PI * 2); ctx.stroke();
+  }
   for (const u of sim.units) {
     const b = AW_BOTS[u.type];
-    ctx.beginPath(); ctx.arc(u.x, u.y, b.r, 0, Math.PI * 2); ctx.fillStyle = u.side === "you" ? C.up : C.down; ctx.fill();
-    ctx.lineWidth = 2; ctx.strokeStyle = b.color; ctx.stroke();
-    ctx.fillStyle = "rgba(8,9,10,0.7)"; ctx.fillRect(u.x - b.r, u.y - b.r - 5, b.r * 2, 3);
-    ctx.fillStyle = "#ffffff"; ctx.fillRect(u.x - b.r, u.y - b.r - 5, b.r * 2 * Math.max(0, u.hp) / u.maxHp, 3);
+    const age = sim.t - (u.born ?? sim.t);
+    const grow = age >= 0.22 ? 1 : 0.35 + 0.65 * (1 - (1 - age / 0.22) ** 2);   // ease-out arrival
+    const r = b.r * grow;
+    const dir = u.side === "you" ? 1 : -1;
+    awPath(ctx, b.shape, u.x, u.y, r, dir);
+    ctx.fillStyle = u.side === "you" ? C.up : C.down; ctx.fill();
+    // A near-black outline, not a second hue: it separates the unit from the
+    // grid without asking the eye to decode another colour.
+    ctx.lineWidth = 1.5; ctx.strokeStyle = C.base; ctx.stroke();
+    ctx.fillStyle = alpha(C.base, 0.7); ctx.fillRect(u.x - b.r, u.y - b.r - 6, b.r * 2, 3);
+    ctx.fillStyle = C.text; ctx.fillRect(u.x - b.r, u.y - b.r - 6, b.r * 2 * Math.max(0, u.hp) / u.maxHp, 3);
   }
 }
-// Algorithm Wars UI: a canvas + rAF render loop over the sim (engine functions above), with deploy
-// buttons, a live stance switch, and capital/HP readouts. Sim state lives in a ref so it survives renders.
 function AlgoWarsGame({ onWin, onCheer }) {
+  const { t } = useI18n();
   const canvasRef = useRef(null);
   const simRef = useRef(null);
   const rafRef = useRef(0);
   const [stance, setStance] = useState("balanced");
   const stanceRef = useRef(stance); stanceRef.current = stance;
   const [over, setOver] = useState(null);
-  const [hud, setHud] = useState({ youCap: 34, youBase: 200, cpuBase: 200, youN: 0, cpuN: 0, cpuStance: "balanced" });
+  const [showRules, setShowRules] = useState(false);
+  const [hud, setHud] = useState({ youCap: 34, youBase: AW_BASE_HP, cpuBase: AW_BASE_HP, youN: 0, cpuN: 0, cpuStance: "balanced" });
+  // Which card was last pressed, and whether the deploy took. A button that
+  // does nothing when you cannot afford it is indistinguishable from a button
+  // that is broken, so the refusal gets a shake and the spend gets a flash.
+  const [flash, setFlash] = useState(null);   // { type, ok, id }
   const wonRef = useRef(false);
   const newSim = () => ({
-    t: 0, lastHud: 0, over: null, tracers: [],
-    you: { cap: 34, baseHp: 200, baseX: 22, spawnX: 40 },
-    cpu: { cap: 34, baseHp: 200, baseX: AW_W - 22, spawnX: AW_W - 40, stance: "balanced", nextDeploy: 2.2 },
+    t: 0, lastHud: 0, over: null, tracers: [], puffs: [],
+    you: { cap: 34, baseHp: AW_BASE_HP, baseX: 22, spawnX: 40 },
+    cpu: { cap: 34, baseHp: AW_BASE_HP, baseX: AW_W - 22, spawnX: AW_W - 40, stance: "balanced", nextDeploy: 2.2 },
     units: [],
   });
   useEffect(() => {
@@ -4281,58 +4955,154 @@ function AlgoWarsGame({ onWin, onCheer }) {
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const reset = () => { wonRef.current = false; simRef.current = newSim(); setOver(null); setStance("balanced"); };
-  const deploy = (type) => { awDeploy(simRef.current, "you", type); };
+  const reset = () => { wonRef.current = false; simRef.current = newSim(); setOver(null); setStance("balanced"); setFlash(null); };
+  const deploy = (type) => {
+    const ok = awDeploy(simRef.current, "you", type);
+    setFlash(prev => ({ type, ok, id: (prev?.id || 0) + 1 }));
+  };
   const cap = hud.youCap;
-  const btn = { fontFamily: MONO, fontSize: 12, borderRadius: R.sm, padding: "8px 10px", cursor: "pointer" };
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {/* HUD */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: MONO, fontSize: 12, flexWrap: "wrap", gap: 8 }}>
-        <span style={{ color: C.up }}>▮ YOU · server {hud.youBase}/200 · {hud.youN} bots</span>
-        <span style={{ color: C.textStrong }}>⚡ capital {cap}</span>
-        <span style={{ color: C.down }}>ENEMY · server {hud.cpuBase}/200 · {hud.cpuN} bots · {hud.cpuStance} ▮</span>
+  // Spelled out as static literals rather than translating b.name / s.hint at
+  // the call site (which would read as a computed key): the i18n
+  // audit only sees literal arguments, so a dynamic key is a translation that
+  // falls back to English silently, with nothing to catch it.
+  const STANCE_LABEL = { aggressive: t("Aggressive"), balanced: t("Balanced"), defensive: t("Defensive") };
+  const STANCE_HINT = {
+    aggressive: t("push the enemy server"),
+    balanced: t("engage nearest, then advance"),
+    defensive: t("hold your line, counter-punch"),
+  };
+  const BOT_NAME = { day: t("Day-Trader"), index: t("Index-Fund"), sniper: t("Sniper") };
+  const BOT_BLURB = {
+    day: t("fast, cheap, fragile — swarm and rush"),
+    index: t("tanky, slow — soaks damage, holds the line"),
+    sniper: t("long range, high burst — melts tanks, dies fast"),
+  };
+  const cpuStanceLabel = STANCE_LABEL[hud.cpuStance] || hud.cpuStance;
+
+  // ---- HUD ----
+  const meterCard = { background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "11px 13px", flex: "1 1 150px", minWidth: 0 };
+  // linear, not eased: the sim samples the HUD roughly eight times a second, so
+  // an easing curve restarting on every sample reads as a stutter.
+  const meter = (frac, color) => (
+    <div aria-hidden="true" style={{ height: 5, borderRadius: 3, background: C.surfaceRaised, overflow: "hidden", marginTop: 9 }}>
+      <div style={{ height: "100%", width: `${Math.max(0, Math.min(1, frac)) * 100}%`, background: color, borderRadius: 3, transition: "width 140ms linear" }} />
+    </div>
+  );
+  const stat = (label, value, sub, frac, color) => (
+    <div style={meterCard}>
+      <div style={{ ...TYPE.eyebrowSm, color: C.faint }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 7, marginTop: 5 }}>
+        <span style={{ ...TYPE.num, fontSize: 17, fontWeight: 700, color }}>{value}</span>
+        <span style={{ fontFamily: SANS, fontSize: 11.5, color: C.faint, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub}</span>
       </div>
-      {/* battlefield */}
-      <div style={{ position: "relative", width: "100%", maxWidth: AW_W, alignSelf: "center" }}>
-        <canvas ref={canvasRef} width={AW_W} height={AW_H} style={{ width: "100%", height: "auto", display: "block", borderRadius: R.md, border: `1px solid ${C.panelEdge}` }} />
-        {over && (
-            <div style={{ position: "absolute", inset: 0, background: "rgba(8,9,10,0.86)", borderRadius: R.md, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
-            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 24, color: over === "you" ? C.up : C.down }}>
-              {over === "you" ? "🏆 MARKET DOMINATED" : "💥 ALGORITHMS CRUSHED"}
+      {meter(frac, color)}
+    </div>
+  );
+
+  return (
+    <div style={{ fontFamily: SANS }}>
+      <div className="v-awroom" style={{ display: "flex", flexDirection: "column", gap: 12, padding: 20 }}>
+        {/* Three readouts, each a number over the bar that number came from.
+            This was one row of coloured mono text with ▮ and ⚡ glyphs in it,
+            which is a status line, not an instrument panel. */}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {stat(t("Your server"), hud.youBase, t("{n} bots").replace("{n}", String(hud.youN)), hud.youBase / AW_BASE_HP, C.up)}
+          {stat(t("Capital"), cap, t("spend it to deploy"), cap / AW_CAP_MAX, C.accentText)}
+          {stat(t("Enemy server"), hud.cpuBase, `${t("{n} bots").replace("{n}", String(hud.cpuN))} · ${cpuStanceLabel.toLowerCase()}`, hud.cpuBase / AW_BASE_HP, C.down)}
+        </div>
+
+        {/* battlefield */}
+        <div style={{ position: "relative", width: "100%", maxWidth: AW_W, alignSelf: "center" }}>
+          <canvas ref={canvasRef} width={AW_W} height={AW_H} aria-label={t("Battlefield")}
+            style={{ width: "100%", height: "auto", display: "block", borderRadius: R.md, border: `1px solid ${C.edge}` }} />
+          {over && (
+            <div className="v-awover" style={{ position: "absolute", inset: 0, background: alpha(C.base, 0.88), borderRadius: R.md, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 16, textAlign: "center" }}>
+              <div style={{ ...TYPE.display, color: over === "you" ? C.up : C.down }}>
+                {over === "you" ? t("Market dominated") : t("Algorithms crushed")}
+              </div>
+              <div style={{ fontFamily: SANS, fontSize: 13, color: C.muted }}>
+                {over === "you" ? t("Your bots took the enemy server.") : t("The enemy overran your server.")}
+              </div>
+              <button onClick={reset} style={button("primary", "md")}>{t("Rematch")}</button>
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 12, color: C.muted }}>{over === "you" ? "Your bots took the enemy server." : "The enemy overran your server."}</div>
-            <button onClick={reset} style={{ ...btn, background: C.accentPress, border: "none", color: C.textOnAccent, fontWeight: 600, padding: "9px 18px" }}>Rematch ↻</button>
+          )}
+        </div>
+
+        {/* deploy bar — three peers, so none of them rests green. The tile
+            turns accent on press, which is the moment green actually means
+            something here: "this is the one you just spent on". */}
+        <div>
+          <div style={{ ...TYPE.eyebrowSm, color: C.faint, marginBottom: 7 }}>{t("Deploy")}</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {Object.entries(AW_BOTS).map(([id, b]) => {
+              const afford = cap >= b.cost && !over;
+              const hit = flash && flash.type === id;
+              return (
+                // NOT disabled when you cannot afford it: a button that does
+                // nothing is indistinguishable from a broken one, so the
+                // refusal is a shake rather than silence. aria-disabled says
+                // the same thing to a screen reader while keeping it focusable.
+                <button key={id} onClick={() => deploy(id)} disabled={!!over} aria-disabled={!afford}
+                  className="v-verbcard"
+                  style={{
+                    flex: "1 1 170px", minWidth: 0, textAlign: "left",
+                    background: C.surface, border: `1px solid ${afford ? C.edgeStrong : C.edge}`, borderRadius: R.lg,
+                    padding: 11, cursor: over ? "default" : "pointer",
+                    opacity: over ? 0.5 : afford ? 1 : 0.55,
+                    transition: `opacity ${MOTION.base} ${MOTION.ease}, border-color ${MOTION.base} ${MOTION.ease}`,
+                  }}>
+                  {/* Keyed on the press so the animation replays on a repeat
+                      press. Keying the BUTTON would remount it and throw the
+                      keyboard user's focus back to the document. */}
+                  <span key={hit ? flash.id : "idle"} className={hit ? (flash.ok ? "v-spend" : "v-nope") : undefined}
+                    style={{ display: "flex", alignItems: "flex-start", gap: 10, width: "100%", minWidth: 0 }}>
+                    <span className="v-verbtile" style={{ flex: "0 0 auto", width: 32, height: 32, borderRadius: R.xs, display: "grid", placeItems: "center", background: C.surfaceRaised, color: C.muted }}>
+                      <AwBotMark shape={b.shape} />
+                    </span>
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: "flex", alignItems: "baseline", gap: 7 }}>
+                        <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 13, color: C.text }}>{BOT_NAME[id]}</span>
+                        <span style={{ ...TYPE.numSm, color: afford ? C.accentText : C.faint }}>{b.cost}</span>
+                      </span>
+                      <span style={{ display: "block", fontFamily: SANS, fontSize: 11.5, color: C.faint, lineHeight: 1.45, marginTop: 2 }}>{BOT_BLURB[id]}</span>
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* stance = live AI re-scripting. A set of three exclusive options is a
+            segmented control, which is the component this product already has
+            for exactly that; it was three outline buttons pretending to be one. */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ ...TYPE.eyebrowSm, color: C.faint, marginBottom: 7 }}>{t("Army logic")}</div>
+            <div role="radiogroup" aria-label={t("Army logic")} style={segmentTrack()}>
+              {AW_STANCES.map(s => (
+                <button key={s.id} role="radio" aria-checked={stance === s.id} onClick={() => setStance(s.id)} title={STANCE_HINT[s.id]}
+                  style={segmentItem(stance === s.id, "neutral")}>
+                  {STANCE_LABEL[s.id]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+            <button onClick={() => setShowRules(v => !v)} aria-expanded={showRules} style={button("solid", "sm")}>{t("How to play")}</button>
+            <button onClick={reset} style={button("ghost", "sm")}>{t("Restart")}</button>
+          </span>
+        </div>
+
+        {/* The paragraph that used to live permanently under the game, on
+            request instead — the same call the chess room makes. */}
+        {showRules && (
+          <div style={{ background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: 12, fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: C.muted }}>
+            {t("Capital regenerates on its own — spend it to deploy bots that march and fight without you. Destroy the enemy server to win.")}
+            {" "}{t("Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers.")}
+            {" "}{t("Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.")}
           </div>
         )}
-      </div>
-      {/* deploy bar */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {Object.entries(AW_BOTS).map(([id, b]) => {
-          const afford = cap >= b.cost;
-          return (
-            <button key={id} onClick={() => deploy(id)} disabled={!afford || !!over} title={b.blurb}
-              style={{ ...btn, flex: 1, minWidth: 120, textAlign: "left", background: afford ? C.surfaceRaised : "#0f1011", border: `1px solid ${afford ? C.edgeStrong : C.panelEdge}`, color: afford ? C.text : C.faint, opacity: over ? 0.5 : 1 }}>
-              <div style={{ fontWeight: 600, color: afford ? b.color : C.faint }}>{b.name} <span style={{ color: afford ? C.muted : C.faint, fontWeight: 400 }}>⚡{b.cost}</span></div>
-              <div style={{ fontSize: 10, color: C.faint, marginTop: 2, lineHeight: 1.4 }}>{b.blurb}</div>
-            </button>
-          );
-        })}
-      </div>
-      {/* stance = live AI re-scripting */}
-      <div>
-        <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, marginBottom: 5 }}>YOUR ARMY LOGIC — flip it live to counter the enemy</div>
-        <div style={{ display: "flex", gap: 6 }}>
-          {AW_STANCES.map(s => (
-            <button key={s.id} onClick={() => setStance(s.id)} title={s.hint}
-              style={{ ...btn, flex: 1, background: stance === s.id ? "rgba(255,255,255,0.09)" : "transparent", border: `1px solid ${stance === s.id ? C.accent : C.panelEdge}`, color: stance === s.id ? C.accentText : C.muted, fontWeight: 600 }}>
-              {s.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div style={{ fontFamily: SANS, fontSize: 10, color: C.faint, lineHeight: 1.6 }}>
-        Capital regenerates over time — spend it to deploy bots that auto-march and fight. Destroy the enemy server. Counter-play: Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers. The enemy adapts its logic — so adapt yours.
       </div>
     </div>
   );
@@ -9210,50 +9980,60 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const gamePanel = gameOn && (() => {
     const primaryBtn = { background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 600, fontSize: 12, padding: "9px 16px", cursor: "pointer" };
     const ghostBtn = { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "9px 12px", cursor: "pointer" };
-    const ctlBtn = { background: "rgba(255,255,255,0.05)", border: `1px solid ${C.panelEdge}`, color: C.text, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, lineHeight: 1, padding: "6px 10px", cursor: "pointer" };
-    // Titles arrive as "<glyph> NAME". The glyph is an emoji, so it
-    // cannot take a colour and it cannot ride at the eyebrow's 11px
-    // without collapsing into a smudge — it gets split off and sized
-    // on its own, and the name gets full text contrast.
-    const shell = (title, headerRight, body) => {
-      const cut = title.indexOf(" ");
-      const icon = cut > 0 ? title.slice(0, cut) : "";
-      const label = cut > 0 ? title.slice(cut + 1) : title;
-      return (
-      <div style={{ flexShrink: 0, minWidth: 0, background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            {icon && <span aria-hidden="true" style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{icon}</span>}
-            <span style={{ ...TYPE.eyebrow, color: C.text }}>{label}</span>
+    const ctlBtn = { background: C.surfaceRaised, border: `1px solid ${C.edge}`, color: C.text, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, lineHeight: 1, padding: "7px 11px", cursor: "pointer" };
+    // ONE LIST, ONE NAME PER GAME.
+    // The menu card and the header of the game it opens used to be written
+    // twice and disagree — "Market Blackjack" on the card, "MARKET BLACKJACK"
+    // on the header; "Bulls vs Bears Chess" against "BULLS vs BEARS". Both now
+    // read from here, so a rename is one edit and the two can never drift.
+    //
+    // The icons are DeskIcon marks rather than emoji, for the reasons that
+    // component's header sets out — chiefly that an emoji is a different
+    // picture on every platform and cannot take a colour.
+    const GAMES = [
+      { id: "school",   icon: "school",   name: t("Stock School"),         desc: t("Eight short lessons on stocks, prices and P&L.") },
+      { id: "bullbear", icon: "bullbear", name: t("Bull or Bear"),         desc: t("Read a headline, call it up or down.") },
+      { id: "ticker",   icon: "ticker",   name: t("Ticker Match"),         desc: t("Match companies to their tickers.") },
+      { id: "cards",    icon: "cards",    name: t("Market Blackjack"),     desc: t("21 against the dealer, with a chip bankroll.") },
+      { id: "chess",    icon: "chess",    name: t("Bulls vs Bears Chess"), desc: t("Two-player chess: Bulls against Bears.") },
+      { id: "algowars", icon: "algowars", name: t("Algorithm Wars"),       desc: t("A trading-floor RTS: script bot armies in real time.") },
+    ];
+    const gameMeta = (id) => GAMES.find(g => g.id === id) || { icon: "games", name: "" };
+    // The panel's title bar. Sentence-case sans at 13/600 — the same voice
+    // every other panel head in the product speaks. It was mono uppercase with
+    // an emoji parsed out of the front of the title string by splitting on the
+    // first space, which is an encoding, not an API.
+    const shell = (iconName, label, headerRight, body) => (
+      <div style={{ flexShrink: 0, minWidth: 0, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ ...panelHead({ pad: "10px 14px" }) }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+            <span style={{ flexShrink: 0, color: C.muted, display: "grid", placeItems: "center" }}><DeskIcon name={iconName} size={17} /></span>
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             {headerRight}
-            <button onClick={closeGame} className="v-gamectl" aria-label="Close games" style={{ ...ctlBtn, fontSize: 12, padding: "6px 9px" }}>✕</button>
+            <button onClick={closeGame} className="v-gamectl" aria-label={t("Close games")} style={{ ...ctlBtn, padding: "7px 10px" }}>✕</button>
           </span>
         </div>
         {body}
       </div>
-      );
-    };
+    );
 
     // ---- game selection menu ----
     if (gameMode === "menu") {
-      const games = [
-        { id: "school", icon: "🎓", name: "Stock School", desc: "8 short lessons on stocks, prices, and P&L." },
-        { id: "bullbear", icon: "📊", name: "Bull or Bear", desc: "Read a headline, call it up or down." },
-        { id: "ticker", icon: "🔤", name: "Ticker Match", desc: "Match companies to their tickers." },
-        { id: "cards", icon: "🃏", name: "Market Blackjack", desc: "21 against the dealer, with a chip bankroll." },
-        { id: "chess", icon: "♟", name: "Bulls vs Bears Chess", desc: "Two-player chess: Bulls vs Bears." },
-        { id: "algowars", icon: "🖥️", name: "Algorithm Wars", desc: "A trading-floor RTS: script bot armies in real time." },
-      ];
-      return shell("🎮 GAME ROOM", <span style={{ fontFamily: SANS, fontSize: 11, color: C.muted }}>no account needed</span>,
-        <div style={{ padding: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 10 }}>
-          {games.map(g => (
-            <button key={g.id} onClick={() => startMode(g.id)} className="v-lift"
-              style={{ textAlign: "left", background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: 14, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, minHeight: 112 }}>
-              <span aria-hidden="true" style={{ fontSize: 20 }}>{g.icon}</span>
-              <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 13, color: C.text }}>{g.name}</span>
-              <span style={{ fontFamily: SANS, fontSize: 11, lineHeight: 1.5, color: C.faint }}>{g.desc}</span>
+      return shell("games", t("Game room"),
+        <span style={{ fontFamily: SANS, fontSize: 12, color: C.faint }}>{t("No account needed")}</span>,
+        <div style={{ padding: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 10 }}>
+          {GAMES.map(g => (
+            <button key={g.id} onClick={() => startMode(g.id)} className="v-verbcard"
+              style={{ textAlign: "left", background: C.surfaceRaised, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: 14, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 8, minHeight: 118 }}>
+              {/* Same tile behaviour as the desk's verb cards: neutral at rest
+                  because these six are peers, accent on press. */}
+              <span className="v-verbtile" style={{ width: 32, height: 32, borderRadius: R.xs, display: "grid", placeItems: "center", background: C.surface, color: C.muted }}>
+                <DeskIcon name={g.icon} />
+              </span>
+              <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 13.5, color: C.text }}>{g.name}</span>
+              <span style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.5, color: C.faint }}>{g.desc}</span>
             </button>
           ))}
         </div>
@@ -9261,18 +10041,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     }
 
     // ---- board/card games render their own self-contained components ----
-    const backBtn = <button onClick={() => { setGameMode("menu"); stopSpeak(); }} className="v-gamectl" style={ctlBtn}>← games</button>;
+    const backBtn = <button onClick={() => { setGameMode("menu"); stopSpeak(); }} className="v-gamectl" style={ctlBtn}>← {t("games")}</button>;
     if (gameMode === "cards") {
-      return shell("🃏 MARKET BLACKJACK", backBtn,
-        <BlackjackGame onCheer={() => triggerAnchor("cheer", { label: "WINNER! ✓" })} onWin={() => triggerAnchor("cheer", { label: "BLACKJACK! 🃏" })} />);
+      return shell(gameMeta("cards").icon, gameMeta("cards").name, backBtn,
+        <BlackjackGame onCheer={() => triggerAnchor("cheer", { label: "WINNER" })} onWin={() => triggerAnchor("cheer", { label: "BLACKJACK" })} />);
     }
     if (gameMode === "chess") {
-      return shell("♟ BULLS vs BEARS", backBtn,
-        <ChessGame sfx={chessSfx} onWin={(w) => triggerAnchor("cheer", { label: w === "w" ? "BULLS WIN! 🐂" : "BEARS WIN! 🐻" })} />);
+      return shell(gameMeta("chess").icon, gameMeta("chess").name, backBtn,
+        <ChessGame sfx={chessSfx} onWin={(w) => triggerAnchor("cheer", { label: w === "w" ? "BULLS WIN" : "BEARS WIN" })} />);
     }
     if (gameMode === "algowars") {
-      return shell("🖥️ ALGORITHM WARS", backBtn,
-        <AlgoWarsGame onWin={(w) => triggerAnchor(w === "you" ? "cheer" : "break", { label: w === "you" ? "MARKET DOMINATED! 🏆" : "OUTGUNNED 💥" })} onCheer={() => {}} />);
+      return shell(gameMeta("algowars").icon, gameMeta("algowars").name, backBtn,
+        <AlgoWarsGame onWin={(w) => triggerAnchor(w === "you" ? "cheer" : "break", { label: w === "you" ? "MARKET DOMINATED" : "OUTGUNNED" })} onCheer={() => {}} />);
     }
 
     // ---- an active quiz game (school / bullbear / ticker) ----
@@ -9280,11 +10060,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     // radius token across this whole closure (TDZ crash on open).
     const data = gameSet(gameMode), total = data.length, round = data[gameStep] || {};
     const done = gamePhase === "done";
+    // `hdr` is gone: the header reads from GAMES like every other game, so the
+    // three quizzes can no longer carry a second, differently-cased name.
     const meta = gameMode === "school"
-      ? { hdr: "🎓 STOCK SCHOOL", unit: "lesson", title: round.title, question: round.q, choices: round.choices || [], answer: round.answer, explain: round.explain }
+      ? { unit: "lesson", title: round.title, question: round.q, choices: round.choices || [], answer: round.answer, explain: round.explain }
       : gameMode === "bullbear"
-        ? { hdr: "📊 BULL OR BEAR", unit: "round", title: "Will the stock go up or down?", question: round.headline, choices: ["📈 Bullish — likely UP", "📉 Bearish — likely DOWN"], answer: round.bullish ? 0 : 1, explain: round.why }
-        : { hdr: "🔤 TICKER MATCH", unit: "round", title: "Pick the real ticker symbol", question: `Which symbol is ${round.company}?`, choices: round.options || [], answer: round.answer, explain: `${round.company} trades as ${round.options?.[round.answer]}.` };
+        ? { unit: "round", title: "Will the stock go up or down?", question: round.headline, choices: ["Bullish — likely UP", "Bearish — likely DOWN"], answer: round.bullish ? 0 : 1, explain: round.why }
+        : { unit: "round", title: "Pick the real ticker symbol", question: `Which symbol is ${round.company}?`, choices: round.options || [], answer: round.answer, explain: `${round.company} trades as ${round.options?.[round.answer]}.` };
     const headerRight = (
       <>
         <span style={{ fontFamily: MONO, fontSize: 12, color: C.muted }}>{done ? `score ${gameScore}/${total}` : `${meta.unit} ${gameStep + 1}/${total} · score ${gameScore}`}</span>
@@ -9350,7 +10132,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         </div>
       </>
     );
-    return shell(meta.hdr, headerRight, body);
+    return shell(gameMeta(gameMode).icon, gameMeta(gameMode).name, headerRight, body);
   })();
   // Does the desk have a result showing? Gates the "on the desk" verb cards,
   // which exist to fill the space when it does not.
@@ -10025,42 +10807,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     : null
                   }
                 />
-                {/* Who is presenting, and how you change it.
-                    This was a bare ‹ › pair, which is a control you have to
-                    click to find out what it does — on a roster of twenty-odd
-                    anchors that is a lottery. Three faces instead: who you have,
-                    with who you would get either side of them. The picker shows
-                    its outcome, which is the whole point the handoff makes
-                    about this panel. */}
+                {/* Who is presenting, and how you change it. Three faces: who
+                    you have, with who you would get either side of them. The
+                    picker shows its outcome, which is the whole point the
+                    handoff makes about this panel. */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                  <div role="radiogroup" aria-label={t("Anchor")} style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                    {(() => {
-                      const i = CHARACTERS.findIndex(c => c.id === characterId);
-                      const at = (step) => CHARACTERS[(i + step + CHARACTERS.length) % CHARACTERS.length];
-                      // Previous, current, next. Stepping still walks the whole
-                      // roster; you can just see where the next step lands.
-                      return [at(-1), at(0), at(1)].map((ch, k) => {
-                        const on = ch.id === characterId;
-                        return (
-                          <button key={`${ch.id}-${k}`} className="v-tap" role="radio" aria-checked={on}
-                            onClick={() => setCharacterId(ch.id)}
-                            aria-label={on ? `${ch.name} — ${t("on the desk")}` : `${t("Switch to")} ${ch.name}`}
-                            title={ch.name}
-                            style={{
-                              width: 38, height: 38, borderRadius: "50%", flexShrink: 0,
-                              display: "grid", placeItems: "center", cursor: "pointer",
-                              background: C.surfaceRaised,
-                              border: `2px solid ${on ? C.accent : "transparent"}`,
-                              color: on ? C.text : C.muted,
-                              fontFamily: SANS, fontSize: 12, fontWeight: on ? 700 : 600,
-                              transition: `border-color ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}`,
-                            }}>
-                            {ch.name.slice(0, 2)}
-                          </button>
-                        );
-                      });
-                    })()}
-                  </div>
+                  <AnchorRoster characterId={characterId} onPick={setCharacterId} />
                   {/* The rest of the roster, the sets and the voice engine live
                       one click away rather than crowding this card. */}
                   <button onClick={() => { setSettingsTab("anchor"); setShowSettings(true); }}
@@ -10974,53 +11726,105 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         </div>
       )}
 
-      {/* ===== tutorial — a guided, click-to-try walkthrough of every feature ===== */}
+      {/* ============================================================
+           GETTING STARTED — the first thing a new account sees.
+
+           Built to screenshots/getting-started.png in the handoff. That screen
+           is a PNG only: it has no counterpart in the HTML reference, so the
+           image is the source for layout and this system's tokens supply every
+           value it cannot state.
+
+           WHAT CHANGED FROM THE OLD MODAL
+           · The dialog had a 1px GREEN border all the way round. An accent
+             outline on a 480px box is the loudest thing on the screen and it
+             was spent on a container. The reference has no border at all; this
+             takes the standard hairline, and the green goes on the one button.
+           · The brand line was "VANTAGE · GETTING STARTED" in accent-coloured
+             uppercase sans at 700 — a wordmark from the previous system. The
+             reference sets the mark, "Vantage" in text at 700, and the eyebrow
+             in mono. That is the block the auth gate and the homepage already
+             use, so all three front doors now match.
+           · Each row's call to action was accent TEXT with an arrow. Four
+             identical green links is four primaries, which is none. The tour
+             is the recommended path, so it gets the filled button and the
+             other three get outlines.
+           · The tiles were emoji (🔦 ▶ 🎯 ⚙️). The reference uses Unicode in
+             mono tiles and the README says, of exactly this: "If the codebase
+             has an icon set, substitute equivalents rather than shipping
+             Unicode." It has one. The accent, which the reference carries on
+             the first tile's "01", stays on the first tile's mark.
+
+           ONE DELIBERATE DEPARTURE
+           The reference's footer reads "Replay anytime from Settings → Data
+           source". There is no Data source section any more — the settings
+           rebuild replaced those six mono tabs, and the replay control lives
+           under "Getting started". The reference predates that screen; naming
+           a section the user cannot find is worse than disagreeing with a PNG.
+           ============================================================ */}
       {showTutorial && (
-        <div role="dialog" aria-label="Welcome to Vantage"
-          style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: 16 }}>
-          <div className="v-rise" style={{ width: 480, maxWidth: "94vw", maxHeight: "92vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.lg, padding: 20, boxShadow: "0 24px 70px rgba(0,0,0,0.6)" }}>
-            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20, letterSpacing: "-0.012em", color: C.accentText }}>
-              VANTAGE <span style={{ fontSize: 10, letterSpacing: "-0.010em", color: C.faint, fontWeight: 600 }}>· GETTING STARTED</span>
+        <div role="dialog" aria-modal="true" aria-label={t("Getting started")}
+          style={{ position: "fixed", inset: 0, background: alpha(C.base, 0.86), display: "flex", alignItems: "center", justifyContent: "center", zIndex: Z.modal, padding: 16 }}>
+          <div className="v-rise" style={{ width: 600, maxWidth: "94vw", maxHeight: "92vh", overflowY: "auto", background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.xl, padding: 30, boxShadow: SHADOW.xl }}>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <VantageMark size={38} />
+              <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 25, letterSpacing: "-0.020em", color: C.text }}>Vantage</span>
+              <span style={{ ...TYPE.eyebrow, color: C.faint }}>{t("Getting started")}</span>
             </div>
-            <div style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.55, color: C.text, marginTop: 7 }}>
-              Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:
+
+            <div style={{ ...TYPE.body, color: C.muted, marginTop: 16 }}>
+              {t("Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:")}
             </div>
-            <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.55, color: C.muted, marginTop: 7, background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "8px 10px" }}>
-              💡 <b style={{ color: C.text }}>No setup required.</b> Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.
+
+            {/* The question every new user actually has, answered before they
+                go looking for a key to paste. Boxed but quiet — it is
+                reassurance, not an alert, and it no longer opens with a 💡. */}
+            <div style={{ fontFamily: SANS, fontSize: 12.5, lineHeight: 1.55, color: C.muted, marginTop: 14, background: C.surfaceRaised, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: "10px 12px" }}>
+              <b style={{ color: C.text, fontWeight: 600 }}>{t("No setup required.")}</b>{" "}
+              {t("Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.")}
             </div>
+
             {!aiReady() && (
-              <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: C.down, marginTop: 8, background: alpha(C.down, 0.08), border: `1px solid ${C.down}`, borderRadius: R.md, padding: "8px 10px" }}>
-                ⚠ <b>No AI key set up yet.</b> Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.{" "}
-                <button onClick={() => { setShowTutorial(false); setSetupOpen(true); }} style={{ background: "transparent", border: "none", color: C.accentText, textDecoration: "underline", cursor: "pointer", fontFamily: SANS, fontSize: 11, padding: 0 }}>Set it up →</button>
+              <div style={{ fontFamily: SANS, fontSize: 12.5, lineHeight: 1.55, color: C.muted, marginTop: 10, background: C.dangerSoft, border: `1px solid ${C.dangerEdge}`, borderRadius: R.md, padding: "10px 12px" }}>
+                <b style={{ color: C.down, fontWeight: 600 }}>{t("No AI key set up yet.")}</b>{" "}
+                {t("Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.")}{" "}
+                <button onClick={() => { setShowTutorial(false); setSetupOpen(true); }}
+                  style={{ background: "transparent", border: "none", padding: 0, color: C.accentText, textDecoration: "underline", textUnderlineOffset: 2, cursor: "pointer", fontFamily: SANS, fontSize: 12.5 }}>
+                  {t("Set it up")}
+                </button>
               </div>
             )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 12 }}>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
               {[
-                { icon: "🔦", title: "Take the guided tour", desc: "I'll spotlight each part of the screen, step by step.", cta: "Start tour", on: launchSpotlight },
-                { icon: "▶", title: "Watch me demo it", desc: "Sit back — I'll chart a stock, ask a question, ring the bell.", cta: "Play demo", on: runDemo },
-                { icon: "🎯", title: "Try the missions", desc: "Six hands-on tasks that check off as you do them.", cta: "Show missions", on: launchMissions },
-                { icon: "⚙️", title: "Set it up (keys & options)", desc: "What each key does and where to get it.", cta: "Setup guide", on: () => { setShowTutorial(false); setSetupOpen(true); } },
-              ].map((o, i) => (
-                <button key={i} onClick={o.on}
-                  style={{ textAlign: "left", display: "flex", alignItems: "center", gap: 11, background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "9px 12px", cursor: "pointer" }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = C.accent} onMouseLeave={e => e.currentTarget.style.borderColor = C.panelEdge}>
-                  <span style={{ fontSize: 20, lineHeight: 1 }}>{o.icon}</span>
-                  <span style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
-                    <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 13, color: C.text }}>{o.title}</span>
-                    <span style={{ fontFamily: SANS, fontSize: 11, color: C.muted, marginTop: 2, lineHeight: 1.45 }}>{o.desc}</span>
+                { icon: "spotlight", title: t("Take the guided tour"), desc: t("I'll spotlight each part of the screen, step by step."), cta: t("Start tour"), primary: true, on: launchSpotlight },
+                { icon: "play", title: t("Watch me demo it"), desc: t("Sit back — I'll chart a stock, ask a question, ring the bell."), cta: t("Play demo"), on: runDemo },
+                { icon: "missions", title: t("Try the missions"), desc: t("Six hands-on tasks that check off as you do them."), cta: t("Show missions"), on: launchMissions },
+                { icon: "settings", title: t("Set it up (keys & options)"), desc: t("What each key does and where to get it."), cta: t("Setup guide"), on: () => { setShowTutorial(false); setSetupOpen(true); } },
+              ].map((o) => (
+                // The whole row is the target, and the button inside it is a
+                // label rather than a second control — nesting a real <button>
+                // in a <button> is invalid HTML and gives a keyboard user two
+                // stops for one choice.
+                <button key={o.icon} onClick={o.on} className="v-tutrow"
+                  style={{ textAlign: "left", display: "flex", alignItems: "center", gap: 14, width: "100%", background: C.surfaceRaised, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "14px 16px", cursor: "pointer" }}>
+                  <span className="v-tuttile" style={{ flex: "0 0 auto", width: 42, height: 42, borderRadius: R.md, display: "grid", placeItems: "center", background: C.surface, color: o.primary ? C.accentText : C.muted }}>
+                    <DeskIcon name={o.icon} size={20} />
                   </span>
-                  <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: C.accentText, whiteSpace: "nowrap" }}>{o.cta} →</span>
+                  <span style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
+                    <span style={{ ...TYPE.subhead, color: C.text }}>{o.title}</span>
+                    <span style={{ fontFamily: SANS, fontSize: 13, color: C.muted, marginTop: 2, lineHeight: 1.45 }}>{o.desc}</span>
+                  </span>
+                  <span aria-hidden="true" style={{ ...button(o.primary ? "primary" : "ghost", "md"), flex: "0 0 auto", cursor: "pointer" }}>{o.cta}</span>
                 </button>
               ))}
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 11, gap: 12, flexWrap: "wrap" }}>
-              <span style={{ fontFamily: SANS, fontSize: 11, color: C.faint }}>Replay anytime from Settings → DATA SOURCE</span>
-              <button onClick={() => setShowTutorial(false)}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = C.muted; e.currentTarget.style.color = C.text; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.panelEdge; e.currentTarget.style.color = C.muted; }}
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: SANS, fontSize: 11, fontWeight: 600, cursor: "pointer", padding: "8px 16px", whiteSpace: "nowrap", transition: "border-color .12s, color .12s" }}>
-                {t("skip — I'll explore on my own")}
-              </button>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18, gap: 12, flexWrap: "wrap" }}>
+              <span style={{ fontFamily: SANS, fontSize: 13, color: C.faint }}>
+                {t("Replay anytime from Settings → Getting started")}
+              </span>
+              <button onClick={() => setShowTutorial(false)} style={{ ...button("quiet", "md"), color: C.muted }}>{t("Skip")}</button>
             </div>
           </div>
         </div>
