@@ -71,6 +71,26 @@ export default function DeskIcon({ name, size = 18 }) {
           <circle cx="12" cy="12" r="2.5" />
         </svg>
       );
+    // ---- story card verbs ----
+    case "external":
+      return (
+        <svg {...p}>
+          <path d="M13.5 4.5H19.5V10.5" />
+          <path d="M19.5 4.5 11 13" />
+          <path d="M18 14.2v4.3a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6h4.3" />
+        </svg>
+      );
+    // Reading a story out loud is sound leaving the desk, so: a speaker.
+    case "speaker":
+      return (
+        <svg {...p}>
+          <path d="M11.5 4.5 6.5 9H3.2v6h3.3l5 4.5V4.5Z" />
+          <path d="M15.6 9.2a4 4 0 0 1 0 5.6M18.4 6.4a8 8 0 0 1 0 11.2" />
+        </svg>
+      );
+    case "stop":
+      return <svg {...p}><rect x="5.5" y="5.5" width="13" height="13" rx="2" /></svg>;
+
     // ---- navigation and menus ----
     // These replace box-drawing characters — ◈ ▤ ▧ ◧ ▦ for the five nav
     // destinations, ◆ and ⚙ in the account menu. At 13px on a dark bar those

@@ -162,6 +162,14 @@ a:hover { text-decoration: underline; }
 .v-gamectl:hover { background: var(--v-edge-strong); border-color: var(--v-edge-strong); color: var(--v-text); }
 .v-gamectl:active { transform: translateY(1px); }
 
+/* ---------- story card verbs ----------
+   These are buttons that live inside a card that itself lifts on hover, so
+   they answer with a fill rather than a lift of their own — two things moving
+   in different directions on one hover reads as a glitch. */
+.v-storyact { transition: background var(--v-fast) var(--v-ease), color var(--v-fast) var(--v-ease); }
+.v-storyact:hover { background: var(--v-surface-raised); color: var(--v-text); }
+.v-storyact:active { background: var(--v-edge-strong); }
+
 /* ---------- getting started ----------
    Each row is one choice, so the whole row is the target and the button inside
    it is a label. The lift is 3px: the handoff gives cards 4-6px, but these are

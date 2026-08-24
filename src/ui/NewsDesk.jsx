@@ -56,21 +56,41 @@ export function toneOf(title = "") {
 // A card, not one big link: the AI actions below the title are buttons, and
 // buttons nested inside an <a> are invalid HTML that screen readers flatten
 // into nonsense. The title carries the link; the card stays a plain container.
-function StoryAction({ label, hint, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      title={hint}
-      className="v-row"
-      style={{
-        background: "transparent", border: "none", cursor: "pointer",
-        padding: "3px 6px", borderRadius: R.xs,
-        ...TYPE.eyebrowSm, color: C.muted,
-      }}
-    >
+// The card's verbs. All three were set in TYPE.eyebrowSm — mono, uppercase,
+// 0.14em tracking, at C.muted or C.faint — which is the label voice, not the
+// button voice: "READ ↗   ‣ ON AIR   ✦ ASK DESK" reads as three pieces of
+// metadata rather than three things you can do. Mono never sets buttons in
+// this system, and that rule exists for exactly this failure.
+//
+// Sans, sentence case, and a real mark instead of ‣ ✦ ■ ↗. Ask desk wears the
+// same broadcast mark as the Desk nav item, because it is the same desk.
+function StoryAction({ mark, label, hint, onClick, href, tone }) {
+  const shared = {
+    display: "inline-flex", alignItems: "center", gap: 6,
+    padding: "5px 9px", borderRadius: R.xs,
+    background: "transparent", border: "none", cursor: "pointer",
+    // Tracking is set explicitly because one of these renders as an <a> and
+    // inherits a value the two <button>s do not — measured at -0.16px against
+    // normal, which is small, visible when they sit in a row, and exactly the
+    // drift a design system exists to stop.
+    fontFamily: SANS, fontSize: 12.5, fontWeight: 500, lineHeight: 1.2, letterSpacing: "-0.006em",
+    color: tone === "live" ? C.live : C.muted,
+    textDecoration: "none", whiteSpace: "nowrap",
+  };
+  const inner = (
+    <>
+      <span aria-hidden="true" style={{ display: "grid", placeItems: "center", flexShrink: 0 }}>
+        <DeskIcon name={mark} size={14} />
+      </span>
       {label}
-    </button>
+    </>
   );
+  // A link when it goes somewhere, a button when it does something. The old
+  // row had one of each already wearing identical styling, which is how they
+  // ended up indistinguishable.
+  return href
+    ? <a href={href} target="_blank" rel="noopener noreferrer" title={hint} className="v-storyact" style={shared}>{inner}</a>
+    : <button onClick={onClick} title={hint} className="v-storyact" style={shared}>{inner}</button>;
 }
 
 function StoryCard({ item, href, index, onRead, onAsk, reading = false }) {
@@ -119,20 +139,19 @@ function StoryCard({ item, href, index, onRead, onAsk, reading = false }) {
         {item.title}
       </a>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: -6 }}>
-        <a
-          href={href} target="_blank" rel="noopener noreferrer"
-          style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 6px", ...TYPE.eyebrowSm, color: C.faint, textDecoration: "none" }}
-        >
-          Read <span aria-hidden="true">↗</span>
-        </a>
+      <div style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: -9, flexWrap: "wrap" }}>
+        <StoryAction mark="external" label="Read" hint="Open the story" href={href} />
         <span style={{ flex: 1 }} />
         {onRead && (
-          <StoryAction label={reading ? "■ Stop" : "‣ On air"} hint={reading ? "Stop reading" : "Read on air"} onClick={() => onRead(item)} />
+          <StoryAction
+            mark={reading ? "stop" : "speaker"}
+            label={reading ? "Stop" : "On air"}
+            tone={reading ? "live" : undefined}
+            hint={reading ? "Stop reading" : "Read on air"}
+            onClick={() => onRead(item)}
+          />
         )}
-        {onAsk && (
-          <StoryAction label="✦ Ask desk" hint="Ask the desk" onClick={() => onAsk(item)} />
-        )}
+        {onAsk && <StoryAction mark="desk" label="Ask desk" hint="Ask the desk about this" onClick={() => onAsk(item)} />}
       </div>
     </div>
   );
