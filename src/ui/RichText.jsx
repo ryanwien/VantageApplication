@@ -18,7 +18,7 @@ import { C, MONO, TYPE, R, SP } from "./theme.js";
 function Spans({ spans }) {
   return spans.map((s, i) => {
     switch (s.t) {
-      case "b": return <strong key={i} style={{ fontWeight: 510, color: C.textStrong }}>{s.v}</strong>;
+      case "b": return <strong key={i} style={{ fontWeight: 600, color: C.textStrong }}>{s.v}</strong>;
       case "i": return <em key={i} style={{ fontStyle: "italic" }}>{s.v}</em>;
       case "code": return (
         <code key={i} style={{
@@ -68,7 +68,7 @@ function Block({ block }) {
       return (
         <div style={{
           ...(block.level <= 2 ? TYPE.subhead : TYPE.label),
-          fontWeight: 510, color: C.textStrong, fontSize: block.level <= 2 ? 17 : 16,
+          fontWeight: 600, color: C.textStrong, fontSize: block.level <= 2 ? 17 : 16,
         }}>
           <Spans spans={block.spans} />
         </div>

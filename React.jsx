@@ -4069,14 +4069,14 @@ function BlackjackGame({ onCheer, onWin }) {
   const hideHole = phase === "player";                 // dealer's 2nd card stays down until the player stands
   const card = (c, key, hidden, delay = 0, flip = false) => (
     <div key={key} className={flip ? "v-flip" : "v-deal"} style={{ animationDelay: `${delay}ms`, width: 34, height: 48, borderRadius: R.xs, border: `1px solid ${hidden ? C.edgeStrong : "#C7CEDB"}`, flexShrink: 0,
-      background: hidden ? "#161718" : "#EDEFF4", color: hidden ? C.faint : (c.s === "♥" || c.s === "♦" ? "#C0392B" : "#141821"),
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontWeight: 510 }}>
+      background: hidden ? C.surfaceRaised : "#EDEFF4", color: hidden ? C.faint : (c.s === "♥" || c.s === "♦" ? "#C0392B" : "#141821"),
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontWeight: 600 }}>
       {hidden ? <span style={{ fontSize: 18 }}>★</span> : <><span style={{ fontSize: 12 }}>{c.r}</span><span style={{ fontSize: 14 }}>{c.s}</span></>}
     </div>
   );
   const btn = (label, on, kind = "primary") => (
     <button onClick={on} style={kind === "primary"
-      ? { background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 510, fontSize: 12, padding: "9px 18px", cursor: "pointer" }
+      ? { background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 600, fontSize: 12, padding: "9px 18px", cursor: "pointer" }
       : { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, padding: "9px 14px", cursor: "pointer" }}>{label}</button>
   );
   const resultCol = result ? (result.kind === "win" ? C.up : result.kind === "lose" ? C.down : C.text) : C.muted;
@@ -4103,7 +4103,7 @@ function BlackjackGame({ onCheer, onWin }) {
         </div>
       </div>
 
-      {result && <div className="v-settle" style={{ fontSize: 13, fontWeight: 510, color: resultCol }}>{result.text}</div>}
+      {result && <div className="v-settle" style={{ fontSize: 13, fontWeight: 600, color: resultCol }}>{result.text}</div>}
 
       {/* controls */}
       {phase === "bet" && (
@@ -4222,7 +4222,7 @@ function awStep(sim, dt, youStance) {
 // render one frame: grid + dashed center line, both servers (with HP bars), shot tracers, then units
 function awDraw(ctx, sim) {
   ctx.fillStyle = "#0f1011"; ctx.fillRect(0, 0, AW_W, AW_H);
-  ctx.strokeStyle = "#161718"; ctx.lineWidth = 1;
+  ctx.strokeStyle = C.surfaceRaised; ctx.lineWidth = 1;
   for (let x = 0; x <= AW_W; x += 28) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, AW_H); ctx.stroke(); }
   for (let y = 0; y <= AW_H; y += 28) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(AW_W, y); ctx.stroke(); }
   ctx.strokeStyle = "#23252a"; ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.moveTo(AW_W / 2, 0); ctx.lineTo(AW_W / 2, AW_H); ctx.stroke(); ctx.setLineDash([]);
@@ -4298,11 +4298,11 @@ function AlgoWarsGame({ onWin, onCheer }) {
         <canvas ref={canvasRef} width={AW_W} height={AW_H} style={{ width: "100%", height: "auto", display: "block", borderRadius: R.md, border: `1px solid ${C.panelEdge}` }} />
         {over && (
             <div style={{ position: "absolute", inset: 0, background: "rgba(8,9,10,0.86)", borderRadius: R.md, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
-            <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 24, color: over === "you" ? C.up : C.down }}>
+            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 24, color: over === "you" ? C.up : C.down }}>
               {over === "you" ? "🏆 MARKET DOMINATED" : "💥 ALGORITHMS CRUSHED"}
             </div>
             <div style={{ fontFamily: MONO, fontSize: 12, color: C.muted }}>{over === "you" ? "Your bots took the enemy server." : "The enemy overran your server."}</div>
-            <button onClick={reset} style={{ ...btn, background: C.accentPress, border: "none", color: C.textOnAccent, fontWeight: 510, padding: "9px 18px" }}>Rematch ↻</button>
+            <button onClick={reset} style={{ ...btn, background: C.accentPress, border: "none", color: C.textOnAccent, fontWeight: 600, padding: "9px 18px" }}>Rematch ↻</button>
           </div>
         )}
       </div>
@@ -4312,8 +4312,8 @@ function AlgoWarsGame({ onWin, onCheer }) {
           const afford = cap >= b.cost;
           return (
             <button key={id} onClick={() => deploy(id)} disabled={!afford || !!over} title={b.blurb}
-              style={{ ...btn, flex: 1, minWidth: 120, textAlign: "left", background: afford ? "#161718" : "#0f1011", border: `1px solid ${afford ? C.edgeStrong : C.panelEdge}`, color: afford ? C.text : C.faint, opacity: over ? 0.5 : 1 }}>
-              <div style={{ fontWeight: 510, color: afford ? b.color : C.faint }}>{b.name} <span style={{ color: afford ? C.muted : C.faint, fontWeight: 400 }}>⚡{b.cost}</span></div>
+              style={{ ...btn, flex: 1, minWidth: 120, textAlign: "left", background: afford ? C.surfaceRaised : "#0f1011", border: `1px solid ${afford ? C.edgeStrong : C.panelEdge}`, color: afford ? C.text : C.faint, opacity: over ? 0.5 : 1 }}>
+              <div style={{ fontWeight: 600, color: afford ? b.color : C.faint }}>{b.name} <span style={{ color: afford ? C.muted : C.faint, fontWeight: 400 }}>⚡{b.cost}</span></div>
               <div style={{ fontSize: 10, color: C.faint, marginTop: 2, lineHeight: 1.4 }}>{b.blurb}</div>
             </button>
           );
@@ -4321,11 +4321,11 @@ function AlgoWarsGame({ onWin, onCheer }) {
       </div>
       {/* stance = live AI re-scripting */}
       <div>
-        <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, marginBottom: 5 }}>YOUR ARMY LOGIC — flip it live to counter the enemy</div>
+        <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, marginBottom: 5 }}>YOUR ARMY LOGIC — flip it live to counter the enemy</div>
         <div style={{ display: "flex", gap: 6 }}>
           {AW_STANCES.map(s => (
             <button key={s.id} onClick={() => setStance(s.id)} title={s.hint}
-              style={{ ...btn, flex: 1, background: stance === s.id ? "rgba(255,255,255,0.09)" : "transparent", border: `1px solid ${stance === s.id ? C.accent : C.panelEdge}`, color: stance === s.id ? C.accentText : C.muted, fontWeight: 510 }}>
+              style={{ ...btn, flex: 1, background: stance === s.id ? "rgba(255,255,255,0.09)" : "transparent", border: `1px solid ${stance === s.id ? C.accent : C.panelEdge}`, color: stance === s.id ? C.accentText : C.muted, fontWeight: 600 }}>
               {s.label}
             </button>
           ))}
@@ -4395,7 +4395,7 @@ function AppCalendar({ extra = [] }) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <button onClick={() => shift(-1)} aria-label="Previous month" className="v-tap" style={navBtn}>‹</button>
           <button onClick={() => { setYm({ y: now.getFullYear(), m: now.getMonth() }); setSel(todayKey); }} title="Jump to today"
-            style={{ background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 13, fontWeight: 510, cursor: "pointer" }}>{CAL_MON[ym.m]} {ym.y}</button>
+            style={{ background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{CAL_MON[ym.m]} {ym.y}</button>
           <button onClick={() => shift(1)} aria-label="Next month" className="v-tap" style={navBtn}>›</button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
@@ -4435,8 +4435,8 @@ function AppCalendar({ extra = [] }) {
       {/* agenda — the selected day, the add form, and what's coming */}
       <div style={{ flex: "1 1 260px", minWidth: "min(236px, 100%)" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
-          <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 13, color: C.text }}>{pretty(sel)}</span>
-          {sel === todayKey && <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.accentText, border: `1px solid ${C.accent}`, borderRadius: R.pill, padding: "1px 7px" }}>TODAY</span>}
+          <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 13, color: C.text }}>{pretty(sel)}</span>
+          {sel === todayKey && <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.accentText, border: `1px solid ${C.accent}`, borderRadius: R.pill, padding: "1px 7px" }}>TODAY</span>}
         </div>
         {dayEvents.length === 0 && <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint, marginBottom: 6 }}>No events.</div>}
         {dayEvents.map((e, i) => (
@@ -4448,14 +4448,14 @@ function AppCalendar({ extra = [] }) {
         ))}
         <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
           <input value={time} onChange={e => setTime(e.target.value)} type="time" aria-label="Event time"
-            style={{ width: 96, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "7px 6px" }} />
+            style={{ width: 96, background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "7px 6px" }} />
           <input value={title} onChange={e => setTitle(e.target.value)} onKeyDown={e => e.key === "Enter" && add()} placeholder="Add an event…" aria-label="Event title"
-            style={{ flex: 1, minWidth: 0, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, padding: "7px 8px" }} />
-          <button onClick={add} aria-label="Add event" style={{ background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, letterSpacing: "-0.010em", padding: "0 12px", cursor: "pointer", whiteSpace: "nowrap" }}>+ Add</button>
+            style={{ flex: 1, minWidth: 0, background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, padding: "7px 8px" }} />
+          <button onClick={add} aria-label="Add event" style={{ background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "-0.010em", padding: "0 12px", cursor: "pointer", whiteSpace: "nowrap" }}>+ Add</button>
         </div>
         {upcoming.length > 0 && (
           <div style={{ marginTop: 14, borderTop: `1px solid ${C.panelEdge}`, paddingTop: 10 }}>
-            <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, marginBottom: 4 }}>UPCOMING</div>
+            <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, marginBottom: 4 }}>UPCOMING</div>
             {upcoming.map((e, i) => (
               <button key={e.id || `u${i}`} onClick={() => jump(e.date)} className="v-row"
                 style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "5px 6px", margin: "0 -6px", background: "transparent", border: "none", borderRadius: R.sm, cursor: "pointer", textAlign: "left" }}>
@@ -4972,7 +4972,7 @@ function AuthScreen({ onAuthed }) {
               {PLANS.map(p => {
                 const on = plan === p.id;
                 return (
-                  <button key={p.id} onClick={() => setPlan(p.id)} style={{ textAlign: "left", cursor: "pointer", background: on ? "#161718" : "transparent", border: `2px solid ${on ? C.accent : C.panelEdge}`, borderRadius: R.lg, padding: 16, display: "flex", flexDirection: "column", gap: 8, position: "relative" }}>
+                  <button key={p.id} onClick={() => setPlan(p.id)} style={{ textAlign: "left", cursor: "pointer", background: on ? C.surfaceRaised : "transparent", border: `2px solid ${on ? C.accent : C.panelEdge}`, borderRadius: R.lg, padding: 16, display: "flex", flexDirection: "column", gap: 8, position: "relative" }}>
                     {p.featured && <span style={{ position: "absolute", top: -10, right: 12, background: C.accent, color: C.textOnAccent, fontFamily: MONO, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", padding: "3px 10px", borderRadius: R.pill }}>{t("POPULAR")}</span>}
                     <div style={{ ...TYPE.subhead, fontSize: 15, fontWeight: 700 }}>{p.label}</div>
                     {/* The price is the one number here, so it keeps the numeric face
@@ -5008,7 +5008,7 @@ function AuthScreen({ onAuthed }) {
                 <button key={tab} role="radio" aria-checked={legalTab === tab} onClick={() => setLegalTab(tab)} style={{ ...segmentItem(legalTab === tab), flex: 1 }}>{tab === "terms" ? t("Terms") : t("Privacy")}</button>
               ))}
             </div>
-            <div style={{ maxHeight: 200, overflowY: "auto", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ maxHeight: 200, overflowY: "auto", background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
               {(legalTab === "terms" ? LEGAL_TERMS : LEGAL_PRIVACY).map((line, i) => (
                 <div key={i} style={{ ...TYPE.bodySm, fontSize: 13, color: C.muted, display: "flex", gap: 9 }}>
                   <span style={{ ...TYPE.numSm, color: C.faint, flex: "0 0 auto" }}>{i + 1}.</span>{line}
@@ -5206,7 +5206,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // Returns null when the feature is unlocked (by plan or dev mode). Safe to render inline in any tab.
   const lockChip = (feature) => planAllows(feature) ? null : (
     <span onClick={() => setSettingsTab("account")} title={`Unlock with ${planFor(feature)} — click to upgrade`}
-      style={{ fontFamily: MONO, textTransform: "none", fontSize: 12, fontWeight: 510, letterSpacing: "-0.013em", color: C.accentText, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.accent}`, borderRadius: R.xs, padding: "1px 6px", cursor: "pointer", whiteSpace: "nowrap" }}>
+      style={{ fontFamily: MONO, textTransform: "none", fontSize: 12, fontWeight: 600, letterSpacing: "-0.013em", color: C.accentText, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.accent}`, borderRadius: R.xs, padding: "1px 6px", cursor: "pointer", whiteSpace: "nowrap" }}>
       🔒 {planFor(feature)}
     </span>
   );
@@ -9150,16 +9150,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         <>
           {/* summary panel for the picked title */}
           {catalogPick && !catalog.archive && (
-            <div style={{ display: "flex", gap: 10, padding: 12, borderBottom: `1px solid ${C.panelEdge}`, background: "#161718" }}>
+            <div style={{ display: "flex", gap: 10, padding: 12, borderBottom: `1px solid ${C.panelEdge}`, background: C.surfaceRaised }}>
               {catalogPick.poster && <img src={catalogPick.poster} alt="" style={{ width: 70, height: 105, objectFit: "cover", borderRadius: R.sm, flexShrink: 0 }} />}
               <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0, flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: C.text }}>{catalogPick.title}{catalogPick.year ? ` (${catalogPick.year})` : ""}{catalogPick.rating > 0 ? <span style={{ color: C.accentText, fontWeight: 400 }}>  ★{Number(catalogPick.rating).toFixed(1)}</span> : null}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{catalogPick.title}{catalogPick.year ? ` (${catalogPick.year})` : ""}{catalogPick.rating > 0 ? <span style={{ color: C.accentText, fontWeight: 400 }}>  ★{Number(catalogPick.rating).toFixed(1)}</span> : null}</span>
                   <button onClick={() => setCatalogPick(null)} aria-label="Close summary" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
                 </div>
                 <div style={{ fontFamily: SANS, fontSize: 11, lineHeight: 1.55, color: C.muted, maxHeight: 96, overflowY: "auto" }}>{catalogPick.overview || "No summary available."}</div>
                 <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
-                  <button onClick={() => playTrailer(catalogPick, catalog.service)} style={{ background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "4px 10px", cursor: "pointer" }}>▶ trailer</button>
+                  <button onClick={() => playTrailer(catalogPick, catalog.service)} style={{ background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 600, padding: "4px 10px", cursor: "pointer" }}>▶ trailer</button>
                   {catalog.service
                     ? <button onClick={() => openEmbed(catalog.service.search(catalogPick.title), catalog.service.name)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 10px", cursor: "pointer" }}>watch on {catalog.service.name} ↗</button>
                     : <a href={`https://www.themoviedb.org/${catalogPick.kind}/${catalogPick.id}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 10px" }}>details ↗</a>}
@@ -9169,10 +9169,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           )}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 10, padding: 12 }}>
             {catalog.items.map((it, i) => (
-              <div key={i} style={{ display: "flex", flexDirection: "column", background: "#161718", border: `1px solid ${catalogPick && catalogPick.id === it.id && catalogPick.archiveId === it.archiveId ? C.accent : C.panelEdge}`, borderRadius: R.md, overflow: "hidden" }}>
+              <div key={i} style={{ display: "flex", flexDirection: "column", background: C.surfaceRaised, border: `1px solid ${catalogPick && catalogPick.id === it.id && catalogPick.archiveId === it.archiveId ? C.accent : C.panelEdge}`, borderRadius: R.md, overflow: "hidden" }}>
                 <div onClick={() => catalog.archive ? playArchive(it) : setCatalogPick(p => (p && p.id === it.id ? null : it))}
                   title={catalog.archive ? "Play in-desk" : "Show summary"}
-                  style={{ position: "relative", width: "100%", paddingTop: "150%", background: "#161718", cursor: "pointer" }}>
+                  style={{ position: "relative", width: "100%", paddingTop: "150%", background: C.surfaceRaised, cursor: "pointer" }}>
                   {it.poster && <img src={it.poster} alt="" loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
                   {it.rating > 0 && <span style={{ position: "absolute", top: 4, right: 4, background: "rgba(0,0,0,0.75)", color: C.accentText, fontFamily: MONO, fontSize: 12, padding: "1px 5px", borderRadius: R.xs }}>★ {Number(it.rating).toFixed(1)}</span>}
                   {!catalog.archive && <span style={{ position: "absolute", bottom: 4, left: 4, background: "rgba(0,0,0,0.7)", color: C.faint, fontFamily: MONO, fontSize: 12, padding: "1px 5px", borderRadius: R.xs }}>ⓘ summary</span>}
@@ -9182,12 +9182,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   <span style={{ marginTop: "auto", display: "flex", gap: 4 }}>
                     {catalog.archive ? (
                       <>
-                        <button onClick={() => playArchive(it)} title="Play in-desk" style={{ flex: 1, background: alpha(C.accent, 0.14), border: `1px solid ${C.up}`, color: C.up, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "4px 0", cursor: "pointer" }}>▶ play</button>
+                        <button onClick={() => playArchive(it)} title="Play in-desk" style={{ flex: 1, background: alpha(C.accent, 0.14), border: `1px solid ${C.up}`, color: C.up, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 600, padding: "4px 0", cursor: "pointer" }}>▶ play</button>
                         <a href={`https://archive.org/details/${it.archiveId}`} target="_blank" rel="noopener noreferrer" title="Open on Archive" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 7px" }}>↗</a>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => playTrailer(it, catalog.service)} title="Play trailer in-desk" style={{ flex: 1, background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "4px 0", cursor: "pointer" }}>▶ trailer</button>
+                        <button onClick={() => playTrailer(it, catalog.service)} title="Play trailer in-desk" style={{ flex: 1, background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 600, padding: "4px 0", cursor: "pointer" }}>▶ trailer</button>
                         {catalog.service
                           ? <button onClick={() => openEmbed(catalog.service.search(it.title), catalog.service.name)} title={`Watch on ${catalog.service.name}`} style={{ border: `1px solid ${C.panelEdge}`, color: C.muted, background: "transparent", borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 7px", cursor: "pointer" }}>↗</button>
                           : <a href={`https://www.themoviedb.org/${it.kind}/${it.id}`} target="_blank" rel="noopener noreferrer" title="Details" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 7px" }}>↗</a>}
@@ -9208,7 +9208,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // played through, not on a stage above the composer where the host's replies
   // and the host's game ended up in two different columns.
   const gamePanel = gameOn && (() => {
-    const primaryBtn = { background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 510, fontSize: 12, padding: "9px 16px", cursor: "pointer" };
+    const primaryBtn = { background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 600, fontSize: 12, padding: "9px 16px", cursor: "pointer" };
     const ghostBtn = { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "9px 12px", cursor: "pointer" };
     const ctlBtn = { background: "rgba(255,255,255,0.05)", border: `1px solid ${C.panelEdge}`, color: C.text, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, lineHeight: 1, padding: "6px 10px", cursor: "pointer" };
     // Titles arrive as "<glyph> NAME". The glyph is an emoji, so it
@@ -9220,7 +9220,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const icon = cut > 0 ? title.slice(0, cut) : "";
       const label = cut > 0 ? title.slice(cut + 1) : title;
       return (
-      <div style={{ flexShrink: 0, minWidth: 0, background: "#161718", border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ flexShrink: 0, minWidth: 0, background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
           <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
             {icon && <span aria-hidden="true" style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{icon}</span>}
@@ -9250,9 +9250,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         <div style={{ padding: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 10 }}>
           {games.map(g => (
             <button key={g.id} onClick={() => startMode(g.id)} className="v-lift"
-              style={{ textAlign: "left", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: 14, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, minHeight: 112 }}>
+              style={{ textAlign: "left", background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: 14, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, minHeight: 112 }}>
               <span aria-hidden="true" style={{ fontSize: 20 }}>{g.icon}</span>
-              <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 13, color: C.text }}>{g.name}</span>
+              <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 13, color: C.text }}>{g.name}</span>
               <span style={{ fontFamily: SANS, fontSize: 11, lineHeight: 1.5, color: C.faint }}>{g.desc}</span>
             </button>
           ))}
@@ -9299,7 +9299,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         <div style={{ padding: 14, fontFamily: MONO, display: "flex", flexDirection: "column", gap: 12 }}>
           {done ? (
             <>
-              <div style={{ fontSize: 17, fontWeight: 510, color: C.accentText }}>{gameMode === "school" ? "🎓 You graduated!" : "🏁 Round complete!"}</div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: C.accentText }}>{gameMode === "school" ? "🎓 You graduated!" : "🏁 Round complete!"}</div>
               <div style={{ fontSize: 12, lineHeight: 1.7, color: C.text }}>
                 You scored <b style={{ color: gameScore > total / 2 ? C.up : C.accentText }}>{gameScore} / {total}</b>. {gameMode === "school" ? "You now know the basics of how stocks work." : gameScore === total ? "Perfect run!" : "Play again to beat your score."}
               </div>
@@ -9309,7 +9309,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             </>
           ) : (
             <>
-              <div style={{ fontSize: 13, fontWeight: 510, color: C.text }}>{meta.title}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{meta.title}</div>
               {gameMode === "school" && gamePhase === "teach" && (
                 <>
                   <div style={{ fontSize: 12, lineHeight: 1.7, color: C.text }}>{R.teach}</div>
@@ -9604,32 +9604,32 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           <div role="dialog" aria-label="Export preview" style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setExportDraft(null)}>
             <div id="export-modal" onClick={e => e.stopPropagation()} className="v-rise" style={{ width: 620, maxWidth: "94vw", maxHeight: "88vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${C.panelEdge}` }}>
-                <span style={{ ...TYPE.eyebrow, color: C.muted }}>⬇ REVIEW & EDIT <span style={{ color: C.faint, fontWeight: 510, letterSpacing: "-0.013em", textTransform: "none" }}>· before you export</span></span>
+                <span style={{ ...TYPE.eyebrow, color: C.muted }}>⬇ REVIEW & EDIT <span style={{ color: C.faint, fontWeight: 600, letterSpacing: "-0.013em", textTransform: "none" }}>· before you export</span></span>
                 <button onClick={() => setExportDraft(null)} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 14, cursor: "pointer" }}>✕</button>
               </div>
               <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
                 <div>
-                  <label style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>DOCUMENT TITLE</label>
+                  <label style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>DOCUMENT TITLE</label>
                   <input value={exportDraft.title} onChange={e => setExportDraft(d => ({ ...d, title: e.target.value }))}
-                    style={{ width: "100%", boxSizing: "border-box", marginTop: 4, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 14, padding: "9px 10px" }} />
+                    style={{ width: "100%", boxSizing: "border-box", marginTop: 4, background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 14, padding: "9px 10px" }} />
                 </div>
                 <div>
-                  <label style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>REPORT BODY · edit freely, this goes into the document</label>
+                  <label style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>REPORT BODY · edit freely, this goes into the document</label>
                   <textarea value={exportDraft.body} onChange={e => setExportDraft(d => ({ ...d, body: e.target.value }))} rows={13}
-                    style={{ width: "100%", boxSizing: "border-box", marginTop: 4, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, lineHeight: 1.6, padding: "10px", resize: "vertical" }} />
+                    style={{ width: "100%", boxSizing: "border-box", marginTop: 4, background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, lineHeight: 1.6, padding: "10px", resize: "vertical" }} />
                   {!writtenReport && <button onClick={async () => { const t = await generateWrittenReport(); if (t) setExportDraft(d => ({ ...d, body: t })); }} disabled={reportBusy}
                     style={{ marginTop: 6, background: "transparent", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "5px 10px", cursor: "pointer" }}>{reportBusy ? "✍ writing…" : "✨ write it for me (AI)"}</button>}
                 </div>
 
                 {/* editable snapshot — the Summary sheet / title-slide numbers */}
                 <div>
-                  <label style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>SNAPSHOT · edit any value ({exportDraft.selected?.sym || selected})</label>
+                  <label style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>SNAPSHOT · edit any value ({exportDraft.selected?.sym || selected})</label>
                   <div style={{ marginTop: 6, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     {[["name", "Name"], ["price", "Price"], ["chgPct", "Change %"], ["chg", "Change"], ["open", "Open"], ["high", "High"], ["low", "Low"], ["prevClose", "Prev Close"]].map(([k, lbl]) => (
                       <label key={k} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <span style={{ fontFamily: MONO, fontSize: 12, color: C.muted, width: 74, flexShrink: 0 }}>{lbl}</span>
                         <input value={exportDraft.selected?.[k] ?? ""} onChange={e => setSel(k, e.target.value)}
-                          style={{ flex: 1, minWidth: 0, boxSizing: "border-box", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px" }} />
+                          style={{ flex: 1, minWidth: 0, boxSizing: "border-box", background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px" }} />
                       </label>
                     ))}
                   </div>
@@ -9637,11 +9637,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
                 {/* editable watchlist grid — per-cell for the Watchlist sheet / slide / table */}
                 <div>
-                  <label style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>WATCHLIST · edit any cell, add or remove rows</label>
+                  <label style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>WATCHLIST · edit any cell, add or remove rows</label>
                   <div style={{ marginTop: 6, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, overflow: "hidden" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: wlCols, background: "#161718", borderBottom: `1px solid ${C.panelEdge}` }}>
+                    <div style={{ display: "grid", gridTemplateColumns: wlCols, background: C.surfaceRaised, borderBottom: `1px solid ${C.panelEdge}` }}>
                       {["Symbol", "Price", "Change", "Change %", ""].map((h, i) => (
-                        <span key={i} style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, padding: "6px 8px" }}>{h}</span>
+                        <span key={i} style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, padding: "6px 8px" }}>{h}</span>
                       ))}
                     </div>
                     {exportDraft.watchlist.map((w, i) => (
@@ -9661,7 +9661,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 {/* editable AI-analysis blocks */}
                 {exportDraft.analysis.length > 0 && (
                   <div>
-                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, cursor: "pointer" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, cursor: "pointer" }}>
                       <Toggle checked={inc.analysis !== false} onChange={e => setInc("analysis", e.target.checked)} /> AI ANALYSIS · edit or remove
                     </label>
                     {inc.analysis !== false && exportDraft.analysis.map((a, i) => (
@@ -9671,7 +9671,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                           <button onClick={() => delAn(i)} title="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
                         </div>
                         <textarea value={a.text ?? ""} onChange={e => setAn(i, e.target.value)} rows={3}
-                          style={{ width: "100%", boxSizing: "border-box", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, lineHeight: 1.5, padding: "6px 8px", resize: "vertical" }} />
+                          style={{ width: "100%", boxSizing: "border-box", background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, lineHeight: 1.5, padding: "6px 8px", resize: "vertical" }} />
                       </div>
                     ))}
                   </div>
@@ -9679,16 +9679,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
                 {/* editable news list */}
                 <div>
-                  <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, cursor: "pointer" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, cursor: "pointer" }}>
                     <Toggle checked={inc.news !== false} onChange={e => setInc("news", e.target.checked)} /> NEWS · edit, add or remove
                   </label>
                   {inc.news !== false && (<>
                     {exportDraft.news.map((n, i) => (
                       <div key={i} style={{ marginTop: 6, display: "grid", gridTemplateColumns: "2.4fr 1fr 28px", gap: 6, alignItems: "center" }}>
                         <input value={n.title ?? ""} onChange={e => setNews(i, "title", e.target.value)} placeholder="Headline" aria-label={`news title ${i + 1}`}
-                          style={{ boxSizing: "border-box", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px", minWidth: 0 }} />
+                          style={{ boxSizing: "border-box", background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px", minWidth: 0 }} />
                         <input value={n.source ?? ""} onChange={e => setNews(i, "source", e.target.value)} placeholder="Source" aria-label={`news source ${i + 1}`}
-                          style={{ boxSizing: "border-box", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px", minWidth: 0 }} />
+                          style={{ boxSizing: "border-box", background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 8px", minWidth: 0 }} />
                         <button onClick={() => delNews(i)} title="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
                       </div>
                     ))}
@@ -9705,7 +9705,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   {exportMsg && <span style={{ color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted }}>· {exportMsg}</span>}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>FORMAT</span>
+                  <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>FORMAT</span>
                   {["xlsx", "docx", "pptx"].map(f => (
                     <button key={f} onClick={() => setExportDraft(d => ({ ...d, format: f }))}
                       style={{ background: exportDraft.format === f ? "rgba(255,255,255,0.09)" : "transparent", border: `1px solid ${exportDraft.format === f ? C.accent : C.panelEdge}`, color: exportDraft.format === f ? C.accentText : C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>{FMT[f]}</button>
@@ -9724,7 +9724,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     });
                     setExportDraft(null);
                   }}
-                    style={{ marginLeft: "auto", background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 510, fontSize: 12, padding: "9px 18px", cursor: "pointer" }}>⬇ Download {FMT[exportDraft.format]}</button>
+                    style={{ marginLeft: "auto", background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 600, fontSize: 12, padding: "9px 18px", cursor: "pointer" }}>⬇ Download {FMT[exportDraft.format]}</button>
                 </div>
               </div>
             </div>
@@ -9737,19 +9737,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         <div role="dialog" aria-label="In-app browser" style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", zIndex: 60, display: "flex", flexDirection: "column", padding: 18 }} onClick={() => setEmbed(null)}>
           <div onClick={e => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", flex: 1, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.md, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "8px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-              <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: C.accentText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>🌐 {embed.title}</span>
+              <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.accentText, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>🌐 {embed.title}</span>
               <span style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                 <a href={embed.url} target="_blank" rel="noopener noreferrer"
-                  style={{ background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: MONO, fontSize: 12, fontWeight: 510, padding: "6px 14px", textDecoration: "none" }}>open in new tab ↗</a>
+                  style={{ background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: MONO, fontSize: 12, fontWeight: 600, padding: "6px 14px", textDecoration: "none" }}>open in new tab ↗</a>
                 <button onClick={() => setEmbed(null)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>✕ close</button>
               </span>
             </div>
-            <iframe title={embed.title} src={embed.url} style={{ flex: 1, width: "100%", border: "none", background: embed.trusted ? "#08090a" : "#fff" }}
+            <iframe title={embed.title} src={embed.url} style={{ flex: 1, width: "100%", border: "none", background: embed.trusted ? C.base : "#fff" }}
               allow="clipboard-write; fullscreen" referrerPolicy="no-referrer-when-downgrade" />
             {!embed.trusted && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "6px 12px", fontFamily: SANS, fontSize: 10, color: C.faint, borderTop: `1px solid ${C.panelEdge}`, lineHeight: 1.5, flexWrap: "wrap" }}>
                 <span>Blank? Brokers (Robinhood, Fidelity…) block embedding — use <b style={{ color: C.muted }}>open in new tab ↗</b>, or view the live chart in-app:</span>
-                <button onClick={() => openChart(selected)} style={{ background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "5px 10px", cursor: "pointer" }}>📈 {selected} chart (works in-frame)</button>
+                <button onClick={() => openChart(selected)} style={{ background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, fontWeight: 600, padding: "5px 10px", cursor: "pointer" }}>📈 {selected} chart (works in-frame)</button>
               </div>
             )}
           </div>
@@ -9819,7 +9819,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       )}
       {breakingAlert && (
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 20px", background: `linear-gradient(90deg, ${alpha(C.down, 0.24)}, ${alpha(C.down, 0.04)})`, borderBottom: `1px solid ${C.down}` }}>
-          <span className="breaking-pulse" style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, letterSpacing: "-0.013em", color: "#08090a", background: C.down, borderRadius: R.xs, padding: "3px 8px", whiteSpace: "nowrap" }}>⚡ BREAKING</span>
+          <span className="breaking-pulse" style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, letterSpacing: "-0.013em", color: C.textOnAccent, background: C.down, borderRadius: R.xs, padding: "3px 8px", whiteSpace: "nowrap" }}>⚡ BREAKING</span>
           <span style={{ fontFamily: SANS, fontSize: 12, color: C.text, flex: 1, lineHeight: 1.4 }}>{breakingAlert.text}</span>
           <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint, whiteSpace: "nowrap" }}>{breakingAlert.source}</span>
           <button onClick={() => speak("breaking", `This just in. ${breakingAlert.text}.`)} title="Read on air"
@@ -9851,11 +9851,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     {[["xlsx", "📊 Excel (.xlsx)"], ["docx", "📄 Word (.docx)"], ["pptx", "📽 PowerPoint (.pptx)"]].map(([fmt, label]) => (
                       <button key={fmt} onClick={() => { setShowExportMenu(false); openExportPreview(fmt); }}
                         style={{ textAlign: "left", background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 11, padding: "8px 12px", cursor: "pointer" }}
-                        onMouseEnter={e => e.currentTarget.style.background = "#161718"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{label}</button>
+                        onMouseEnter={e => e.currentTarget.style.background = C.surfaceRaised} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{label}</button>
                     ))}
                     <button onClick={() => { setShowExportMenu(false); generateWrittenReport(); }} disabled={reportBusy}
                       style={{ textAlign: "left", background: "transparent", borderTop: `1px solid ${C.panelEdge}`, borderLeft: "none", borderRight: "none", borderBottom: "none", color: C.accentText, fontFamily: SANS, fontSize: 11, padding: "8px 12px", cursor: "pointer" }}
-                      onMouseEnter={e => e.currentTarget.style.background = "#161718"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{reportBusy ? "✍ writing…" : "📝 write analyst report"}</button>
+                      onMouseEnter={e => e.currentTarget.style.background = C.surfaceRaised} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{reportBusy ? "✍ writing…" : "📝 write analyst report"}</button>
                   </div>
                 )}
               </span>
@@ -9875,7 +9875,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     ].map((it, idx) => (
                       <button key={it.key} onClick={it.onClick} aria-pressed={it.active}
                         style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", background: "transparent", border: "none", borderBottom: idx < 2 ? `1px solid ${C.panelEdge}` : "none", color: C.text, fontFamily: SANS, fontSize: 11, padding: "9px 12px", cursor: "pointer" }}
-                        onMouseEnter={e => e.currentTarget.style.background = "#161718"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        onMouseEnter={e => e.currentTarget.style.background = C.surfaceRaised} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                         <span style={{ fontSize: 13, width: 16, textAlign: "center" }}>{it.icon}</span>
                         <span style={{ flex: 1 }}>
                           <span style={{ display: "block", fontSize: 12, color: it.active ? C.accentText : C.text }}>{it.label}</span>
@@ -9917,9 +9917,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           {/* embedded player — docked at the TOP of the desk so a trailer opened from a
               tall catalog grid is visible without scrolling */}
           {player && (
-            <div ref={playerRef} style={{ margin: "12px 12px 0", border: `1px solid ${C.accent}`, borderRadius: R.md, overflow: "hidden", background: "#161718" }}>
+            <div ref={playerRef} style={{ margin: "12px 12px 0", border: `1px solid ${C.accent}`, borderRadius: R.md, overflow: "hidden", background: C.surfaceRaised }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-                <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: C.text }}>
+                <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>
                   <span style={{ color: C.down }}>▶</span> {player.title}
                   <span style={{ color: C.faint, fontWeight: 400, marginLeft: 8 }}>{player.channel}</span>
                 </span>
@@ -9946,7 +9946,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               ) : (
                 <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.accentText }}>DESK BRIEF</span>
+                    <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.accentText }}>DESK BRIEF</span>
                     <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
                       <a href={ytWatchUrl(player)} target="_blank" rel="noopener noreferrer"
                         style={{ fontFamily: MONO, fontSize: 12, color: C.accentText, textDecoration: "none", border: `1px solid ${C.accentEdge}`, borderRadius: R.xs, padding: "3px 9px" }}>
@@ -10337,7 +10337,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <span style={{ display: "flex" }}>
               {[["list", "≡", "List"], ["heat", "▦", "Heat map"]].map(([id, glyph, hint]) => (
                 <button key={id} onClick={() => setWlView(id)} title={hint} aria-pressed={wlView === id} aria-label={`${id} view`} className="v-tap"
-                  style={{ background: wlView === id ? "#161718" : "transparent", border: "none", color: wlView === id ? C.accentText : C.muted, fontFamily: SANS, fontSize: 12, padding: "4px 9px", cursor: "pointer", borderRadius: R.sm, transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}` }}>
+                  style={{ background: wlView === id ? C.surfaceRaised : "transparent", border: "none", color: wlView === id ? C.accentText : C.muted, fontFamily: SANS, fontSize: 12, padding: "4px 9px", cursor: "pointer", borderRadius: R.sm, transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}` }}>
                   {glyph}
                 </button>
               ))}
@@ -10365,9 +10365,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         border: `1px solid ${on ? C.accent : "transparent"}`,
                         transition: "background 0.5s ease",
                       }}>
-                      <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: on ? C.accentText : C.text }}>{r.sym}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: on ? C.accentText : C.text }}>{r.sym}</span>
                       <span style={{ fontFamily: MONO, fontSize: 12, color: C.text, opacity: 0.8 }}>{fmt(r.price)}</span>
-                      <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: dirColorN(r.chg) }}>{pct(r.chgPct)}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: dirColorN(r.chg) }}>{pct(r.chgPct)}</span>
                     </button>
                   );
                 });
@@ -10480,7 +10480,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                      covered the chart's top rows, which are the newest action */
                   <div style={{ height: "100%", display: "flex", flexDirection: "column", gap: 6 }}>
                     {pnfPattern && (
-                      <div style={{ alignSelf: "flex-start", fontFamily: SANS, fontSize: 11, fontWeight: 510, letterSpacing: "-0.010em", textTransform: "uppercase", color: pnfPattern.side === "bull" ? dirColorN(1) : dirColorN(-1), background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, padding: "4px 8px" }}>
+                      <div style={{ alignSelf: "flex-start", fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "-0.010em", textTransform: "uppercase", color: pnfPattern.side === "bull" ? dirColorN(1) : dirColorN(-1), background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, padding: "4px 8px" }}>
                         {pnfPattern.name}
                       </div>
                     )}
@@ -10522,7 +10522,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <XAxis dataKey="t" tick={{ fill: C.faint, fontSize: 12, fontFamily: MONO }} minTickGap={48} axisLine={{ stroke: C.panelEdge }} tickLine={false} />
                     <YAxis domain={comparePlot ? ["auto", "auto"] : yDomain} tick={{ fill: C.faint, fontSize: 12, fontFamily: MONO }} width={56} axisLine={false} tickLine={false} tickFormatter={v => (comparePlot ? `${v > 0 ? "+" : ""}${(+v).toFixed(1)}%` : fmt(v))} />
                     <Tooltip
-                      contentStyle={{ background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, fontFamily: MONO, fontSize: 12 }}
+                      contentStyle={{ background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, fontFamily: MONO, fontSize: 12 }}
                       labelStyle={{ color: C.muted }} itemStyle={{ color: C.text }}
                       formatter={(v, name) => (comparePlot
                         ? [`${v > 0 ? "+" : ""}${(+v).toFixed(2)}%`, name === "vs" ? chartVs : selected]
@@ -10563,7 +10563,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       {suggestSym(selected) && (
                         <button
                           onClick={() => { const t = suggestSym(selected); setSelected(t); if (!watchlist.includes(t)) setWatchlist(w => [...w, t]); }}
-                          style={{ fontFamily: SANS, fontSize: 12, color: C.bg, background: C.accent, border: "none", borderRadius: R.sm, padding: "6px 12px", cursor: "pointer", fontWeight: 510 }}
+                          style={{ fontFamily: SANS, fontSize: 12, color: C.bg, background: C.accent, border: "none", borderRadius: R.sm, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}
                         >
                           Switch to {suggestSym(selected)}
                         </button>
@@ -10724,7 +10724,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               return (
                 <div style={{ padding: "8px 12px 0", display: "flex", alignItems: "center", gap: 10, color: C.faint }}>
                   <Sparkline data={totals} width={132} height={28} color={dirColorN(portTotals.pnl)} refValue={refValue} />
-                  <span title="Dotted line marks yesterday's value" style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>SESSION VALUE</span>
+                  <span title="Dotted line marks yesterday's value" style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>SESSION VALUE</span>
                 </div>
               );
             })()}
@@ -10744,7 +10744,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                         style={{ width: `${(x.v / total * 100).toFixed(2)}%`, background: dirColorN(x.pnl), opacity: 0.85, minWidth: 2 }} />
                     ))}
                   </div>
-                  <div style={{ marginTop: 4, fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>{t("ALLOCATION BY VALUE")}</div>
+                  <div style={{ marginTop: 4, fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>{t("ALLOCATION BY VALUE")}</div>
                 </div>
               );
             })()}
@@ -10752,9 +10752,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               const maxPnl = Math.max(0.5, ...portfolioRows.map(r => Math.abs(r.pnlPct ?? 0)));
               return portfolioRows.map(r => (
               <button key={r.id} className="wl-row" onClick={() => setSelected(r.sym)} aria-current={r.sym === selected ? "true" : undefined}
-                style={{ display: "block", width: "100%", padding: "8px 12px", background: r.sym === selected ? "#161718" : "transparent", border: "none", borderLeft: `2px solid ${r.sym === selected ? C.accent : "transparent"}`, borderTop: `1px solid ${C.grid}`, cursor: "pointer", textAlign: "left" }}>
+                style={{ display: "block", width: "100%", padding: "8px 12px", background: r.sym === selected ? C.surfaceRaised : "transparent", border: "none", borderLeft: `2px solid ${r.sym === selected ? C.accent : "transparent"}`, borderTop: `1px solid ${C.grid}`, cursor: "pointer", textAlign: "left" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, color: C.text }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span></span>
+                  <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span></span>
                   {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>)}
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
@@ -10856,10 +10856,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             </svg>
             <div style={{ position: "absolute", boxSizing: "border-box", width: TIPW, maxWidth: "calc(100vw - 24px)", left: tip.left, top: tip.top, maxHeight: maxH, overflowY: "auto", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.md, padding: 16, boxShadow: "0 16px 50px rgba(0,0,0,0.6)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>TOUR · {tourStep + 1}/{TOUR_STEPS.length}</span>
+                <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>TOUR · {tourStep + 1}/{TOUR_STEPS.length}</span>
                 <button onClick={endSpotlight} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 11, cursor: "pointer" }}>{t("exit")} ✕</button>
               </div>
-              <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 15, letterSpacing: "-0.011em", color: C.accentText, marginTop: 6 }}>{t(step.title)}</div>
+              <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 15, letterSpacing: "-0.011em", color: C.accentText, marginTop: 6 }}>{t(step.title)}</div>
               <div style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.65, color: C.text, marginTop: 8 }}>{t(step.body)}</div>
               <div style={{ display: "flex", gap: 4, margin: "12px 0" }}>
                 {TOUR_STEPS.map((_, i) => (
@@ -10873,7 +10873,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   {tourStep > 0 && (
                     <button onClick={() => setTourStep(s => s - 1)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>{t("Back")}</button>
                   )}
-                  <button onClick={() => (last ? endSpotlight() : setTourStep(s => s + 1))} style={{ background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "6px 16px", cursor: "pointer" }}>{last ? t("Done") : t("Next")}</button>
+                  <button onClick={() => (last ? endSpotlight() : setTourStep(s => s + 1))} style={{ background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 600, padding: "6px 16px", cursor: "pointer" }}>{last ? t("Done") : t("Next")}</button>
                 </div>
               </div>
             </div>
@@ -10885,7 +10885,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       {demoRunning && (
         <div style={{ position: "fixed", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 65, display: "flex", alignItems: "center", gap: 12, background: C.panel, border: `1px solid ${C.accent}`, borderRadius: 999, padding: "7px 8px 7px 16px", boxShadow: "0 8px 30px rgba(0,0,0,0.5)", fontFamily: MONO, fontSize: 12, color: C.text }}>
           <span className="cursor" style={{ color: C.down }}>▶</span> Demo — the anchor is driving
-          <button onClick={stopDemo} style={{ background: alpha(C.down, 0.14), border: `1px solid ${C.down}`, color: C.down, borderRadius: 999, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "5px 14px", cursor: "pointer" }}>■ stop</button>
+          <button onClick={stopDemo} style={{ background: alpha(C.down, 0.14), border: `1px solid ${C.down}`, color: C.down, borderRadius: 999, fontFamily: SANS, fontSize: 11, fontWeight: 600, padding: "5px 14px", cursor: "pointer" }}>■ stop</button>
         </div>
       )}
 
@@ -10907,7 +10907,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <span aria-hidden="true" style={{
                       width: 15, height: 15, marginTop: 1, flexShrink: 0, borderRadius: R.xs, boxSizing: "border-box",
                       background: ok ? C.accent : "transparent", border: `1px solid ${ok ? C.accent : C.panelEdge}`,
-                      display: "grid", placeItems: "center", color: "#08090a", fontSize: 10, fontWeight: 510,
+                      display: "grid", placeItems: "center", color: C.textOnAccent, fontSize: 10, fontWeight: 600,
                       transition: "background .15s, border-color .15s",
                     }}>{ok ? "✓" : ""}</span>
                     <span style={{ display: "flex", flexDirection: "column" }}>
@@ -10938,7 +10938,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           <div onClick={e => e.stopPropagation()}
             style={{ width: 520, maxWidth: "94vw", maxHeight: "90vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.lg, padding: 22, boxShadow: "0 24px 70px rgba(0,0,0,0.6)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 17, letterSpacing: "-0.010em", color: C.accentText }}>⚙️ SETUP GUIDE</div>
+              <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 17, letterSpacing: "-0.010em", color: C.accentText }}>⚙️ SETUP GUIDE</div>
               <button onClick={() => setSetupOpen(false)} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 12, cursor: "pointer" }}>✕</button>
             </div>
             <div style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.7, color: C.text, marginTop: 10 }}>
@@ -10946,11 +10946,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
               {SETUP_STEPS.map((s, i) => (
-                <div key={i} style={{ background: "#161718", border: `1px solid ${s.req ? C.accent : C.panelEdge}`, borderRadius: R.md, padding: "12px 14px" }}>
+                <div key={i} style={{ background: C.surfaceRaised, border: `1px solid ${s.req ? C.accent : C.panelEdge}`, borderRadius: R.md, padding: "12px 14px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 20, lineHeight: 1 }}>{s.icon}</span>
-                    <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 14, color: C.text }}>{s.name}</span>
-                    <span style={{ marginLeft: "auto", fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: s.req ? "#08090a" : C.faint, background: s.req ? C.accent : "transparent", border: `1px solid ${s.req ? C.accent : C.panelEdge}`, borderRadius: 999, padding: "2px 8px" }}>{s.need.toUpperCase()}</span>
+                    <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 14, color: C.text }}>{s.name}</span>
+                    <span style={{ marginLeft: "auto", fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: s.req ? C.textOnAccent : C.faint, background: s.req ? C.accent : "transparent", border: `1px solid ${s.req ? C.accent : C.panelEdge}`, borderRadius: 999, padding: "2px 8px" }}>{s.need.toUpperCase()}</span>
                   </div>
                   <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: C.muted, marginTop: 7 }}>{s.what}</div>
                   <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: C.text, marginTop: 5 }}>
@@ -10962,7 +10962,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             </div>
             <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
               <button onClick={() => { setSetupOpen(false); setSettingsTab("quick"); setShowSettings(true); }}
-                style={{ flex: 1, minWidth: 180, background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: 5, fontFamily: SANS, fontSize: 12, fontWeight: 510, padding: "10px 0", cursor: "pointer" }}>
+                style={{ flex: 1, minWidth: 180, background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: 5, fontFamily: SANS, fontSize: 12, fontWeight: 600, padding: "10px 0", cursor: "pointer" }}>
                 Open Settings →
               </button>
               <button onClick={() => setSetupOpen(false)}
@@ -10979,13 +10979,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         <div role="dialog" aria-label="Welcome to Vantage"
           style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: 16 }}>
           <div className="v-rise" style={{ width: 480, maxWidth: "94vw", maxHeight: "92vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.lg, padding: 20, boxShadow: "0 24px 70px rgba(0,0,0,0.6)" }}>
-            <div style={{ fontFamily: SANS, fontWeight: 510, fontSize: 20, letterSpacing: "-0.012em", color: C.accentText }}>
-              VANTAGE <span style={{ fontSize: 10, letterSpacing: "-0.010em", color: C.faint, fontWeight: 510 }}>· GETTING STARTED</span>
+            <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20, letterSpacing: "-0.012em", color: C.accentText }}>
+              VANTAGE <span style={{ fontSize: 10, letterSpacing: "-0.010em", color: C.faint, fontWeight: 600 }}>· GETTING STARTED</span>
             </div>
             <div style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.55, color: C.text, marginTop: 7 }}>
               Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:
             </div>
-            <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.55, color: C.muted, marginTop: 7, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "8px 10px" }}>
+            <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.55, color: C.muted, marginTop: 7, background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "8px 10px" }}>
               💡 <b style={{ color: C.text }}>No setup required.</b> Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.
             </div>
             {!aiReady() && (
@@ -11002,14 +11002,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 { icon: "⚙️", title: "Set it up (keys & options)", desc: "What each key does and where to get it.", cta: "Setup guide", on: () => { setShowTutorial(false); setSetupOpen(true); } },
               ].map((o, i) => (
                 <button key={i} onClick={o.on}
-                  style={{ textAlign: "left", display: "flex", alignItems: "center", gap: 11, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "9px 12px", cursor: "pointer" }}
+                  style={{ textAlign: "left", display: "flex", alignItems: "center", gap: 11, background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.md, padding: "9px 12px", cursor: "pointer" }}
                   onMouseEnter={e => e.currentTarget.style.borderColor = C.accent} onMouseLeave={e => e.currentTarget.style.borderColor = C.panelEdge}>
                   <span style={{ fontSize: 20, lineHeight: 1 }}>{o.icon}</span>
                   <span style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
-                    <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 13, color: C.text }}>{o.title}</span>
+                    <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 13, color: C.text }}>{o.title}</span>
                     <span style={{ fontFamily: SANS, fontSize: 11, color: C.muted, marginTop: 2, lineHeight: 1.45 }}>{o.desc}</span>
                   </span>
-                  <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 510, color: C.accentText, whiteSpace: "nowrap" }}>{o.cta} →</span>
+                  <span style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: C.accentText, whiteSpace: "nowrap" }}>{o.cta} →</span>
                 </button>
               ))}
             </div>
@@ -11018,7 +11018,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               <button onClick={() => setShowTutorial(false)}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = C.muted; e.currentTarget.style.color = C.text; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = C.panelEdge; e.currentTarget.style.color = C.muted; }}
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: SANS, fontSize: 11, fontWeight: 510, cursor: "pointer", padding: "8px 16px", whiteSpace: "nowrap", transition: "border-color .12s, color .12s" }}>
+                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: SANS, fontSize: 11, fontWeight: 600, cursor: "pointer", padding: "8px 16px", whiteSpace: "nowrap", transition: "border-color .12s, color .12s" }}>
                 {t("skip — I'll explore on my own")}
               </button>
             </div>

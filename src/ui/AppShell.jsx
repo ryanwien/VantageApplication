@@ -40,7 +40,7 @@ export function BrandMark({ compact = false, onClick }) {
           ever gets, so 26px is the size it has to survive. */}
       <VantageMark size={26} />
       {!compact && (
-        <span className="v-grad-text" style={{ fontFamily: DISPLAY, fontWeight: 510, fontSize: 16, letterSpacing: "-0.025em" }}>
+        <span className="v-grad-text" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 16, letterSpacing: "-0.025em" }}>
           VANTAGE
         </span>
       )}
@@ -174,7 +174,7 @@ function AccountMenu({ account, plan, onSignIn, onSignOut, onOpenSettings, onOpe
           borderRadius: R.lg, boxShadow: SHADOW.lg, overflow: "hidden", zIndex: Z.overlay,
         }}>
           <div style={{ padding: "12px 14px", borderBottom: `1px solid ${C.edge}` }}>
-            <div style={{ ...TYPE.bodySm, color: C.text, fontWeight: 510, overflow: "hidden", textOverflow: "ellipsis" }}>{name}</div>
+            <div style={{ ...TYPE.bodySm, color: C.text, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>{name}</div>
             {account.email && (
               <div style={{ ...TYPE.code, fontSize: 12, color: C.faint, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis" }}>{account.email}</div>
             )}

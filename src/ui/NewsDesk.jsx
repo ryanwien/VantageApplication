@@ -114,7 +114,7 @@ function StoryCard({ item, href, index, onRead, onAsk, reading = false }) {
 
       <a
         href={href} target="_blank" rel="noopener noreferrer"
-        style={{ ...TYPE.body, fontSize: 14, fontWeight: 510, color: C.text, lineHeight: 1.45, flex: 1, textDecoration: "none" }}
+        style={{ ...TYPE.body, fontSize: 14, fontWeight: 600, color: C.text, lineHeight: 1.45, flex: 1, textDecoration: "none" }}
       >
         {item.title}
       </a>
