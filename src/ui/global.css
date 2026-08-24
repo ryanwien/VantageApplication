@@ -413,29 +413,21 @@ a:hover { text-decoration: underline; }
   .v-deskhead-tools { margin-left: 0; }
 }
 
-.v-deskrow {
-  display: flex;
-  gap: 12px;
-  padding: 12px;
-  align-items: flex-start;
-  flex-wrap: wrap;
-}
-.v-deskrow-anchor { flex: 0 0 auto; }
-/* A flex-basis rather than a min-width: the column may now shrink below its
-   preferred size before it gives up and wraps. */
-.v-deskrow-main { flex: 1 1 240px; min-width: 0; }
-
 /* The ask row: the anchor column lives beside the chat, so the presenter is in
-   view from the composer instead of a scroll of responses above it. */
+   view from the composer.
+
+   .v-deskrow / .v-deskrow-main went with the results box they laid out. Every
+   desk result is a chat attachment now, so the only two columns left on this
+   screen are the anchor and the conversation. */
 .v-askrow { display: flex; gap: 12px; padding: 12px; align-items: flex-start; flex-wrap: wrap; }
+.v-deskrow-anchor { flex: 0 0 auto; }
 .v-askrow-chat { flex: 1 1 240px; min-width: 0; }
 
 @media (max-width: 760px) {
-  /* Columns do not fit beside the anchor here, so they wrap below it — docked
+  /* The chat does not fit beside the anchor here, so it wraps below it — docked
      LEFT with the rest of the desk's content, exactly as at full width. (The
      anchor was centred once; that read as a misrender.) */
-  .v-deskrow { justify-content: flex-start; }
-  .v-deskrow-main { flex: 1 1 100%; }
+  .v-askrow { justify-content: flex-start; }
   .v-askrow-chat { flex: 1 1 100%; }
 }
 

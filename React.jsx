@@ -345,6 +345,10 @@ const I18N = {
     "no symbols": "sin símbolos",
     "{n} available on this device": "{n} disponibles en este dispositivo",
     "{n} turns remembered": "{n} turnos recordados",
+    // --- settings: the plain-language sidebar ---
+    "Analyst report": "Informe del analista",
+    "Navigator": "Navegador",
+    "Total": "Total",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -581,6 +585,10 @@ const I18N = {
     "no symbols": "aucun symbole",
     "{n} available on this device": "{n} disponibles sur cet appareil",
     "{n} turns remembered": "{n} tours mémorisés",
+    // --- settings: the plain-language sidebar ---
+    "Analyst report": "Rapport d'analyste",
+    "Navigator": "Navigateur",
+    "Total": "Total",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -817,6 +825,10 @@ const I18N = {
     "no symbols": "keine Symbole",
     "{n} available on this device": "{n} auf diesem Gerät verfügbar",
     "{n} turns remembered": "{n} Runden gemerkt",
+    // --- settings: the plain-language sidebar ---
+    "Analyst report": "Analystenbericht",
+    "Navigator": "Navigator",
+    "Total": "Gesamt",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1052,6 +1064,10 @@ const I18N = {
     "no symbols": "sem símbolos",
     "{n} available on this device": "{n} disponíveis neste dispositivo",
     "{n} turns remembered": "{n} turnos recordados",
+    // --- settings: the plain-language sidebar ---
+    "Analyst report": "Relatório do analista",
+    "Navigator": "Navegador",
+    "Total": "Total",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -1287,6 +1303,10 @@ const I18N = {
     "no symbols": "nessun simbolo",
     "{n} available on this device": "{n} disponibili su questo dispositivo",
     "{n} turns remembered": "{n} turni ricordati",
+    // --- settings: the plain-language sidebar ---
+    "Analyst report": "Report dell'analista",
+    "Navigator": "Navigatore",
+    "Total": "Totale",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -4429,6 +4449,44 @@ function PnFChart({ columns, boxSize, up, down }) {
 }
 
 // ============================================================
+// ============================================================
+//  DeskCard — the shell every desk result wears.
+//
+//  A desk result is the answer to something that was asked: the navigator's
+//  reply, the news it fetched, the report it wrote, the portfolio it pulled up.
+//  They all ride the conversation, one card each, so an exchange stays in one
+//  place. They used to stack in a bordered results box ABOVE the composer,
+//  which cut every exchange in half — the question and the spoken reply in one
+//  column, the thing the question actually produced in another.
+//
+//  One shell, because a transcript of replies that each invented their own
+//  header would read as a pile of widgets rather than as a conversation.
+// ============================================================
+
+function DeskCard({ icon, title, note, actions, onClose, closeLabel, padded = true, children }) {
+  return (
+    <div style={{ background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, overflow: "hidden", minWidth: 0 }}>
+      <div style={panelHead({ pad: "12px 16px" })}>
+        <span style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+          {icon && <span aria-hidden="true" style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>{icon}</span>}
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</span>
+          {note && <span style={{ ...panelNote, flexShrink: 0 }}>{note}</span>}
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+          {actions}
+          {onClose && (
+            <button onClick={onClose} aria-label={closeLabel || "Close"} className="v-tap"
+              style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 14, lineHeight: 1, padding: 2 }}>✕</button>
+          )}
+        </span>
+      </div>
+      {/* `padded` is off for a child that brings its own padding — the calendar
+          grid and the report's scroll box both do. */}
+      <div style={padded ? { padding: "14px 16px" } : undefined}>{children}</div>
+    </div>
+  );
+}
+
 // ============================================================
 //  Settings vocabulary
 //
@@ -8621,14 +8679,169 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     );
     return shell(meta.hdr, headerRight, body);
   })();
-  const deskBoxFilled = !!aiResponses.nav || deskCalendar || deskPortfolio
+  // Does the desk have a result showing? Gates the "on the desk" verb cards,
+  // which exist to fill the space when it does not.
+  const deskHasResult = !!aiResponses.nav || deskCalendar || deskPortfolio
     || !!(news && (news.news?.length > 0 || news.videos?.length > 0)) || newsBusy || !!newsErr || !!writtenReport;
 
-  // What rides at the tail of the transcript. Order is arrival order: a game is
-  // opened deliberately and stays, a catalog is the answer to the last thing asked.
-  const deskAttachments = (gamePanel || catalogPanel)
-    ? <>{gamePanel}{catalogPanel}</>
-    : null;
+  // ---- the navigator's answer, as a chat attachment ----
+  const navPanel = aiResponses.nav && (
+    <DeskCard key="nav" icon="⌖" title={t("Navigator")}
+      onClose={() => setAiResponses(p => { const { nav, ...rest } = p; return rest; })} closeLabel="Dismiss navigator">
+      <div style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.65, color: aiResponses.nav.status === "error" ? C.down : C.text }}>
+        {aiResponses.nav.text}
+        {aiResponses.nav.status === "running" && <span className="cursor">▍</span>}
+      </div>
+      {aiResponses.nav.links?.length > 0 && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+          {aiResponses.nav.links.map(l => (
+            <span key={l.name} style={{ display: "inline-flex", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, overflow: "hidden" }}>
+              <button onClick={() => openEmbed(l.href, l.name)} title={`Open ${l.name} inside Vantage`}
+                style={{ background: C.surfaceRaised, border: "none", color: C.text, fontFamily: SANS, fontSize: 13, fontWeight: 600, padding: "7px 13px", cursor: "pointer" }}>
+                {l.name}
+              </button>
+              <a href={l.href} target="_blank" rel="noopener noreferrer" title="Open in a new tab instead"
+                style={{ textDecoration: "none", background: "transparent", borderLeft: `1px solid ${C.edgeStrong}`, color: C.muted, fontFamily: SANS, fontSize: 13, padding: "7px 10px" }}>↗</a>
+            </span>
+          ))}
+          {!aiResponses.nav.stream && (
+            <button onClick={() => openChart(selected)} title="Open the in-app chart"
+              style={{ ...button("ghost", "sm"), fontSize: 13 }}>
+              📈 {selected} chart in-app
+            </button>
+          )}
+        </div>
+      )}
+      {aiResponses.nav.videos?.map((v, i) => (
+        <div key={i} style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.edge}` }}>
+          <div style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 600, color: C.text }}>
+            <span style={{ color: C.down }}>▶</span> {v.title}
+            <span style={{ color: C.faint, fontWeight: 400, marginLeft: 6 }}>{v.channel}</span>
+          </div>
+          {v.brief && <div style={{ fontFamily: SANS, fontSize: 13, color: C.muted, marginTop: 4, lineHeight: 1.6 }}>{v.brief}</div>}
+          <button onClick={() => openVideo(v)} style={{ ...button("ghost", "sm"), marginTop: 8, fontSize: 12.5 }}>
+            play in desk
+          </button>
+        </div>
+      ))}
+    </DeskCard>
+  );
+
+  // ---- the calendar, as a chat attachment ----
+  const calendarPanel = deskCalendar && (
+    <DeskCard key="calendar" icon="🗓" title={t("Calendar")} padded={false}
+      onClose={() => setDeskCalendar(false)} closeLabel="Close calendar">
+      <div style={{ maxWidth: 460, width: "100%" }}>
+        <AppCalendar extra={marketEvents} />
+      </div>
+    </DeskCard>
+  );
+
+  // ---- the portfolio, as a chat attachment ----
+  const portfolioPanel = deskPortfolio && (
+    <DeskCard key="portfolio" icon="💼" title={t("Portfolio")}
+      note={positions.length > 0 ? priv(<span style={{ color: dirColorN(portTotals.pnl) }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} · {portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%</span>) : null}
+      actions={positions.length > 0 && (
+        <button onClick={briefPortfolio} title="Read on air" style={{ ...button("live", "sm"), fontSize: 12.5 }}>▶ read</button>
+      )}
+      onClose={() => setDeskPortfolio(false)} closeLabel="Close portfolio">
+      {positions.length === 0 && <div style={{ fontFamily: SANS, fontSize: 13, color: C.faint, lineHeight: 1.6 }}>No holdings yet — add a symbol, the shares, and your cost per share below.</div>}
+      {portfolioRows.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 6, fontFamily: SANS, fontSize: 12, color: C.faint, paddingBottom: 6, borderBottom: `1px solid ${C.edge}` }}>
+          <span>Symbol</span><span style={{ textAlign: "right" }}>Cost → now</span><span style={{ textAlign: "right" }}>Value</span><span style={{ textAlign: "right" }}>P&L</span><span />
+        </div>
+      )}
+      {portfolioRows.map(r => (
+        <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 6, alignItems: "center", fontFamily: MONO, fontSize: 12.5, padding: "8px 0", borderBottom: `1px solid ${C.edge}` }}>
+          <button onClick={() => setSelected(r.sym)} style={{ background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 13.5, fontWeight: 700, textAlign: "left", cursor: "pointer", padding: 0 }}>{r.sym} <span style={{ fontFamily: MONO, color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span></button>
+          <span style={{ textAlign: "right", color: C.muted, fontSize: 12, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{fmt(r.cost / r.shares)}→{r.price != null ? fmt(r.price) : "—"}</span>
+          <span style={{ textAlign: "right", color: C.text, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.val != null ? fmt(r.val) : "—"}</span>
+          <span style={{ textAlign: "right", color: dirColorN(r.pnl), ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}{r.pnlPct != null ? <span style={{ fontSize: 11, display: "block", color: dirColorN(r.pnl) }}>{r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%</span> : null}</span>
+          <button onClick={() => removePosition(r.id)} aria-label="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 13 }}>✕</button>
+        </div>
+      ))}
+      {positions.length > 0 && (
+        <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 10, fontFamily: MONO, fontSize: 13, fontWeight: 500 }}>
+          {priv(<span style={{ color: C.muted }}>{t("Total")} · {fmt(portTotals.val)}</span>)}
+          {priv(<span style={{ color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        {(() => {
+          const fieldStyle = { boxSizing: "border-box", background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 13, padding: "8px 12px", outline: "none" };
+          return (<>
+            <input value={portForm.sym} onChange={e => setPortForm(f => ({ ...f, sym: e.target.value.toUpperCase() }))} placeholder={t("Symbol")} aria-label="Symbol"
+              style={{ ...fieldStyle, width: 88, fontFamily: MONO }} />
+            <input value={portForm.shares} onChange={e => setPortForm(f => ({ ...f, shares: e.target.value }))} placeholder={t("Shares")} inputMode="decimal" aria-label="Shares"
+              style={{ ...fieldStyle, width: 90 }} />
+            <input value={portForm.cost} onChange={e => setPortForm(f => ({ ...f, cost: e.target.value }))} onKeyDown={e => e.key === "Enter" && addPosition()} placeholder={t("Cost / share")} inputMode="decimal" aria-label="Cost basis"
+              style={{ ...fieldStyle, flex: 1, minWidth: 0 }} />
+          </>);
+        })()}
+        {/* Neutral, not primary. On the Markets rail this button IS the screen's
+            one green; here it sits inside the desk conversation, where that
+            green belongs to Ask. */}
+        <button onClick={addPosition} style={{ ...button("solid", "sm"), padding: "8px 16px", fontSize: 13, fontWeight: 600 }}>{t("Add position")}</button>
+      </div>
+    </DeskCard>
+  );
+
+  // ---- news & video, as a chat attachment ----
+  // News is the answer to "load the news", so it belongs where the answers are.
+  // Keeps #sec-news so the News nav item still lands on it.
+  const newsPanel = panels.news && (news?.news?.length > 0 || news?.videos?.length > 0 || newsBusy || newsErr) && (
+    <div key="news" id="sec-news" style={{ minWidth: 0 }}>
+      <NewsDesk
+        items={news?.news || []}
+        videos={news?.videos || []}
+        subject={selected}
+        loadedFor={newsFor}
+        busy={newsBusy}
+        error={newsErr}
+        stale={!!news && newsFor !== selected}
+        onLoad={fetchNews}
+        onBroadcast={broadcastNews}
+        onPlayVideo={openVideo}
+        onReadStory={readStory}
+        readingTitle={typeof speakingId === "string" && speakingId.startsWith("story:") ? speakingId.slice(6) : null}
+        onAskStory={askStory}
+        hrefFor={newsHref}
+        compact
+      />
+    </div>
+  );
+
+  // ---- the long-form report, as a chat attachment ----
+  // A document to scroll rather than a chat turn, so it keeps its own scroll
+  // box — but it is still the answer to "write a report", so it rides here.
+  const reportPanel = writtenReport && (
+    <DeskCard key="report" icon="📝" title={t("Analyst report")} padded={false}
+      actions={
+        <button onClick={() => (speakingId === "report" ? stopSpeak() : speak("report", writtenReport))}
+          style={{ ...button("live", "sm"), fontSize: 12.5 }}>
+          {speakingId === "report" ? "■ stop" : "▶ read on air"}
+        </button>
+      }>
+      <div style={{ padding: "14px 16px", fontFamily: SANS, fontSize: 14, lineHeight: 1.7, color: C.text, maxHeight: 360, overflowY: "auto" }}>
+        <RichText text={writtenReport} />
+      </div>
+    </DeskCard>
+  );
+
+  // What rides at the tail of the transcript.
+  //
+  // Everything the desk produces is the answer to something that was asked, so
+  // it belongs where the answers are. These used to stack in a bordered results
+  // box ABOVE the conversation, which split every exchange in half: the question
+  // and the spoken reply in one column, the thing the question actually produced
+  // in another. Order is the order they arrive in.
+  const deskPanels = [
+    navPanel, calendarPanel, portfolioPanel, newsPanel, reportPanel,
+    // These two were already attachments; they carry no key of their own.
+    gamePanel && <React.Fragment key="game">{gamePanel}</React.Fragment>,
+    catalogPanel && <React.Fragment key="catalog">{catalogPanel}</React.Fragment>,
+  ].filter(Boolean);
+  const deskAttachments = deskPanels.length ? <>{deskPanels}</> : null;
 
   return (
     <div onClickCapture={handleUiClick} style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: SANS }}>
@@ -9165,173 +9378,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               )}
             </div>
           )}
-
-          {/* Anchor beside the response box. The response box only has something
-              to show when a navigator answer, the calendar or the portfolio has
-              been pulled onto the desk — which is the minority of the time. When
-              it is empty it is hidden outright and the anchor centres, instead of
-              rendering a 2px sliver that pushed the anchor against a column of
-              dead panel. */}
-          {(() => {
-            if (!deskBoxFilled) return null;
-            return (
-            <div className="v-deskrow">
-
-
-              {/* response area — ONE box; navigator / desk answer / report / news are sections within it */}
-              <div id="tour-response" className="v-deskrow-main" style={{ display: !deskBoxFilled ? "none" : "flex", flexDirection: "column", background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
-                {/* The blank-slate prompt that used to live here now belongs to
-                    <ChatAssistant> below, which owns the conversation and its
-                    starter chips. This box is only for responses. */}
-                {aiResponses.nav && (
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <div style={{ minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}`, ...TYPE.eyebrow, color: C.muted, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span>⌖ NAVIGATOR</span>
-                      <button onClick={() => setAiResponses(p => { const { nav, ...rest } = p; return rest; })} aria-label="Dismiss navigator"
-                        style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
-                    </div>
-                    <div style={{ padding: 10, fontFamily: SANS, fontSize: 12, lineHeight: 1.65, color: aiResponses.nav.status === "error" ? C.down : C.text }}>
-                      {aiResponses.nav.text}
-                      {aiResponses.nav.status === "running" && <span className="cursor">▍</span>}
-                      {aiResponses.nav.links?.length > 0 && (
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-                          {aiResponses.nav.links.map(l => (
-                            <span key={l.name} style={{ display: "inline-flex", border: `1px solid ${C.accent}`, borderRadius: R.sm, overflow: "hidden" }}>
-                              <button onClick={() => openEmbed(l.href, l.name)} title={`Open ${l.name} inside Vantage`}
-                                style={{ background: "rgba(255,255,255,0.07)", border: "none", color: C.accentText, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "6px 12px", cursor: "pointer" }}>
-                                {l.name}
-                              </button>
-                              <a href={l.href} target="_blank" rel="noopener noreferrer" title="Open in a new tab instead"
-                                style={{ textDecoration: "none", background: "transparent", borderLeft: `1px solid ${C.accent}`, color: C.accentText, fontFamily: SANS, fontSize: 11, padding: "6px 8px" }}>↗</a>
-                            </span>
-                          ))}
-                          {!aiResponses.nav.stream && (
-                            <button onClick={() => openChart(selected)} title="Open the in-app chart"
-                              style={{ background: "rgba(39,166,68,0.12)", border: `1px solid ${C.up}`, color: C.up, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "6px 12px", cursor: "pointer" }}>
-                              📈 {selected} chart in-app
-                            </button>
-                          )}
-                        </div>
-                      )}
-                      {aiResponses.nav.videos?.map((v, i) => (
-                        <div key={i} style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.panelEdge}` }}>
-                          <div style={{ fontSize: 11, fontWeight: 510 }}>
-                            <span style={{ color: C.down }}>▶</span> {v.title}
-                            <span style={{ color: C.faint, fontWeight: 400, marginLeft: 6 }}>{v.channel}</span>
-                          </div>
-                          {v.brief && <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>{v.brief}</div>}
-                          <button onClick={() => openVideo(v)}
-                            style={{ marginTop: 6, background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "5px 10px", cursor: "pointer" }}>
-                            play in desk
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {deskCalendar && (
-                  <div style={{ display: "flex", flexDirection: "column", borderTop: aiResponses.nav ? `1px solid ${C.panelEdge}` : "none" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}`, ...TYPE.eyebrow, color: C.muted }}>
-                      <span>{t("Calendar")}</span>
-                      <button onClick={() => setDeskCalendar(false)} aria-label="Close calendar" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
-                    </div>
-                    <div style={{ maxWidth: 460, width: "100%" }}>
-                      <AppCalendar extra={marketEvents} />
-                    </div>
-                  </div>
-                )}
-                {deskPortfolio && (
-                  <div style={{ display: "flex", flexDirection: "column", borderTop: (aiResponses.nav || deskCalendar) ? `1px solid ${C.panelEdge}` : "none" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}`, ...TYPE.eyebrow, color: C.muted }}>
-                      <span>💼 PORTFOLIO {positions.length > 0 && priv(<span style={{ color: dirColorN(portTotals.pnl), marginLeft: 6 }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}</span>
-                      <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        {positions.length > 0 && <button onClick={briefPortfolio} title="Read on air" style={{ background: "transparent", border: `1px solid ${C.liveDim}`, color: C.live, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶ read</button>}
-                        <button onClick={() => setDeskPortfolio(false)} aria-label="Close portfolio" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
-                      </span>
-                    </div>
-                    <div style={{ padding: "6px 10px" }}>
-                      {positions.length === 0 && <div style={{ fontFamily: MONO, fontSize: 12, color: C.faint, padding: "6px 0" }}>No holdings yet — add symbol, shares, and your cost per share below.</div>}
-                      {portfolioRows.length > 0 && (
-                        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 4, fontFamily: MONO, fontSize: 12, color: C.faint, padding: "2px 0", borderBottom: `1px solid ${C.grid}` }}>
-                          <span>SYMBOL</span><span style={{ textAlign: "right" }}>COST→NOW</span><span style={{ textAlign: "right" }}>VALUE</span><span style={{ textAlign: "right" }}>P&L</span><span />
-                        </div>
-                      )}
-                      {portfolioRows.map(r => (
-                        <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 4, alignItems: "center", fontFamily: MONO, fontSize: 12, padding: "6px 0", borderBottom: `1px solid ${C.grid}` }}>
-                          <button onClick={() => setSelected(r.sym)} style={{ background: "transparent", border: "none", color: C.text, fontFamily: MONO, fontSize: 12, fontWeight: 510, textAlign: "left", cursor: "pointer", padding: 0 }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span></button>
-                          <span style={{ textAlign: "right", color: C.muted, fontSize: 10, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{fmt(r.cost / r.shares)}→{r.price != null ? fmt(r.price) : "—"}</span>
-                          <span style={{ textAlign: "right", color: C.text, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.val != null ? fmt(r.val) : "—"}</span>
-                          <span style={{ textAlign: "right", color: dirColorN(r.pnl), ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}{r.pnlPct != null ? <span style={{ fontSize: 10, display: "block", color: dirColorN(r.pnl) }}>{r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%</span> : null}</span>
-                          <button onClick={() => removePosition(r.id)} aria-label="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 11 }}>✕</button>
-                        </div>
-                      ))}
-                      {positions.length > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0 2px", fontFamily: MONO, fontSize: 12, fontWeight: 510 }}>
-                          {priv(<span style={{ color: C.muted }}>TOTAL · {fmt(portTotals.val)}</span>)}
-                          {priv(<span style={{ color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}
-                        </div>
-                      )}
-                      <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
-                        <input value={portForm.sym} onChange={e => setPortForm(f => ({ ...f, sym: e.target.value.toUpperCase() }))} placeholder="SYM" aria-label="Symbol"
-                          style={{ width: 60, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 6px" }} />
-                        <input value={portForm.shares} onChange={e => setPortForm(f => ({ ...f, shares: e.target.value }))} placeholder="shares" inputMode="decimal" aria-label="Shares"
-                          style={{ width: 64, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 6px" }} />
-                        <input value={portForm.cost} onChange={e => setPortForm(f => ({ ...f, cost: e.target.value }))} onKeyDown={e => e.key === "Enter" && addPosition()} placeholder="cost / share" inputMode="decimal" aria-label="Cost basis"
-                          style={{ flex: 1, minWidth: 0, background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: MONO, fontSize: 12, padding: "6px 6px" }} />
-                        <button onClick={addPosition} style={{ background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: R.sm, fontFamily: SANS, fontSize: 13, fontWeight: 510, padding: "0 12px", cursor: "pointer" }}>+ add</button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {/* --- news & video ---
-                     News is a desk RESULT, so it belongs in the box results
-                     appear in — beside the navigator answer, the calendar, the
-                     portfolio and the report — not in a section of its own
-                     under the composer. Compact: this column is narrower than
-                     the desk, so the cards run single file.
-                     Keeps #sec-news so the News nav item still lands on it. */}
-                {panels.news && (news?.news?.length > 0 || news?.videos?.length > 0 || newsBusy || newsErr) && (
-                  <div id="sec-news" style={{ borderTop: `1px solid ${C.panelEdge}` }}>
-                    <NewsDesk
-                      items={news?.news || []}
-                      videos={news?.videos || []}
-                      subject={selected}
-                      loadedFor={newsFor}
-                      busy={newsBusy}
-                      error={newsErr}
-                      stale={!!news && newsFor !== selected}
-                      onLoad={fetchNews}
-                      onBroadcast={broadcastNews}
-                      onPlayVideo={openVideo}
-                      onReadStory={readStory}
-                      readingTitle={typeof speakingId === "string" && speakingId.startsWith("story:") ? speakingId.slice(6) : null}
-                      onAskStory={askStory}
-                      hrefFor={newsHref}
-                      compact
-                    />
-                  </div>
-                )}
-                {/* --- analyst report ---
-                     The desk's conversational answer now lives in the chat
-                     transcript below; what remains here is the long-form report,
-                     which is a document to scroll rather than a chat turn. */}
-                {writtenReport && (
-                  <div style={{ display: "flex", flexDirection: "column", borderTop: (aiResponses.nav || news) ? `1px solid ${C.panelEdge}` : "none" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}`, ...TYPE.eyebrow, color: C.muted }}>
-                      <span>📝 ANALYST REPORT — {reportSym || selected}</span>
-                      <span style={{ display: "flex", gap: 8 }}>
-                        <button onClick={() => (speakingId === "report" ? stopSpeak() : speak("report", writtenReport))}
-                          style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "2px 8px", cursor: "pointer" }}>{speakingId === "report" ? "■" : "▶ read"}</button>
-                        <button onClick={() => setWrittenReport("")} aria-label="Dismiss report" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
-                      </span>
-                    </div>
-                    <div style={{ padding: "12px 14px", fontSize: 13, lineHeight: 1.7, color: C.text, maxHeight: 320, overflowY: "auto" }}><RichText text={writtenReport} /></div>
-                  </div>
-                )}
-              </div>
-            </div>
-            );
-          })()}
+          {/* The results box that used to live here is gone. Everything it held
+              — the navigator's answer, the calendar, the portfolio, the news and
+              the written report — now rides the conversation as a chat
+              attachment, because each of them is the answer to something that
+              was asked. See deskPanels above. */}
           {/* ===== chat assistant =====
                Replaces the old single-line question bar. The engine is unchanged —
                askDesk() still does the routing, intent matching and model fallback —
@@ -9448,7 +9499,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 </div>
               </div>
             </div>
-            <div className="v-askrow-chat">
+            {/* #tour-response used to be the results box. The tour step it
+                belongs to says answers, news and the catalog land here — still
+                true, and now this is where they land. */}
+            <div id="tour-response" className="v-askrow-chat">
             <ChatAssistant
               embedded
               compact
@@ -9508,7 +9562,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               anchor offers the desk's verbs instead of rendering as a void —
               every card here is an existing capability whose result fills
               this same slot, so the empty state teaches the filled one. */}
-          {!gameOn && !deskBoxFilled && (
+          {!gameOn && !deskHasResult && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 12, borderTop: `1px solid ${C.panelEdge}` }}>
               <div style={{ ...TYPE.eyebrowSm, color: C.faint }}>{t("ON THE DESK")} · {selected}</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8 }}>

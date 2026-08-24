@@ -19,7 +19,7 @@
 // ============================================================
 
 import React, { useMemo, useState, useEffect } from "react";
-import { C, GRAD, MONO, SANS, TYPE, R, SP, SHADOW, MOTION, button, chip } from "./theme.js";
+import { C, MONO, SANS, TYPE, R, SP, SHADOW, MOTION, button, chip, panelHead } from "./theme.js";
 
 // A stable accent per source so the same outlet always looks the same, without
 // maintaining a hand-written colour map. Hashing the name is enough: we only need
@@ -248,35 +248,39 @@ export default function NewsDesk({
       aria-label="AI news desk"
       style={{ background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, overflow: "hidden" }}
     >
-      {/* ---- header ---- */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
-        padding: "12px 14px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceSunken,
-      }}>
-        <span aria-hidden="true" style={{
-          width: 20, height: 20, borderRadius: R.xs, background: GRAD.live,
-          display: "grid", placeItems: "center", fontSize: 10,
-        }}>📰</span>
-        <span style={{ ...TYPE.eyebrow, color: C.muted }}>News Desk</span>
-        {subject && (
-          <span style={{ ...TYPE.num, fontSize: 12, color: C.accentSoft, background: C.accentGlow, border: `1px solid ${C.accentEdge}`, borderRadius: R.pill, padding: "2px 9px" }}>
-            {loadedFor || subject}
-          </span>
-        )}
+      {/* ---- header ----
+           Sentence-case sans, matching every other card in the transcript. It
+           wore a mono uppercase eyebrow — the treatment this system gives a
+           DATA LABEL — so a panel heading and a field name looked identical.
+           The symbol beside it is mono, because that one IS a value. */}
+      <div style={{ ...panelHead({ pad: "12px 16px" }), flexWrap: "wrap" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+          <span aria-hidden="true" style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>📰</span>
+          <span>News desk</span>
+          {subject && (
+            <span style={{ ...TYPE.numSm, fontSize: 12.5, color: C.muted, background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: R.pill, padding: "2px 9px" }}>
+              {loadedFor || subject}
+            </span>
+          )}
+        </span>
 
-        <div style={{ flex: 1 }} />
-
-        {/* "On air" is the primary action here — it is what makes this a news DESK
-            rather than a feed reader, so it gets the loud treatment. */}
-        {items.length > 0 && onBroadcast && (
-          <button onClick={onBroadcast} style={{ ...button("live", "sm"), gap: 6 }}>
-            <span className="v-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: C.live, display: "inline-block" }} />
-            Read on air
+        <span style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {/* Reading it on air is what makes this a news DESK rather than a feed
+              reader, so it keeps the live treatment — green, but an outline. */}
+          {items.length > 0 && onBroadcast && (
+            <button onClick={onBroadcast} style={{ ...button("live", "sm"), gap: 6 }}>
+              <span className="v-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: C.live, display: "inline-block" }} />
+              Read on air
+            </button>
+          )}
+          {/* Never `primary`. This card lives inside the desk conversation,
+              whose one green fill belongs to Ask — a second one here would make
+              three on the screen, which is the exact failure the redesign is
+              about. Neutral filled still reads as this card's action. */}
+          <button onClick={onLoad} disabled={busy} style={button(hasContent ? "ghost" : "solid", "sm", { disabled: busy })}>
+            {busy ? "Searching…" : hasContent ? "Refresh" : `Load ${subject || "news"} →`}
           </button>
-        )}
-        <button onClick={onLoad} disabled={busy} style={button(hasContent ? "ghost" : "primary", "sm", { disabled: busy })}>
-          {busy ? "Searching…" : hasContent ? "Refresh" : `Load ${subject || "news"} →`}
-        </button>
+        </span>
       </div>
 
       {/* ---- body ---- */}
@@ -284,7 +288,7 @@ export default function NewsDesk({
         {error && (
           <div role="alert" style={{
             ...TYPE.bodySm, color: C.down, background: C.downSoft,
-            border: `1px solid rgba(235,87,87,0.32)`, borderRadius: R.md,
+            border: `1px solid ${C.dangerEdge}`, borderRadius: R.md,
             padding: "10px 12px", marginBottom: SP[4],
           }}>
             {error}
