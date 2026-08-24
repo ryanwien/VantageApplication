@@ -7381,18 +7381,45 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     return { ...targets, last: prices[prices.length - 1], lo: Math.min(...prices), hi: Math.max(...prices) };
   }, [chartMode, chartData, pnf, live]);
 
-  // Tight y-axis around the actual data (+ prev close). Recharts "auto" balloons to a huge range when
-  // every point is identical — e.g. a market-closed frozen price — making a real value look broken.
+  // Tight y-axis around the actual data. Recharts "auto" balloons to a huge range when every
+  // point is identical — e.g. a market-closed frozen price — making a real value look broken.
+  //
+  // WHY PREV CLOSE ONLY SOMETIMES GETS A VOTE
+  // It used to be pushed into the domain unconditionally, and on a live tape that is
+  // ruinous. The live tape holds only what has been polled since page load, so a minute
+  // after opening it spans a few cents. Forcing yesterday's close into the scale of a stock
+  // that is up 1.2% then stretches the axis across the whole day's move — MSFT at 489.01
+  // against a 483.24 close gave a 7-point axis for a 15-cent trace, which is 2% of the plot
+  // height. The line was doing exactly what it was told and looked completely dead.
+  //
+  // So prev close is a reference, not an anchor: it joins the domain while it is near what
+  // the tape is actually doing, and drops out when it is not. As a session develops and the
+  // range grows, it comes back into view on its own.
   const yDomain = useMemo(() => {
-    const ys = chartData.map(d => d.price).filter(v => v != null);
-    const pc = selectedRow?.prevClose;
-    if (pc != null) ys.push(pc);
+    const ys = chartData.map(d => d.price).filter(Number.isFinite);
     if (!ys.length) return ["auto", "auto"];
     let lo = Math.min(...ys), hi = Math.max(...ys);
+    const pc = selectedRow?.prevClose;
+    if (Number.isFinite(pc)) {
+      // Reach is twice what the tape has covered, with a 0.25% floor so a frozen or
+      // brand-new tape still shows prev close when it is genuinely close by.
+      const reach = Math.max((hi - lo) * 2, Math.abs(hi) * 0.0025);
+      if (pc >= lo - reach && pc <= hi + reach) { lo = Math.min(lo, pc); hi = Math.max(hi, pc); }
+    }
     if (hi - lo < 1e-6) { const p = Math.max(0.02, Math.abs(lo) * 0.004); lo -= p; hi += p; } // flat/frozen → hug it
     else { const p = (hi - lo) * 0.12; lo -= p; hi += p; }
     return [+lo.toFixed(2), +hi.toFixed(2)];
   }, [chartData, selectedRow]);
+
+  // Is prev close actually on the axis? A ReferenceLine outside the domain gets pinned to
+  // the edge by recharts, which draws yesterday's close at today's high — a lie the chart
+  // states in mono with two decimal places. Off-scale, it isn't drawn; the header's change
+  // figure and the stats row underneath both still carry the number.
+  const prevCloseOnAxis = useMemo(() => {
+    const pc = selectedRow?.prevClose;
+    if (!Number.isFinite(pc) || !Array.isArray(yDomain) || typeof yDomain[0] !== "number") return false;
+    return pc >= yDomain[0] && pc <= yDomain[1];
+  }, [selectedRow, yDomain]);
 
   // SMA rides in the same rows as the price so recharts plots both off one
   // data array. A rolling sum, not a window-slice per point: the tape is
@@ -11311,7 +11338,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       <ReferenceLine y={0} stroke={C.faint} strokeDasharray="4 4"
                         label={{ value: "0%", fill: C.faint, fontSize: 12, fontFamily: MONO, position: "insideTopRight" }} />
                     )}
-                    {!comparePlot && selectedRow?.prevClose != null && (
+                    {!comparePlot && prevCloseOnAxis && (
                       <ReferenceLine y={selectedRow.prevClose} stroke={C.faint} strokeDasharray="4 4"
                         label={{ value: `prev ${fmt(selectedRow.prevClose)}`, fill: C.faint, fontSize: 12, fontFamily: MONO, position: "insideTopRight" }} />
                     )}
