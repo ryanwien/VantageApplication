@@ -145,7 +145,6 @@ const I18N = {
     "Live · quotes via Finnhub": "En vivo · cotizaciones vía Finnhub",
     "Demo · simulated session": "Demo · sesión simulada",
     "ask the desk about \"{q}\"": "preguntar a la mesa sobre \"{q}\"",
-    "{env} set": "plató {env}",
     "Data": "Datos",
     "Live": "En vivo",
     "Demo": "Demo",
@@ -168,7 +167,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Escribe un símbolo y pulsa Enter  ·  HELP para comandos",
     "OPEN": "ABIERTO", "CLOSED": "CERRADO",
     "standing by": "en espera",
-    "Voice & anchor settings": "Ajustes de voz y presentador", "SET": "SET", "stop reading": "detener lectura", "free": "gratis",
+    "Voice & anchor settings": "Ajustes de voz y presentador", "SET": "SET", "free": "gratis",
     "ASK ALL": "PREGUNTAR A TODOS",
  "Summarize {sym} today": "Resume {sym} hoy", "What's moving today?": "¿Qué se mueve hoy?", "Take me to Robinhood": "Llévame a Robinhood", "What's on Netflix?": "¿Qué hay en Netflix?", "Write a report → PPT": "Escribe un informe → PPT",
     "WATCHLIST": "LISTA DE SEGUIMIENTO","full chart": "gráfico completo",
@@ -418,6 +417,13 @@ const I18N = {
     "forever": "para siempre",
     "on air.": "en directo.",
     "{who} is reading this answer": "{who} está leyendo esta respuesta",
+    // --- settings: the plain-language sidebar ---
+    "Ask something first — there is no answer to read yet.": "Pregunta algo primero: todavía no hay ninguna respuesta que leer.",
+    "Read the last answer aloud": "Leer en voz alta la última respuesta",
+    "Stop reading": "Dejar de leer",
+    "Switch to": "Cambiar a",
+    "Voice & settings": "Voz y ajustes",
+    "on the desk": "en el escritorio",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -453,7 +459,6 @@ const I18N = {
     "Live · quotes via Finnhub": "En direct · cours via Finnhub",
     "Demo · simulated session": "Démo · séance simulée",
     "ask the desk about \"{q}\"": "demander au plateau à propos de \"{q}\"",
-    "{env} set": "plateau {env}",
     "Data": "Données",
     "Live": "En direct",
     "Demo": "Démo",
@@ -476,7 +481,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Saisissez un symbole et appuyez sur Entrée  ·  HELP pour les commandes",
     "OPEN": "OUVERT", "CLOSED": "FERMÉ",
     "standing by": "en attente",
-    "Voice & anchor settings": "Réglages voix et présentateur", "SET": "DÉCOR", "stop reading": "arrêter la lecture", "free": "gratuites",
+    "Voice & anchor settings": "Réglages voix et présentateur", "SET": "DÉCOR", "free": "gratuites",
     "ASK ALL": "TOUT DEMANDER",
  "Summarize {sym} today": "Résumez {sym} aujourd'hui", "What's moving today?": "Qu'est-ce qui bouge aujourd'hui ?", "Take me to Robinhood": "Emmène-moi sur Robinhood", "What's on Netflix?": "Qu'y a-t-il sur Netflix ?", "Write a report → PPT": "Rédiger un rapport → PPT",
     "WATCHLIST": "LISTE DE SUIVI","full chart": "graphique complet",
@@ -726,6 +731,13 @@ const I18N = {
     "forever": "à vie",
     "on air.": "à l'antenne.",
     "{who} is reading this answer": "{who} lit cette réponse",
+    // --- settings: the plain-language sidebar ---
+    "Ask something first — there is no answer to read yet.": "Posez d'abord une question — il n'y a pas encore de réponse à lire.",
+    "Read the last answer aloud": "Lire la dernière réponse à voix haute",
+    "Stop reading": "Arrêter la lecture",
+    "Switch to": "Passer à",
+    "Voice & settings": "Voix et réglages",
+    "on the desk": "au pupitre",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -761,7 +773,6 @@ const I18N = {
     "Live · quotes via Finnhub": "Live · Kurse über Finnhub",
     "Demo · simulated session": "Demo · simulierte Sitzung",
     "ask the desk about \"{q}\"": "das Pult zu \"{q}\" fragen",
-    "{env} set": "Set {env}",
     "Data": "Daten",
     "Live": "Live",
     "Demo": "Demo",
@@ -784,7 +795,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Symbol eingeben und Enter drücken  ·  HELP für Befehle",
     "OPEN": "OFFEN", "CLOSED": "GESCHLOSSEN",
     "standing by": "bereit",
-    "Voice & anchor settings": "Stimme & Moderator-Einstellungen", "SET": "KULISSE", "stop reading": "Vorlesen stoppen", "free": "kostenlos",
+    "Voice & anchor settings": "Stimme & Moderator-Einstellungen", "SET": "KULISSE", "free": "kostenlos",
     "ASK ALL": "ALLE FRAGEN",
  "Summarize {sym} today": "Fasse {sym} heute zusammen", "What's moving today?": "Was bewegt sich heute?", "Take me to Robinhood": "Bring mich zu Robinhood", "What's on Netflix?": "Was läuft auf Netflix?", "Write a report → PPT": "Bericht schreiben → PPT",
     "WATCHLIST": "BEOBACHTUNGSLISTE","full chart": "vollständiges Diagramm",
@@ -1034,6 +1045,13 @@ const I18N = {
     "forever": "dauerhaft",
     "on air.": "auf Sendung.",
     "{who} is reading this answer": "{who} liest diese Antwort",
+    // --- settings: the plain-language sidebar ---
+    "Ask something first — there is no answer to read yet.": "Frag erst etwas — es gibt noch keine Antwort zum Vorlesen.",
+    "Read the last answer aloud": "Die letzte Antwort vorlesen",
+    "Stop reading": "Vorlesen stoppen",
+    "Switch to": "Wechseln zu",
+    "Voice & settings": "Stimme & Einstellungen",
+    "on the desk": "am Desk",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1069,7 +1087,6 @@ const I18N = {
     "Live · quotes via Finnhub": "Ao vivo · cotações via Finnhub",
     "Demo · simulated session": "Demo · sessão simulada",
     "ask the desk about \"{q}\"": "perguntar à mesa sobre \"{q}\"",
-    "{env} set": "cenário {env}",
     "Data": "Dados",
     "Live": "Ao vivo",
     "Demo": "Demo",
@@ -1092,7 +1109,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Escreva um símbolo e prima Enter  ·  HELP para comandos",
     "OPEN": "ABERTO", "CLOSED": "FECHADO",
     "standing by": "em espera",
-    "Voice & anchor settings": "Definições de voz e apresentador", "SET": "CENÁRIO", "stop reading": "parar leitura", "free": "grátis",
+    "Voice & anchor settings": "Definições de voz e apresentador", "SET": "CENÁRIO", "free": "grátis",
     "ASK ALL": "PERGUNTAR A TODOS",
  "Summarize {sym} today": "Resumir {sym} hoje", "What's moving today?": "O que está a mover-se hoje?", "Take me to Robinhood": "Leva-me ao Robinhood", "What's on Netflix?": "O que há na Netflix?", "Write a report → PPT": "Escrever um relatório → PPT",
     "WATCHLIST": "LISTA DE ACOMPANHAMENTO","full chart": "gráfico completo",
@@ -1341,6 +1358,13 @@ const I18N = {
     "forever": "para sempre",
     "on air.": "no ar.",
     "{who} is reading this answer": "{who} está a ler esta resposta",
+    // --- settings: the plain-language sidebar ---
+    "Ask something first — there is no answer to read yet.": "Pergunta algo primeiro — ainda não há resposta para ler.",
+    "Read the last answer aloud": "Ler a última resposta em voz alta",
+    "Stop reading": "Parar de ler",
+    "Switch to": "Mudar para",
+    "Voice & settings": "Voz e definições",
+    "on the desk": "na bancada",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -1376,7 +1400,6 @@ const I18N = {
     "Live · quotes via Finnhub": "In diretta · quotazioni via Finnhub",
     "Demo · simulated session": "Demo · sessione simulata",
     "ask the desk about \"{q}\"": "chiedi alla postazione di \"{q}\"",
-    "{env} set": "set {env}",
     "Data": "Dati",
     "Live": "In diretta",
     "Demo": "Demo",
@@ -1399,7 +1422,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Digita un simbolo e premi Invio  ·  HELP per i comandi",
     "OPEN": "APERTO", "CLOSED": "CHIUSO",
     "standing by": "in attesa",
-    "Voice & anchor settings": "Impostazioni voce e conduttore", "SET": "SET", "stop reading": "ferma lettura", "free": "gratis",
+    "Voice & anchor settings": "Impostazioni voce e conduttore", "SET": "SET", "free": "gratis",
     "ASK ALL": "CHIEDI A TUTTI",
  "Summarize {sym} today": "Riassumi {sym} oggi", "What's moving today?": "Cosa si muove oggi?", "Take me to Robinhood": "Portami su Robinhood", "What's on Netflix?": "Cosa c'è su Netflix?", "Write a report → PPT": "Scrivi un report → PPT",
     "WATCHLIST": "LISTA DI OSSERVAZIONE","full chart": "grafico completo",
@@ -1648,6 +1671,13 @@ const I18N = {
     "forever": "per sempre",
     "on air.": "in onda.",
     "{who} is reading this answer": "{who} sta leggendo questa risposta",
+    // --- settings: the plain-language sidebar ---
+    "Ask something first — there is no answer to read yet.": "Chiedi qualcosa prima — non c'è ancora una risposta da leggere.",
+    "Read the last answer aloud": "Leggi ad alta voce l'ultima risposta",
+    "Stop reading": "Interrompi la lettura",
+    "Switch to": "Passa a",
+    "Voice & settings": "Voce e impostazioni",
+    "on the desk": "al desk",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -3848,6 +3878,16 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
             style={{ width: 6, height: 6, borderRadius: "50%", background: talking ? C.accentText : C.faint }} />
           {talking ? t("On air") : t("Standing by")}
         </span>
+        {/* Who this is, named on the portrait rather than in a caption under
+            it. The status pill and the name take opposite corners: the
+            reference stacks both on the left, which leaves the other side of a
+            330px frame empty and reads as a column of chrome. The README puts
+            the status top-right, and that is the arrangement kept here. */}
+        <span style={{
+          position: "absolute", bottom: 10, left: 10, pointerEvents: "none",
+          background: "rgba(11,14,19,0.85)", color: C.text,
+          fontFamily: SANS, fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 6,
+        }}>{ch.name}</span>
       </div>
     );
   }
@@ -9935,47 +9975,80 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     : null
                   }
                 />
-
-                {/* Who is presenting, and the two arrows that change it. The
-                    arrows NAME their destination in the tooltip and the
-                    accessible label — a bare ‹ › on a roster of nine anchors is
-                    a control you have to click to find out what it does. */}
+                {/* Who is presenting, and how you change it.
+                    This was a bare ‹ › pair, which is a control you have to
+                    click to find out what it does — on a roster of twenty-odd
+                    anchors that is a lottery. Three faces instead: who you have,
+                    with who you would get either side of them. The picker shows
+                    its outcome, which is the whole point the handoff makes
+                    about this panel. */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 15, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{anchorName}</div>
-                    <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t("{env} set").replace("{env}", envName)}</div>
-                  </div>
-                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                    {[["‹", -1], ["›", 1]].map(([glyph, step]) => {
+                  <div role="radiogroup" aria-label={t("Anchor")} style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                    {(() => {
                       const i = CHARACTERS.findIndex(c => c.id === characterId);
-                      const next = CHARACTERS[(i + step + CHARACTERS.length) % CHARACTERS.length];
-                      return (
-                        <button
-                          key={glyph} className="v-tap"
-                          onClick={() => setCharacterId(next.id)}
-                          aria-label={`${step < 0 ? "Previous" : "Next"} anchor — ${next.name}`}
-                          title={next.name}
-                          style={{ width: 30, height: 30, display: "grid", placeItems: "center", background: "transparent", border: `1px solid ${C.edgeStrong}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 13, lineHeight: 1, cursor: "pointer" }}
-                        >{glyph}</button>
-                      );
-                    })}
+                      const at = (step) => CHARACTERS[(i + step + CHARACTERS.length) % CHARACTERS.length];
+                      // Previous, current, next. Stepping still walks the whole
+                      // roster; you can just see where the next step lands.
+                      return [at(-1), at(0), at(1)].map((ch, k) => {
+                        const on = ch.id === characterId;
+                        return (
+                          <button key={`${ch.id}-${k}`} className="v-tap" role="radio" aria-checked={on}
+                            onClick={() => setCharacterId(ch.id)}
+                            aria-label={on ? `${ch.name} — ${t("on the desk")}` : `${t("Switch to")} ${ch.name}`}
+                            title={ch.name}
+                            style={{
+                              width: 38, height: 38, borderRadius: "50%", flexShrink: 0,
+                              display: "grid", placeItems: "center", cursor: "pointer",
+                              background: C.surfaceRaised,
+                              border: `2px solid ${on ? C.accent : "transparent"}`,
+                              color: on ? C.text : C.muted,
+                              fontFamily: SANS, fontSize: 12, fontWeight: on ? 700 : 600,
+                              transition: `border-color ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}`,
+                            }}>
+                            {ch.name.slice(0, 2)}
+                          </button>
+                        );
+                      });
+                    })()}
                   </div>
+                  {/* The rest of the roster, the sets and the voice engine live
+                      one click away rather than crowding this card. */}
+                  <button onClick={() => { setSettingsTab("anchor"); setShowSettings(true); }}
+                    style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: SANS, fontSize: 13, color: C.muted, whiteSpace: "nowrap" }}>
+                    {t("Voice & settings")}
+                  </button>
                 </div>
 
-                {/* One full-width outline control. While the anchor is actually
-                    reading it becomes Stop, because that is the only thing you
-                    want from this card at that moment. */}
-                {speakingId ? (
-                  <button onClick={stopSpeak}
-                    style={{ background: "transparent", border: `1px solid ${C.downEdge}`, color: C.down, borderRadius: 9, fontFamily: SANS, fontSize: 13, fontWeight: 500, padding: 9, cursor: "pointer" }}>
-                    ■ {t("stop reading")}
-                  </button>
-                ) : (
-                  <button onClick={() => { setSettingsTab("anchor"); setShowSettings(true); }}
-                    style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, color: C.accent, borderRadius: 9, fontFamily: SANS, fontSize: 13, fontWeight: 500, padding: 9, cursor: "pointer" }}>
-                    {t("Voice & anchor settings")}
-                  </button>
-                )}
+                {/* Read the last answer aloud — the thing this panel is FOR.
+                    It was buried behind "Voice & anchor settings", which is a
+                    route to a modal, not an action. Disabled with a reason when
+                    there is nothing to read yet. */}
+                {(() => {
+                  const lastAnswer = [...chatThread].reverse().find(m => m.role !== "user" && m.text && m.status !== "error");
+                  const reading = speakingId != null;
+                  const canRead = !!lastAnswer;
+                  return (
+                    <button
+                      onClick={() => { if (reading) { stopSpeak(); return; } if (lastAnswer) speak(lastAnswer.id, lastAnswer.text); }}
+                      disabled={!reading && !canRead}
+                      title={!reading && !canRead ? t("Ask something first — there is no answer to read yet.") : undefined}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10, width: "100%",
+                        background: C.surfaceRaised, border: "1px solid transparent", borderRadius: R.md,
+                        padding: "10px 12px", textAlign: "left",
+                        cursor: (reading || canRead) ? "pointer" : "not-allowed",
+                        opacity: (reading || canRead) ? 1 : 0.55,
+                      }}>
+                      <span aria-hidden="true" style={{ color: reading ? C.down : C.accent, fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
+                        {reading ? "■" : "▶"}
+                      </span>
+                      <span style={{ flex: 1, minWidth: 0, fontFamily: SANS, fontSize: 13, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {reading ? t("Stop reading") : t("Read the last answer aloud")}
+                      </span>
+                      <span style={{ fontFamily: MONO, fontSize: 11, color: C.faint, flexShrink: 0 }}>{speechRate.toFixed(2)}×</span>
+                    </button>
+                  );
+                })()}
               </div>
 
               {/* The desk's own vital signs. Values right-aligned so the three
@@ -9987,6 +10060,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: live ? C.up : C.faint }} />
                     {live ? t("Live") : t("Demo")}
                   </span>
+                </div>
+                {/* The set moved here from a caption under the portrait. It is
+                    a fact about this desk, which is what this card is for —
+                    and the portrait now carries the anchor's name instead. */}
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                  <span style={{ flexShrink: 0 }}>{t("Set")}</span>
+                  <span style={{ color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{envName}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
                   <span style={{ flexShrink: 0 }}>{t("Model")}</span>
