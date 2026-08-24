@@ -690,11 +690,18 @@ button:not(:disabled):active { transform: scale(0.97); }
 }
 
 /* ---------- the desk composer ----------
-   The market status has been removed from this row entirely (it is in the
-   header), so only the shortcut chip still needs dropping on a phone — a
-   keyboard shortcut on a device with no keyboard is decoration, and the
-   textarea is the one flexible thing in the row. */
-@media (max-width: 700px) {
+   The shortcut chip is dropped in two cases, and WIDTH is only one of them.
+
+   A tablet, or a phone in landscape, is comfortably past 700px and still has
+   no Ctrl key — so a width query alone left "Ctrl K" advertised to people who
+   cannot press it. `pointer: coarse` asks the question that actually matters:
+   is this a finger? It is the same predicate the touch-target block below
+   uses, for the same reason.
+
+   The width rule stays for the other case — a narrow desktop window, where
+   the keyboard exists but the textarea is the only flexible thing in the row
+   and needs the space back. */
+@media (pointer: coarse), (max-width: 700px) {
   .v-cmdpalette { display: none !important; }
 }
 
