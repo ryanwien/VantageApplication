@@ -2752,19 +2752,6 @@ const TAPE_CLOCK = new Intl.DateTimeFormat("en-US", {
 });
 const tapeLabel = (ms) => TAPE_CLOCK.format(new Date(ms));
 
-// Which modifier this keyboard actually has. The palette chip read "⌘K" on
-// every platform, so on Windows — where there is no ⌘ key — it named a key
-// the reader does not own, for a shortcut that did not exist. userAgentData
-// first because navigator.platform is deprecated; both are guarded because
-// this also runs under the test environment's jsdom.
-const IS_MAC = (() => {
-  try {
-    const p = navigator.userAgentData?.platform || navigator.platform || "";
-    return /mac/i.test(p);
-  } catch { return false; }
-})();
-const PALETTE_KEYS = IS_MAC ? "⌘K" : "Ctrl K";
-
 // Current time on the exchange's clock (US/Eastern, auto-DST via Intl). The anchor's trading day runs
 // on NY time so the opening bell and meals stay coherent no matter where the viewer sits.
 // Returns { day: 0=Sun…6=Sat, mins: minutes since ET midnight, stamp: "YYYY-M-D" in ET }.
@@ -11519,15 +11506,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 { label: t("Write a report → PPT"), value: "write a report and export ppt" },
               ]}
               toolbar={<>
-                {/* The palette shortcut, named for the keyboard in front of
-                    you rather than for a Mac. It also now works — see the
-                    binding in AppShell; this chip advertised ⌘K for months
-                    with nothing listening for it. */}
-                <button onClick={() => openPaletteRef.current?.()} aria-label={`${t("Search")} (${PALETTE_KEYS})`} title={`${t("Search")} · ${PALETTE_KEYS}`}
-                  className="v-interactive v-cmdpalette"
-                  style={{ display: "inline-flex", alignItems: "center", background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: 6, color: C.faint, fontFamily: MONO, fontSize: 12, padding: "7px 9px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
-                  {PALETTE_KEYS}
-                </button>
                 {voiceSupported ? (
                 <button onClick={toggleVoice} aria-label={listening ? "Stop listening" : "Talk to the desk"} title="Talk to the desk"
                   className={listening ? "v-tap v-pulse" : "v-tap"}
