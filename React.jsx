@@ -20,6 +20,7 @@ import AppShell from "./src/ui/AppShell.jsx";
 import ChatAssistant from "./src/ui/ChatAssistant.jsx";
 import NewsDesk, { sourceColor, toneOf } from "./src/ui/NewsDesk.jsx";
 import VantageMark from "./src/ui/VantageMark.jsx";
+import DeskIcon from "./src/ui/DeskIcon.jsx";
 import HomePage from "./src/ui/HomePage.jsx";
 
 /* ============================================================
@@ -421,6 +422,15 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.": "Una sola caja para todo. Escribe un símbolo y pulsa Enter para graficarlo, o pregunta con tus palabras: «llévame a Robinhood», «qué hay en netflix», «escribe un informe y expórtalo a ppt». «ADD TSLA» y «DEL TSLA» gestionan tu lista de seguimiento.",
     "One box for everything. Type a ticker to chart it, or just ask me a question. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Una sola caja para todo. Escribe un símbolo para graficarlo, o simplemente pregúntame. También entiendo órdenes normales, como, llévame a Robinhood, o, qué hay en Netflix.",
+    // --- settings: the plain-language sidebar ---
+    "Calendar on desk": "Calendario en la mesa",
+    "Load the news": "Cargar las noticias",
+    "Portfolio on desk": "Cartera en la mesa",
+    "Searching…": "Buscando…",
+    "latest {sym} headlines and video": "últimos titulares y vídeo de {sym}",
+    "positions and P&L": "posiciones y resultado",
+    "the full {sym} chart": "el gráfico completo de {sym}",
+    "your events and market earnings": "tus eventos y los resultados del mercado",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -732,6 +742,15 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.": "Une seule zone pour tout. Tapez un symbole et appuyez sur Entrée pour l'afficher, ou posez une question en langage courant — « emmène-moi sur Robinhood », « qu'y a-t-il sur netflix », « rédige un rapport et exporte en ppt ». « ADD TSLA » et « DEL TSLA » gèrent votre liste de suivi.",
     "One box for everything. Type a ticker to chart it, or just ask me a question. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Une seule zone pour tout. Tapez un symbole pour l'afficher, ou posez-moi simplement une question. Je comprends aussi les commandes courantes, comme, emmène-moi sur Robinhood, ou, qu'y a-t-il sur Netflix.",
+    // --- settings: the plain-language sidebar ---
+    "Calendar on desk": "Calendrier sur le plateau",
+    "Load the news": "Charger les actualités",
+    "Portfolio on desk": "Portefeuille sur le plateau",
+    "Searching…": "Recherche…",
+    "latest {sym} headlines and video": "derniers titres et vidéos sur {sym}",
+    "positions and P&L": "positions et résultat",
+    "the full {sym} chart": "le graphique complet de {sym}",
+    "your events and market earnings": "vos événements et les résultats du marché",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -1043,6 +1062,15 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.": "Ein Feld für alles. Tippe ein Kürzel und drück Enter, um es zu charten, oder stell einfach eine Frage — „bring mich zu Robinhood“, „was läuft auf netflix“, „schreib einen Bericht und exportier als ppt“. „ADD TSLA“ und „DEL TSLA“ verwalten deine Beobachtungsliste.",
     "One box for everything. Type a ticker to chart it, or just ask me a question. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Ein Feld für alles. Tippe ein Kürzel, um es zu charten, oder frag mich einfach etwas. Ich verstehe auch normale Befehle, etwa, bring mich zu Robinhood, oder, was läuft auf Netflix.",
+    // --- settings: the plain-language sidebar ---
+    "Calendar on desk": "Kalender aufs Pult",
+    "Load the news": "Nachrichten laden",
+    "Portfolio on desk": "Portfolio aufs Pult",
+    "Searching…": "Suche läuft…",
+    "latest {sym} headlines and video": "aktuelle Schlagzeilen und Videos zu {sym}",
+    "positions and P&L": "Positionen und Ergebnis",
+    "the full {sym} chart": "das vollständige {sym}-Chart",
+    "your events and market earnings": "deine Termine und die Quartalszahlen",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1353,6 +1381,15 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.": "Uma só caixa para tudo. Escreve um símbolo e carrega em Enter para o traçar, ou faz uma pergunta por palavras tuas — «leva-me ao Robinhood», «o que há na netflix», «escreve um relatório e exporta em ppt». «ADD TSLA» e «DEL TSLA» gerem a tua lista de acompanhamento.",
     "One box for everything. Type a ticker to chart it, or just ask me a question. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Uma só caixa para tudo. Escreve um símbolo para o traçar, ou simplesmente faz-me uma pergunta. Também percebo comandos normais, como, leva-me ao Robinhood, ou, o que há na Netflix.",
+    // --- settings: the plain-language sidebar ---
+    "Calendar on desk": "Calendário na mesa",
+    "Load the news": "Carregar as notícias",
+    "Portfolio on desk": "Carteira na mesa",
+    "Searching…": "A procurar…",
+    "latest {sym} headlines and video": "últimas notícias e vídeo de {sym}",
+    "positions and P&L": "posições e resultado",
+    "the full {sym} chart": "o gráfico completo de {sym}",
+    "your events and market earnings": "os teus eventos e os resultados do mercado",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -1663,6 +1700,15 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.": "Una sola casella per tutto. Scrivi un simbolo e premi Invio per graficarlo, oppure fai una domanda a parole tue — «portami su Robinhood», «cosa c'è su netflix», «scrivi un report ed esporta in ppt». «ADD TSLA» e «DEL TSLA» gestiscono la tua lista di osservazione.",
     "One box for everything. Type a ticker to chart it, or just ask me a question. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix.": "Una sola casella per tutto. Scrivi un simbolo per graficarlo, oppure fammi semplicemente una domanda. Capisco anche i comandi normali, tipo, portami su Robinhood, o, cosa c'è su Netflix.",
+    // --- settings: the plain-language sidebar ---
+    "Calendar on desk": "Calendario in postazione",
+    "Load the news": "Carica le notizie",
+    "Portfolio on desk": "Portafoglio in postazione",
+    "Searching…": "Ricerca in corso…",
+    "latest {sym} headlines and video": "ultime notizie e video su {sym}",
+    "positions and P&L": "posizioni e risultato",
+    "the full {sym} chart": "il grafico completo di {sym}",
+    "your events and market earnings": "i tuoi eventi e le trimestrali",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -4974,7 +5020,6 @@ function PnFChart({ columns, boxSize, up, down }) {
   );
 }
 
-// ============================================================
 // ============================================================
 //  DeskCard — the shell every desk result wears.
 //
@@ -9228,7 +9273,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
   // ---- the navigator's answer, as a chat attachment ----
   const navPanel = aiResponses.nav && (
-    <DeskCard key="nav" icon="⌖" title={t("Navigator")}
+    <DeskCard key="nav" icon={<DeskIcon name="navigator" size={16} />} title={t("Navigator")}
       onClose={() => setAiResponses(p => { const { nav, ...rest } = p; return rest; })} closeLabel="Dismiss navigator">
       <div style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.65, color: aiResponses.nav.status === "error" ? C.down : C.text }}>
         {aiResponses.nav.text}
@@ -9271,7 +9316,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
   // ---- the calendar, as a chat attachment ----
   const calendarPanel = deskCalendar && (
-    <DeskCard key="calendar" icon="🗓" title={t("Calendar")} padded={false}
+    <DeskCard key="calendar" icon={<DeskIcon name="calendar" size={16} />} title={t("Calendar")} padded={false}
       onClose={() => setDeskCalendar(false)} closeLabel="Close calendar">
       <div style={{ maxWidth: 460, width: "100%" }}>
         <AppCalendar extra={marketEvents} />
@@ -9281,7 +9326,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
   // ---- the portfolio, as a chat attachment ----
   const portfolioPanel = deskPortfolio && (
-    <DeskCard key="portfolio" icon="💼" title={t("Portfolio")}
+    <DeskCard key="portfolio" icon={<DeskIcon name="portfolio" size={16} />} title={t("Portfolio")}
       note={positions.length > 0 ? priv(<span style={{ color: dirColorN(portTotals.pnl) }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} · {portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%</span>) : null}
       actions={positions.length > 0 && (
         <button onClick={briefPortfolio} title="Read on air" style={{ ...button("live", "sm"), fontSize: 12.5 }}>▶ read</button>
@@ -9357,7 +9402,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // A document to scroll rather than a chat turn, so it keeps its own scroll
   // box — but it is still the answer to "write a report", so it rides here.
   const reportPanel = writtenReport && (
-    <DeskCard key="report" icon="📝" title={t("Analyst report")} padded={false}
+    <DeskCard key="report" icon={<DeskIcon name="report" size={16} />} title={t("Analyst report")} padded={false}
       actions={
         <button onClick={() => (speakingId === "report" ? stopSpeak() : speak("report", writtenReport))}
           style={{ ...button("live", "sm"), fontSize: 12.5 }}>
@@ -10141,23 +10186,45 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               this same slot, so the empty state teaches the filled one. */}
           {!gameOn && !deskHasResult && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 12, borderTop: `1px solid ${C.panelEdge}` }}>
-              <div style={{ ...TYPE.eyebrowSm, color: C.faint }}>{t("ON THE DESK")} · {selected}</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8 }}>
+              <div style={{ ...TYPE.eyebrowSm, color: C.faint }}>
+                {t("ON THE DESK")} <span aria-hidden="true">/</span> <span style={{ color: C.accentText }}>{selected}</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 10 }}>
                 {[
-                  ["📰", newsBusy ? "Searching…" : "Load the news", `latest ${selected} headlines and video`, () => fetchNews(), newsBusy],
-                  ["💼", "Portfolio on desk", "positions and P&L", () => setDeskPortfolio(true), false],
-                  ["📅", "Calendar on desk", "your events and market earnings", () => setDeskCalendar(true), false],
-                  ["📈", "Full chart", `the full ${selected} chart`, () => openChart(selected), false],
+                  ["news", newsBusy ? t("Searching…") : t("Load the news"), t("latest {sym} headlines and video").replace("{sym}", selected), () => fetchNews(), newsBusy, false],
+                  ["portfolio", t("Portfolio on desk"), t("positions and P&L"), () => setDeskPortfolio(true), false, false],
+                  ["calendar", t("Calendar on desk"), t("your events and market earnings"), () => setDeskCalendar(true), false, false],
+                  ["chart", t("Full chart"), t("the full {sym} chart").replace("{sym}", selected), () => openChart(selected), false],
                 ].map(([icon, label, hint, run, off]) => (
-                  <button key={hint} onClick={run} disabled={off} className="v-lift"
+                  <button key={icon} onClick={run} disabled={off} className="v-lift v-verbcard"
                     style={{
-                      display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 5, textAlign: "left",
-                      background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.lg,
-                      padding: "12px 14px", cursor: off ? "default" : "pointer", opacity: off ? 0.6 : 1, minHeight: 88,
+                      display: "flex", alignItems: "center", gap: 14, textAlign: "left",
+                      background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg,
+                      padding: 14, cursor: off ? "default" : "pointer", opacity: off ? 0.6 : 1,
                     }}>
-                    <span aria-hidden="true" style={{ fontSize: 15, color: C.accentText }}>{icon}</span>
-                    <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 13, color: C.text }}>{label}</span>
-                    <span style={{ fontFamily: SANS, fontSize: 11, color: C.faint, lineHeight: 1.45 }}>{hint}</span>
+                    {/* A tile, not a bare emoji. An emoji cannot take a colour
+                        — the old markup set color:accentText on one and nothing
+                        happened — and it renders as a different picture on
+                        every platform. These are strokes in currentColor, which
+                        is what lets the tile go green under a press.
+
+                        All four rest neutral. One of them standing green said
+                        "this is the important one", which is not true — they
+                        are four peers — and it spent the screen's accent on a
+                        state rather than on an action. The green is the press
+                        now: it means "this is the one you just chose". */}
+                    <span aria-hidden="true" className="v-verbtile" style={{
+                      width: 40, height: 40, flexShrink: 0, borderRadius: R.md,
+                      display: "grid", placeItems: "center",
+                      background: C.surfaceRaised, color: C.muted,
+                      transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}`,
+                    }}>
+                      <DeskIcon name={icon} />
+                    </span>
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: "block", fontFamily: SANS, fontWeight: 700, fontSize: 14.5, color: C.text, letterSpacing: "-0.008em" }}>{label}</span>
+                      <span style={{ display: "block", fontFamily: SANS, fontSize: 13, color: C.muted, lineHeight: 1.45, marginTop: 2 }}>{hint}</span>
+                    </span>
                   </button>
                 ))}
               </div>

@@ -546,6 +546,25 @@ button:not(:disabled):active { transform: scale(0.97); }
   .v-coname { display: none; }
 }
 
+/* ---------- "on the desk" verb cards ----------
+   The icon tile answers the pointer. At rest all four are neutral — they are
+   four peers, and one of them standing green claimed an importance it does not
+   have while spending the screen's accent on a state instead of an action.
+
+   Hover lifts the tile off its card; press turns it accent. Green here means
+   "this is the one you just chose", which is a thing worth saying, said only
+   while it is true. !important because the resting values are inline. */
+.v-verbcard:hover .v-verbtile {
+  background: var(--v-edge-strong) !important;
+  color: var(--v-text) !important;
+}
+.v-verbcard:active .v-verbtile,
+.v-verbcard:focus-visible .v-verbtile {
+  background: var(--v-accent) !important;
+  color: var(--v-base) !important;
+}
+.v-verbcard:disabled .v-verbtile { background: var(--v-surface-raised) !important; color: var(--v-faint) !important; }
+
 /* ---------- the desk composer ----------
    One input now: the command bar merged into it, bringing a market-status line
    and a ⌘K chip along. Those are fixed-width and the textarea is the only

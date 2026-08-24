@@ -20,7 +20,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { C, MONO, SANS, TYPE, R, SP, SHADOW, MOTION, button, chip, panelHead } from "./theme.js";
-
+import DeskIcon from "./DeskIcon.jsx";
 // A stable accent per source so the same outlet always looks the same, without
 // maintaining a hand-written colour map. Hashing the name is enough: we only need
 // consistency, not meaning.
@@ -255,7 +255,12 @@ export default function NewsDesk({
            The symbol beside it is mono, because that one IS a value. */}
       <div style={{ ...panelHead({ pad: "12px 16px" }), flexWrap: "wrap" }}>
         <span style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
-          <span aria-hidden="true" style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>📰</span>
+          {/* The same mark the "Load the news" card carries. Click a newspaper,
+              get a newspaper — two glyphs for one idea is how an interface
+              stops being learnable. */}
+          <span aria-hidden="true" style={{ display: "grid", placeItems: "center", flexShrink: 0, color: C.muted }}>
+            <DeskIcon name="news" size={16} />
+          </span>
           <span>News desk</span>
           {subject && (
             <span style={{ ...TYPE.numSm, fontSize: 12.5, color: C.muted, background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: R.pill, padding: "2px 9px" }}>
