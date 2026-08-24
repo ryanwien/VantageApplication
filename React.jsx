@@ -143,8 +143,6 @@ const I18N = {
     "Prev close": "Cierre ant.",
     "Change": "Variación",
     "Day range": "Rango del día",
-    "Live · quotes via Finnhub": "En vivo · cotizaciones vía Finnhub",
-    "Demo · simulated session": "Demo · sesión simulada",
     "ask the desk about \"{q}\"": "preguntar a la mesa sobre \"{q}\"",
     "Data": "Datos",
     "Live": "En vivo",
@@ -528,6 +526,7 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "write analyst report": "escribir informe de analista",
     "writing…": "escribiendo…",
+    // --- settings: the plain-language sidebar ---
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -560,8 +559,6 @@ const I18N = {
     "Prev close": "Clôture préc.",
     "Change": "Variation",
     "Day range": "Amplitude du jour",
-    "Live · quotes via Finnhub": "En direct · cours via Finnhub",
-    "Demo · simulated session": "Démo · séance simulée",
     "ask the desk about \"{q}\"": "demander au plateau à propos de \"{q}\"",
     "Data": "Données",
     "Live": "En direct",
@@ -945,6 +942,7 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "write analyst report": "rédiger une note d'analyste",
     "writing…": "rédaction…",
+    // --- settings: the plain-language sidebar ---
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -977,8 +975,6 @@ const I18N = {
     "Prev close": "Vortagesschluss",
     "Change": "Veränderung",
     "Day range": "Tagesspanne",
-    "Live · quotes via Finnhub": "Live · Kurse über Finnhub",
-    "Demo · simulated session": "Demo · simulierte Sitzung",
     "ask the desk about \"{q}\"": "das Pult zu \"{q}\" fragen",
     "Data": "Daten",
     "Live": "Live",
@@ -1362,6 +1358,7 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "write analyst report": "Analystenbericht schreiben",
     "writing…": "wird geschrieben…",
+    // --- settings: the plain-language sidebar ---
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1394,8 +1391,6 @@ const I18N = {
     "Prev close": "Fecho ant.",
     "Change": "Variação",
     "Day range": "Intervalo do dia",
-    "Live · quotes via Finnhub": "Ao vivo · cotações via Finnhub",
-    "Demo · simulated session": "Demo · sessão simulada",
     "ask the desk about \"{q}\"": "perguntar à mesa sobre \"{q}\"",
     "Data": "Dados",
     "Live": "Ao vivo",
@@ -1778,6 +1773,7 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "write analyst report": "escrever relatório de analista",
     "writing…": "a escrever…",
+    // --- settings: the plain-language sidebar ---
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -1810,8 +1806,6 @@ const I18N = {
     "Prev close": "Chius. prec.",
     "Change": "Variazione",
     "Day range": "Intervallo del giorno",
-    "Live · quotes via Finnhub": "In diretta · quotazioni via Finnhub",
-    "Demo · simulated session": "Demo · sessione simulata",
     "ask the desk about \"{q}\"": "chiedi alla postazione di \"{q}\"",
     "Data": "Dati",
     "Live": "In diretta",
@@ -2194,6 +2188,7 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "write analyst report": "scrivi un report da analista",
     "writing…": "in scrittura…",
+    // --- settings: the plain-language sidebar ---
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -11405,11 +11400,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   </b>
                 </span>
               ))}
-              {/* Whether these numbers are real. It was a 10px all-caps sentence
-                  about polling intervals; what a reader needs is this. */}
-              <span style={{ marginLeft: "auto", color: C.faint, fontSize: 12 }}>
-                {live ? t("Live · quotes via Finnhub") : t("Demo · simulated session")}
-              </span>
+              {/* No provenance line here. Whether the numbers are real is
+                  already answered by the Data · Live/Demo chip in the desk
+                  panel, with a coloured dot — and answering it twice on one
+                  screen spends a row of the stats bar restating a state the
+                  user set themselves. */}
             </div>
           </div>
 
