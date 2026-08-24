@@ -440,4 +440,28 @@ export function chip(tone = "neutral") {
   };
 }
 
+// ============================================================
+//  alpha() — the same colour, less of it.
+//
+//  WHY THIS EXISTS
+//  Call sites used to hard-code rgba(235,87,87,0.30) and rgba(39,166,68,0.15):
+//  the PREVIOUS palette's red and green. A literal cannot be retargeted, so
+//  those survived a complete retheme — the app changed palette and a dozen
+//  scattered LEDs, quiz answers and alert backgrounds quietly did not.
+//
+//  There is already a named token for every alpha this system uses often
+//  (upSoft, downSoft, downEdge, accentGlow, liveGlow). This is for the one-off
+//  alphas that do not earn a name, so that they still follow the palette.
+// ============================================================
+export function alpha(hex, a) {
+  const h = String(hex).trim();
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(h);
+  // Not a hex colour — hand it back rather than emitting rgba(NaN, …), which
+  // paints nothing and is invisible until someone screenshots it.
+  if (!m) return h;
+  const s = m[1].length === 3 ? m[1].replace(/./g, c => c + c) : m[1];
+  const n = parseInt(s, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+
 export default C;

@@ -9,7 +9,7 @@ import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage,
 import { buildPnF, pnfTargets, visibleWindow, INTRADAY_BOX_PCT } from "./src/pnf/pnf.js";
 import { detectPattern } from "./src/pnf/patterns.js";
 import { CHESS_GLYPH, chessInit, legalMoves, chessApply, gameStatus, inCheck, chessAIMove } from "./src/chess/chess.js";
-import { C, GRAD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, button, panel, panelHead, panelNote, field as fieldRecipe, chip, segmentTrack, segmentItem, pill } from "./src/ui/theme.js";
+import { C, GRAD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, alpha, button, panel, panelHead, panelNote, field as fieldRecipe, chip, segmentTrack, segmentItem, pill } from "./src/ui/theme.js";
 import { passwordCheck, PW_MIN } from "./src/auth/password.js";
 import Sparkline from "./src/ui/Sparkline.jsx";
 import RichText from "./src/ui/RichText.jsx";
@@ -2033,8 +2033,11 @@ function ChessGame({ onCheer, onWin, sfx }) {
             <button key={`${r}-${c}`} onClick={() => clickSquare(r, c)}
               style={{
                 position: "relative", border: "none", cursor: winner ? "default" : "pointer", padding: 0,
-                background: light ? "#23252a" : "#161718",
-                boxShadow: isSel ? "inset 0 0 0 2px #e4f222" : inDanger ? "inset 0 0 0 2px #eb5757" : "none",
+                background: light ? C.boardLight : C.boardDark,
+                // The selection ring was #e4f222 — the acid yellow this
+                // redesign exists to remove. Selection is an active state, and
+                // active states are the accent.
+                boxShadow: isSel ? `inset 0 0 0 2px ${C.accent}` : inDanger ? `inset 0 0 0 2px ${C.down}` : "none",
                 display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
               }}>
               {p && <span style={{ fontSize: 22, color: p.s === "w" ? C.up : C.down, textShadow: "0 1px 2px rgba(0,0,0,0.6)", opacity: inFlight ? 0 : 1 }}>{CHESS_GLYPH[p.t]}</span>}
@@ -2146,7 +2149,7 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
             const x = 6 + i * 30 * sc + row * 12;
             ctx.fillStyle = "#101623"; ctx.fillRect(x, y, 22 * sc, 14 * sc);
             const lit = Math.sin(i * 3.7 + row * 2.1 + t / 1400) > 0;
-            ctx.fillStyle = lit ? "rgba(39,166,68,0.30)" : "rgba(235,87,87,0.30)";
+            ctx.fillStyle = lit ? alpha(C.up, 0.3) : alpha(C.down, 0.3);
             ctx.fillRect(x + 3 * sc, y + 2 * sc, 16 * sc, 7 * sc);
           }
         }
@@ -2168,12 +2171,12 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
           for (let wy = 0; wy < Math.floor(bh / 10); wy++) {
             for (let wx = 0; wx < Math.floor(bw / 7); wx++) {
               const on = Math.sin(i * 7 + wx * 3.1 + wy * 5.7 + Math.floor(t / 2500)) > 0.2;
-              if (on) { ctx.fillStyle = "rgba(255,196,64,0.28)"; ctx.fillRect(bx2 + 3 + wx * 7, 154 - bh + wy * 10, 3, 4); }
+              if (on) { ctx.fillStyle = alpha(C.warn, 0.28); ctx.fillRect(bx2 + 3 + wx * 7, 154 - bh + wy * 10, 3, 4); }
             }
           }
         }
         // rooftop beacon
-        ctx.fillStyle = (reduced || Math.sin(t / 500) > 0) ? "rgba(235,87,87,0.8)" : "rgba(235,87,87,0.15)";
+        ctx.fillStyle = (reduced || Math.sin(t / 500) > 0) ? alpha(C.down, 0.8) : alpha(C.down, 0.15);
         ctx.fillRect(52, 96, 2, 2);
       } else if (env === "server") {
         ctx.fillStyle = "#0A0D13"; ctx.fillRect(0, 0, W, H);
@@ -2185,7 +2188,7 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
             const uy = 18 + u * 12;
             ctx.fillStyle = "#121826"; ctx.fillRect(rx + 3, uy, 30, 8);
             const led = reduced ? 0.5 : Math.sin(rack * 5.1 + u * 3.3 + t / (300 + u * 40));
-            ctx.fillStyle = led > 0.3 ? "rgba(39,166,68,0.8)" : led < -0.5 ? "rgba(235,87,87,0.7)" : "rgba(74,82,102,0.5)";
+            ctx.fillStyle = led > 0.3 ? alpha(C.up, 0.8) : led < -0.5 ? alpha(C.down, 0.7) : alpha(C.faint, 0.5);
             ctx.fillRect(rx + 27, uy + 2.5, 3, 3);
           }
         }
@@ -3629,12 +3632,12 @@ function awDraw(ctx, sim) {
     ctx.fillStyle = "#0009"; ctx.fillRect(x - 15, AW_H / 2 - 56, 30, 5);
     ctx.fillStyle = color; ctx.fillRect(x - 15, AW_H / 2 - 56, 30 * Math.max(0, hp) / 200, 5);
   };
-  base(sim.you.baseX, "#27a644", sim.you.baseHp);
-  base(sim.cpu.baseX, "#eb5757", sim.cpu.baseHp);
+  base(sim.you.baseX, C.up, sim.you.baseHp);
+  base(sim.cpu.baseX, C.down, sim.cpu.baseHp);
   for (const tr of sim.tracers) { ctx.strokeStyle = `rgba(208,214,224,${Math.max(0, tr.life / 0.12) * 0.8})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(tr.x1, tr.y1); ctx.lineTo(tr.x2, tr.y2); ctx.stroke(); }
   for (const u of sim.units) {
     const b = AW_BOTS[u.type];
-    ctx.beginPath(); ctx.arc(u.x, u.y, b.r, 0, Math.PI * 2); ctx.fillStyle = u.side === "you" ? "#27a644" : "#eb5757"; ctx.fill();
+    ctx.beginPath(); ctx.arc(u.x, u.y, b.r, 0, Math.PI * 2); ctx.fillStyle = u.side === "you" ? C.up : C.down; ctx.fill();
     ctx.lineWidth = 2; ctx.strokeStyle = b.color; ctx.stroke();
     ctx.fillStyle = "rgba(8,9,10,0.7)"; ctx.fillRect(u.x - b.r, u.y - b.r - 5, b.r * 2, 3);
     ctx.fillStyle = "#ffffff"; ctx.fillRect(u.x - b.r, u.y - b.r - 5, b.r * 2 * Math.max(0, u.hp) / u.maxHp, 3);
@@ -4190,7 +4193,7 @@ function AuthScreen({ onAuthed }) {
   const primaryBtn = (extra = {}) => ({ ...button("primary", "lg", { full: true }), ...extra });
   const ghostBtn = { ...button("quiet", "sm"), color: C.accentSoft, textDecoration: "underline", padding: 0 };
   const errBox = err ? (
-    <div role="alert" style={{ background: C.downSoft, border: "1px solid rgba(235,87,87,0.4)", color: "#f28080", borderRadius: R.md, padding: "10px 12px", ...TYPE.bodySm, fontSize: 13, lineHeight: 1.5 }}>{err}</div>
+    <div role="alert" style={{ background: C.downSoft, border: `1px solid ${C.dangerEdge}`, color: C.down, borderRadius: R.md, padding: "10px 12px", ...TYPE.bodySm, fontSize: 13, lineHeight: 1.5 }}>{err}</div>
   ) : null;
 
   // .v-aurora (global.css) drifts a slow colour field behind the card. The inline
@@ -8509,7 +8512,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   <span style={{ marginTop: "auto", display: "flex", gap: 4 }}>
                     {catalog.archive ? (
                       <>
-                        <button onClick={() => playArchive(it)} title="Play in-desk" style={{ flex: 1, background: "rgba(39,166,68,0.14)", border: `1px solid ${C.up}`, color: C.up, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "4px 0", cursor: "pointer" }}>▶ play</button>
+                        <button onClick={() => playArchive(it)} title="Play in-desk" style={{ flex: 1, background: alpha(C.accent, 0.14), border: `1px solid ${C.up}`, color: C.up, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 510, padding: "4px 0", cursor: "pointer" }}>▶ play</button>
                         <a href={`https://archive.org/details/${it.archiveId}`} target="_blank" rel="noopener noreferrer" title="Open on Archive" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 7px" }}>↗</a>
                       </>
                     ) : (
@@ -8652,7 +8655,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {meta.choices.map((c, i) => {
                       const chosen = gameChoice === i, isRight = i === meta.answer, revealed = gamePhase === "reveal";
-                      const bg = revealed ? (isRight ? "rgba(39,166,68,0.15)" : chosen ? "rgba(235,87,87,0.12)" : "transparent") : "transparent";
+                      const bg = revealed ? (isRight ? alpha(C.up, 0.15) : chosen ? alpha(C.down, 0.12) : "transparent") : "transparent";
                       const bd = revealed ? (isRight ? C.up : chosen ? C.down : C.panelEdge) : C.panelEdge;
                       return (
                         <button key={i} disabled={revealed} onClick={() => gameAnswer(i)}
@@ -9145,7 +9148,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         <div style={{ padding: "6px 20px", fontFamily: MONO, fontSize: 12, color: C.accentText, borderBottom: `1px solid ${C.panelEdge}` }}>{cmdMsg}</div>
       )}
       {breakingAlert && (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 20px", background: "linear-gradient(90deg, rgba(235,87,87,0.24), rgba(235,87,87,0.04))", borderBottom: `1px solid ${C.down}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 20px", background: `linear-gradient(90deg, ${alpha(C.down, 0.24)}, ${alpha(C.down, 0.04)})`, borderBottom: `1px solid ${C.down}` }}>
           <span className="breaking-pulse" style={{ fontFamily: MONO, fontSize: 12, fontWeight: 510, letterSpacing: "-0.013em", color: "#08090a", background: C.down, borderRadius: R.xs, padding: "3px 8px", whiteSpace: "nowrap" }}>⚡ BREAKING</span>
           <span style={{ fontFamily: SANS, fontSize: 12, color: C.text, flex: 1, lineHeight: 1.4 }}>{breakingAlert.text}</span>
           <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint, whiteSpace: "nowrap" }}>{breakingAlert.source}</span>
@@ -10155,7 +10158,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       {demoRunning && (
         <div style={{ position: "fixed", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 65, display: "flex", alignItems: "center", gap: 12, background: C.panel, border: `1px solid ${C.accent}`, borderRadius: 999, padding: "7px 8px 7px 16px", boxShadow: "0 8px 30px rgba(0,0,0,0.5)", fontFamily: MONO, fontSize: 12, color: C.text }}>
           <span className="cursor" style={{ color: C.down }}>▶</span> Demo — the anchor is driving
-          <button onClick={stopDemo} style={{ background: "rgba(235,87,87,0.14)", border: `1px solid ${C.down}`, color: C.down, borderRadius: 999, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "5px 14px", cursor: "pointer" }}>■ stop</button>
+          <button onClick={stopDemo} style={{ background: alpha(C.down, 0.14), border: `1px solid ${C.down}`, color: C.down, borderRadius: 999, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "5px 14px", cursor: "pointer" }}>■ stop</button>
         </div>
       )}
 
@@ -10259,7 +10262,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               💡 <b style={{ color: C.text }}>No setup required.</b> Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.
             </div>
             {!aiReady() && (
-              <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: C.down, marginTop: 8, background: "rgba(235,87,87,0.08)", border: `1px solid ${C.down}`, borderRadius: R.md, padding: "8px 10px" }}>
+              <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: C.down, marginTop: 8, background: alpha(C.down, 0.08), border: `1px solid ${C.down}`, borderRadius: R.md, padding: "8px 10px" }}>
                 ⚠ <b>No AI key set up yet.</b> Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.{" "}
                 <button onClick={() => { setShowTutorial(false); setSetupOpen(true); }} style={{ background: "transparent", border: "none", color: C.accentText, textDecoration: "underline", cursor: "pointer", fontFamily: SANS, fontSize: 11, padding: 0 }}>Set it up →</button>
               </div>
