@@ -26,13 +26,14 @@
 // ============================================================
 
 import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from "react";
-import { C, GRAD, MONO, SANS, TYPE, R, SP, SHADOW, MOTION, button } from "./theme.js";
+import { C, MONO, SANS, TYPE, R, SP, SHADOW, MOTION, button } from "./theme.js";
 import RichText from "./RichText.jsx";
 import VantageMark from "./VantageMark.jsx";
 
-// A small text button used for the per-message actions. Low contrast at rest so
-// a thread of ten answers is not a wall of controls, full contrast on hover and
-// on keyboard focus — which is the part hover-only affordances always forget.
+// Green text, not a filled chip. Three bordered pills under every answer turned
+// a ten-turn thread into a wall of controls; as text they sit in the provenance
+// line and only the colour says they are live. Underlined on hover and on
+// keyboard focus — the part hover-only affordances always forget.
 function MsgAction({ label, onClick, active, title }) {
   const [hot, setHot] = useState(false);
   return (
@@ -41,10 +42,10 @@ function MsgAction({ label, onClick, active, title }) {
       onMouseEnter={() => setHot(true)} onMouseLeave={() => setHot(false)}
       onFocus={() => setHot(true)} onBlur={() => setHot(false)}
       style={{
-        ...button("quiet", "sm"),
-        padding: "2px 7px", fontSize: 11, borderRadius: R.pill,
-        border: `1px solid ${active ? C.liveDim : hot ? C.edgeStrong : "transparent"}`,
-        color: active ? C.live : hot ? C.text : C.faint,
+        background: "transparent", border: "none", padding: 0, cursor: "pointer",
+        fontFamily: MONO, fontSize: 12,
+        color: active ? C.accentText : C.accent,
+        textDecoration: hot ? "underline" : "none",
       }}
     >
       {label}
@@ -52,8 +53,30 @@ function MsgAction({ label, onClick, active, title }) {
   );
 }
 
+// ---------- "on air" ----------
+// The waveform is driven by whether the anchor is ACTUALLY speaking, never by a
+// timer — a fake meter that animates while nothing is playing is worse than no
+// meter, because it teaches you to stop believing it. Four bars at fixed
+// heights with a staggered delay; .vt-bars (global.css) owns the animation and
+// is silenced under prefers-reduced-motion.
+function OnAir({ who }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+      <span className="vt-bars" aria-hidden="true" style={{ display: "flex", alignItems: "flex-end", gap: 2.5, height: 16 }}>
+        {[60, 100, 45, 80].map((h, i) => (
+          <span key={i} style={{ width: 3, height: `${h}%`, background: C.accent, borderRadius: 2 }} />
+        ))}
+      </span>
+      <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: C.accentText }}>On air</span>
+      <span style={{ fontFamily: SANS, fontSize: 12, color: C.faint }}>
+        {who ? `${who} is reading this answer` : "Reading this answer"}
+      </span>
+    </div>
+  );
+}
+
 // ---------- one message ----------
-function Bubble({ msg, onRetry, onSpeak, speaking }) {
+function Bubble({ msg, onRetry, onSpeak, speaking, anchorName }) {
   const isUser = msg.role === "user";
   const isSystem = msg.role === "system";
   const [copied, setCopied] = useState(false);
@@ -85,94 +108,102 @@ function Bubble({ msg, onRetry, onSpeak, speaking }) {
   const canRetry = !isUser && msg.error && onRetry;
   const showActions = canSpeak || canCopy || canRetry || msg.meta;
 
-  return (
-    <div className="v-rise" style={{ display: "flex", gap: 10, flexDirection: isUser ? "row-reverse" : "row", alignItems: "flex-start" }}>
-      {/* Avatar. The assistant gets the brand gradient; the user gets a flat chip,
-          so the eye can separate the two without reading a word. */}
-      {isUser || isAction ? (
-        <span
-          aria-hidden="true"
-          style={{
-            width: 26, height: 26, borderRadius: "50%", flexShrink: 0, marginTop: 2,
-            display: "grid", placeItems: "center",
-            background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`,
-            fontFamily: SANS, fontSize: 11, fontWeight: 510,
-            color: isUser ? C.muted : C.accentText,
-          }}
-        >
-          {isUser ? "you" : "⚙"}
-        </span>
-      ) : (
-        <span aria-hidden="true" style={{ marginTop: 2 }}><VantageMark size={26} radius={16} /></span>
-      )}
-
-      <div style={{ maxWidth: "82%", minWidth: 0 }}>
-        <div
-          style={{
-            background: isUser ? C.surfaceRaised : isAction ? "transparent" : C.surface,
-            border: `1px solid ${msg.error ? "rgba(235,87,87,0.4)" : isUser ? C.edgeStrong : C.edge}`,
-            // Tail-side corner tightened so the bubble points at its own avatar.
-            borderRadius: isUser ? `${R.lg}px ${R.sm}px ${R.lg}px ${R.lg}px` : `${R.sm}px ${R.lg}px ${R.lg}px ${R.lg}px`,
-            padding: "10px 13px",
-            color: msg.error ? C.down : isAction ? C.muted : C.text,
-            ...TYPE.bodySm,
-            wordBreak: "break-word",
-          }}
-        >
-          {msg.status === "running" && !msg.text
-            ? <TypingDots />
-            /* User text is never parsed as Markdown: someone typing "what does
-               **this** mean" should see their own asterisks, not have them eaten. */
-            : isUser || isAction
-              ? <span style={{ whiteSpace: "pre-wrap" }}>{msg.text}</span>
-              : <RichText text={msg.text} />}
-
-          {/* Streaming cursor: only while text is still arriving. */}
-          {msg.status === "running" && msg.text ? (
-            <span className="v-pulse" style={{ color: C.accentText, marginLeft: 2 }}>▋</span>
-          ) : null}
+  // ---------- the question ----------
+  // Right-aligned, tight-cornered on the side it came from, and capped at 60%
+  // so a long question cannot pass itself off as an answer. No avatar: a chip
+  // reading "you" beside your own words is a label for something already
+  // unambiguous, and it cost every answer 36px of gutter to stay aligned with.
+  if (isUser) {
+    return (
+      <div className="v-rise" style={{ display: "flex", justifyContent: "flex-end" }}>
+        <div style={{
+          maxWidth: "60%", minWidth: 0,
+          background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, color: C.text,
+          borderRadius: `${R.xl - 2}px ${R.xl - 2}px 4px ${R.xl - 2}px`,
+          padding: "13px 20px",
+          fontFamily: SANS, fontSize: 15.5, lineHeight: 1.5,
+          whiteSpace: "pre-wrap", wordBreak: "break-word",
+        }}>
+          {msg.text}
         </div>
+      </div>
+    );
+  }
 
-        {/* Inline widget — a chart, table or calendar rendered by the host. */}
-        {msg.widget ? <div style={{ marginTop: 8 }}>{msg.widget}</div> : null}
+  return (
+    <div className="v-rise" style={{ minWidth: 0 }}>
+      <div
+        style={{
+          background: isAction ? "transparent" : C.surface,
+          border: `1px solid ${msg.error ? C.dangerEdge : isAction ? "transparent" : C.edge}`,
+          borderLeft: isAction ? `2px solid ${C.edgeStrong}` : undefined,
+          borderRadius: isAction ? 0 : R.lg,
+          padding: isAction ? "4px 0 4px 14px" : "22px 26px",
+          color: msg.error ? C.down : isAction ? C.muted : C.text,
+          fontFamily: SANS, fontSize: isAction ? 13.5 : 15.5, lineHeight: 1.65,
+          wordBreak: "break-word",
+        }}
+      >
+        {/* Only while audio is genuinely playing this turn. */}
+        {speaking && !isAction ? <OnAir who={anchorName} /> : null}
+
+        {msg.status === "running" && !msg.text
+          ? <TypingDots />
+          : isAction
+            ? <span style={{ whiteSpace: "pre-wrap" }}>{msg.text}</span>
+            : <RichText text={msg.text} />}
+
+        {/* Streaming cursor: only while text is still arriving. */}
+        {msg.status === "running" && msg.text ? (
+          <span className="v-pulse" style={{ color: C.accentText, marginLeft: 2 }}>▋</span>
+        ) : null}
 
         {/* Sources, when the turn came from a web/news lookup. */}
         {msg.sources?.length ? (
-          <div style={{ marginTop: 7, display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <div style={{ marginTop: 14, display: "flex", flexWrap: "wrap", gap: 6 }}>
             {msg.sources.map((s, i) => (
               <a
                 key={i} href={s.url} target="_blank" rel="noopener noreferrer"
                 style={{
-                  ...TYPE.eyebrowSm, textDecoration: "none",
-                  color: C.accentSoft, border: `1px solid ${C.accentEdge}`,
-                  background: C.accentGlow, borderRadius: R.pill, padding: "3px 9px",
-                  maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  fontFamily: SANS, fontSize: 11.5, textDecoration: "none",
+                  color: C.muted, border: `1px solid ${C.edge}`,
+                  background: C.surfaceAlt, borderRadius: R.lg, padding: "3px 9px",
+                  maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}
               >
-                ↗ {s.title || safeHost(s.url)}
+                {s.title || safeHost(s.url)} ↗
               </a>
             ))}
           </div>
         ) : null}
 
-        {/* Footer: provenance plus the per-message actions. This app routes between
-            several models and silently falls back on failure, so which one actually
-            answered — and how long it took — is real information, not decoration. */}
-        {showActions ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 6, flexWrap: "wrap" }}>
-            {msg.meta && <span style={{ ...TYPE.eyebrowSm, color: C.faint, marginRight: 4 }}>{msg.meta}</span>}
+        {/* Footer: provenance plus the per-message actions, hairlined off the
+            answer rather than floating under it. This app routes between several
+            models and silently falls back on failure, so which one answered —
+            and how long it took — is real information, not decoration.
+            The actions are green TEXT, not filled chips: three buttons under
+            every answer in a ten-turn thread is a wall of controls. */}
+        {showActions && !isAction ? (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
+            marginTop: 14, paddingTop: 12, borderTop: `1px solid ${C.edge}`,
+          }}>
+            {msg.meta && <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>{msg.meta}</span>}
             {canCopy && <MsgAction label={copied || "Copy"} onClick={copy} title="Copy this answer" />}
             {canSpeak && (
               <MsgAction
-                label={speaking ? "■ Stop" : "▶ Read"} active={speaking}
+                label={speaking ? "Stop" : "Read aloud"} active={speaking}
                 onClick={() => onSpeak(msg)}
                 title={speaking ? "Stop reading" : "Read this answer aloud"}
               />
             )}
-            {canRetry && <MsgAction label="↻ Try again" onClick={() => onRetry(msg)} title="Ask again" />}
+            {canRetry && <MsgAction label="Try again" onClick={() => onRetry(msg)} title="Ask again" />}
           </div>
         ) : null}
       </div>
+
+      {/* Inline widget — a chart, table or calendar rendered by the host. */}
+      {msg.widget ? <div style={{ marginTop: 8 }}>{msg.widget}</div> : null}
     </div>
   );
 }
@@ -244,6 +275,7 @@ export default function ChatAssistant({
   onStop,           // abort an answer in flight; the stop control only appears if given
   onSpeak,          // read a turn aloud; the desk wires this to its TTS engine
   speakingId,       // id of the message currently being spoken, if any
+  anchorName,       // who is presenting — named in the "on air" line while speaking
   toolbar,          // extra controls beside the composer (e.g. the mic button)
   attachments,      // desk results that belong to the conversation — the streaming
                     // catalog, the games menu. Rendered at the TAIL of the thread,
@@ -389,7 +421,7 @@ export default function ChatAssistant({
             ? <EmptyState suggestions={suggestions} onPick={pick} subject={subject} />
             : messages.map(m => (
                 <Bubble
-                  key={m.id} msg={m} onRetry={onRetry}
+                  key={m.id} msg={m} onRetry={onRetry} anchorName={anchorName}
                   onSpeak={onSpeak} speaking={speakingId === m.id}
                 />
               ))}
@@ -422,9 +454,9 @@ export default function ChatAssistant({
         <div
           className="cmdbar"
           style={{
-            display: "flex", alignItems: "flex-end", gap: 8,
-            background: C.inputBg, border: `1px solid ${C.edge}`,
-            borderRadius: R.md, padding: "7px 7px 7px 12px",
+            display: "flex", alignItems: "flex-end", gap: 12,
+            background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`,
+            borderRadius: R.lg, padding: "8px 8px 8px 18px",
             transition: `border-color ${MOTION.fast} ${MOTION.ease}, box-shadow ${MOTION.fast} ${MOTION.ease}`,
           }}
         >
@@ -446,7 +478,7 @@ export default function ChatAssistant({
             style={{
               flex: 1, minWidth: 0, resize: "none", background: "transparent",
               border: "none", outline: "none", color: C.text,
-              ...TYPE.bodySm, lineHeight: 1.5, padding: "5px 0", maxHeight: 132,
+              fontFamily: SANS, fontSize: 15, lineHeight: 1.5, padding: "8px 0", maxHeight: 132,
             }}
           />
           {/* Compact mode has no header for Clear to live in, so it rides the
@@ -474,12 +506,13 @@ export default function ChatAssistant({
               aria-label="Send message"
               style={{
                 ...button(canSend ? "primary" : "solid", "sm"),
-                padding: "8px 12px", flexShrink: 0,
+                padding: "10px 22px", borderRadius: 9, flexShrink: 0,
+                fontSize: 14, fontWeight: 700,
                 opacity: canSend ? 1 : 0.5,
                 cursor: canSend ? "pointer" : "not-allowed",
               }}
             >
-              {busy ? <span className="v-spin" style={{ display: "inline-block" }}>◌</span> : "Send →"}
+              {busy ? <span className="v-spin" style={{ display: "inline-block" }}>◌</span> : "Ask"}
             </button>
           )}
         </div>

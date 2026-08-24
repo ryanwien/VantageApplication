@@ -18,19 +18,20 @@
 //  text, and no gradient inside the glyph, because the real test of a logo is
 //  16px in a browser tab — anything with structure to lose, loses it there.
 //
-//  WHY THE TILE IS DARK
-//  The app's canvas is near-black. The mark it replaced was a white tile, and
-//  a white rectangle in this UI is a bright block competing with the one lime
-//  call to action. A #161718 tile with a hairline sits in the surface ladder
-//  like every other panel, and lets the white V be the bright thing instead.
+//  WHY THE TILE IS FILLED
+//  The redesign makes the mark a solid accent tile with a near-black glyph —
+//  the inverse of the dark-tile-with-bright-V it replaced. On a #0b0e13 page a
+//  green chip is the one saturated thing in the header, which is what a logo
+//  should be, and near-black on #46a758 is 6.3:1 where the text token would be
+//  3.1:1.
 //
-//  THE LIME DOT IS A DELIBERATE EXCEPTION
-//  theme.js reserves acid lime for actions and active indicators, precisely so
-//  it never becomes decoration. The dot is an on-air light — a live indicator —
-//  which is inside that rule rather than an exemption from it. It is also the
-//  only lime on screen that never moves, so it reads as identity, not as a
-//  thing to click. If a surface ever puts this mark next to a lime button,
-//  pass ink for `dot` there rather than letting two limes argue.
+//  THE DOT, AND WHY IT SURVIVED THE REPALETTE
+//  It was acid lime as an on-air light, under a rule reserving lime for actions
+//  and active indicators. That rule and that colour are both gone. The dot is
+//  now the accent-light green the redesign gives to on-air by name, which keeps
+//  it inside the same idea rather than making it loose decoration. It is the
+//  one detail here the reference does not have — the reference sets a plain
+//  text V — so it is the first thing to drop if the mark ever reads busy.
 //
 //  WHY A COMPONENT
 //  The mark appeared in five places as five hand-rolled spans, which is how a
@@ -43,10 +44,10 @@
 import React from "react";
 
 // Geometry is authored in a 32-unit box and scaled; every consumer picks a size.
-const TILE = "#161718";   // ink[2] — one step up from the panel it sits on
-const EDGE = "#383b3f";   // ink[4] — the same hairline every panel gets
-const INK = "#ffffff";
-const DOT = "#e4f222";    // acid lime, as the on-air light
+const TILE = "#46a758";   // accent — the mark IS the accent chip in this system
+const EDGE = "#46a758";   // no hairline: a filled tile needs no outline to sit in
+const INK = "#0b0e13";    // near-black glyph, 6.3:1 on the tile
+const DOT = "#4cc38a";    // accent light — the redesign's on-air colour
 
 export default function VantageMark({
   size = 26, tile = TILE, edge = EDGE, ink = INK, dot = DOT, radius = 8, title,

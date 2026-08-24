@@ -8,254 +8,264 @@
 //  9,000-line find-and-replace. Now the palette is data: change a value here
 //  and every panel, button and chart in the app follows.
 //
-//  THE LOOK — "midnight precision instrument" (see DESIGN.md / Linear reference)
-//  Void canvas (#08090a) with a four-step surface ladder, paper-white type at
-//  tight negative tracking, hairline borders instead of shadows, and exactly
-//  ONE chromatic action colour: acid lime (#e4f222), used for the single
-//  primary action in a view and never for decoration. Weights live in a low
-//  400–590 band; the system never bolds. Radii are a three-note vocabulary
-//  (6px controls, 12px cards, pills) and elevation comes from the surface
-//  progression #08090a → #0f1011 → #161718 → #23252a, not from ambient shadow.
+//  THE LOOK — the Vantage redesign (see the handoff README + reference file)
+//  Near-black canvas (#0b0e13) with a surface ladder, a cool grey text ramp
+//  topping out at #e6e8eb (there is no pure white in this system), hairline
+//  borders, and ONE accent: green #46a758 for the single primary action and
+//  active state, with #4cc38a for positive numbers, on-air and accent text.
 //
-//  MARKET SEMANTICS — the one documented deviation
-//  The reference calls Pulse Green and Coral Red "supporting accents, not
-//  status colours" because Linear has no rising/falling data. A market terminal
-//  does: price direction is the product. So green (#27a644) is up and coral
-//  (#eb5757) is down — the palette's own green and red, used semantically.
-//  Coral also carries the on-air state, separated from "down" by treatment
-//  (solid fill + dot vs plain text), which is how a control room reads a tally
-//  light anyway. Acid lime stays out of it: data is never the CTA colour.
+//  ACCENT DISCIPLINE — the core rule of the redesign
+//  One accent, ONE primary action per screen. The previous UI put acid yellow
+//  on GO, LIVE, +Add, the tabs and today's date simultaneously, so nothing read
+//  as primary. Green is reserved for the main action and for positive/live
+//  states; everything else is a neutral surface or an outline. Amber (#dd9a3c)
+//  is the one cautionary voice — market-closed and alert dots.
+//
+//  TYPE — two voices, and the split is load-bearing
+//  Schibsted Grotesk carries UI and prose; JetBrains Mono carries numbers,
+//  tickers, timestamps and code. Mono NEVER sets body copy, buttons or
+//  questions — that flatness was the previous UI's main hierarchy problem.
+//  Unlike the old system this one does bold: card titles are 700.
 //
 //  COMPATIBILITY
-//  `C` keeps every key the old palette had (bg, panel, panelEdge, amber,
-//  amberDim, text, muted, faint, up, down, grid) so existing inline styles keep
-//  working untouched. New tokens are additive.
+//  `C` keeps every key it has ever had (bg, panel, panelEdge, amber, amberDim,
+//  text, muted, faint, up, down, grid, moss, citrus, …) so existing inline
+//  styles keep working untouched. New tokens are additive.
 // ============================================================
 
 // ---------- raw ramps ----------
-// Cool near-blacks with a faint blue cast — the reference's own ladder. Each
-// step is a documented surface level, not an arbitrary tint.
+// Surfaces. Each step is a documented level, not an arbitrary tint. Note that
+// `alt` is not "one lighter" — it is DARKER than the card surface, because
+// dropdowns and floating chips read as cut into the page rather than lifted off
+// it. Ordering these by hex would break that intent.
+const surf = {
+  base: "#0b0e13",  // page / app background
+  raised: "#11151c", // cards, panels, inputs
+  alt: "#0e1218",   // dropdowns, floating chips
+  inset: "#171c24", // icon tiles, secondary buttons
+};
+const line = {
+  edge: "#1c222c",   // panel dividers, card borders
+  strong: "#262d38", // inputs, outline buttons, hover borders
+};
+// The text ramp tops out at #e6e8eb. Nothing in this system is #ffffff — pure
+// white against these near-blacks glares, and the reference never uses it.
 const ink = {
-  0: "#08090a", // void — page canvas, the substrate everything sits on
-  1: "#0f1011", // carbon — card surfaces, nav containers
-  2: "#161718", // obsidian — elevated panels, inputs, nested surfaces
-  3: "#23252a", // graphite — hairline borders, ghost outlines, interactive tint
-  4: "#383b3f", // smoke — higher-contrast hairlines, section separators
-  5: "#62666d", // ash — muted body text, inactive icons
-};
-const light = {
-  paper: "#ffffff",  // primary headings, max-contrast emphasis
-  bone: "#e5e5e6",   // near-white surface fills
-  mist: "#d0d6e0",   // body text, button labels on dark
-  fog: "#8a8f98",    // tertiary text, placeholders, icon fills
+  primary: "#e6e8eb",  // headings, body
+  secondary: "#9aa3ae", // supporting copy
+  tertiary: "#5b6470",  // metadata, labels, placeholders
 };
 
-// The single chromatic action. One per view — the reference is explicit that
-// this is a flashlight, not a paint.
-const acid = {
-  lime: "#e4f222",
-  limeDim: "#8b9615",                     // 3.4:1 on void — the border weight
-  limeGlow: "rgba(228,242,34,0.10)",
-  limeEdge: "rgba(228,242,34,0.40)",
+// The single chromatic action, plus its lighter sibling for data and state.
+const grow = {
+  accent: "#46a758",     // primary action, active state
+  light: "#4cc38a",      // positive numbers, on-air, accent text
+  hover: "#4fb862",      // between accent and light — the button hover step
+  press: "#3c8f4b",
+  glow: "rgba(70,167,88,0.14)",
+  edge: "rgba(70,167,88,0.45)",
+  soft: "rgba(76,195,138,0.12)",
 };
-
-// Data voices. Semantic here (see header note), never chrome.
-const signal = {
-  green: "#27a644",
-  greenDim: "#1a6e2d",
-  greenSoft: "rgba(39,166,68,0.12)",
-  coral: "#eb5757",
-  coralDim: "#8f3535",
-  coralGlow: "rgba(235,87,87,0.12)",
-  coralEdge: "rgba(235,87,87,0.45)",
-  coralSoft: "rgba(235,87,87,0.10)",
-  teal: "#02b8cc",
-  violet: "#6366f1",
+const alarm = {
+  negative: "#dd6a6e",   // negative numbers, bear pieces
+  negativeDim: "#8f4245",
+  negativeSoft: "rgba(221,106,110,0.12)",
+  negativeEdge: "rgba(221,106,110,0.45)",
+  warning: "#dd9a3c",    // market-closed dot, alert dot
+  warningDim: "#8c6126",
+  warningSoft: "rgba(221,154,60,0.12)",
 };
+// Chess board squares — named because the game reads them directly.
+const board = { lightSq: "#212934", darkSq: "#171d26" };
 
 // ---------- the palette the app consumes ----------
 export const C = {
   // --- legacy keys (same names as before → existing inline styles keep working) ---
-  bg: ink[0],
-  panel: ink[1],
-  panelEdge: ink[3],
-  // "amber" survives as the functional warning marker. The reference has no
-  // amber, so it resolves to coral — the system's one cautionary voice.
-  amber: signal.coral,
-  amberDim: signal.coralDim,
-  text: light.mist,
-  muted: light.fog,
-  faint: ink[5],
-  up: signal.green,
-  down: signal.coral,
-  grid: ink[3],
+  bg: surf.base,
+  panel: surf.raised,
+  panelEdge: line.edge,
+  // "amber" is a real amber again. The previous system had none and resolved it
+  // to coral; this one has a dedicated cautionary colour, so the alias is honest.
+  amber: alarm.warning,
+  amberDim: alarm.warningDim,
+  text: ink.primary,
+  muted: ink.secondary,
+  faint: ink.tertiary,
+  up: grow.light,
+  down: alarm.negative,
+  grid: line.edge,
 
-  // --- surfaces (the documented 0→3 ladder) ---
-  base: ink[0],
-  surface: ink[1],
-  surfaceRaised: ink[2],
-  surfaceSunken: ink[0],
-  inputBg: "rgba(255,255,255,0.02)",
-  edge: ink[3],
-  edgeSoft: ink[2],
-  edgeStrong: ink[4],
+  // --- surfaces ---
+  base: surf.base,
+  surface: surf.raised,
+  surfaceRaised: surf.inset,
+  surfaceAlt: surf.alt,        // dropdowns, floating chips — cut in, not lifted
+  surfaceSunken: surf.base,
+  inputBg: surf.raised,
+  edge: line.edge,
+  edgeSoft: surf.inset,
+  edgeStrong: line.strong,
 
   // --- accent (interactive, selection, AI) ---
-  // Acid lime: the only chromatic UI element in the system. Reserved for the
-  // primary action — everything else is neutral.
-  accent: acid.lime,
-  accentHover: "#eef79a",
-  accentPress: "#cfdb1f",
-  // A TEXT token in every call site (inline code, badges, nav badges), so it is
-  // neutral for the same reason accentText is.
-  accentSoft: light.mist,
-  accentGlow: "rgba(255,255,255,0.05)",   // neutral selection wash — not lime
-  accentEdge: ink[4],
-  // Lime is a FILL colour only. Emphasis text — ticker symbols, active labels,
-  // links — takes mist: lime on every highlighted word turns the flashlight
-  // into wallpaper, which is the one thing the reference forbids outright.
-  accentText: light.mist,
+  accent: grow.accent,
+  accentHover: grow.hover,
+  accentPress: grow.press,
+  accentSoft: grow.light,
+  accentGlow: grow.glow,
+  accentEdge: grow.edge,
+  // Unlike the previous system, accent text IS chromatic here: the redesign
+  // gives #4cc38a to positive numbers, "on air" and accent text by name.
+  accentText: grow.light,
 
-  // --- live / on-air (coral — the broadcast tally voice) ---
-  live: signal.coral,
-  liveDim: signal.coralDim,
-  liveGlow: signal.coralGlow,
-  liveEdge: signal.coralEdge,
-  liveFill: signal.coral,   // solid block; pair with textOnLive
-  liveSoft: "#f28080",
-  textOnLive: ink[0],       // 5.6:1 on the coral fill — white would be 3.4:1
+  // --- live / on-air (green now, not coral — "on air" is a positive state) ---
+  live: grow.light,
+  liveDim: grow.press,
+  liveGlow: grow.soft,
+  liveEdge: grow.edge,
+  liveFill: grow.light,
+  liveSoft: grow.light,
+  textOnLive: surf.base,     // 8.4:1 on #4cc38a; white would be 2.3:1
 
-  // --- market semantics (see header note) ---
-  upSoft: signal.greenSoft,
-  downSoft: signal.coralSoft,
-  upDim: signal.greenDim,
+  // --- market semantics ---
+  upSoft: grow.soft,
+  downSoft: alarm.negativeSoft,
+  // The negative hairline. Call sites used to hard-code rgba(235,87,87,0.4) —
+  // the PREVIOUS palette's red — and a literal cannot be retargeted, so it
+  // survived every retheme. Naming it is what stops that happening again.
+  downEdge: alarm.negativeEdge,
+  upDim: grow.press,
 
   // --- status ---
-  info: signal.teal,
-  warn: signal.coral,
-  danger: signal.coral,
-  success: signal.green,
+  info: grow.light,
+  warn: alarm.warning,
+  warnSoft: alarm.warningSoft,
+  danger: alarm.negative,
+  dangerEdge: alarm.negativeEdge,
+  dangerSoft: alarm.negativeSoft,
+  success: grow.accent,
 
   // --- text ---
-  textStrong: light.paper,
-  textMuted: light.fog,
-  textFaint: ink[5],
-  // NEAR-BLACK on the lime fill (16:1). This flips with the accent — a dark
-  // accent would need paper here.
-  textOnAccent: ink[0],
+  textStrong: ink.primary,
+  textMuted: ink.secondary,
+  textFaint: ink.tertiary,
+  // Near-black on the green fill (6.3:1). #e6e8eb here would be 3.1:1 — below
+  // AA for anything but large text, which is why the reference sets #0b0e13.
+  textOnAccent: surf.base,
 
-  // --- additive ---
-  moss: ink[2],     // legacy soft-surface alias from an earlier theme
-  citrus: ink[2],   // ditto — both resolve to the obsidian lift now
-  link: light.mist,
+  // --- chess ---
+  boardLight: board.lightSq,
+  boardDark: board.darkSq,
+
+  // --- additive / legacy aliases ---
+  moss: surf.inset,
+  citrus: surf.inset,
+  link: grow.light,
 };
 
 // ---------- gradients ----------
-// The reference permits exactly one gradient: the atmospheric floor under the
-// hero. Everything else is flat, so these ramps are near-solid — they keep
-// every call site working while reading as a single confident fill.
 export const GRAD = {
-  brand: "linear-gradient(135deg, #ffffff 0%, #d0d6e0 100%)",
-  // Both stops are lime, so this ramp carries NEAR-BLACK label text.
-  accent: "linear-gradient(135deg, #e4f222 0%, #cfdb1f 100%)",
-  live: "linear-gradient(135deg, #eb5757 0%, #c14444 100%)",
+  // The brand tile is a green chip in this system, not a white one.
+  brand: `linear-gradient(135deg, ${grow.light} 0%, ${grow.accent} 100%)`,
+  // Both stops are green, so this ramp carries NEAR-BLACK label text.
+  accent: `linear-gradient(135deg, ${grow.light} 0%, ${grow.accent} 100%)`,
+  live: `linear-gradient(135deg, ${grow.light} 0%, ${grow.accent} 100%)`,
 
-  // The sanctioned one: a dark-to-light wash that grounds floating UI against
-  // the void. Used for hero/auth backdrops.
+  // The two drifting orbs behind the homepage hero (vt-float1 / vt-float2).
   aurora:
-    "radial-gradient(1200px 600px at 12% -10%, rgba(208,214,224,0.05), transparent 60%)," +
-    "radial-gradient(900px 500px at 95% 0%, rgba(99,102,241,0.05), transparent 55%)," +
-    "radial-gradient(700px 500px at 60% 110%, rgba(255,255,255,0.03), transparent 60%)",
+    "radial-gradient(480px 480px at 12% 4%, rgba(70,167,88,0.14), transparent 62%)," +
+    "radial-gradient(520px 520px at 92% 14%, rgba(76,195,138,0.09), transparent 58%)",
 
   // Fades a scrolling list out at its edge instead of cutting it off.
-  fadeDown: "linear-gradient(180deg, #0f1011 0%, rgba(15,16,17,0) 100%)",
+  fadeDown: `linear-gradient(180deg, ${surf.raised} 0%, rgba(17,21,28,0) 100%)`,
+
+  // The primary button's animated sheen (vt-sheen moves background-position
+  // -200% → 200%; the element needs background-size: 200%).
+  sheen: `linear-gradient(100deg, ${grow.accent} 0%, ${grow.hover} 45%, ${grow.light} 55%, ${grow.accent} 100%)`,
 };
 
 // ============================================================
 //  TYPOGRAPHY
-//
-//  TWO VOICES, ONE DISCIPLINE — the reference caps at weight 590 and carries
-//  authority through size and tight negative tracking, never bolding:
-//    • UI / prose      → Inter (the reference's own primary face), with the
-//                        cv01 / ss03 / zero alternates enabled in global.css —
-//                        those glyphs are the typographic identity.
-//    • Instrument      → IBM Plex Mono (the reference's listed substitute for
-//                        Berkeley Mono), reserved for issue-ID-class metadata:
-//                        eyebrows, status tags, tickers, column headers. When
-//                        you see mono, you are looking at a system surface.
-//  Archivo remains exported for anything referencing DISPLAY directly, but the
-//  display tokens speak Inter — the reference admits no third face.
+//  Schibsted Grotesk for UI and prose, JetBrains Mono for values. The rule that
+//  matters: mono never sets body copy, buttons or questions.
+//  Uppercase mono labels take POSITIVE tracking (0.5–2px) — the opposite of the
+//  negative tracking headings use, and easy to get backwards.
 // ============================================================
 
-export const MONO = "'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace";
-export const SANS = "'Inter', -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
-export const DISPLAY = "'Archivo', 'Inter', 'Helvetica Neue', Arial, sans-serif";
+export const MONO = "'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace";
+export const SANS = "'Schibsted Grotesk', -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
+// No third face: DISPLAY speaks the UI font. Kept as an export because call
+// sites reference it directly.
+export const DISPLAY = SANS;
 
 export const TYPE = {
   // --- display ---
-  // Tracking is a function of size, not of role: -0.022em from 48px up,
-  // -0.012em across 20-32. Letting a 32px token wear the 48px value is the
-  // classic way a type scale drifts out of true.
-  displayLg: { fontFamily: SANS, fontWeight: 510, fontSize: 48, letterSpacing: "-0.022em", lineHeight: 1.0 },
-  display: { fontFamily: SANS, fontWeight: 510, fontSize: 32, letterSpacing: "-0.012em", lineHeight: 1.13 },
+  // Tracking is a function of size: the hero's -3.5px at 82px is -0.043em, and
+  // a smaller token wearing that value would collapse. Each rung carries its own.
+  hero: { fontFamily: SANS, fontWeight: 700, fontSize: 82, letterSpacing: "-0.043em", lineHeight: 0.95 },
+  displayLg: { fontFamily: SANS, fontWeight: 700, fontSize: 40, letterSpacing: "-0.030em", lineHeight: 1.05 },
+  display: { fontFamily: SANS, fontWeight: 600, fontSize: 26, letterSpacing: "-0.019em", lineHeight: 1.2 },
 
-  // --- structural (590 is the ceiling — the reference never bolds) ---
-  title: { fontFamily: SANS, fontWeight: 510, fontSize: 20, letterSpacing: "-0.012em", lineHeight: 1.33 },
-  heading: { fontFamily: SANS, fontWeight: 510, fontSize: 16, letterSpacing: "-0.010em", lineHeight: 1.4 },
-  subhead: { fontFamily: SANS, fontWeight: 510, fontSize: 14, letterSpacing: "-0.010em", lineHeight: 1.4 },
+  // --- structural (this system bolds: card titles are 700) ---
+  title: { fontFamily: SANS, fontWeight: 600, fontSize: 20, letterSpacing: "-0.015em", lineHeight: 1.3 },
+  heading: { fontFamily: SANS, fontWeight: 700, fontSize: 17, letterSpacing: "-0.010em", lineHeight: 1.35 },
+  subhead: { fontFamily: SANS, fontWeight: 600, fontSize: 15, letterSpacing: "-0.008em", lineHeight: 1.4 },
 
   // --- prose ---
-  body: { fontFamily: SANS, fontWeight: 400, fontSize: 16, letterSpacing: "-0.010em", lineHeight: 1.5 },
-  bodySm: { fontFamily: SANS, fontWeight: 400, fontSize: 15, letterSpacing: "-0.011em", lineHeight: 1.6 },
-  caption: { fontFamily: SANS, fontWeight: 400, fontSize: 12, lineHeight: 1.4 },
+  body: { fontFamily: SANS, fontWeight: 400, fontSize: 15.5, lineHeight: 1.65 },
+  bodySm: { fontFamily: SANS, fontWeight: 400, fontSize: 13.5, lineHeight: 1.6 },
+  caption: { fontFamily: SANS, fontWeight: 400, fontSize: 12.5, lineHeight: 1.45 },
 
-  // --- labels: the instrument voice — mono, uppercase, tight ---
-  // eyebrow and eyebrowSm are the same size on purpose: the mono scale has two
-  // rungs (12 label, 14 reading) and no third. eyebrowSm survives as an alias.
-  eyebrow: { fontFamily: MONO, fontWeight: 400, fontSize: 12, letterSpacing: "-0.013em", lineHeight: 1.4, textTransform: "uppercase" },
-  eyebrowSm: { fontFamily: MONO, fontWeight: 400, fontSize: 12, letterSpacing: "-0.013em", lineHeight: 1.4, textTransform: "uppercase" },
-  label: { fontFamily: SANS, fontWeight: 400, fontSize: 12, lineHeight: 1.4 },
+  // --- labels: the instrument voice — mono, uppercase, POSITIVE tracking ---
+  eyebrow: { fontFamily: MONO, fontWeight: 500, fontSize: 12, letterSpacing: "0.10em", lineHeight: 1.4, textTransform: "uppercase" },
+  eyebrowSm: { fontFamily: MONO, fontWeight: 500, fontSize: 11, letterSpacing: "0.14em", lineHeight: 1.4, textTransform: "uppercase" },
+  label: { fontFamily: SANS, fontWeight: 500, fontSize: 11.5, lineHeight: 1.4 },
 
   // --- numeric: tabular always ---
-  num: { fontFamily: MONO, fontWeight: 400, fontSize: 14, letterSpacing: "-0.013em", fontVariantNumeric: "tabular-nums" },
-  numSm: { fontFamily: MONO, fontWeight: 400, fontSize: 12, letterSpacing: "-0.013em", fontVariantNumeric: "tabular-nums" },
-  numLg: { fontFamily: MONO, fontWeight: 400, fontSize: 32, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.013em", lineHeight: 1.1 },
-  ticker: { fontFamily: MONO, fontWeight: 400, fontSize: 12, letterSpacing: "-0.013em", fontVariantNumeric: "tabular-nums" },
-  code: { fontFamily: MONO, fontWeight: 400, fontSize: 12, letterSpacing: "-0.013em", lineHeight: 1.55 },
+  num: { fontFamily: MONO, fontWeight: 400, fontSize: 14, fontVariantNumeric: "tabular-nums" },
+  numSm: { fontFamily: MONO, fontWeight: 400, fontSize: 12, fontVariantNumeric: "tabular-nums" },
+  numLg: { fontFamily: MONO, fontWeight: 700, fontSize: 34, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em", lineHeight: 1.1 },
+  ticker: { fontFamily: MONO, fontWeight: 400, fontSize: 12, fontVariantNumeric: "tabular-nums" },
+  code: { fontFamily: MONO, fontWeight: 400, fontSize: 12.5, lineHeight: 1.55 },
 };
 
 // ---------- geometry ----------
-// The entire radius vocabulary: 4px badges, 6px controls/inputs, 12px cards.
-// Nothing rounds past 12 except pills — the reference forbids 16+.
-export const R = { xs: 4, sm: 6, md: 6, lg: 12, xl: 12, pill: 9999 };
+// The radius vocabulary, by role rather than by t-shirt size: 7 icon tile,
+// 8 button/chip, 10 input, 12 inner card, 16 panel.
+export const R = { xs: 7, sm: 8, md: 10, lg: 12, xl: 16, pill: 9999 };
 
-// The 4px base unit and its 8/12/24/96 ladder.
+// The 4px ladder stays as it is ON PURPOSE. The redesign's spacing set
+// (6/8/10/12/14/18/20/22/26/40/48/64) is not a renaming of this one, so
+// redefining these keys would silently reflow every existing call site by a few
+// px in unpredictable directions. Existing screens keep this ladder; rebuilt
+// screens take their spacing from the reference directly.
 export const SP = { 0: 0, 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40, 12: 48, 16: 64 };
 
+// Minimum touch target anywhere in the product.
+export const HIT = 44;
+
 // ---------- elevation ----------
-// Borders do the work shadows usually would. The two real shadows are a tight
-// dark drop for small cards and the inset hairline ring that defines a card
-// edge; `accent` is the inset stack the reference reserves for the lime CTA —
-// the only chrome element in the system that gets a true shadow.
+// This system does use real shadows — three of them, each with one job.
 export const SHADOW = {
   none: "none",
-  sm: "rgba(0, 0, 0, 0.4) 0px 2px 4px 0px",
-  md: "rgba(0, 0, 0, 0.2) 0px 0px 12px 0px inset",
-  lg: "rgb(35, 37, 42) 0px 0px 0px 1px inset",
-  xl: "rgba(8, 9, 10, 0.6) 0px 4px 32px 0px",
-  accent: "rgba(0,0,0,0.01) 0px 5px 2px 0px, rgba(0,0,0,0.04) 0px 3px 2px 0px, rgba(0,0,0,0.07) 0px 1px 1px 0px",
-  inset: "rgb(35, 37, 42) 0px 0px 0px 1px inset",
+  sm: "0 2px 6px rgba(0,0,0,0.35)",
+  md: "0 8px 20px rgba(0,0,0,0.4)",
+  // The floating chip that overlaps the hero card's corner.
+  lg: "0 18px 40px rgba(0,0,0,0.55)",
+  // The hero card itself.
+  xl: "0 30px 70px rgba(0,0,0,0.5)",
+  // The green lift under a hovered primary button.
+  accent: "0 6px 18px rgba(70,167,88,0.3)",
+  inset: `0 0 0 1px ${line.edge} inset`,
 };
 
 export const Z = { base: 0, rail: 20, dock: 40, header: 50, overlay: 60, modal: 70, toast: 80, tour: 90 };
 
-// Motion: short and mechanical — the feel of a precision instrument, not a
-// marketing site. Colour, background and border transition together so a state
-// change reads as one switch flipping. No spring physics.
+// Motion: 0.2–0.25s for state, longer easings for the ambient loops. Hover
+// lifts are 2px on buttons and 4–6px on cards.
 export const MOTION = {
   fast: "150ms",
   base: "200ms",
-  slow: "300ms",
+  slow: "250ms",
   ease: "cubic-bezier(0.4, 0, 0.2, 1)",
   spring: "cubic-bezier(0.4, 0, 0.2, 1)",
 };
@@ -268,21 +278,23 @@ export const MOTION = {
 
 export function button(variant = "ghost", size = "md", opts = {}) {
   const { active = false, disabled = false, full = false } = opts;
+  // Heights clear the 44px touch minimum at md and lg; sm is for dense toolbars
+  // where the control sits inside a larger hit area.
   const sizes = {
-    sm: { padding: "6px 12px", fontSize: 12, borderRadius: R.md, gap: 6 },
-    md: { padding: "10px 16px", fontSize: 13, borderRadius: R.md, gap: 8 },
-    lg: { padding: "12px 22px", fontSize: 14, borderRadius: R.md, gap: 10 },
+    sm: { padding: "7px 12px", fontSize: 12.5, borderRadius: R.sm, gap: 6 },
+    md: { padding: "11px 18px", fontSize: 13.5, borderRadius: R.sm, gap: 8 },
+    lg: { padding: "14px 24px", fontSize: 15, borderRadius: R.sm, gap: 10 },
   };
   const variants = {
-    // THE chromatic element: acid lime, near-black label, the reference's own
-    // inset shadow stack. One per view — that discipline is the whole point.
-    primary: { background: C.accent, color: C.textOnAccent, border: "1px solid transparent", fontWeight: 510, letterSpacing: "-0.010em", boxShadow: SHADOW.accent },
-    // The neutral filled button: a barely-there white wash, no border.
-    solid: { background: "rgba(255,255,255,0.05)", color: C.text, border: "1px solid transparent", fontWeight: 400 },
-    ghost: { background: "transparent", color: active ? C.text : C.muted, border: `1px solid ${active ? C.edgeStrong : C.edge}`, fontWeight: 400 },
-    quiet: { background: "transparent", color: C.muted, border: "1px solid transparent", fontWeight: 400 },
-    live: { background: "transparent", color: C.live, border: `1px solid ${C.liveDim}`, fontWeight: 400 },
-    danger: { background: "transparent", color: C.danger, border: `1px solid ${C.liveDim}`, fontWeight: 400 },
+    // THE chromatic element: green fill, near-black label. One per screen — that
+    // discipline is the whole point of the redesign.
+    primary: { background: C.accent, color: C.textOnAccent, border: "1px solid transparent", fontWeight: 600 },
+    // The neutral filled button — an inset surface, not a white wash.
+    solid: { background: C.surfaceRaised, color: C.text, border: `1px solid ${C.edge}`, fontWeight: 500 },
+    ghost: { background: "transparent", color: active ? C.text : C.muted, border: `1px solid ${active ? C.edgeStrong : C.edge}`, fontWeight: 500 },
+    quiet: { background: "transparent", color: C.muted, border: "1px solid transparent", fontWeight: 500 },
+    live: { background: "transparent", color: C.live, border: `1px solid ${C.liveEdge}`, fontWeight: 500 },
+    danger: { background: "transparent", color: C.danger, border: `1px solid ${C.down}`, fontWeight: 500 },
   };
   return {
     display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -290,7 +302,8 @@ export function button(variant = "ghost", size = "md", opts = {}) {
     opacity: disabled ? 0.45 : 1,
     width: full ? "100%" : undefined,
     whiteSpace: "nowrap",
-    transition: `background ${MOTION.fast} ${MOTION.ease}, border-color ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}, transform ${MOTION.fast} ${MOTION.ease}`,
+    letterSpacing: "-0.006em",
+    transition: `background ${MOTION.base} ${MOTION.ease}, border-color ${MOTION.base} ${MOTION.ease}, color ${MOTION.base} ${MOTION.ease}, transform ${MOTION.base} ${MOTION.ease}, box-shadow ${MOTION.base} ${MOTION.ease}`,
     ...sizes[size], ...variants[variant],
   };
 }
@@ -300,7 +313,7 @@ export function panel(opts = {}) {
   return {
     background: raised ? C.surfaceRaised : C.surface,
     border: `1px solid ${glow ? C.edgeStrong : C.edge}`,
-    borderRadius: R.lg,
+    borderRadius: R.xl,
     padding: pad,
     boxShadow: "none",
   };
@@ -311,31 +324,32 @@ export function field(opts = {}) {
   return {
     width: "100%", boxSizing: "border-box",
     background: C.inputBg,
-    border: `1px solid ${invalid ? C.danger : "rgba(255,255,255,0.08)"}`,
+    border: `1px solid ${invalid ? C.danger : C.edgeStrong}`,
     borderRadius: R.md,
     color: C.text,
     fontFamily: SANS, fontSize: 14,
-    padding: "12px 14px",
+    padding: "13px 15px",
     outline: "none",
-    transition: `border-color ${MOTION.fast} ${MOTION.ease}, box-shadow ${MOTION.fast} ${MOTION.ease}`,
+    transition: `border-color ${MOTION.base} ${MOTION.ease}, box-shadow ${MOTION.base} ${MOTION.ease}`,
   };
 }
 
-// Small status/eyebrow chip — the reference's badge: a faint white wash, fog
-// text, 4px radius. Colour-coded variants swap the text colour only.
+// Small status/eyebrow chip. Neutral by default — colour is reserved for the
+// tones that actually mean something.
 export function chip(tone = "neutral") {
   const tones = {
-    neutral: { color: C.muted, border: "transparent", bg: "rgba(255,255,255,0.05)" },
-    accent: { color: C.text, border: "transparent", bg: "rgba(255,255,255,0.05)" },
+    neutral: { color: C.muted, border: C.edge, bg: C.surfaceRaised },
+    accent: { color: C.accentText, border: C.accentEdge, bg: C.accentGlow },
     live: { color: C.live, border: C.liveEdge, bg: C.liveGlow },
     up: { color: C.up, border: "transparent", bg: C.upSoft },
     down: { color: C.down, border: "transparent", bg: C.downSoft },
+    warn: { color: C.warn, border: "transparent", bg: alarm.warningSoft },
   }[tone];
   return {
-    display: "inline-flex", alignItems: "center", gap: 5,
-    padding: "3px 9px", borderRadius: R.xs,
+    display: "inline-flex", alignItems: "center", gap: 6,
+    padding: "4px 10px", borderRadius: R.sm,
     background: tones.bg, border: `1px solid ${tones.border}`, color: tones.color,
-    ...TYPE.eyebrow, fontSize: 12,
+    ...TYPE.eyebrow, fontSize: 11.5,
   };
 }
 

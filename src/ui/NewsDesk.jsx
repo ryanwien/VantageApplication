@@ -154,11 +154,13 @@ function VideoCard({ video, onPlay }) {
           gradient tile stands in for one rather than leaving a grey hole. */}
       <span aria-hidden="true" style={{
         width: 46, height: 34, borderRadius: R.sm, flexShrink: 0,
-        // Signal orange, the one warm voice this theme has: the play tile joins
-        // the live/negative family rather than inventing a red, and the glyph
-        // goes near-black like every other label on an orange fill (5.7:1).
-        background: "linear-gradient(135deg, rgba(235,87,87,0.98) 0%, rgba(162,80,32,0.98) 100%)",
-        display: "grid", placeItems: "center", color: "#08090a", fontSize: 13,
+        // Neutral, deliberately. This used to be a warm orange fill, which the
+        // redesign's one-accent rule rules out: a coloured play tile on every
+        // video row competes with the screen's single primary action, and the
+        // system's remaining warm colour (amber) means "caution" — market
+        // closed, alert fired — so borrowing it here would blur that meaning.
+        background: C.surfaceRaised, border: `1px solid ${C.edge}`,
+        display: "grid", placeItems: "center", color: C.text, fontSize: 13,
       }}>▶</span>
       <span style={{ minWidth: 0, flex: 1 }}>
         <span style={{ display: "block", ...TYPE.bodySm, color: C.text, lineHeight: 1.4 }}>{video.title}</span>

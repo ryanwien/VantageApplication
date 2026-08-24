@@ -124,6 +124,19 @@ const I18N = {
     "ALLOCATION BY VALUE": "ASIGNACIÓN POR VALOR",
     "DAY RANGE": "RANGO DEL DÍA",
     "MARKET CLOSED": "MERCADO CERRADO",
+    "ask the desk about \"{q}\"": "preguntar a la mesa sobre \"{q}\"",
+    "{env} set": "plató {env}",
+    "Data": "Datos",
+    "Live": "En vivo",
+    "Demo": "Demo",
+    "Model": "Modelo",
+    "Standing by": "En espera",
+    "On air": "Al aire",
+    "AI Desk": "Mesa IA",
+    "Ask": "Preguntar",
+    "Market open": "Mercado abierto",
+    "Market closed": "Mercado cerrado",
+    "Market closed · last trade {when}": "Mercado cerrado · última operación {when}",
     "ON THE DESK": "EN LA MESA",
     "last": "último",
     "last trade": "última operación",
@@ -135,7 +148,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Escribe un símbolo y pulsa Enter  ·  HELP para comandos",
     "OPEN": "ABIERTO", "CLOSED": "CERRADO",
     "standing by": "en espera",
-    "voice & anchor settings": "ajustes de voz y presentador", "SET": "SET", "stop reading": "detener lectura", "free": "gratis",
+    "Voice & anchor settings": "Ajustes de voz y presentador", "SET": "SET", "stop reading": "detener lectura", "free": "gratis",
     "ASK ALL": "PREGUNTAR A TODOS",
  "Summarize {sym} today": "Resume {sym} hoy", "What's moving today?": "¿Qué se mueve hoy?", "Take me to Robinhood": "Llévame a Robinhood", "What's on Netflix?": "¿Qué hay en Netflix?", "Write a report → PPT": "Escribe un informe → PPT",
     "WATCHLIST": "LISTA DE SEGUIMIENTO", "TOP MOVERS": "MAYORES MOVIMIENTOS", "full chart": "gráfico completo",
@@ -268,6 +281,19 @@ const I18N = {
     "ALLOCATION BY VALUE": "RÉPARTITION PAR VALEUR",
     "DAY RANGE": "AMPLITUDE DU JOUR",
     "MARKET CLOSED": "MARCHÉ FERMÉ",
+    "ask the desk about \"{q}\"": "demander au plateau à propos de \"{q}\"",
+    "{env} set": "plateau {env}",
+    "Data": "Données",
+    "Live": "En direct",
+    "Demo": "Démo",
+    "Model": "Modèle",
+    "Standing by": "En attente",
+    "On air": "À l'antenne",
+    "AI Desk": "Plateau IA",
+    "Ask": "Demander",
+    "Market open": "Marché ouvert",
+    "Market closed": "Marché fermé",
+    "Market closed · last trade {when}": "Marché fermé · dernière transaction {when}",
     "ON THE DESK": "SUR LE PLATEAU",
     "last": "dernier",
     "last trade": "dernière transaction",
@@ -279,7 +305,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Saisissez un symbole et appuyez sur Entrée  ·  HELP pour les commandes",
     "OPEN": "OUVERT", "CLOSED": "FERMÉ",
     "standing by": "en attente",
-    "voice & anchor settings": "réglages voix et présentateur", "SET": "DÉCOR", "stop reading": "arrêter la lecture", "free": "gratuites",
+    "Voice & anchor settings": "Réglages voix et présentateur", "SET": "DÉCOR", "stop reading": "arrêter la lecture", "free": "gratuites",
     "ASK ALL": "TOUT DEMANDER",
  "Summarize {sym} today": "Résumez {sym} aujourd'hui", "What's moving today?": "Qu'est-ce qui bouge aujourd'hui ?", "Take me to Robinhood": "Emmène-moi sur Robinhood", "What's on Netflix?": "Qu'y a-t-il sur Netflix ?", "Write a report → PPT": "Rédiger un rapport → PPT",
     "WATCHLIST": "LISTE DE SUIVI", "TOP MOVERS": "PLUS FORTES VARIATIONS", "full chart": "graphique complet",
@@ -412,6 +438,19 @@ const I18N = {
     "ALLOCATION BY VALUE": "AUFTEILUNG NACH WERT",
     "DAY RANGE": "TAGESSPANNE",
     "MARKET CLOSED": "MARKT GESCHLOSSEN",
+    "ask the desk about \"{q}\"": "das Pult zu \"{q}\" fragen",
+    "{env} set": "Set {env}",
+    "Data": "Daten",
+    "Live": "Live",
+    "Demo": "Demo",
+    "Model": "Modell",
+    "Standing by": "Bereit",
+    "On air": "Auf Sendung",
+    "AI Desk": "KI-Pult",
+    "Ask": "Fragen",
+    "Market open": "Markt geöffnet",
+    "Market closed": "Markt geschlossen",
+    "Market closed · last trade {when}": "Markt geschlossen · letzter Handel {when}",
     "ON THE DESK": "AM PULT",
     "last": "letzter",
     "last trade": "letzter Handel",
@@ -423,7 +462,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Symbol eingeben und Enter drücken  ·  HELP für Befehle",
     "OPEN": "OFFEN", "CLOSED": "GESCHLOSSEN",
     "standing by": "bereit",
-    "voice & anchor settings": "Stimme & Moderator-Einstellungen", "SET": "KULISSE", "stop reading": "Vorlesen stoppen", "free": "kostenlos",
+    "Voice & anchor settings": "Stimme & Moderator-Einstellungen", "SET": "KULISSE", "stop reading": "Vorlesen stoppen", "free": "kostenlos",
     "ASK ALL": "ALLE FRAGEN",
  "Summarize {sym} today": "Fasse {sym} heute zusammen", "What's moving today?": "Was bewegt sich heute?", "Take me to Robinhood": "Bring mich zu Robinhood", "What's on Netflix?": "Was läuft auf Netflix?", "Write a report → PPT": "Bericht schreiben → PPT",
     "WATCHLIST": "BEOBACHTUNGSLISTE", "TOP MOVERS": "GRÖSSTE BEWEGUNGEN", "full chart": "vollständiges Diagramm",
@@ -556,6 +595,19 @@ const I18N = {
     "ALLOCATION BY VALUE": "ALOCAÇÃO POR VALOR",
     "DAY RANGE": "INTERVALO DO DIA",
     "MARKET CLOSED": "MERCADO FECHADO",
+    "ask the desk about \"{q}\"": "perguntar à mesa sobre \"{q}\"",
+    "{env} set": "cenário {env}",
+    "Data": "Dados",
+    "Live": "Ao vivo",
+    "Demo": "Demo",
+    "Model": "Modelo",
+    "Standing by": "Em espera",
+    "On air": "No ar",
+    "AI Desk": "Mesa de IA",
+    "Ask": "Perguntar",
+    "Market open": "Mercado aberto",
+    "Market closed": "Mercado fechado",
+    "Market closed · last trade {when}": "Mercado fechado · última negociação {when}",
     "ON THE DESK": "NA MESA",
     "last": "último",
     "last trade": "última negociação",
@@ -567,7 +619,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Escreva um símbolo e prima Enter  ·  HELP para comandos",
     "OPEN": "ABERTO", "CLOSED": "FECHADO",
     "standing by": "em espera",
-    "voice & anchor settings": "definições de voz e apresentador", "SET": "CENÁRIO", "stop reading": "parar leitura", "free": "grátis",
+    "Voice & anchor settings": "Definições de voz e apresentador", "SET": "CENÁRIO", "stop reading": "parar leitura", "free": "grátis",
     "ASK ALL": "PERGUNTAR A TODOS",
  "Summarize {sym} today": "Resumir {sym} hoje", "What's moving today?": "O que está a mover-se hoje?", "Take me to Robinhood": "Leva-me ao Robinhood", "What's on Netflix?": "O que há na Netflix?", "Write a report → PPT": "Escrever um relatório → PPT",
     "WATCHLIST": "LISTA DE ACOMPANHAMENTO", "TOP MOVERS": "MAIORES VARIAÇÕES", "full chart": "gráfico completo",
@@ -699,6 +751,19 @@ const I18N = {
     "ALLOCATION BY VALUE": "RIPARTIZIONE PER VALORE",
     "DAY RANGE": "RANGE DEL GIORNO",
     "MARKET CLOSED": "MERCATO CHIUSO",
+    "ask the desk about \"{q}\"": "chiedi alla postazione di \"{q}\"",
+    "{env} set": "set {env}",
+    "Data": "Dati",
+    "Live": "In diretta",
+    "Demo": "Demo",
+    "Model": "Modello",
+    "Standing by": "In attesa",
+    "On air": "In onda",
+    "AI Desk": "Postazione IA",
+    "Ask": "Chiedi",
+    "Market open": "Mercato aperto",
+    "Market closed": "Mercato chiuso",
+    "Market closed · last trade {when}": "Mercato chiuso · ultimo scambio {when}",
     "ON THE DESK": "IN POSTAZIONE",
     "last": "ultimo",
     "last trade": "ultima operazione",
@@ -710,7 +775,7 @@ const I18N = {
     "Type a symbol and press Enter  ·  HELP for commands": "Digita un simbolo e premi Invio  ·  HELP per i comandi",
     "OPEN": "APERTO", "CLOSED": "CHIUSO",
     "standing by": "in attesa",
-    "voice & anchor settings": "impostazioni voce e conduttore", "SET": "SET", "stop reading": "ferma lettura", "free": "gratis",
+    "Voice & anchor settings": "Impostazioni voce e conduttore", "SET": "SET", "stop reading": "ferma lettura", "free": "gratis",
     "ASK ALL": "CHIEDI A TUTTI",
  "Summarize {sym} today": "Riassumi {sym} oggi", "What's moving today?": "Cosa si muove oggi?", "Take me to Robinhood": "Portami su Robinhood", "What's on Netflix?": "Cosa c'è su Netflix?", "Write a report → PPT": "Scrivi un report → PPT",
     "WATCHLIST": "LISTA DI OSSERVAZIONE", "TOP MOVERS": "MAGGIORI VARIAZIONI", "full chart": "grafico completo",
@@ -882,7 +947,7 @@ function b64url(buf) {
 
 // The logo, drawn on a canvas. Geometry is copied from src/ui/VantageMark.jsx
 // because canvas cannot render React — if one changes, change both.
-function drawVantageMark(ctx, x, y, size, tile = "#161718", ink = "#ffffff", dot = "#e4f222", edge = "#383b3f") {
+function drawVantageMark(ctx, x, y, size, tile = "#46a758", ink = "#0b0e13", dot = "#4cc38a", edge = "#46a758") {
   const s = size / 32;
   ctx.save();
   ctx.translate(x, y); ctx.scale(s, s);
@@ -908,7 +973,7 @@ function makeLogoDataUrl() {
   ctx.fillStyle = C.panel; rr(2, 2, W - 4, H - 4, 16); ctx.fill();
   ctx.strokeStyle = C.edgeStrong; ctx.lineWidth = 2; rr(2, 2, W - 4, H - 4, 16); ctx.stroke();
   drawVantageMark(ctx, 24, 24, 48);
-  ctx.fillStyle = C.textStrong; ctx.font = "510 34px Inter, Arial, sans-serif"; ctx.fillText("VANTAGE", 88, 54);
+  ctx.fillStyle = C.textStrong; ctx.font = "700 34px 'Schibsted Grotesk', Arial, sans-serif"; ctx.fillText("VANTAGE", 88, 54);
   ctx.fillStyle = C.muted; ctx.font = "12px monospace"; ctx.fillText("MARKET INTELLIGENCE", 90, 77);
   _logoCache = cvs.toDataURL("image/png");
   return _logoCache;
@@ -1582,7 +1647,7 @@ function ChessGame({ onCheer, onWin, sfx }) {
 }
 
 // ---- DeskAnchor: the animated anchor character, procedural and reactive to props ----
-function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speechRef, crew, env, cue, busy, onAction, onCue }) {
+function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speechRef, crew, env, cue, busy, onAction, onCue, framed }) {
   const { t } = useI18n();
   const cvsRef = useRef(null);
   const propsRef = useRef({ talking, mood, crew, env, cue, busy, onAction, onCue });
@@ -2831,6 +2896,27 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
     raf = requestAnimationFrame(draw);
     return () => { dead = true; cancelAnimationFrame(raf); };
   }, [ch]);
+
+  if (framed) {
+    // The canvas is authored in a fixed 190×230 space and scaled by CSS. Its
+    // backing store is DPR-multiplied, so filling a 268px column upscales from
+    // 380 real pixels — sharper than the unframed form, not softer.
+    return (
+      <div style={{ position: "relative", borderRadius: R.md, overflow: "hidden", background: C.base, lineHeight: 0 }}>
+        <canvas ref={cvsRef} style={{ width: "100%", height: "auto", display: "block" }} aria-label={`Desk anchor: ${ch.name}`} />
+        <span style={{
+          position: "absolute", top: 10, right: 10, pointerEvents: "none",
+          display: "flex", alignItems: "center", gap: 6,
+          background: "rgba(11,14,19,0.85)", color: talking ? C.accentText : C.muted,
+          fontFamily: SANS, fontSize: 11.5, fontWeight: 600, padding: "4px 10px", borderRadius: 20,
+        }}>
+          <span className={talking ? "v-pulse" : undefined} aria-hidden="true"
+            style={{ width: 6, height: 6, borderRadius: "50%", background: talking ? C.accentText : C.faint }} />
+          {talking ? t("On air") : t("Standing by")}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
@@ -4188,12 +4274,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const syncChatBubble = useCallback((prefix, r) => {
     if (!r) return;
     const id = `${prefix}${chatTurnRef.current}`;
+    // Sub-second answers would round to "0.0s" and read as a bug, so anything
+    // under a second keeps its milliseconds.
+    const secs = r.ms == null ? null : r.ms < 1000 ? `${r.ms}ms` : `${(r.ms / 1000).toFixed(1)}s`;
     const meta = r.status === "running" ? undefined : [
       r.stopped && "stopped",
-      r.via && `${r.via}${r.model ? ` · ${r.model}` : ""}`,
-      r.ms != null && `${r.ms} ms`,
-      r.tried?.length && `fell back from ${r.tried.join(" · ")}`,
-    ].filter(Boolean).join("  ·  ") || undefined;
+      r.model ? r.model.split("/").pop() : r.via,
+      secs,
+      // On an error the body already names every model that failed, so the
+      // footer repeating it is the same sentence twice.
+      r.status !== "error" && r.tried?.length && `fell back from ${r.tried.join(" · ")}`,
+    ].filter(Boolean).join(" · ") || undefined;
 
     setChatThread(t => {
       const msg = {
@@ -4724,6 +4815,27 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     } catch { /* audio unavailable */ }
   }, []);
   // play the signature when the anchor actually changes (not on first mount)
+  // Who is presenting. Used by the on-air line under an answer and by the
+  // spoken intros, which is why it is derived once rather than in each.
+  const anchorName = useMemo(
+    () => CHARACTERS.find(c => c.id === characterId)?.name || "The desk",
+    [characterId],
+  );
+  const envName = useMemo(
+    () => ENVIRONMENTS.find(e => e.id === envId)?.name || envId,
+    [envId],
+  );
+  // Which model will answer next. There is no single "the model" here — the desk
+  // walks an ordered list and falls back — so this names the FIRST enabled one,
+  // which is the one that will be tried first. The row shows the last path
+  // segment ("gpt-4o-mini"); the full id is on the tooltip, because
+  // "openai/gpt-4o-mini" does not fit a 300px column and the vendor prefix is
+  // the half you already know.
+  const deskModel = useMemo(() => {
+    const m = aiModels.find(x => x.enabled);
+    const full = m?.model || "";
+    return { full: full || "none enabled", short: full ? full.split("/").pop() : "—" };
+  }, [aiModels]);
   const prevCharRef = useRef(characterId);
   useEffect(() => {
     if (prevCharRef.current === characterId) return;
@@ -5382,6 +5494,48 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     completeMission("chart");
   };
 
+  // What the typeahead is offering, and which row the keyboard is on.
+  // Deliberately NOT shown for the verb commands (HELP / ADD / DEL): those are
+  // sentences, not symbol lookups, and a dropdown under them would offer to
+  // chart a word that is actually an argument.
+  const cmdMatches = useMemo(() => {
+    const q = cmd.trim().toLowerCase();
+    if (!q || /^(help|add|del)\b/.test(q)) return [];
+    const pool = [...UNIVERSE];
+    for (const sym of watchlist) {
+      if (!pool.some(u => u.sym === sym)) pool.push({ sym, name: "" });
+    }
+    return pool
+      .map(u => {
+        // A symbol that STARTS with what you typed is what you meant; a company
+        // name that merely contains it is a maybe. Rank accordingly, or "A"
+        // offers Bank of America before Apple.
+        const sym = u.sym.toLowerCase(), name = (u.name || "").toLowerCase();
+        const score = sym === q ? 0 : sym.startsWith(q) ? 1 : name.startsWith(q) ? 2 : name.includes(q) ? 3 : sym.includes(q) ? 4 : -1;
+        return score < 0 ? null : { ...u, score };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.score - b.score || a.sym.localeCompare(b.sym))
+      .slice(0, 5);
+  }, [cmd, watchlist]);
+  const [cmdIdx, setCmdIdx] = useState(0);
+  const [cmdFocus, setCmdFocus] = useState(false);
+  // Rows + the always-present "ask the desk" escape hatch at the end.
+  const cmdRows = cmdMatches.length ? cmdMatches.length + 1 : 0;
+  const cmdOpen = cmdFocus && cmdRows > 0;
+  useEffect(() => { setCmdIdx(0); }, [cmd]);
+
+  // Enter on a highlighted row does what that row says. Anything else — a verb
+  // command, a closed dropdown — falls through to the behaviour the bar has
+  // always had, so nothing a user already knows how to type stops working.
+  const runCmdRow = async () => {
+    if (!cmdOpen) return runCmd();
+    if (cmdIdx >= cmdMatches.length) { const q = cmd.trim(); setCmd(""); askDesk(q); return; }
+    const pick = cmdMatches[cmdIdx];
+    setCmd("");
+    await chartQuery(pick.sym);
+  };
+
   const runCmd = async () => {
     const raw = cmd.trim();
     if (!raw) return;
@@ -5946,18 +6100,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
   }, [showExportMenu, showMoreMenu]);
   // shared style for the AI-desk header toolbar buttons — one consistent look, amber when active
+  // Secondary controls: outlined, never filled. The "active" state fills with the
+  // inset surface rather than lighting the border green — a menu that happens to
+  // be open is not the primary action on the screen.
   const deskBtn = (active) => ({
     display: "flex", alignItems: "center", gap: 6,
-    background: active ? "rgba(255,255,255,0.08)" : "transparent",
-    border: `1px solid ${active ? C.accent : C.panelEdge}`,
-    color: active ? C.accentText : C.muted,
-    borderRadius: 5, fontFamily: SANS, fontWeight: 510, fontSize: 11, letterSpacing: "-0.010em",
-    padding: "5px 11px", cursor: "pointer", whiteSpace: "nowrap",
+    background: active ? C.surfaceRaised : "transparent",
+    border: `1px solid ${C.edgeStrong}`,
+    color: active ? C.text : C.muted,
+    borderRadius: R.sm, fontFamily: SANS, fontWeight: 500, fontSize: 13,
+    padding: "7px 14px", cursor: "pointer", whiteSpace: "nowrap",
     transition: "border-color .12s, color .12s, background .12s",
   });
   const deskBtnHover = (active) => ({
-    onMouseEnter: (e) => { if (!active) { e.currentTarget.style.borderColor = C.faint; e.currentTarget.style.color = C.text; } },
-    onMouseLeave: (e) => { if (!active) { e.currentTarget.style.borderColor = C.panelEdge; e.currentTarget.style.color = C.muted; } },
+    onMouseEnter: (e) => { if (!active) { e.currentTarget.style.color = C.text; } },
+    onMouseLeave: (e) => { if (!active) { e.currentTarget.style.color = C.muted; } },
   });
   const refreshMeetStatus = useCallback(async () => {
     try { const r = await fetch("/api/status", { headers: authHdr }); setMeetStatus(r.ok ? await r.json() : null); }
@@ -6848,12 +7005,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const broadcastNews = useCallback(() => {
     const stories = news?.news || [];
     if (!stories.length) return;
-    const anchorName = CHARACTERS.find(c => c.id === characterId)?.name || "the desk";
     const script = `This is ${anchorName} with the ${newsFor} brief. ` +
       stories.map((n, i) => `Story ${i + 1}, from ${n.source}: ${n.title}.`).join(" ") +
       " That's the tape. Back to you.";
     speak("broadcast", script);
-  }, [news, newsFor, characterId, speak]);
+  }, [news, newsFor, anchorName, speak]);
 
   // One story on air, without sitting through the whole bulletin.
   // Keyed by title (stable under news filtering) so the UI can show WHICH
@@ -6862,7 +7018,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     if (!n?.title) return;
     const sid = `story:${n.title}`;
     if (speakingId === sid) { stopSpeak(); return; }
-    const anchorName = CHARACTERS.find(c => c.id === characterId)?.name || "the desk";
     speak(sid, `${anchorName} here with one from ${n.source || "the wire"}: ${n.title}.`);
   };
   // Hand one headline to the AI. Goes through askDesk so it lands in the chat
@@ -7456,13 +7611,35 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // Clock shows the user's chosen timezone; OPEN/CLOSED always tracks NYSE
   // (Eastern) hours regardless of what the clock is set to.
   const shellClock = useMemo(
-    () => new Intl.DateTimeFormat("en-US", { timeZone: clockTz, hour: "2-digit", minute: "2-digit", hour12: true }).format(clockNow),
+    () => new Intl.DateTimeFormat("en-US", { timeZone: clockTz, hour: "numeric", minute: "2-digit", hour12: true }).format(clockNow),
     [clockNow, clockTz],
   );
   const marketOpen = useMemo(() => {
     const { day, mins } = etNow();
     return day >= 1 && day <= 5 && mins >= 570 && mins < 960;   // 9:30–16:00 ET, weekdays
   }, [clockNow]);
+
+  // ONE market-status sentence, derived once and rendered in exactly two places
+  // — the shell header and the command bar — which are the same statement seen
+  // from the chrome and from the input. Everything else that used to announce
+  // session state (the LIVE DATA chip, the OPEN/CLOSED badge, the desk-head
+  // MARKET CLOSED · LAST TRADE chip, the LIVE chip on the command row) is gone:
+  // four voices saying one thing is how the old desk ended up with nothing that
+  // read as authoritative.
+  //
+  // `liveStale` is the sharper signal and wins when present — it means the feed
+  // is genuinely returning an old trade, which is more specific than "the clock
+  // says the bell has rung".
+  const marketStatus = useMemo(() => {
+    if (liveStale) {
+      return {
+        open: false,
+        label: t("Market closed · last trade {when}")
+          .replace("{when}", liveStale.toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })),
+      };
+    }
+    return { open: marketOpen, label: marketOpen ? t("Market open") : t("Market closed") };
+  }, [liveStale, marketOpen, t]);
 
   // The destinations the primary nav offers. `panel` names the panel that must be
   // switched on before scrolling, so navigating to a hidden section reveals it
@@ -7960,7 +8137,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   return (
     <div onClickCapture={handleUiClick} style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: SANS }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Archivo:wght@500;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
         @keyframes tapeScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         .tape-track { animation: tapeScroll 40s linear infinite; }
         .tape-track:hover, .tape-track:has(:focus-visible) { animation-play-state: paused; }
@@ -8216,8 +8393,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         onSignOut={onSignOut}
         onOpenSettings={() => { setSettingsTab("quick"); setShowSettings(true); }}
         onOpenPlans={() => { setSettingsTab("account"); setShowSettings(true); }}
-        marketOpen={marketOpen}
-        marketLabel={marketOpen ? `NYSE ${t("OPEN")}` : `NYSE ${t("CLOSED")}`}
+        marketOpen={marketStatus.open}
+        marketLabel={marketStatus.label}
         clock={shellClock}
         commands={shellCommands}
         paletteFallback={q => (q.length <= 20 && /^[A-Za-z][A-Za-z0-9.\- ]*$/.test(q)) ? {
@@ -8228,12 +8405,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             if (sec) navigateSection(sec);
           },
         } : null}
-        status={live ? <span style={chip("up")}>● LIVE DATA</span> : null}
         searchRef={openPaletteRef}
       >
       {panels.tape && (
-      <div id="tour-ticker" style={{ overflow: "hidden", borderBottom: `1px solid ${C.panelEdge}`, background: "#0D111A", whiteSpace: "nowrap" }}>
-        <div className="tape-track" style={{ display: "inline-block", padding: "7px 0" }}>
+      <div id="tour-ticker" style={{ overflow: "hidden", borderTop: `1px solid ${C.panelEdge}`, borderBottom: `1px solid ${C.panelEdge}`, background: C.base, whiteSpace: "nowrap" }}>
+        <div className="tape-track" style={{ display: "inline-block", padding: "10px 0" }}>
           {/* Each entry charts its symbol — the tape already pauses on hover, so
               it reads as navigation, not just decoration. */}
           {tape.map((r, i) => (
@@ -8243,10 +8419,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               // offered exactly once. It stays clickable with the mouse.
               aria-hidden={i >= tapeRows.length || undefined}
               tabIndex={i >= tapeRows.length ? -1 : undefined}
-              style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: MONO, fontSize: 12, marginRight: 34 }}>
-              <span style={{ color: C.accentText, fontWeight: 510 }}>{r.sym}</span>{" "}
+              style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: MONO, fontSize: 12.5, marginRight: 36 }}>
+              <span style={{ color: C.muted }}>{r.sym}</span>{" "}
               <span style={{ color: C.text }}>{fmt(r.price)}</span>{" "}
-              <span style={{ color: dirColorN(r.chg) }}>{r.chg > 0 ? "▲" : r.chg < 0 ? "▼" : "•"} {pct(r.chgPct)}</span>
+              <span style={{ color: dirColorN(r.chg) }}>
+                {(() => { const g = prefDirGlyph(r.chg > 0 ? "up" : r.chg < 0 ? "down" : "flat"); return g ? g + " " : ""; })()}
+                {pct(r.chgPct)}
+              </span>
             </button>
           ))}
         </div>
@@ -8275,14 +8454,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       <div id="sec-desk" style={{ padding: "14px 14px 0" }}>
         <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
           <div className="v-deskhead" style={{ borderBottom: `1px solid ${C.panelEdge}` }}>
-            <span className="v-deskhead-title" style={{ ...TYPE.eyebrow, color: C.muted }}>AI DESK</span>
-            {/* Session state lives up here with the desk, not buried under the
-                chart: one glance says why every price is holding still. */}
-            {liveStale && (
-              <span style={{ fontFamily: MONO, fontSize: 12, color: C.muted, background: "rgba(255,255,255,0.05)", borderRadius: R.xs, padding: "3px 9px", letterSpacing: "-0.013em", whiteSpace: "nowrap" }}>
-                {t("MARKET CLOSED")} · {t("last trade")} {liveStale.toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}
-              </span>
-            )}
+            <h2 className="v-deskhead-title" style={{ margin: 0, fontFamily: SANS, fontSize: 19, fontWeight: 700, letterSpacing: "-0.012em", color: C.text }}>{t("AI Desk")}</h2>
             <span className="v-deskhead-tools">
               {/* visible export menu (Excel / Word / PowerPoint / report), all generated inside Vantage */}
               <span data-deskmenu="" style={{ position: "relative" }}>
@@ -8335,7 +8507,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               </span>
               {/* language rides last, keeping Export + More as an adjacent pair; it switches the whole UI, but above all the anchor's spoken answers */}
               <select id="tour-lang" value={lang} onChange={e => setLang(e.target.value)} aria-label={t("Language")} title={t("Language")}
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: SANS, fontWeight: 510, fontSize: 11, letterSpacing: "-0.010em", padding: "5px 6px", cursor: "pointer" }}>
+                style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontWeight: 500, fontSize: 13, padding: "6px 8px", cursor: "pointer" }}>
                 {LANGS.map(l => <option key={l.code} value={l.code} style={{ background: C.surface, color: C.text }}>{l.code === "en" ? "🌐 " + l.label : l.label}</option>)}
               </select>
             </span>
@@ -8348,27 +8520,91 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                not to the page chrome. Typing a symbol and asking about it are
                the same gesture, so they share a panel. */}
           <div className="v-cmdrow" style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, borderBottom: `1px solid ${C.panelEdge}`, flexWrap: "wrap" }}>
-            <div id="tour-symbol" className="cmdbar" style={{ flex: 1, minWidth: 240, display: "flex", alignItems: "center", background: C.inputBg, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: "0 6px 0 12px" }}>
-              <span aria-hidden="true" style={{ fontFamily: MONO, color: C.accentText, fontSize: 14 }}>&gt;</span>
+            <div id="tour-symbol" className="cmdbar" style={{ position: "relative", flex: 1, minWidth: 240, display: "flex", alignItems: "center", background: C.inputBg, border: `1px solid ${C.edgeStrong}`, borderRadius: R.md, padding: "0 8px 0 15px" }}>
+              {/* The prompt is furniture, not an accent. Green here was the same
+                  colour as the Ask button two inches to its right, which is how
+                  a screen ends up with no primary action. */}
+              <span aria-hidden="true" style={{ fontFamily: MONO, color: C.faint, fontSize: 13 }}>&gt;</span>
               <input
                 value={cmd}
                 onChange={e => setCmd(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && runCmd()}
+                onFocus={() => setCmdFocus(true)}
+                /* A blur that lands ON a row must not close the list before the
+                   click registers — the rows cancel mousedown, so by the time
+                   blur fires the pick has already run. The timeout covers the
+                   tab-away case. */
+                onBlur={() => setTimeout(() => setCmdFocus(false), 120)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") { e.preventDefault(); runCmdRow(); }
+                  else if (e.key === "ArrowDown" && cmdOpen) { e.preventDefault(); setCmdIdx(i => (i + 1) % cmdRows); }
+                  else if (e.key === "ArrowUp" && cmdOpen) { e.preventDefault(); setCmdIdx(i => (i - 1 + cmdRows) % cmdRows); }
+                  else if (e.key === "Escape" && cmdOpen) { e.preventDefault(); setCmdFocus(false); }
+                }}
+                role="combobox" aria-expanded={cmdOpen} aria-controls="cmd-typeahead" aria-autocomplete="list"
+                aria-activedescendant={cmdOpen ? `cmd-row-${cmdIdx}` : undefined}
                 placeholder={t("Type a symbol and press Enter  ·  HELP for commands")}
                 aria-label="Command bar"
-                style={{ flex: 1, minWidth: 0, background: "transparent", border: "none", outline: "none", color: C.text, fontFamily: MONO, fontSize: 14, padding: "10px 8px" }}
+                style={{ flex: 1, minWidth: 0, background: "transparent", border: "none", outline: "none", color: C.text, fontFamily: SANS, fontSize: 14.5, padding: "13px 10px" }}
               />
+              {/* Not a chip: a bordered box inside an input reads as a second
+                  control. Dot plus sentence, the same one the header carries. */}
+              <span className="v-cmdstatus" style={{ display: "flex", alignItems: "center", gap: 6, color: C.faint, fontFamily: SANS, fontSize: 11.5, whiteSpace: "nowrap", marginRight: 10, flexShrink: 0 }}>
+                <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: marketStatus.open ? C.up : C.amber, flexShrink: 0 }} />
+                {marketStatus.label}
+              </span>
               <button onClick={() => openPaletteRef.current?.()} aria-label="Open command palette" title={t("Search")}
-                style={{ display: "flex", alignItems: "center", gap: 7, background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 12, fontWeight: 510, padding: "7px 12px", marginRight: 6, cursor: "pointer", whiteSpace: "nowrap", transition: "border-color .12s, background .12s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = C.faint; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.edgeStrong; }}>
-                <span aria-hidden="true" style={{ color: C.accentText, fontSize: 13 }}>⌕</span>
-                <span>{t("Search")}</span>
+                style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: 6, color: C.faint, fontFamily: MONO, fontSize: 12, padding: "4px 8px", marginRight: 8, cursor: "pointer", whiteSpace: "nowrap", transition: "border-color .12s, color .12s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.faint; e.currentTarget.style.color = C.text; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.edgeStrong; e.currentTarget.style.color = C.faint; }}>
+                ⌘K
               </button>
-              <button onClick={runCmd} style={button("primary", "sm")}>GO</button>
-            </div>
+              {/* The single primary action on this screen. "GO" was a terminal
+                  verb for a terminal UI; this one asks a question. */}
+              <button onClick={runCmdRow} style={{ ...button("primary", "sm"), padding: "10px 22px", fontSize: 14, fontWeight: 700, borderRadius: 9 }}>{t("Ask")}</button>
 
-            {live && <span style={chip("up")}>● LIVE</span>}
+              {/* Flush under the input and inset 8px, so it reads as the input
+                  growing rather than as a panel landing on top of it. Absolutely
+                  positioned on purpose: in the reference this sits in its own
+                  column, but here the desk is below it and a dropdown that
+                  pushed the whole conversation down every keystroke would be
+                  unusable. surfaceAlt is DARKER than the input — a dropdown is
+                  cut into the page, not lifted off it. */}
+              {cmdOpen && (
+                <div id="cmd-typeahead" role="listbox" aria-label="Symbol matches" className="vt-fadeup"
+                  style={{ position: "absolute", top: "calc(100% - 1px)", left: 8, right: 8, zIndex: 25, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderTop: "none", borderRadius: `0 0 ${R.md}px ${R.md}px`, overflow: "hidden", boxShadow: SHADOW.lg }}>
+                  {cmdMatches.map((m, i) => {
+                    const row = getRow(m.sym);
+                    const on = i === cmdIdx;
+                    return (
+                      <div
+                        key={m.sym} id={`cmd-row-${i}`} role="option" aria-selected={on}
+                        onMouseDown={e => { e.preventDefault(); setCmd(""); chartQuery(m.sym); }}
+                        onMouseEnter={() => setCmdIdx(i)}
+                        style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", cursor: "pointer", background: on ? "#131922" : "transparent", borderLeft: `2px solid ${on ? C.accent : "transparent"}` }}
+                      >
+                        <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 13, width: 54, flexShrink: 0, color: on ? C.text : C.muted }}>{m.sym}</span>
+                        <span style={{ fontFamily: SANS, fontSize: 13, color: on ? C.muted : C.faint, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
+                        <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 13, color: on ? C.text : C.muted, whiteSpace: "nowrap" }}>
+                          {row?.price != null ? fmt(row.price) : "—"}{" "}
+                          <span style={{ color: dirColorN(row?.chg) }}>{row?.chgPct != null ? pct(row.chgPct) : ""}</span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {/* The escape hatch. Whatever you typed is a question if it is
+                      not a symbol, and this row is what says so. */}
+                  <div
+                    id={`cmd-row-${cmdMatches.length}`} role="option" aria-selected={cmdIdx === cmdMatches.length}
+                    onMouseDown={e => { e.preventDefault(); const q = cmd.trim(); setCmd(""); askDesk(q); }}
+                    onMouseEnter={() => setCmdIdx(cmdMatches.length)}
+                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", cursor: "pointer", borderTop: `1px solid ${C.edge}`, background: cmdIdx === cmdMatches.length ? "#131922" : "transparent", color: C.faint, fontFamily: SANS, fontSize: 12.5 }}
+                  >
+                    <span aria-hidden="true" style={{ fontFamily: MONO }}>↵</span>
+                    {t('ask the desk about "{q}"').replace("{q}", cmd.trim())}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {liveMeeting && (
               <a href={liveMeeting} target="_blank" rel="noopener noreferrer" title="Rejoin your live meeting"
@@ -8620,66 +8856,100 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                accumulates entries from several features, so asking "is anything
                running" would let one stalled entry lock the composer for good. */}
           <div id="tour-ask" className="v-askrow" style={{ borderTop: `1px solid ${C.panelEdge}` }}>
-            {/* desk anchor */}
-            <div id="tour-anchor" className="v-deskrow-anchor" style={{ background: "#161718", border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: "10px 8px" }}>
-              <DeskAnchor
-                talking={speakingId != null}
-                mood={selectedRow?.chgPct}
-                speakerLabel={aiModels.find(m => m.id === speakingId)?.label}
-                character={CHARACTERS.find(c => c.id === characterId)}
-                analyserRef={analyserRef}
-                speechRef={speechMouthRef}
-                env={envId}
-                crew={
-                  crewId === "off" ? null :
-                  crewId === "auto"
-                    ? CHARACTERS[(CHARACTERS.findIndex(c => c.id === characterId) + 1) % CHARACTERS.length]
-                    : CHARACTERS.find(c => c.id === crewId) || null
-                }
-                cue={anchorCue}
-                onAction={playActionSfx}
-                onCue={playCueSfx}
-                busy={
-                  gameOn ? "teach"
-                  : presenting ? "present"
-                  : (reportBusy || Object.values(aiResponses).some(r => r?.status === "running")) ? "work"
-                  : null
-                }
-              />
-              {/* anchor + environment pickers — dropdowns scale cleanly past a dozen options; arrows browse */}
-              <div style={{ display: "grid", gap: 6, marginTop: 8, width: 190 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <button
-                    onClick={() => { const i = CHARACTERS.findIndex(c => c.id === characterId); setCharacterId(CHARACTERS[(i - 1 + CHARACTERS.length) % CHARACTERS.length].id); }}
-                    aria-label="Previous anchor" className="v-tap"
-                    style={{ flexShrink: 0, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, lineHeight: 1, padding: "5px 8px", cursor: "pointer" }}>‹</button>
-                  <select value={characterId} onChange={e => setCharacterId(e.target.value)} aria-label="Anchor"
-                    style={{ flex: 1, minWidth: 0, background: C.bg, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 11, fontWeight: 510, padding: "5px 6px", cursor: "pointer" }}>
-                    {CHARACTERS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                  <button
-                    onClick={() => { const i = CHARACTERS.findIndex(c => c.id === characterId); setCharacterId(CHARACTERS[(i + 1) % CHARACTERS.length].id); }}
-                    aria-label="Next anchor" className="v-tap"
-                    style={{ flexShrink: 0, background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, lineHeight: 1, padding: "5px 8px", cursor: "pointer" }}>›</button>
+            {/* ===== the anchor column =====
+                A 300px card holding the presenter, who they are, and the three
+                facts about this desk that change what an answer is worth: is the
+                data live, which model is answering, what language it speaks.
+                Those three used to be scattered across the header, a chip on the
+                command row and the settings modal. */}
+            <div id="tour-anchor" className="v-deskrow-anchor" style={{ width: 300, maxWidth: "100%", display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+                <DeskAnchor
+                  framed
+                  talking={speakingId != null}
+                  mood={selectedRow?.chgPct}
+                  speakerLabel={aiModels.find(m => m.id === speakingId)?.label}
+                  character={CHARACTERS.find(c => c.id === characterId)}
+                  analyserRef={analyserRef}
+                  speechRef={speechMouthRef}
+                  env={envId}
+                  crew={
+                    crewId === "off" ? null :
+                    crewId === "auto"
+                      ? CHARACTERS[(CHARACTERS.findIndex(c => c.id === characterId) + 1) % CHARACTERS.length]
+                      : CHARACTERS.find(c => c.id === crewId) || null
+                  }
+                  cue={anchorCue}
+                  onAction={playActionSfx}
+                  onCue={playCueSfx}
+                  busy={
+                    gameOn ? "teach"
+                    : presenting ? "present"
+                    : (reportBusy || Object.values(aiResponses).some(r => r?.status === "running")) ? "work"
+                    : null
+                  }
+                />
+
+                {/* Who is presenting, and the two arrows that change it. The
+                    arrows NAME their destination in the tooltip and the
+                    accessible label — a bare ‹ › on a roster of nine anchors is
+                    a control you have to click to find out what it does. */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 15, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{anchorName}</div>
+                    <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t("{env} set").replace("{env}", envName)}</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    {[["‹", -1], ["›", 1]].map(([glyph, step]) => {
+                      const i = CHARACTERS.findIndex(c => c.id === characterId);
+                      const next = CHARACTERS[(i + step + CHARACTERS.length) % CHARACTERS.length];
+                      return (
+                        <button
+                          key={glyph} className="v-tap"
+                          onClick={() => setCharacterId(next.id)}
+                          aria-label={`${step < 0 ? "Previous" : "Next"} anchor — ${next.name}`}
+                          title={next.name}
+                          style={{ width: 30, height: 30, display: "grid", placeItems: "center", background: "transparent", border: `1px solid ${C.edgeStrong}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 13, lineHeight: 1, cursor: "pointer" }}
+                        >{glyph}</button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ fontFamily: SANS, fontWeight: 510, fontSize: 10, letterSpacing: "-0.010em", color: C.faint, flexShrink: 0 }}>{t("SET")}</span>
-                  <select value={envId} onChange={e => setEnvId(e.target.value)} aria-label="Environment"
-                    style={{ flex: 1, minWidth: 0, background: C.bg, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, color: C.muted, fontFamily: SANS, fontSize: 11, padding: "5px 6px", cursor: "pointer" }}>
-                    {ENVIRONMENTS.map(ev => <option key={ev.id} value={ev.id}>{ev.name}</option>)}
-                  </select>
-                </div>
+
+                {/* One full-width outline control. While the anchor is actually
+                    reading it becomes Stop, because that is the only thing you
+                    want from this card at that moment. */}
                 {speakingId ? (
                   <button onClick={stopSpeak}
-                    style={{ background: "transparent", border: `1px solid ${C.down}`, color: C.down, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "6px 0", cursor: "pointer" }}>
+                    style={{ background: "transparent", border: `1px solid ${C.downEdge}`, color: C.down, borderRadius: 9, fontFamily: SANS, fontSize: 13, fontWeight: 500, padding: 9, cursor: "pointer" }}>
                     ■ {t("stop reading")}
                   </button>
                 ) : (
                   <button onClick={() => { setSettingsTab("anchor"); setShowSettings(true); }}
-                    style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.faint, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, padding: "6px 0", cursor: "pointer" }}>
-                    {t("voice & anchor settings")}
+                    style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, color: C.accent, borderRadius: 9, fontFamily: SANS, fontSize: 13, fontWeight: 500, padding: 9, cursor: "pointer" }}>
+                    {t("Voice & anchor settings")}
                   </button>
                 )}
+              </div>
+
+              {/* The desk's own vital signs. Values right-aligned so the three
+                  labels form a column you can scan without reading. */}
+              <div style={{ background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8, fontFamily: SANS, fontSize: 13, color: C.muted }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                  <span>{t("Data")}</span>
+                  <span style={{ color: live ? C.up : C.muted, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: live ? C.up : C.faint }} />
+                    {live ? t("Live") : t("Demo")}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                  <span style={{ flexShrink: 0 }}>{t("Model")}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 12, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={deskModel.full}>{deskModel.short}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                  <span>{t("Language")}</span>
+                  <span style={{ color: C.text }}>{LANGS.find(l => l.code === lang)?.label || lang}</span>
+                </div>
               </div>
             </div>
             <div className="v-askrow-chat">
@@ -8703,6 +8973,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               onStop={stopAsk}
               onSpeak={(m) => (speakingId === m.id ? stopSpeak() : speak(m.id, m.text))}
               speakingId={speakingId}
+              anchorName={anchorName}
               busy={aiResponses.desk?.status === "running" || reportBusy}
               subject={selected}
               placeholder={t('Ask about {sym} — or tap a suggestion below').replace("{sym}", selected)}

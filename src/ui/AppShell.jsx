@@ -21,7 +21,7 @@
 // ============================================================
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { C, GRAD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, button, chip } from "./theme.js";
+import { C, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, button, chip } from "./theme.js";
 import VantageMark from "./VantageMark.jsx";
 
 const HEADER_H = 56;
@@ -49,25 +49,24 @@ export function BrandMark({ compact = false, onClick }) {
 }
 
 // ---------- market status ----------
-// Green means the session is open — a state of the world, not an on-air claim,
-// which is why this does NOT use the broadcast red the tally light owns. It
-// reuses the up-green so the header agrees with every rising price below it.
-// Closed markets get muted grey, not a second colour.
+// THE single status line for the whole app. The old UI said the same thing four
+// times over — a LIVE DATA chip here, an OPEN/CLOSED badge beside it, a MARKET
+// CLOSED · LAST TRADE chip on the desk head, and a LIVE chip on the command row
+// — so a glance cost four reads and still left you unsure which one was
+// authoritative. One derived value, said once, in a sentence.
+//
+// It is deliberately not a bordered chip: a box around a permanent fixture of
+// the header reads as something you can act on. Green dot when the session is
+// open, grey when it is not; the label carries the detail.
 export function LiveBadge({ open, label, clock }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <span style={{
-        display: "inline-flex", alignItems: "center", gap: 6,
-        padding: "4px 10px", borderRadius: R.pill,
-        background: open ? C.upSoft : "transparent",
-        border: `1px solid ${open ? C.upDim : C.edge}`,
-        ...TYPE.eyebrowSm, color: open ? C.up : C.faint,
-      }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: SANS, fontSize: 13, color: C.muted, whiteSpace: "nowrap" }}>
         <span
           className={open ? "v-pulse" : undefined}
-          style={{ width: 6, height: 6, borderRadius: "50%", background: open ? C.up : C.faint }}
+          style={{ width: 7, height: 7, borderRadius: "50%", background: open ? C.up : C.faint, flexShrink: 0 }}
         />
-        {label || (open ? "OPEN" : "CLOSED")}
+        {label || (open ? "Market open" : "Market closed")}
       </span>
       {clock && (
         <span style={{ ...TYPE.num, fontSize: 12, color: C.muted, letterSpacing: "-0.013em" }}>{clock}</span>
@@ -77,8 +76,11 @@ export function LiveBadge({ open, label, clock }) {
 }
 
 // ---------- primary navigation ----------
-// The active item is marked with a gradient underline rather than a filled pill:
-// at this density a fill competes with the content below it.
+// The active item is a filled tile. The underline this replaced was drawn in the
+// accent gradient, which put green on the tab bar AND on the one primary action
+// of every screen — the exact "nothing reads as primary" problem the redesign
+// exists to fix. A neutral inset tile says "you are here" without spending the
+// accent to say it.
 function NavItem({ item, active, onSelect }) {
   const [hover, setHover] = useState(false);
   return (
@@ -90,11 +92,11 @@ function NavItem({ item, active, onSelect }) {
       style={{
         position: "relative",
         display: "inline-flex", alignItems: "center", gap: 7,
-        padding: "7px 12px", borderRadius: R.md,
-        background: hover && !active ? C.surfaceRaised : "transparent",
+        padding: "7px 14px", borderRadius: R.xs,
+        background: active ? C.surfaceRaised : "transparent",
         border: "none",
-        color: active ? C.text : C.muted,
-        fontFamily: SANS, fontSize: 13, fontWeight: active ? 600 : 500,
+        color: active ? C.text : hover ? C.text : C.muted,
+        fontFamily: SANS, fontSize: 14, fontWeight: 500,
         cursor: "pointer", whiteSpace: "nowrap",
         transition: `color ${MOTION.fast} ${MOTION.ease}, background ${MOTION.fast} ${MOTION.ease}`,
       }}
@@ -108,12 +110,6 @@ function NavItem({ item, active, onSelect }) {
           ...TYPE.eyebrowSm, color: C.accentSoft,
         }}>{item.badge}</span>
       ) : null}
-      {active && (
-        <span aria-hidden="true" style={{
-          position: "absolute", left: 12, right: 12, bottom: -9, height: 2,
-          borderRadius: 2, background: GRAD.accent,
-        }} />
-      )}
     </button>
   );
 }
@@ -147,28 +143,28 @@ function AccountMenu({ account, plan, onSignIn, onSignOut, onOpenSettings, onOpe
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
+      {/* A 30px initial, and nothing else. The name and caret this replaced put
+          a third block of text in a header whose job is now one status line —
+          and the account name is the one thing on screen the user already knows.
+          The full name still leads the menu it opens, and aria-label carries it
+          for anyone who cannot see the initial. */}
       <button
         id="tour-settings"
         onClick={() => setOpen(o => !o)}
         aria-haspopup="menu" aria-expanded={open}
+        aria-label={`Account — ${name}`}
+        title={name}
         style={{
-          display: "flex", alignItems: "center", gap: 8,
-          padding: "4px 8px 4px 4px", borderRadius: R.pill,
-          background: open ? C.surfaceRaised : "transparent",
-          border: `1px solid ${open ? C.edgeStrong : C.edge}`,
-          cursor: "pointer",
-          transition: `background ${MOTION.fast} ${MOTION.ease}`,
+          width: 30, height: 30, borderRadius: "50%",
+          display: "grid", placeItems: "center", padding: 0,
+          background: C.surfaceRaised,
+          border: `1px solid ${open ? C.accentEdge : C.edgeStrong}`,
+          fontFamily: SANS, fontSize: 12, fontWeight: 600, color: C.text,
+          cursor: "pointer", flexShrink: 0,
+          transition: `border-color ${MOTION.fast} ${MOTION.ease}`,
         }}
       >
-        <span style={{
-          width: 24, height: 24, borderRadius: "50%", background: GRAD.brand,
-          display: "grid", placeItems: "center",
-          fontFamily: SANS, fontSize: 11, fontWeight: 510, color: C.textOnAccent, flexShrink: 0,
-        }}>{initial}</span>
-        <span style={{ fontFamily: SANS, fontSize: 12, color: C.muted, maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {name}
-        </span>
-        <span aria-hidden="true" style={{ color: C.faint, fontSize: 9 }}>▾</span>
+        {initial}
       </button>
 
       {open && (

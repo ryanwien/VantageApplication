@@ -1,79 +1,101 @@
 {
-  "$description": "Vantage design tokens — W3C Design Tokens format, generated from src/ui/theme.js (Linear 'midnight precision instrument' reference). Import into Figma with a variables-import plugin (e.g. 'Tokens Studio' or 'Variables Import/Export') to get an editable variable collection. theme.js stays the source of truth: regenerate this file when the theme changes.",
+  "$description": "Vantage design tokens — W3C Design Tokens format, generated from src/ui/theme.js (Vantage redesign handoff). Import into Figma with a variables-import plugin (e.g. 'Tokens Studio' or 'Variables Import/Export') to get an editable variable collection. theme.js stays the source of truth: regenerate this file when the theme changes.",
   "surface": {
-    "$description": "The documented 0-3 elevation ladder. Depth comes from this progression plus hairline borders, never from ambient shadow.",
-    "void":     { "$type": "color", "$value": "#08090a", "$description": "Level 0 - page canvas, full-bleed backgrounds" },
-    "carbon":   { "$type": "color", "$value": "#0f1011", "$description": "Level 1 - card surfaces, nav containers" },
-    "obsidian": { "$type": "color", "$value": "#161718", "$description": "Level 2 - elevated panels, inputs, nested surfaces" },
-    "slate":    { "$type": "color", "$value": "#23252a", "$description": "Level 3 - interactive surface tint, ghost button fills" }
+    "$description": "Note that 'alt' is DARKER than the card surface, not lighter: dropdowns and floating chips read as cut into the page rather than lifted off it, so ordering these by brightness would misrepresent the ladder.",
+    "base":   { "$type": "color", "$value": "#0b0e13", "$description": "Page and app background" },
+    "raised": { "$type": "color", "$value": "#11151c", "$description": "Cards, panels, inputs" },
+    "alt":    { "$type": "color", "$value": "#0e1218", "$description": "Dropdowns, floating chips" },
+    "inset":  { "$type": "color", "$value": "#171c24", "$description": "Icon tiles, secondary buttons" }
   },
   "border": {
-    "graphite": { "$type": "color", "$value": "#23252a", "$description": "Hairline borders, dividers, ghost outlines" },
-    "smoke":    { "$type": "color", "$value": "#383b3f", "$description": "Higher-contrast hairlines, section separators" }
+    "edge":   { "$type": "color", "$value": "#1c222c", "$description": "Panel dividers, card borders" },
+    "strong": { "$type": "color", "$value": "#262d38", "$description": "Inputs, outline buttons, hover borders" }
   },
   "text": {
-    "paper": { "$type": "color", "$value": "#ffffff", "$description": "Primary headings, max-contrast emphasis" },
-    "bone":  { "$type": "color", "$value": "#e5e5e6", "$description": "Near-white surface fills, high-contrast button text" },
-    "mist":  { "$type": "color", "$value": "#d0d6e0", "$description": "Body text, button labels on dark" },
-    "fog":   { "$type": "color", "$value": "#8a8f98", "$description": "Tertiary text, placeholders, icon fills" },
-    "ash":   { "$type": "color", "$value": "#62666d", "$description": "Muted metadata, inactive icons" }
+    "$description": "The ramp tops out at #e6e8eb. There is no pure white in this system — #ffffff against these near-blacks glares.",
+    "primary":   { "$type": "color", "$value": "#e6e8eb", "$description": "Headings, body" },
+    "secondary": { "$type": "color", "$value": "#9aa3ae", "$description": "Supporting copy" },
+    "tertiary":  { "$type": "color", "$value": "#5b6470", "$description": "Metadata, labels, placeholders" }
   },
   "accent": {
-    "$description": "Acid lime is the ONLY chromatic UI element: the single primary action per view. Never decoration, never a secondary button, never data.",
-    "acid-lime":    { "$type": "color", "$value": "#e4f222", "$description": "Primary action fills, active nav indicators" },
-    "lime-press":   { "$type": "color", "$value": "#cfdb1f", "$description": "Pressed state of the primary action" },
-    "lime-dim":     { "$type": "color", "$value": "#8b9615", "$description": "Border weight of the accent - 3.4:1 on void" },
-    "signal-teal":  { "$type": "color", "$value": "#02b8cc", "$description": "Informational icon fills - supporting accent only" },
-    "iris-violet":  { "$type": "color", "$value": "#6366f1", "$description": "Tag and badge fills - supporting accent only" }
+    "$description": "ONE accent, ONE primary action per screen. The previous UI put acid yellow on GO, LIVE, +Add, the tabs and today's date at once, so nothing read as primary. Green is reserved for the main action and for positive/live states; everything else is a neutral surface or an outline.",
+    "green":       { "$type": "color", "$value": "#46a758", "$description": "Primary action fills, active state" },
+    "green-light": { "$type": "color", "$value": "#4cc38a", "$description": "Positive numbers, on-air, accent text" },
+    "green-hover": { "$type": "color", "$value": "#4fb862", "$description": "Hover step of the primary action" },
+    "green-press": { "$type": "color", "$value": "#3c8f4b", "$description": "Pressed state of the primary action" }
   },
   "data": {
-    "$description": "The documented deviation from the reference: a market terminal needs semantic direction colours, so the palette's green and red are used for price direction. Coral doubles as the on-air state, separated from 'down' by treatment (solid fill + dot vs plain text).",
-    "up":       { "$type": "color", "$value": "#27a644", "$description": "Rising price, success - 6.3:1 on void" },
-    "up-dim":   { "$type": "color", "$value": "#1a6e2d", "$description": "Border weight for rising state" },
-    "down":     { "$type": "color", "$value": "#eb5757", "$description": "Falling price, on-air, danger - 5.6:1 on void" },
-    "down-dim": { "$type": "color", "$value": "#8f3535", "$description": "Border weight for falling / live state" },
-    "on-fill":  { "$type": "color", "$value": "#08090a", "$description": "Label colour on any lime or coral fill - 5.6:1 or better" }
+    "$description": "Direction colours. On-air is green here, not red — it is a positive state, and the redesign gives #4cc38a to positive numbers and 'on air' by the same name.",
+    "up":      { "$type": "color", "$value": "#4cc38a", "$description": "Rising price, on-air, success" },
+    "down":    { "$type": "color", "$value": "#dd6a6e", "$description": "Falling price, danger, bear pieces" },
+    "warning": { "$type": "color", "$value": "#dd9a3c", "$description": "Market-closed dot, alert dot — the one cautionary voice" },
+    "on-fill": { "$type": "color", "$value": "#0b0e13", "$description": "Label colour on any green fill — 6.3:1 on #46a758, where #e6e8eb would be 3.1:1" }
+  },
+  "board": {
+    "$description": "Chess squares, named because the game reads them directly.",
+    "light": { "$type": "color", "$value": "#212934" },
+    "dark":  { "$type": "color", "$value": "#171d26" }
   },
   "radius": {
-    "$description": "The entire radius vocabulary. Nothing rounds past 12 except pills.",
-    "badge":  { "$type": "dimension", "$value": "4px" },
-    "button": { "$type": "dimension", "$value": "6px" },
-    "input":  { "$type": "dimension", "$value": "6px" },
-    "card":   { "$type": "dimension", "$value": "12px" },
-    "pill":   { "$type": "dimension", "$value": "9999px" }
+    "$description": "By role rather than by size.",
+    "icon-tile":  { "$type": "dimension", "$value": "7px" },
+    "button":     { "$type": "dimension", "$value": "8px" },
+    "input":      { "$type": "dimension", "$value": "10px" },
+    "inner-card": { "$type": "dimension", "$value": "12px" },
+    "panel":      { "$type": "dimension", "$value": "16px" },
+    "pill":       { "$type": "dimension", "$value": "9999px" }
   },
   "spacing": {
-    "$description": "4px base unit; the 8/12/24/96 ladder carries the page rhythm.",
-    "1":  { "$type": "dimension", "$value": "4px" },
-    "2":  { "$type": "dimension", "$value": "8px" },
-    "3":  { "$type": "dimension", "$value": "12px" },
-    "4":  { "$type": "dimension", "$value": "16px" },
-    "5":  { "$type": "dimension", "$value": "20px" },
-    "6":  { "$type": "dimension", "$value": "24px" },
-    "8":  { "$type": "dimension", "$value": "32px" },
-    "10": { "$type": "dimension", "$value": "40px" },
-    "12": { "$type": "dimension", "$value": "48px" },
-    "16": { "$type": "dimension", "$value": "64px" }
+    "$description": "The redesign's spacing set. This is NOT a renaming of the 4px ladder still exported as SP in theme.js — that ladder stays put so existing call sites do not shift under themselves; rebuilt screens take these values.",
+    "6":  { "$type": "dimension", "$value": "6px" },
+    "8":  { "$type": "dimension", "$value": "8px" },
+    "10": { "$type": "dimension", "$value": "10px" },
+    "12": { "$type": "dimension", "$value": "12px" },
+    "14": { "$type": "dimension", "$value": "14px" },
+    "18": { "$type": "dimension", "$value": "18px" },
+    "20": { "$type": "dimension", "$value": "20px" },
+    "22": { "$type": "dimension", "$value": "22px" },
+    "26": { "$type": "dimension", "$value": "26px" },
+    "40": { "$type": "dimension", "$value": "40px" },
+    "48": { "$type": "dimension", "$value": "48px" },
+    "64": { "$type": "dimension", "$value": "64px" }
+  },
+  "size": {
+    "touch-min": { "$type": "dimension", "$value": "44px", "$description": "Minimum touch target anywhere in the product" },
+    "chess-square": { "$type": "dimension", "$value": "56px" }
   },
   "type": {
-    "$description": "Two faces. Inter carries UI and headings with cv01/ss03/zero alternates on; IBM Plex Mono (standing in for Berkeley Mono) is reserved for instrument metadata - eyebrows, tickers, IDs, column headers. Weights stay in the 400-590 band; the system never bolds.",
-    "family-sans": { "$type": "fontFamily", "$value": "Inter" },
-    "family-mono": { "$type": "fontFamily", "$value": "IBM Plex Mono" },
-    "display-lg":  { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 510, "fontSize": "44px", "lineHeight": "1", "letterSpacing": "-0.022em" } },
-    "display":     { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 510, "fontSize": "32px", "lineHeight": "1.13", "letterSpacing": "-0.022em" } },
-    "title":       { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 510, "fontSize": "20px", "lineHeight": "1.33", "letterSpacing": "-0.012em" } },
-    "heading":     { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 510, "fontSize": "16px", "lineHeight": "1.4", "letterSpacing": "-0.010em" } },
-    "body":        { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 400, "fontSize": "14px", "lineHeight": "1.5", "letterSpacing": "-0.010em" } },
-    "body-sm":     { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 400, "fontSize": "13px", "lineHeight": "1.5", "letterSpacing": "-0.010em" } },
-    "caption":     { "$type": "typography", "$value": { "fontFamily": "Inter", "fontWeight": 400, "fontSize": "12px", "lineHeight": "1.4" } },
-    "eyebrow":     { "$type": "typography", "$value": { "fontFamily": "IBM Plex Mono", "fontWeight": 400, "fontSize": "11px", "lineHeight": "1.4", "letterSpacing": "-0.013em", "textCase": "uppercase" } },
-    "num":         { "$type": "typography", "$value": { "fontFamily": "IBM Plex Mono", "fontWeight": 400, "fontSize": "13px", "letterSpacing": "-0.013em" } },
-    "num-lg":      { "$type": "typography", "$value": { "fontFamily": "IBM Plex Mono", "fontWeight": 400, "fontSize": "30px", "lineHeight": "1.1", "letterSpacing": "-0.022em" } }
+    "$description": "Two faces, and the split is load-bearing: Schibsted Grotesk carries UI and prose, JetBrains Mono carries numbers, tickers, timestamps and code. Mono NEVER sets body copy, buttons or questions. Unlike the previous system this one bolds — card titles are 700. Uppercase mono labels take POSITIVE tracking, the opposite of headings.",
+    "family-sans": { "$type": "fontFamily", "$value": "Schibsted Grotesk" },
+    "family-mono": { "$type": "fontFamily", "$value": "JetBrains Mono" },
+    "hero":       { "$type": "typography", "$value": { "fontFamily": "Schibsted Grotesk", "fontWeight": 700, "fontSize": "82px", "lineHeight": "0.95", "letterSpacing": "-3.5px" } },
+    "display-lg": { "$type": "typography", "$value": { "fontFamily": "Schibsted Grotesk", "fontWeight": 700, "fontSize": "40px", "lineHeight": "1.05", "letterSpacing": "-0.03em" } },
+    "display":    { "$type": "typography", "$value": { "fontFamily": "Schibsted Grotesk", "fontWeight": 600, "fontSize": "26px", "lineHeight": "1.2", "letterSpacing": "-0.5px" } },
+    "title":      { "$type": "typography", "$value": { "fontFamily": "Schibsted Grotesk", "fontWeight": 600, "fontSize": "20px", "lineHeight": "1.3", "letterSpacing": "-0.015em" } },
+    "heading":    { "$type": "typography", "$value": { "fontFamily": "Schibsted Grotesk", "fontWeight": 700, "fontSize": "17px", "lineHeight": "1.35", "letterSpacing": "-0.010em" } },
+    "subhead":    { "$type": "typography", "$value": { "fontFamily": "Schibsted Grotesk", "fontWeight": 600, "fontSize": "15px", "lineHeight": "1.4", "letterSpacing": "-0.008em" } },
+    "body":       { "$type": "typography", "$value": { "fontFamily": "Schibsted Grotesk", "fontWeight": 400, "fontSize": "15.5px", "lineHeight": "1.65" } },
+    "body-sm":    { "$type": "typography", "$value": { "fontFamily": "Schibsted Grotesk", "fontWeight": 400, "fontSize": "13.5px", "lineHeight": "1.6" } },
+    "caption":    { "$type": "typography", "$value": { "fontFamily": "Schibsted Grotesk", "fontWeight": 400, "fontSize": "12.5px", "lineHeight": "1.45" } },
+    "eyebrow":    { "$type": "typography", "$value": { "fontFamily": "JetBrains Mono", "fontWeight": 500, "fontSize": "12px", "lineHeight": "1.4", "letterSpacing": "0.10em", "textCase": "uppercase" } },
+    "num":        { "$type": "typography", "$value": { "fontFamily": "JetBrains Mono", "fontWeight": 400, "fontSize": "14px" } },
+    "num-lg":     { "$type": "typography", "$value": { "fontFamily": "JetBrains Mono", "fontWeight": 700, "fontSize": "34px", "lineHeight": "1.1", "letterSpacing": "-0.02em" } }
   },
   "shadow": {
-    "$description": "Borders do the work shadows usually would. Only two real shadows exist, plus the inset stack the reference reserves for the lime CTA.",
-    "card-drop":   { "$type": "shadow", "$value": "rgba(0,0,0,0.4) 0px 2px 4px 0px" },
-    "card-ring":   { "$type": "shadow", "$value": "rgb(35,37,42) 0px 0px 0px 1px inset" },
-    "overlay":     { "$type": "shadow", "$value": "rgba(8,9,10,0.6) 0px 4px 32px 0px" }
+    "$description": "This system uses real shadows — three of them, each with one job.",
+    "accent-hover":  { "$type": "shadow", "$value": "0 6px 18px rgba(70,167,88,0.3)", "$description": "The green lift under a hovered primary button" },
+    "floating-chip": { "$type": "shadow", "$value": "0 18px 40px rgba(0,0,0,0.55)", "$description": "The chip overlapping the hero card's corner" },
+    "hero-card":     { "$type": "shadow", "$value": "0 30px 70px rgba(0,0,0,0.5)" }
+  },
+  "motion": {
+    "$description": "Named keyframes defined in src/ui/global.css. All are disabled under prefers-reduced-motion except the fade-ups, which become instant opacity.",
+    "marquee": { "$type": "duration", "$value": "28s", "$description": "Ticker tape, translateX(0 → -50%), linear infinite, content duplicated" },
+    "fadeup":  { "$type": "duration", "$value": "0.7s", "$description": "opacity 0 + translateY(16px) → settled, ease-out, both" },
+    "pulse":   { "$type": "duration", "$value": "1.1s", "$description": "Live dots and carets — opacity 1 → 0.35 → 1; carets use steps(1)" },
+    "draw":    { "$type": "duration", "$value": "2.4s", "$description": "Chart polylines, stroke-dashoffset 1400 → 0, ease-out" },
+    "sheen":   { "$type": "duration", "$value": "3.5s", "$description": "Primary buttons, background-position -200% → 200%, linear infinite" },
+    "bob":     { "$type": "duration", "$value": "6s", "$description": "Floating alert chip, translateY(0 → -5px)" },
+    "bars":    { "$type": "duration", "$value": "0.9s", "$description": "On-air waveform, scaleY(0.4 → 1), 0.15s stagger" },
+    "state":   { "$type": "duration", "$value": "200ms", "$description": "Hover and state transitions; buttons lift 2px, cards 4–6px" }
   }
 }
