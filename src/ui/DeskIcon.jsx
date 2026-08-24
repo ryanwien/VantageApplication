@@ -71,6 +71,87 @@ export default function DeskIcon({ name, size = 18 }) {
           <circle cx="12" cy="12" r="2.5" />
         </svg>
       );
+    // ---- navigation and menus ----
+    // These replace box-drawing characters — ◈ ▤ ▧ ◧ ▦ for the five nav
+    // destinations, ◆ and ⚙ in the account menu. At 13px on a dark bar those
+    // are five slightly different grey rectangles: they occupy the space an
+    // icon would and carry none of the meaning, which is worse than no icon
+    // at all, because the eye stops to read them.
+
+    // The product is a broadcast desk, so the desk is a signal: a source with
+    // two pairs of arcs coming off it. Not a monitor — every other mark in
+    // this set that could be a monitor already is one.
+    case "desk":
+      return (
+        <svg {...p}>
+          <circle cx="12" cy="12" r="2.2" />
+          <path d="M7.9 8.1a5.6 5.6 0 0 0 0 7.8M16.1 8.1a5.6 5.6 0 0 1 0 7.8" />
+          <path d="M5 5.2a9.8 9.8 0 0 0 0 13.6M19 5.2a9.8 9.8 0 0 1 0 13.6" />
+        </svg>
+      );
+    case "plan":
+      return (
+        <svg {...p}>
+          <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+          <path d="M2.5 10h19M6.5 14.8h4" />
+        </svg>
+      );
+    case "sheet":
+      return (
+        <svg {...p}>
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M3 9.4h18M3 14.8h18M9.6 9.4V20" />
+        </svg>
+      );
+    case "deck":
+      return (
+        <svg {...p}>
+          <rect x="3" y="4" width="18" height="11" rx="2" />
+          <path d="M12 15v3.2M8.4 20.6 12 18.2l3.6 2.4" />
+        </svg>
+      );
+    case "pen":
+      return (
+        <svg {...p}>
+          <path d="M16.6 3.6a2.1 2.1 0 0 1 3 3L8 18.2l-4 1 1-4L16.6 3.6Z" />
+          <path d="M14.6 5.6l3 3" />
+        </svg>
+      );
+    case "download":
+      return (
+        <svg {...p}>
+          <path d="M12 3.6v10.8M7.6 10.6 12 15l4.4-4.4" />
+          <path d="M4 16.8v2.2a1.4 1.4 0 0 0 1.4 1.4h13.2a1.4 1.4 0 0 0 1.4-1.4v-2.2" />
+        </svg>
+      );
+    case "headphones":
+      return (
+        <svg {...p}>
+          <path d="M4.2 14.6v-2.4a7.8 7.8 0 0 1 15.6 0v2.4" />
+          <rect x="2.4" y="13.6" width="4.4" height="7" rx="2.2" />
+          <rect x="17.2" y="13.6" width="4.4" height="7" rx="2.2" />
+        </svg>
+      );
+    case "music":
+      return (
+        <svg {...p}>
+          <path d="M9 17.6V5.6l10-2v12" />
+          <circle cx="6.5" cy="17.6" r="2.5" />
+          <circle cx="16.5" cy="15.6" r="2.5" />
+        </svg>
+      );
+    case "check":
+      return <svg {...p}><path d="M4.5 12.4 9.4 17.3 19.5 6.7" /></svg>;
+    // A door with an arrow leaving it, not a power symbol. ⏻ means "turn the
+    // machine off", which is a bigger promise than this button keeps.
+    case "signout":
+      return (
+        <svg {...p}>
+          <path d="M14.5 4.5H6.2A1.7 1.7 0 0 0 4.5 6.2v11.6a1.7 1.7 0 0 0 1.7 1.7h8.3" />
+          <path d="M15 15.5 19.5 12 15 8.5M19.5 12h-9" />
+        </svg>
+      );
+
     // ---- getting started ----
     // The handoff's welcome screen sets these as Unicode in mono tiles (▶, ⚙)
     // and as numbers ("01", "6"). Its README says of exactly that: "If the

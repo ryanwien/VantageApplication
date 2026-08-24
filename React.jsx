@@ -525,6 +525,9 @@ const I18N = {
     "What each key does and where to get it.": "Qué hace cada clave y dónde conseguirla.",
     "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "Tu mesa de mercados con IA: un presentador animado que hace gráficos, responde en voz alta, lee las noticias e incluso pone tráilers. Elige cómo quieres aprenderla:",
     "games": "juegos",
+    // --- settings: the plain-language sidebar ---
+    "write analyst report": "escribir informe de analista",
+    "writing…": "escribiendo…",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -939,6 +942,9 @@ const I18N = {
     "What each key does and where to get it.": "Ce que fait chaque clé et où l'obtenir.",
     "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "Votre desk de marché IA — un présentateur animé qui trace des graphiques, répond à voix haute, lit les actualités et passe même des bandes-annonces. Choisissez comment l'apprendre :",
     "games": "jeux",
+    // --- settings: the plain-language sidebar ---
+    "write analyst report": "rédiger une note d'analyste",
+    "writing…": "rédaction…",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -1353,6 +1359,9 @@ const I18N = {
     "What each key does and where to get it.": "Was jeder Schlüssel tut und wo du ihn bekommst.",
     "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "Dein KI-Marktdesk — ein animierter Moderator, der Charts zeichnet, laut antwortet, die Nachrichten liest und sogar Trailer abspielt. Wähle, wie du es lernen willst:",
     "games": "Spiele",
+    // --- settings: the plain-language sidebar ---
+    "write analyst report": "Analystenbericht schreiben",
+    "writing…": "wird geschrieben…",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1766,6 +1775,9 @@ const I18N = {
     "What each key does and where to get it.": "O que faz cada chave e onde a obter.",
     "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "A tua mesa de mercados com IA — um pivô animado que faz gráficos, responde em voz alta, lê as notícias e até passa trailers. Escolhe como queres aprender:",
     "games": "jogos",
+    // --- settings: the plain-language sidebar ---
+    "write analyst report": "escrever relatório de analista",
+    "writing…": "a escrever…",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -2179,6 +2191,9 @@ const I18N = {
     "What each key does and where to get it.": "Cosa fa ogni chiave e dove ottenerla.",
     "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "La tua postazione di mercato con IA — un conduttore animato che traccia grafici, risponde ad alta voce, legge le notizie e manda pure i trailer. Scegli come impararla:",
     "games": "giochi",
+    // --- settings: the plain-language sidebar ---
+    "write analyst report": "scrivi un report da analista",
+    "writing…": "in scrittura…",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -9644,11 +9659,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const NAV_SECTIONS = useMemo(() => [
     // Labels go through t(); `keywords` stay English on purpose — they are
     // palette search terms, not display text.
-    { id: "desk", label: t("Desk"), icon: "◈", anchor: "sec-desk", keywords: ["ai", "anchor", "broadcast", "assistant", "chat"] },
-    { id: "watchlist", label: t("Markets"), icon: "▤", anchor: "sec-watchlist", panel: "watchlist", keywords: ["chart", "symbols", "quotes", "tape"] },
-    { id: "news", label: t("News"), icon: "▧", anchor: "sec-news", panel: "news", keywords: ["headlines", "video", "coverage", "stories"] },
-    { id: "portfolio", label: t("Portfolio"), icon: "◧", anchor: "sec-portfolio", panel: "portfolio", keywords: ["positions", "holdings", "pnl", "gains"] },
-    { id: "calendar", label: t("Calendar"), icon: "▦", anchor: "app-calendar-panel", panel: "calendar", keywords: ["events", "earnings", "schedule"] },
+    // `icon` is a DeskIcon name. These were ◈ ▤ ▧ ◧ ▦ — box-drawing
+    // characters standing in for icons, which at nav size are five slightly
+    // different grey rectangles.
+    { id: "desk", label: t("Desk"), icon: "desk", anchor: "sec-desk", keywords: ["ai", "anchor", "broadcast", "assistant", "chat"] },
+    { id: "watchlist", label: t("Markets"), icon: "chart", anchor: "sec-watchlist", panel: "watchlist", keywords: ["chart", "symbols", "quotes", "tape"] },
+    { id: "news", label: t("News"), icon: "news", anchor: "sec-news", panel: "news", keywords: ["headlines", "video", "coverage", "stories"] },
+    { id: "portfolio", label: t("Portfolio"), icon: "portfolio", anchor: "sec-portfolio", panel: "portfolio", keywords: ["positions", "holdings", "pnl", "gains"] },
+    { id: "calendar", label: t("Calendar"), icon: "calendar", anchor: "app-calendar-panel", panel: "calendar", keywords: ["events", "earnings", "schedule"] },
   ], [t]);
 
   const [activeSection, setActiveSection] = useState("desk");
@@ -9865,23 +9883,29 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
   // Extra palette entries beyond the nav destinations, which AppShell adds itself.
   const shellCommands = useMemo(() => [
-    { id: "cmd:settings", label: "Open settings", icon: "⚙", group: "Action", keywords: ["keys", "api", "preferences", "config"], run: () => { setSettingsTab("quick"); setShowSettings(true); } },
-    { id: "cmd:account", label: "Account & plan", icon: "◆", group: "Action", keywords: ["billing", "subscription", "upgrade"], run: () => { setSettingsTab("account"); setShowSettings(true); } },
-    { id: "cmd:news", label: `Load news for ${selected}`, icon: "📰", group: "Action", keywords: ["headlines", "search"], run: () => { setPanels(p => ({ ...p, news: true })); fetchNews(); } },
-    { id: "cmd:export-xlsx", label: "Export to Excel", icon: "📊", group: "Export", keywords: ["xlsx", "spreadsheet", "download"], run: () => openExportPreview("xlsx") },
-    { id: "cmd:export-docx", label: "Export to Word", icon: "📄", group: "Export", keywords: ["docx", "document", "download"], run: () => openExportPreview("docx") },
-    { id: "cmd:export-pptx", label: "Export to PowerPoint", icon: "📽", group: "Export", keywords: ["pptx", "slides", "deck", "download"], run: () => openExportPreview("pptx") },
+    // Icons are DeskIcon names. This list mixed emoji with box-drawing
+    // characters (⚙ ◆ 📰 📊 📄 📽 ◻ ◼ ▲) in one column, which is the worst
+    // case for a palette: the column exists to be scanned, and half of it was
+    // rendering at a different size, in a colour it chose for itself.
+    { id: "cmd:settings", label: "Open settings", icon: "settings", group: "Action", keywords: ["keys", "api", "preferences", "config"], run: () => { setSettingsTab("quick"); setShowSettings(true); } },
+    { id: "cmd:account", label: "Account & plan", icon: "plan", group: "Action", keywords: ["billing", "subscription", "upgrade"], run: () => { setSettingsTab("account"); setShowSettings(true); } },
+    { id: "cmd:news", label: `Load news for ${selected}`, icon: "news", group: "Action", keywords: ["headlines", "search"], run: () => { setPanels(p => ({ ...p, news: true })); fetchNews(); } },
+    { id: "cmd:export-xlsx", label: "Export to Excel", icon: "sheet", group: "Export", keywords: ["xlsx", "spreadsheet", "download"], run: () => openExportPreview("xlsx") },
+    { id: "cmd:export-docx", label: "Export to Word", icon: "report", group: "Export", keywords: ["docx", "document", "download"], run: () => openExportPreview("docx") },
+    { id: "cmd:export-pptx", label: "Export to PowerPoint", icon: "deck", group: "Export", keywords: ["pptx", "slides", "deck", "download"], run: () => openExportPreview("pptx") },
     ...PANEL_DEFS.map(({ key: k, inline }) => ({
       id: `panel:${k}`,
       label: `${panels[k] ? "Hide" : "Show"} ${inline}`,
-      icon: panels[k] ? "◻" : "◼",
+      // A tick when it is on, nothing when it is off. ◻ / ◼ were the wrong way
+      // round — the FILLED square sat against "Show", the state you are not in.
+      icon: panels[k] ? "check" : undefined,
       group: "Panel",
       keywords: ["panel", "toggle", "layout", "show", "hide"],
       run: () => setPanels(p => ({ ...p, [k]: !p[k] })),
     })),
     // Every watchlist symbol is reachable by name from the palette.
     ...watchlist.map(sym => ({
-      id: `sym:${sym}`, label: sym, icon: "▲", group: "Symbol",
+      id: `sym:${sym}`, label: sym, icon: "chart", group: "Symbol",
       keywords: ["chart", "quote", "stock"],
       run: () => { setSelected(sym); navigateSection(NAV_SECTIONS[1]); },
     })),
@@ -10625,19 +10649,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 <button id="tour-export" onClick={() => { setShowExportMenu(v => !v); setShowMoreMenu(false); }} aria-label="Export a document"
                   title="Export as Excel, Word, or PowerPoint"
                   style={deskBtn(showExportMenu)} {...deskBtnHover(showExportMenu)}>
-                  ⬇ {t("Export")} ▾
+                  <DeskIcon name="download" size={15} /> {t("Export")} <span aria-hidden="true">▾</span>
                 </button>
                 {showExportMenu && (
                   <div className="v-rise" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", minWidth: 150, overflow: "hidden" }}>
                     {exportMsg && <div style={{ fontFamily: MONO, fontSize: 12, color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted, padding: "6px 10px", borderBottom: `1px solid ${C.panelEdge}` }}>{exportMsg}</div>}
-                    {[["xlsx", "📊 Excel (.xlsx)"], ["docx", "📄 Word (.docx)"], ["pptx", "📽 PowerPoint (.pptx)"]].map(([fmt, label]) => (
-                      <button key={fmt} onClick={() => { setShowExportMenu(false); openExportPreview(fmt); }}
-                        style={{ textAlign: "left", background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 11, padding: "8px 12px", cursor: "pointer" }}
-                        onMouseEnter={e => e.currentTarget.style.background = C.surfaceRaised} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{label}</button>
+                    {[["xlsx", "sheet", "Excel (.xlsx)"], ["docx", "report", "Word (.docx)"], ["pptx", "deck", "PowerPoint (.pptx)"]].map(([fmt, mark, label]) => (
+                      <button key={fmt} onClick={() => { setShowExportMenu(false); openExportPreview(fmt); }} className="v-row"
+                        style={{ display: "flex", alignItems: "center", gap: 9, textAlign: "left", background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 12.5, padding: "9px 12px", cursor: "pointer" }}>
+                        <span aria-hidden="true" style={{ color: C.faint, display: "grid", placeItems: "center" }}><DeskIcon name={mark} size={16} /></span>{label}
+                      </button>
                     ))}
-                    <button onClick={() => { setShowExportMenu(false); generateWrittenReport(); }} disabled={reportBusy}
-                      style={{ textAlign: "left", background: "transparent", borderTop: `1px solid ${C.panelEdge}`, borderLeft: "none", borderRight: "none", borderBottom: "none", color: C.accentText, fontFamily: SANS, fontSize: 11, padding: "8px 12px", cursor: "pointer" }}
-                      onMouseEnter={e => e.currentTarget.style.background = C.surfaceRaised} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>{reportBusy ? "✍ writing…" : "📝 write analyst report"}</button>
+                    <button onClick={() => { setShowExportMenu(false); generateWrittenReport(); }} disabled={reportBusy} className="v-row"
+                      style={{ display: "flex", alignItems: "center", gap: 9, textAlign: "left", background: "transparent", borderTop: `1px solid ${C.edge}`, borderLeft: "none", borderRight: "none", borderBottom: "none", color: C.accentText, fontFamily: SANS, fontSize: 12.5, padding: "9px 12px", cursor: "pointer" }}>
+                      <span aria-hidden="true" className={reportBusy ? "v-pulse" : undefined} style={{ display: "grid", placeItems: "center" }}><DeskIcon name="pen" size={16} /></span>
+                      {reportBusy ? t("writing…") : t("write analyst report")}
+                    </button>
                   </div>
                 )}
               </span>
@@ -10646,19 +10673,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 <button onClick={() => { setShowMoreMenu(v => !v); setShowExportMenu(false); }} aria-label="More — games, ambient sound and music"
                   title="Games, ambient sound and music"
                   style={deskBtn(showMoreMenu || gameOn || ambienceOn || musicOn)} {...deskBtnHover(showMoreMenu || gameOn || ambienceOn || musicOn)}>
-                  ⋯ {t("More")} ▾
+                  {t("More")} <span aria-hidden="true">▾</span>
                 </button>
                 {showMoreMenu && (
                   <div className="v-rise" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", minWidth: 258, overflow: "hidden" }}>
                     {[
-                      { key: "games", icon: "🎮", label: t("Games"), sub: t("learn how stocks work"), active: gameOn, onClick: () => { setShowMoreMenu(false); gameOn ? closeGame() : openGames(); } },
-                      { key: "ambient", icon: "🎧", label: t("Ambient sound"), sub: t("waves, jungle, space hum…"), active: ambienceOn, onClick: () => setAmbienceOn(v => !v) },
-                      { key: "music", icon: "♪", label: t("Music"), sub: t("background score"), active: musicOn, onClick: () => toggleMusic(!musicOn) },
+                      { key: "games", icon: "games", label: t("Games"), sub: t("learn how stocks work"), active: gameOn, onClick: () => { setShowMoreMenu(false); gameOn ? closeGame() : openGames(); } },
+                      { key: "ambient", icon: "headphones", label: t("Ambient sound"), sub: t("waves, jungle, space hum…"), active: ambienceOn, onClick: () => setAmbienceOn(v => !v) },
+                      { key: "music", icon: "music", label: t("Music"), sub: t("background score"), active: musicOn, onClick: () => toggleMusic(!musicOn) },
                     ].map((it, idx) => (
                       <button key={it.key} onClick={it.onClick} aria-pressed={it.active}
                         style={{ display: "flex", alignItems: "center", gap: 10, textAlign: "left", background: "transparent", border: "none", borderBottom: idx < 2 ? `1px solid ${C.panelEdge}` : "none", color: C.text, fontFamily: SANS, fontSize: 11, padding: "9px 12px", cursor: "pointer" }}
                         onMouseEnter={e => e.currentTarget.style.background = C.surfaceRaised} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                        <span style={{ fontSize: 13, width: 16, textAlign: "center" }}>{it.icon}</span>
+                        <span aria-hidden="true" style={{ display: "grid", placeItems: "center", color: it.active ? C.accentText : C.faint }}><DeskIcon name={it.icon} size={17} /></span>
                         <span style={{ flex: 1 }}>
                           <span style={{ display: "block", fontSize: 12, color: it.active ? C.accentText : C.text }}>{it.label}</span>
                           <span style={{ display: "block", fontSize: 11, color: C.faint, marginTop: 1 }}>{it.sub}</span>

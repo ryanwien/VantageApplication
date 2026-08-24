@@ -23,6 +23,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { C, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, button, chip } from "./theme.js";
 import VantageMark from "./VantageMark.jsx";
+// `icon` on a nav section, a command or a menu item is a DeskIcon NAME, not a
+// glyph. It used to be a box-drawing character (◈ ▤ ▧ ◧ ▦ ◆ ⚙) rendered as
+// text, which at 13px on a dark bar is five slightly different grey
+// rectangles — the cost of an icon with none of the benefit.
+import DeskIcon from "./DeskIcon.jsx";
 
 const HEADER_H = 56;
 
@@ -101,7 +106,11 @@ function NavItem({ item, active, onSelect }) {
         transition: `color ${MOTION.fast} ${MOTION.ease}, background ${MOTION.fast} ${MOTION.ease}`,
       }}
     >
-      {item.icon && <span aria-hidden="true" style={{ fontSize: 13, opacity: active ? 1 : 0.75 }}>{item.icon}</span>}
+      {item.icon && (
+        <span aria-hidden="true" style={{ display: "grid", placeItems: "center", opacity: active ? 1 : 0.75 }}>
+          <DeskIcon name={item.icon} size={16} />
+        </span>
+      )}
       {item.label}
       {item.badge ? (
         <span style={{
@@ -183,19 +192,19 @@ function AccountMenu({ account, plan, onSignIn, onSignOut, onOpenSettings, onOpe
             </div>
           </div>
           {[
-            { label: "Plans & billing", icon: "◆", onClick: onOpenPlans },
-            { label: "Settings", icon: "⚙", onClick: onOpenSettings },
+            { label: "Plans & billing", icon: "plan", onClick: onOpenPlans },
+            { label: "Settings", icon: "settings", onClick: onOpenSettings },
           ].filter(i => i.onClick).map(i => (
             <button key={i.label} role="menuitem" className="v-row"
               onClick={() => { setOpen(false); i.onClick(); }}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", background: "transparent", border: "none", color: C.muted, fontFamily: SANS, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
-              <span aria-hidden="true" style={{ width: 14, color: C.faint }}>{i.icon}</span>{i.label}
+              <span aria-hidden="true" style={{ display: "grid", placeItems: "center", color: C.faint }}><DeskIcon name={i.icon} size={16} /></span>{i.label}
             </button>
           ))}
           <button role="menuitem" className="v-row"
             onClick={() => { setOpen(false); onSignOut?.(); }}
             style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", background: "transparent", border: "none", borderTop: `1px solid ${C.edge}`, color: C.down, fontFamily: SANS, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
-            <span aria-hidden="true" style={{ width: 14 }}>⏻</span>Sign out
+            <span aria-hidden="true" style={{ display: "grid", placeItems: "center" }}><DeskIcon name="signout" size={16} /></span>Sign out
           </button>
         </div>
       )}
@@ -324,7 +333,9 @@ export function CommandPalette({ open, onClose, commands = [], fallback, placeho
                 fontFamily: SANS, fontSize: 14,
               }}
             >
-              <span aria-hidden="true" style={{ width: 18, textAlign: "center", color: i === cursor ? C.accentText : C.faint }}>{cmd.icon || "›"}</span>
+              <span aria-hidden="true" style={{ width: 18, display: "grid", placeItems: "center", color: i === cursor ? C.accentText : C.faint }}>
+                {cmd.icon ? <DeskIcon name={cmd.icon} size={16} /> : "›"}
+              </span>
               <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cmd.label}</span>
               {cmd.group && <span style={{ ...TYPE.eyebrowSm, color: C.faint }}>{cmd.group}</span>}
             </button>
@@ -496,7 +507,7 @@ export default function AppShell({
                 color: s.id === activeSection ? C.text : C.muted,
                 fontFamily: SANS, fontSize: 14, fontWeight: s.id === activeSection ? 600 : 500,
               }}>
-              <span aria-hidden="true" style={{ width: 18, textAlign: "center" }}>{s.icon}</span>
+              <span aria-hidden="true" style={{ width: 18, display: "grid", placeItems: "center" }}><DeskIcon name={s.icon} size={17} /></span>
               {s.label}
             </button>
           ))}
