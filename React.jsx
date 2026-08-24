@@ -7746,18 +7746,35 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     // preferring a stored key is how a stale one silently kept calling the
     // provider direct while the UI claimed otherwise.
     const viaServer = m.id === "openrouter"; // OpenRouter rides the server's key, always
-    const r = await fetch(viaServer ? "/api/ai/chat" : `${m.baseUrl.replace(/\/$/, "")}/chat/completions`, {
-      method: "POST", signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...(viaServer ? authHdr : (m.apiKey ? { Authorization: `Bearer ${m.apiKey}` } : {})),
-      },
-      body: JSON.stringify({ model: m.model, stream: true, messages: [...history, { role: "user", content: prompt }] }),
-    });
+    const url = viaServer ? "/api/ai/chat" : `${m.baseUrl.replace(/\/$/, "")}/chat/completions`;
+    // "OpenRouter is temporarily unavailable" is the wrong sentence when the
+    // thing that is unavailable is this app's OWN backend. fetch throws on an
+    // unreachable host, and the dev proxy answers 500 with a non-JSON body when
+    // nothing is listening on 8787 — both used to arrive as a 5xx and get
+    // blamed on the provider, sending people to check a status page that was
+    // green the whole time.
+    const UNREACHABLE = "the Vantage server isn't answering — start it with: npm run server";
+    let r;
+    try {
+      r = await fetch(url, {
+        method: "POST", signal,
+        headers: {
+          "Content-Type": "application/json",
+          ...(viaServer ? authHdr : (m.apiKey ? { Authorization: `Bearer ${m.apiKey}` } : {})),
+        },
+        body: JSON.stringify({ model: m.model, stream: true, messages: [...history, { role: "user", content: prompt }] }),
+      });
+    } catch (e) {
+      if (e?.name === "AbortError") throw e;               // the user pressed stop
+      throw new Error(viaServer ? UNREACHABLE : `can't reach ${m.baseUrl} — is it running, with CORS enabled?`);
+    }
     if (!r.ok) {
       // the provider (OpenRouter/OpenAI/LM Studio) puts the real reason in the JSON body — surface it
       let detail = "";
       try { const j = await r.json(); detail = j?.error?.message || (typeof j?.error === "string" ? j.error : "") || j?.message || ""; } catch { /* no body */ }
+      // A 5xx from our own path with nothing to say for itself is the proxy
+      // failing to connect, not the model vendor having an outage.
+      if (viaServer && !detail && r.status >= 500) throw new Error(UNREACHABLE);
       const hint = r.status === 401 ? "check the API key"
         : r.status === 404 ? `model "${m.model}" not found — check the MODEL id (and BASE URL)`
         : r.status === 402 ? "out of credits/tokens — top up this provider or switch models"
@@ -8686,7 +8703,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             });
             return;
           }
-          errors.push(`${m.label}: ${friendly(m, e)}`);
+          {
+            const why = friendly(m, e);
+            // Do not put a provider's name in front of a fault that is ours.
+            // "OpenRouter: the Vantage server isn't answering" reads as though
+            // OpenRouter said it, and sends people to check a status page that
+            // was green the whole time.
+            errors.push(/Vantage server isn't answering/.test(why) ? why : `${m.label}: ${why}`);
+          }
           setResp("desk", { status: "running", text: "", ms: null, via: null, tried: errors.slice() }); // reset for the next model
         }
       }
