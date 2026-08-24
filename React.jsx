@@ -3225,6 +3225,15 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       crewLook: 0, crewNextLook: 3500 + Math.random() * 4000,
       lastCueId: propsRef.current.cue?.id ?? null, cueMeal: null, cueLabel: null,
       busyAmt: 0, // eases 0→1 while a sustained work/present pose is active (its own driver, not the action envelope)
+      // Breathing. Random start phase so two anchors on one screen — the
+      // presenter and a crew member — never inhale in lockstep.
+      breathPhase: Math.random(),
+      // Gaze. `fixate` counts down to the next saccade; sac* describe the
+      // saccade in flight. Eyes hold still between them, which is the point.
+      fixate: 300 + Math.random() * 900,
+      sacT: 0, sacDur: 1, sacFromX: 0, sacFromY: 0,
+      headFollow: 0,   // eased, lagging copy of gazeX — the head trailing the eyes
+      idleBrowIn: 3000 + Math.random() * 5000, // countdown to a small idle brow lift
     };
 
     const startAction = (type, t) => { s.action = type; s.actionStart = t; };
@@ -3574,13 +3583,55 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       if (busy === "work") eyeOpen *= 1 - s.busyAmt * 0.28;    // narrowed, focused on the numbers
       // brow emphasis beats while speaking — occasional, and EASED so brows glide (no twitching)
       if (TK && !reduced && Math.random() < 0.005) s.browTarget = 1;
+      // A face that only moves its brows while it is talking is a face that
+      // switches off the moment it stops. This is the same beat, rarer and
+      // smaller, for the silences: something crossed its mind.
+      if (!TK && !reduced) {
+        s.idleBrowIn -= dt;
+        if (s.idleBrowIn <= 0) {
+          s.browTarget = 0.55;
+          s.idleBrowIn = 5000 + Math.random() * 9000;
+        }
+      }
       s.browTarget = Math.max(0, s.browTarget - dt / 550);
       s.browPulse += (s.browTarget - s.browPulse) * Math.min(1, dt / 140);
 
-      // --- gaze: occasional saccade to a new target, then ease the eyes there (no instant snapping) ---
-      if (Math.random() < 0.004) { s.gazeTX = (Math.random() - 0.6) * 2.2; s.gazeTY = (Math.random() - 0.5) * 1.1; }
-      s.gazeX += (s.gazeTX - s.gazeX) * Math.min(1, dt / 85);
-      s.gazeY += (s.gazeTY - s.gazeY) * Math.min(1, dt / 85);
+      // --- gaze: fixate, then move ballistically ---
+      // The eyes used to ease continuously toward a target that changed at
+      // random, so they were ALWAYS moving and never arrived — which reads as
+      // drifting rather than looking, and is the single strongest "nobody is
+      // home" tell an animated face has.
+      //
+      // A real eye is still, then moves in 30-80ms, then is still again. The
+      // stillness is the part that does the work: it is what makes each move
+      // look like a decision instead of a wobble. So this fixates for a dwell,
+      // then covers the whole distance on a decelerating curve, then holds.
+      s.fixate -= dt;
+      if (s.fixate <= 0) {
+        const far = Math.random() < 0.28;                  // an occasional proper look away
+        s.sacFromX = s.gazeX; s.sacFromY = s.gazeY;
+        s.gazeTX = (Math.random() - 0.6) * (far ? 3.2 : 1.4);
+        s.gazeTY = (Math.random() - 0.5) * (far ? 1.5 : 0.6);
+        s.sacT = 0;
+        s.sacDur = far ? 70 : 38;
+        // People blink on a large gaze shift. Free realism — the blink is
+        // already built, it just never knew the eyes were moving.
+        if (far && s.blink <= 0 && Math.random() < 0.55) { s.blink = 130; s.nextBlink = 2400 + Math.random() * 3200; }
+        // Fixations run short while speaking (the camera, the desk, the
+        // camera) and long while idle.
+        s.fixate = (far ? 700 : 260) + Math.random() * (TK ? 700 : 2400);
+      }
+      if (s.sacT < s.sacDur) {
+        s.sacT += dt;
+        const k = Math.min(1, s.sacT / s.sacDur);
+        const ease = k * (2 - k);                          // decelerating, like the real thing
+        s.gazeX = s.sacFromX + (s.gazeTX - s.sacFromX) * ease;
+        s.gazeY = s.sacFromY + (s.gazeTY - s.sacFromY) * ease;
+      }
+      // The head follows the eyes, late and small. Eyes lead and the head
+      // catches up; doing it the other way round is what makes an animated
+      // face look like a mannequin being turned.
+      s.headFollow += (s.gazeX - s.headFollow) * Math.min(1, dt / 260);
       const gazeY = act === "papers" ? 2.5 * e : s.gazeY;
       const gazeX = act === "papers" ? 0 : s.gazeX;
 
@@ -3604,7 +3655,41 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         act === "break" ? -3 * e :                        // tips back on a break
         busy === "work" ? 5 * s.busyAmt : 0;              // bows over the keyboard, heads-down
 
-      const bob = reduced ? 0 : Math.sin(t / 900) * 2;
+      // --- breathing, weight, and the head riding both ---
+      // The whole figure used to ride one symmetric sine at a fixed rate:
+      // Math.sin(t / 900) * 2, applied identically to the shoulders and the
+      // head. That is a float, not a breath. Everything moved together, by the
+      // same amount, at the same speed, forever — which is exactly what a
+      // bobbing puppet does.
+      //
+      // Three things separate a breath from a float:
+      //  · It is ASYMMETRIC. The draw is quick and the release is slower,
+      //    roughly 40/60. A sine gives them equal time and reads as machinery.
+      //  · The chest travels further than the head, because the neck takes up
+      //    some of it. One amplitude for both is what made it a bob.
+      //  · The RATE is a readout of state. Resting is slow; heads-down on a
+      //    task is faster and shallower; a break is slow and deep.
+      const bpm = act === "break" ? 9 : act === "stretch" ? 8 : busy === "work" ? 20 : TK ? 17 : 13;
+      s.breathPhase = (s.breathPhase + dt / (60000 / bpm)) % 1;
+      const bph = s.breathPhase;
+      const inhale = bph < 0.4
+        ? 0.5 - 0.5 * Math.cos((bph / 0.4) * Math.PI)              // 0→1 over the quick draw
+        : 0.5 + 0.5 * Math.cos(((bph - 0.4) / 0.6) * Math.PI);     // 1→0 over the slower release
+      const depth = act === "break" ? 1.8 : act === "stretch" ? 2.2 : busy === "work" ? 0.65 : 1;
+      // Negative y is up, so the chest RISES on the inhale.
+      const bob = reduced ? 0 : -(inhale - 0.5) * 2.8 * depth;
+      // The chest widens as it fills. Half a pixel, and it is the half that
+      // stops the shoulders reading as a rigid plate sliding up and down.
+      const chest = reduced ? 0 : inhale * 0.9;
+      // A slow lateral weight shift so the pose is never twice the same and
+      // never perfectly centred. Two periods that do not divide into each
+      // other, because one sine is a metronome. Deliberately long: if you can
+      // notice this happening, it is too big.
+      const lean = reduced ? 0 : Math.sin(t / 5200) * 1.4 + Math.sin(t / 2300) * 0.5;
+      // The head rides the breath at a fraction of it — the neck absorbs the
+      // rest — plus a slow drift of its own, so head and chest are never
+      // exactly in phase. That tiny disagreement is most of the effect.
+      const headBob = reduced ? 0 : bob * 0.55 + Math.sin(t / 2600) * 0.6;
       const m = Math.max(-1, Math.min(1, md / 2));
       const moodCol = m > 0.05 ? C.up : m < -0.05 ? C.down : C.amber;
       const surprised = act === "react";
@@ -3616,7 +3701,9 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       ctx.globalAlpha = s.enter;
       ctx.translate(0, (1 - s.enter) * 12);
 
-      const cx = W / 2, cy = 84 + bob;
+      // The head takes headBob, the torso below takes bob. They are different
+      // numbers on purpose — see the breathing block.
+      const cx = W / 2, cy = 84 + headBob;
 
       const glow = ctx.createRadialGradient(cx, cy + 30, 10, cx, cy + 30, 110);
       glow.addColorStop(0, "rgba(255,255,255,0.06)");
@@ -3724,10 +3811,16 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       ctx.beginPath(); ctx.moveTo(0, deskY); ctx.lineTo(W, deskY); ctx.stroke();
 
       // ---- body ----
+      // Wrapped in the weight shift rather than adding `lean` to twenty
+      // coordinates. The arms are drawn after this and stay put: at 1.4px on
+      // an 11px sleeve the join is not visible, and threading the lean through
+      // the prop geometry would move the mug that is sitting on the desk.
+      ctx.save();
+      ctx.translate(lean, 0);
       ctx.fillStyle = ch.suit;
       ctx.beginPath();
-      ctx.moveTo(cx - 52, deskY); ctx.quadraticCurveTo(cx - 50, 128 + bob, cx - 26, 122 + bob);
-      ctx.lineTo(cx + 26, 122 + bob); ctx.quadraticCurveTo(cx + 50, 128 + bob, cx + 52, deskY);
+      ctx.moveTo(cx - 52 - chest, deskY); ctx.quadraticCurveTo(cx - 50 - chest, 128 + bob, cx - 26, 122 + bob);
+      ctx.lineTo(cx + 26, 122 + bob); ctx.quadraticCurveTo(cx + 50 + chest, 128 + bob, cx + 52 + chest, deskY);
       ctx.closePath(); ctx.fill();
 
       if (ch.robot) {
@@ -3760,6 +3853,7 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       ctx.strokeStyle = "rgba(255,255,255,0.10)"; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(cx - 26, 122 + bob); ctx.lineTo(cx - 8, 146 + bob); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(cx + 26, 122 + bob); ctx.lineTo(cx + 8, 146 + bob); ctx.stroke();
+      ctx.restore(); // end weight shift
 
       // ---- arms, hands & props ----
       const skinCol = ch.robot ? "#4A5568" : ch.skin;
@@ -4017,8 +4111,13 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         drawMug(mugRest.x, mugRest.y);
       }
 
-      // ---- head group: tilt + nod + dip applied as one transform ----
+      // ---- head group: weight shift + gaze follow + tilt + nod + dip, as one transform ----
+      // The lateral part is the body's lean plus a fraction of where the eyes
+      // went. headFollow is an EASED copy of gazeX, so the head arrives after
+      // the eyes do — the lag is the whole point, and 0.9px of it is enough to
+      // read at this scale.
       ctx.save();
+      ctx.translate(lean + s.headFollow * 0.9, 0);
       ctx.translate(cx, cy + nod + headDip);
       ctx.rotate(s.tilt);
       ctx.translate(-cx, -(cy + nod + headDip));
