@@ -43,6 +43,7 @@
   --v-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --v-fast: 150ms;
   --v-base-dur: 200ms;
+  --v-slow: 250ms;
 
   color-scheme: dark;
 }
@@ -185,14 +186,20 @@ a:hover { text-decoration: underline; }
 .v-tutrow:hover .v-tuttile { background: var(--v-edge-strong); }
 
 /* ---------- anchor roster ----------
-   The centre face is the anchor on the desk; the two either side are the steps
-   you could take. Size and opacity carry that, so the row reads as one choice
-   with two offers rather than three equal circles with a ring on one.
+   The LEFT face is the anchor on the desk; the two to its right are who you
+   would get next. Size, opacity and colour carry that, so the row reads as one
+   choice followed by two offers rather than three equal circles with a ring on
+   one of them.
 
    The scale lives on an inner span, not on the button: transitioning a
    button's own width would relayout the row on every step, and transform on a
    fixed-size box costs nothing. The button keeps its full 44px hit area at
-   every size — a shoulder is drawn at 80% but is still a 44px target. */
+   every size — a shoulder is drawn at 80% but is still a 44px target.
+
+   The button's OWN transform is left free for the FLIP slide in AnchorRoster,
+   which is why the transition below is declared here rather than inline: the
+   slide clears the inline value to release the face into this easing. */
+.v-anchorstep { transition: transform var(--v-slow) var(--v-ease); }
 .v-anchorface {
   width: 40px; height: 40px; border-radius: 50%;
   display: grid; place-items: center;
@@ -210,21 +217,25 @@ a:hover { text-decoration: underline; }
   opacity: 1;
   border-color: var(--v-accent);
   color: var(--v-text);
-  /* The ring alone is 2px on a 40px circle. The glow is what makes it read as
-     lit rather than merely outlined, at the same cost as a shadow. */
+  /* Filled, not only ringed. A 2px ring on a 40px circle is a detail; the tint
+     is what makes this the green thing in the card, which is what it has to be
+     now that it sits at the left edge and the eye starts there. The glow does
+     the rest at the cost of a shadow. */
+  background: var(--v-accent-glow);
   box-shadow: 0 0 0 4px var(--v-accent-glow);
 }
 /* A shoulder has to answer the pointer — an offer that does not respond does
-   not read as clickable. It comes forward without ever reaching the centre's
-   size, so the hierarchy survives the hover. */
+   not read as clickable. It answers in the colour it is about to become, so
+   the hover previews the pick instead of a generic grey lift, and it comes
+   forward without ever reaching the chosen face's size. */
 .v-anchorstep:hover .v-anchorface {
   transform: scale(0.9); opacity: 1;
-  color: var(--v-text); border-color: var(--v-edge-strong);
-  background: var(--v-edge-strong);
+  color: var(--v-accent-soft); border-color: var(--v-accent);
+  background: var(--v-accent-glow);
 }
 .v-anchorstep:active .v-anchorface { transform: scale(0.82); }
-/* The centre is already chosen, so it acknowledges rather than promises. */
-.v-anchorstep:hover .v-anchorface.is-on { transform: scale(1.05); border-color: var(--v-accent); background: var(--v-surface-raised); }
+/* The chosen face is already chosen, so it acknowledges rather than promises. */
+.v-anchorstep:hover .v-anchorface.is-on { transform: scale(1.05); border-color: var(--v-accent); background: var(--v-accent-glow); }
 .v-anchorstep:active .v-anchorface.is-on { transform: scale(0.96); }
 
 /* Row hover for dense tables (watchlist, movers, positions). */

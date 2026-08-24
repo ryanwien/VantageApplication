@@ -3197,58 +3197,88 @@ function ChessGame({ onCheer, onWin, sfx }) {
 }
 
 // ============================================================
-//  AnchorRoster — previous, current, next, and the step between them.
+//  AnchorRoster — who is on the desk, and who is up next.
 //
 //  A picker that rewrites ALL THREE of its own labels on every click is a hard
-//  thing to read. Clicking the left face swapped the whole row instantly, so
-//  the one fact the control exists to give — which way the roster just moved —
-//  was the fact it threw away.
+//  thing to read. Clicking a face swapped the whole row instantly, so the one
+//  fact the control exists to give — which way the roster just moved — was the
+//  fact it threw away.
 //
-//  Two changes fix that, and both are motion rather than copy:
+//  Two things fix that, and both are motion rather than copy:
 //
-//   1. THE CENTRE IS THE CHOICE. It sits at full size and full opacity; the
-//      shoulders sit back at 80% and 72%. So the row reads as one anchor with
-//      two offers instead of three equal circles with a ring on one. Because
-//      the slots are keyed by POSITION, React keeps each DOM node across a
-//      step — the face you picked grows into the centre while the one you left
-//      shrinks to a shoulder, on a transition it gets for free.
+//   1. THE LEFT SLOT IS THE CHOICE. It sits at full size, ringed and tinted
+//      green; the two to its right sit back at 80% and 72%. So the row reads
+//      left-to-right as "on the desk, then who is next" rather than as three
+//      equal circles with a ring on one of them.
 //
-//   2. THE ROW TRAVELS. A step is worth 12px in the direction the roster
-//      moved, applied with transitions OFF and released on the next frame.
-//      Same trick as the chess board's flying piece: paint the new state where
-//      the old one was, then ease it home. 12px and not a full slot because a
-//      transform does not reserve space — a real slot's worth would swing the
-//      row out over the card's padding on its way back.
+//   2. THE FACES TRAVEL TO THEIR NEW SLOTS. Keyed by character id, so React
+//      keeps each button across a step and each one can be moved on its own:
+//      measure where every face sits, let it re-render wherever it lands, then
+//      paint it back at the old position with transitions OFF and release it.
+//      Standard FLIP, and the same idea as the chess board's flying piece. The
+//      face you picked slides left into the green slot, lighting up on the way
+//      in. The anchor it replaces has left the window entirely, so it does not
+//      slide anywhere — it goes, and the rest close up over it.
+//
+//  The two offers are the NEXT two anchors, not one either side. That is the
+//  cost of putting the current one on the left: there is no backwards step
+//  from here, only forwards around the ring. The full roster — where you can
+//  jump straight to anyone — is one click away under Voice & settings.
+//
+//  Memoized because the desk card re-renders on every tape tick, and the FLIP
+//  measurement reads offsetLeft, which flushes layout. Nothing here depends on
+//  a price.
 // ============================================================
-function AnchorRoster({ characterId, onPick }) {
+const AnchorRoster = React.memo(function AnchorRoster({ characterId, onPick }) {
   const { t } = useI18n();
-  const [shift, setShift] = useState(0);   // -1 | 0 | +1 — the offset to ease back from
-  useLayoutEffect(() => {
-    if (!shift) return;
-    const id = requestAnimationFrame(() => setShift(0));
-    return () => cancelAnimationFrame(id);
-  }, [shift]);
+  const nodes = useRef(new Map());   // character id -> its live button
+  const wasAt = useRef(new Map());   // character id -> offsetLeft at the last commit
 
   const i = CHARACTERS.findIndex(c => c.id === characterId);
-  const at = (step) => CHARACTERS[(i + step + CHARACTERS.length) % CHARACTERS.length];
-  // Picking the previous anchor moves every face one slot to the RIGHT, so the
-  // row starts 12px left of where it lands. Picking the next one mirrors that.
-  const pick = (dir, id) => { if (id === characterId) return; setShift(dir); onPick(id); };
+  const row = [0, 1, 2].map(step => CHARACTERS[(i + step + CHARACTERS.length) % CHARACTERS.length]);
+
+  // No dep array on purpose: every commit is a possible reorder, and the early
+  // return costs three reads when it is not one.
+  useLayoutEffect(() => {
+    const now = new Map(), moved = [];
+    for (const [id, el] of nodes.current) {
+      // offsetLeft is the LAYOUT position, which a transform does not move.
+      // That is what lets a face be measured while an earlier slide is still
+      // running: it reports where it belongs, not where it currently looks.
+      const x = el.offsetLeft;
+      now.set(id, x);
+      const before = wasAt.current.get(id);
+      if (before != null && before !== x) moved.push([el, before - x]);
+    }
+    wasAt.current = now;
+    if (!moved.length) return;
+    for (const [el, dx] of moved) { el.style.transition = "none"; el.style.transform = `translateX(${dx}px)`; }
+    // The release has to be a FORCED REFLOW, not a rAF. A layout effect runs
+    // inside the same frame the click was handled in, and rAF callbacks run at
+    // the top of a frame's rendering steps — i.e. still before that frame's
+    // paint. Releasing there means the old position is never actually drawn,
+    // the browser sees one style change instead of two, and the row snaps.
+    // Reading offsetHeight makes the browser adopt the offset right now, so
+    // clearing on the next line is a second, transitionable change.
+    void moved[0][0].offsetHeight;
+    // Cleared rather than assigned: the eased transition lives in the
+    // stylesheet, so an empty inline value falls back onto it.
+    for (const [el] of moved) { el.style.transition = ""; el.style.transform = ""; }
+  });
 
   return (
     <div role="radiogroup" aria-label={t("Anchor")} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-      {[at(-1), at(0), at(1)].map((ch, k) => {
-        const on = k === 1;
+      {row.map((ch, k) => {
+        const on = k === 0;
         return (
-          <button key={k} className="v-tap v-anchorstep" role="radio" aria-checked={on}
-            onClick={() => pick(k === 0 ? -1 : 1, ch.id)}
+          <button key={ch.id} className="v-tap v-anchorstep" role="radio" aria-checked={on}
+            ref={el => { if (el) nodes.current.set(ch.id, el); else nodes.current.delete(ch.id); }}
+            onClick={() => { if (!on) onPick(ch.id); }}
             aria-label={on ? `${ch.name} — ${t("on the desk")}` : `${t("Switch to")} ${ch.name}`}
             title={ch.name}
             style={{
               width: 44, height: 44, padding: 0, flexShrink: 0,
               background: "transparent", border: "none", borderRadius: "50%", cursor: "pointer",
-              transform: shift ? `translateX(${shift * 12}px)` : "none",
-              transition: shift ? "none" : `transform ${MOTION.slow} ${MOTION.ease}`,
             }}>
             <span aria-hidden="true" className={on ? "v-anchorface is-on" : "v-anchorface"}
               style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: on ? 700 : 600 }}>
@@ -3259,7 +3289,7 @@ function AnchorRoster({ characterId, onPick }) {
       })}
     </div>
   );
-}
+});
 
 // ---- DeskAnchor: the animated anchor character, procedural and reactive to props ----
 function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speechRef, crew, env, cue, busy, onAction, onCue, framed }) {
