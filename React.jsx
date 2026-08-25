@@ -45,6 +45,8 @@ import { LESSONS as STOCK_LESSONS } from "./src/games/school.js";
 import StockSchool from "./src/ui/StockSchool.jsx";
 import TickerMatch from "./src/ui/TickerMatch.jsx";
 import { ROUNDS as TICKER_ROUNDS, answerIndex as tickerAnswer, award as tickerAward } from "./src/games/ticker.js";
+import BullOrBear from "./src/ui/BullOrBear.jsx";
+import { ROUNDS as BULLBEAR_ROUNDS, isRight as bbRight, award as bbAward } from "./src/games/bullbear.js";
 import Waveform from "./src/ui/Waveform.jsx";
 import VantageMark from "./src/ui/VantageMark.jsx";
 import DeskIcon from "./src/ui/DeskIcon.jsx";
@@ -783,6 +785,26 @@ const I18N = {
     "{a} of {b} symbols matched.": "{a} de {b} símbolos acertados.",
     // --- settings: the plain-language sidebar ---
     "not this company's symbol": "no es el símbolo de esta empresa",
+    // --- settings: the plain-language sidebar ---
+    "CALLED IT": "ACERTASTE",
+    "WRONG CALL": "FALLASTE",
+    "CALLED RIGHT": "ACIERTOS",
+    "THE TAPE": "LA CINTA",
+    "example": "ejemplo",
+    "Last close": "Cierre anterior",
+    "the tape stops at the headline": "la cinta se detiene en el titular",
+    "it gapped up at the bell": "abrió con hueco al alza",
+    "it gapped down at the bell": "abrió con hueco a la baja",
+    "Bullish": "Alcista",
+    "Bearish": "Bajista",
+    "the price goes up": "el precio sube",
+    "the price goes down": "el precio baja",
+    "key": "tecla",
+    "your call · correct": "tu apuesta · correcta",
+    "your call · wrong": "tu apuesta · fallada",
+    "the answer": "la respuesta",
+    "Call it inside {n} seconds for a speed bonus": "Decídelo en menos de {n} segundos para un bonus de rapidez",
+    "{a} of {b} calls right.": "{a} de {b} aciertos.",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -1428,6 +1450,26 @@ const I18N = {
     "{a} of {b} symbols matched.": "{a} symboles sur {b} trouvés.",
     // --- settings: the plain-language sidebar ---
     "not this company's symbol": "ce n'est pas le symbole de cette société",
+    // --- settings: the plain-language sidebar ---
+    "CALLED IT": "BIEN VU",
+    "WRONG CALL": "RATÉ",
+    "CALLED RIGHT": "BONNES RÉPONSES",
+    "THE TAPE": "LA BANDE",
+    "example": "exemple",
+    "Last close": "Clôture précédente",
+    "the tape stops at the headline": "la bande s'arrête au titre",
+    "it gapped up at the bell": "il a ouvert en gap haussier",
+    "it gapped down at the bell": "il a ouvert en gap baissier",
+    "Bullish": "Haussier",
+    "Bearish": "Baissier",
+    "the price goes up": "le cours monte",
+    "the price goes down": "le cours baisse",
+    "key": "touche",
+    "your call · correct": "votre pari · correct",
+    "your call · wrong": "votre pari · raté",
+    "the answer": "la réponse",
+    "Call it inside {n} seconds for a speed bonus": "Décidez en moins de {n} secondes pour un bonus de rapidité",
+    "{a} of {b} calls right.": "{a} bons paris sur {b}.",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -2073,6 +2115,26 @@ const I18N = {
     "{a} of {b} symbols matched.": "{a} von {b} Kürzeln erkannt.",
     // --- settings: the plain-language sidebar ---
     "not this company's symbol": "nicht das Kürzel dieses Unternehmens",
+    // --- settings: the plain-language sidebar ---
+    "CALLED IT": "GETROFFEN",
+    "WRONG CALL": "DANEBEN",
+    "CALLED RIGHT": "RICHTIG GETIPPT",
+    "THE TAPE": "DAS BAND",
+    "example": "Beispiel",
+    "Last close": "Letzter Schluss",
+    "the tape stops at the headline": "das Band endet bei der Meldung",
+    "it gapped up at the bell": "es eröffnete mit einer Kurslücke nach oben",
+    "it gapped down at the bell": "es eröffnete mit einer Kurslücke nach unten",
+    "Bullish": "Bullisch",
+    "Bearish": "Bärisch",
+    "the price goes up": "der Kurs steigt",
+    "the price goes down": "der Kurs fällt",
+    "key": "Taste",
+    "your call · correct": "dein Tipp · richtig",
+    "your call · wrong": "dein Tipp · falsch",
+    "the answer": "die Antwort",
+    "Call it inside {n} seconds for a speed bonus": "Entscheide dich in unter {n} Sekunden für einen Tempobonus",
+    "{a} of {b} calls right.": "{a} von {b} richtig getippt.",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -2717,6 +2779,26 @@ const I18N = {
     "{a} of {b} symbols matched.": "{a} de {b} símbolos acertados.",
     // --- settings: the plain-language sidebar ---
     "not this company's symbol": "não é o símbolo desta empresa",
+    // --- settings: the plain-language sidebar ---
+    "CALLED IT": "ACERTASTE",
+    "WRONG CALL": "FALHASTE",
+    "CALLED RIGHT": "ACERTOS",
+    "THE TAPE": "A FITA",
+    "example": "exemplo",
+    "Last close": "Fecho anterior",
+    "the tape stops at the headline": "a fita para na notícia",
+    "it gapped up at the bell": "abriu com gap em alta",
+    "it gapped down at the bell": "abriu com gap em baixa",
+    "Bullish": "Alta",
+    "Bearish": "Baixa",
+    "the price goes up": "o preço sobe",
+    "the price goes down": "o preço desce",
+    "key": "tecla",
+    "your call · correct": "a tua aposta · correta",
+    "your call · wrong": "a tua aposta · errada",
+    "the answer": "a resposta",
+    "Call it inside {n} seconds for a speed bonus": "Decide em menos de {n} segundos para um bónus de rapidez",
+    "{a} of {b} calls right.": "{a} de {b} acertos.",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -3361,6 +3443,26 @@ const I18N = {
     "{a} of {b} symbols matched.": "{a} simboli su {b} indovinati.",
     // --- settings: the plain-language sidebar ---
     "not this company's symbol": "non è il simbolo di questa società",
+    // --- settings: the plain-language sidebar ---
+    "CALLED IT": "INDOVINATO",
+    "WRONG CALL": "SBAGLIATO",
+    "CALLED RIGHT": "AZZECCATE",
+    "THE TAPE": "IL NASTRO",
+    "example": "esempio",
+    "Last close": "Chiusura precedente",
+    "the tape stops at the headline": "il nastro si ferma alla notizia",
+    "it gapped up at the bell": "ha aperto in gap al rialzo",
+    "it gapped down at the bell": "ha aperto in gap al ribasso",
+    "Bullish": "Rialzista",
+    "Bearish": "Ribassista",
+    "the price goes up": "il prezzo sale",
+    "the price goes down": "il prezzo scende",
+    "key": "tasto",
+    "your call · correct": "la tua scelta · corretta",
+    "your call · wrong": "la tua scelta · sbagliata",
+    "the answer": "la risposta",
+    "Call it inside {n} seconds for a speed bonus": "Decidi entro {n} secondi per un bonus velocità",
+    "{a} of {b} calls right.": "{a} scelte giuste su {b}.",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -3899,17 +4001,10 @@ function etNow() {
 // eight instances, and a shape wants a contract — there is a test walking every
 // lesson now, including one that checks the worked examples actually compute.
 
-// Bull or Bear: read a headline, predict which way the stock likely moves. Teaches cause → effect.
-const BULLBEAR_ROUNDS = [
-  { headline: "The company reports quarterly earnings that beat analysts' expectations.", bullish: true, why: "Beating expectations usually pulls buyers in and lifts the stock." },
-  { headline: "A flagship product is recalled over a serious safety defect.", bullish: false, why: "Recalls hurt sales and trust, which tends to push the price down." },
-  { headline: "The board announces a surprise increase to the dividend.", bullish: true, why: "A bigger dividend signals confidence and rewards shareholders." },
-  { headline: "A key executive abruptly resigns amid an accounting investigation.", bullish: false, why: "Leadership turmoil plus accounting worries scares investors off." },
-  { headline: "The firm wins a multi-billion-dollar government contract.", bullish: true, why: "A big new revenue stream is a strong tailwind for the stock." },
-  { headline: "The company slashes its full-year sales forecast.", bullish: false, why: "Lower guidance implies weaker future profits, so shares often fall." },
-  { headline: "The company launches a large share buyback program.", bullish: true, why: "Buybacks shrink the share count and often support the price." },
-  { headline: "A rival ships a cheaper product that undercuts the company's prices.", bullish: false, why: "More competition can steal customers and squeeze profit margins." },
-];
+// Bull or Bear: read a headline, predict which way the stock likely moves.
+// The rounds moved to src/games/bullbear.js when the handoff gave each one a
+// timestamp, a tag, a last close and a tape to plot — none of which belongs to
+// a real company, which is a thing the card now says out loud.
 // Ticker Match: pick the real stock symbol for a well-known company.
 // The rounds moved to src/games/ticker.js when the handoff asked each one for a
 // sector, an exchange, a reason beside every wrong option and a teaching line —
@@ -10488,7 +10583,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     setGameChoice(i); setGamePhase("reveal");
     let correct = false, explain = "";
     if (gameMode === "school") { const R = STOCK_LESSONS[gameStep]; correct = i === R.answer; explain = R.explain; }
-    else if (gameMode === "bullbear") { const R = BULLBEAR_ROUNDS[gameStep]; correct = i === (R.bullish ? 0 : 1); explain = R.why; }
+    else if (gameMode === "bullbear") {
+      const R = BULLBEAR_ROUNDS[gameStep];
+      correct = bbRight(R, i);
+      explain = R.why;
+      setGameAwards(a => [...a, bbAward(correct, secondsLeft)]);
+    }
     else {
       const R = TICKER_ROUNDS[gameStep];
       correct = i != null && i === tickerAnswer(R);
@@ -13084,8 +13184,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // played through, not on a stage above the composer where the host's replies
   // and the host's game ended up in two different columns.
   const gamePanel = gameOn && (() => {
-    const primaryBtn = { background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 600, fontSize: 12, padding: "9px 16px", cursor: "pointer" };
-    const ghostBtn = { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "9px 12px", cursor: "pointer" };
+    // The last two of these went with the generic quiz shell: every game draws
+    // its own controls now, so the panel keeps only the one its own chrome uses.
     const ctlBtn = { background: C.surfaceRaised, border: `1px solid ${C.edge}`, color: C.text, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, lineHeight: 1, padding: "7px 11px", cursor: "pointer" };
     // ONE LIST, ONE NAME PER GAME.
     // The menu card and the header of the game it opens used to be written
@@ -13156,8 +13256,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       );
     }
 
-    // ---- board/card games render their own self-contained components ----
-    const backBtn = <button onClick={() => { setGameMode("menu"); stopSpeak(); }} className="v-gamectl" style={ctlBtn}>← {t("games")}</button>;
+    // ---- every game renders its own self-contained screens ----
     if (gameMode === "cards") {
       // Its own header, like the other two full-size games: this one carries a
       // status pill, the session line and its own reset, none of which the
@@ -13245,74 +13344,33 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       ), true);
     }
 
-    // ---- an active quiz game (bullbear) ----
-    // NB: named `round`, never `R` — a local `R` here shadows the theme's
-    // radius token across this whole closure (TDZ crash on open).
-    const data = gameSet(gameMode), total = data.length, round = data[gameStep] || {};
-    const done = gamePhase === "done";
-    // `hdr` is gone: the header reads from GAMES like every other game, so the
-    // three quizzes can no longer carry a second, differently-cased name.
-    const meta = gameMode === "bullbear"
-        ? { unit: "round", title: "Will the stock go up or down?", question: round.headline, choices: ["Bullish — likely UP", "Bearish — likely DOWN"], answer: round.bullish ? 0 : 1, explain: round.why }
-        : { unit: "round", title: "Pick the real ticker symbol", question: `Which symbol is ${round.company}?`, choices: round.options || [], answer: round.answer, explain: `${round.company} trades as ${round.options?.[round.answer]}.` };
-    const headerRight = (
-      <>
-        <span style={{ fontFamily: MONO, fontSize: 12, color: C.muted }}>{done ? `score ${gameScore}/${total}` : `${meta.unit} ${gameStep + 1}/${total} · score ${gameScore}`}</span>
-        {backBtn}
-      </>
-    );
-    const body = (
-      <>
-        <div style={{ height: 3, background: C.panelEdge }}>
-          <div style={{ height: "100%", width: `${((done ? total : gameStep) / total) * 100}%`, background: C.text, transition: "width 0.4s" }} />
-        </div>
-        <div style={{ padding: 14, fontFamily: MONO, display: "flex", flexDirection: "column", gap: 12 }}>
-          {done ? (
-            <>
-              <div style={{ fontSize: 17, fontWeight: 700, color: C.accentText }}>🏁 Round complete!</div>
-              <div style={{ fontSize: 12, lineHeight: 1.7, color: C.text }}>
-                You scored <b style={{ color: gameScore > total / 2 ? C.up : C.accentText }}>{gameScore} / {total}</b>. {gameScore === total ? "Perfect run!" : "Play again to beat your score."}
-              </div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button onClick={() => startMode(gameMode)} style={primaryBtn}>Play again ↻</button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{meta.title}</div>
+    // ---- Bull or Bear: its own screens, in src/ui/BullOrBear.jsx ----
+    if (gameMode === "bullbear") {
+      return shell(null, null, null, (
+        <BullOrBear
+          rounds={BULLBEAR_ROUNDS}
+          step={gameStep}
+          answered={gamePhase === "reveal"}
+          done={gamePhase === "done"}
+          choice={gameChoice}
+          awards={gameAwards}
+          onAnswer={gameAnswer}
+          onNext={gameNext}
+          onRestart={() => startMode("bullbear")}
+          onBack={() => { setGameMode("menu"); stopSpeak(); }}
+          onClose={closeGame}
+          t={t}
+        />
+      ), true);
+    }
 
-              {(gamePhase === "quiz" || gamePhase === "reveal") && (
-                <>
-                  <div style={{ fontSize: 12, lineHeight: 1.6, color: C.muted }}>{gameMode === "bullbear" ? "📰 " : ""}{meta.question}</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {meta.choices.map((c, i) => {
-                      const chosen = gameChoice === i, isRight = i === meta.answer, revealed = gamePhase === "reveal";
-                      const bg = revealed ? (isRight ? alpha(C.up, 0.15) : chosen ? alpha(C.down, 0.12) : "transparent") : "transparent";
-                      const bd = revealed ? (isRight ? C.up : chosen ? C.down : C.panelEdge) : C.panelEdge;
-                      return (
-                        <button key={i} disabled={revealed} onClick={() => gameAnswer(i)}
-                          style={{ textAlign: "left", background: bg, border: `1px solid ${bd}`, color: C.text, borderRadius: 5, fontFamily: SANS, fontSize: 12, padding: "9px 11px", cursor: revealed ? "default" : "pointer" }}>
-                          {c}{revealed && isRight ? "  ✓" : revealed && chosen ? "  ✕" : ""}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {gamePhase === "reveal" && (
-                    <>
-                      <div style={{ fontSize: 12, lineHeight: 1.6, color: gameChoice === meta.answer ? C.up : C.muted }}>
-                        {meta.explain}
-                      </div>
-                      <button onClick={gameNext} style={primaryBtn}>{gameStep >= total - 1 ? "See score 🏁" : "Next →"}</button>
-                    </>
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </div>
-      </>
-    );
-    return shell(gameMeta(gameMode).icon, gameMeta(gameMode).name, headerRight, body);
+    // Every game now renders its own screens, so nothing reaches this point.
+    // The generic quiz shell that used to live here — one layout stretched over
+    // a lesson, a headline and a ticker — is gone with the last game that used
+    // it. Its `meta` object was the tell: three games' worth of if/else picking
+    // a title, a question, a choice list and an explanation out of three
+    // different shapes.
+    return null;
   })();
   // Does the desk have a result showing? Gates the "on the desk" verb cards,
   // which exist to fill the space when it does not.

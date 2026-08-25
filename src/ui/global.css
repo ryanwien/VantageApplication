@@ -634,6 +634,11 @@ button:not(:disabled):active { transform: scale(0.97); }
 .vt-pulse   { animation: vt-pulse 1.1s ease-in-out infinite; }
 .vt-sheen   { background-size: 200% auto; animation: vt-sheen 3.5s linear infinite; }
 .vt-bob     { animation: vt-bob 6s ease-in-out infinite; }
+/* The keyframe for this has been here since the redesign vocabulary landed and
+   the class never was, so every element that asked for vt-draw got nothing.
+   2s is the handoff's slower end — Bull or Bear's gap overrides to 1.2s at the
+   call site, which is the range the handoff gives it. */
+.vt-draw    { animation: vt-draw 2s ease-out both; }
 .vt-bars > * { transform-origin: bottom; animation: vt-bars 0.9s ease-in-out infinite; }
 .vt-bars > *:nth-child(2) { animation-delay: 0.15s; }
 .vt-bars > *:nth-child(3) { animation-delay: 0.3s; }
@@ -1115,3 +1120,16 @@ button:not(:disabled):active { transform: scale(0.97); }
 @media (max-width: 620px) {
   .v-tmhud { padding: 12px 14px !important; gap: 14px !important; }
 }
+
+/* ---------- Bull or Bear ----------
+   "each lifting with its own colored shadow on hover" — the handoff's words.
+   The two calls are opposite answers, so they must not glow the same colour:
+   the shadow is the only thing on the card that says which way you are about
+   to commit before you have committed. */
+.v-callup, .v-calldown { transition: transform 0.2s var(--v-ease), border-color 0.2s var(--v-ease), box-shadow 0.2s var(--v-ease); }
+.v-callup:hover  { transform: translateY(-3px); border-color: var(--v-accent) !important; box-shadow: 0 12px 28px rgba(70, 167, 88, 0.14); }
+.v-calldown:hover { transform: translateY(-3px); border-color: #dd6a6e !important; box-shadow: 0 12px 28px rgba(221, 106, 110, 0.14); }
+
+/* Two calls side by side while there is room; stacked once there is not, since
+   a 38px tile and a 16px label do not fit twice across a phone. */
+@media (max-width: 620px) { .v-bbcalls { grid-template-columns: 1fr !important; } }

@@ -24,6 +24,8 @@
 //  ends up disagreeing with the rounds above it.
 // ============================================================
 
+import { awardWith, totalPoints, rightCount, streak, countdown } from "./quiz.js";
+
 export const ROUND_SECONDS = 20;
 // The footer promises a bonus for answering "inside 15 seconds", so the bonus
 // is live while more than five seconds remain of a twenty-second round. At the
@@ -116,36 +118,13 @@ export function answerIndex(round) {
 
 // What a round pays. The bonus is the whole reason the clock is on screen:
 // without it the countdown would be a deadline and nothing more.
-export function award(correct, secondsLeft) {
-  if (!correct) return { correct: false, points: 0, bonus: false };
-  const left = Math.max(0, Math.min(ROUND_SECONDS, Number(secondsLeft) || 0));
-  const bonus = left > ROUND_SECONDS - BONUS_WITHIN;
-  return { correct: true, points: BASE_POINTS + (bonus ? BONUS_POINTS : 0), bonus };
-}
+//
+// The rule is in src/games/quiz.js — Bull or Bear runs the same one on its own
+// numbers — and these four constants are what makes it this game's.
+export const award = awardWith({
+  roundSeconds: ROUND_SECONDS, bonusWithin: BONUS_WITHIN, base: BASE_POINTS, bonus: BONUS_POINTS,
+});
 
-// ---- everything below reads the awards list. None of it is stored. ----
-
-export function totalPoints(awards = []) {
-  return awards.reduce((s, a) => s + (Number(a?.points) || 0), 0);
-}
-
-export function rightCount(awards = []) {
-  return awards.filter(a => a?.correct).length;
-}
-
-// The trailing run of right answers. Derived rather than counted up, so it
-// cannot survive a wrong round that the list above it clearly records.
-export function streak(awards = []) {
-  let n = 0;
-  for (let i = awards.length - 1; i >= 0; i--) {
-    if (awards[i]?.correct) n += 1;
-    else break;
-  }
-  return n;
-}
-
-// mm:ss for the countdown pill.
-export function countdown(sec) {
-  const n = Math.max(0, Math.floor(Number(sec) || 0));
-  return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
-}
+// Re-exported so the screen and this game's tests keep reading them from the
+// game rather than having to know where the shared arithmetic lives.
+export { totalPoints, rightCount, streak, countdown };
