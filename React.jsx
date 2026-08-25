@@ -11681,8 +11681,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // than the one the watchlist beside it is showing.
   const [videoDesk, setVideoDesk] = useState(null);   // { topic, video, queue }
   const [videoSummary, setVideoSummary] = useState(null); // { status, rows, checks, model, ms }
-  // the player docks at the TOP of the desk; opening one from deep in a catalog grid
-  // would otherwise land off-screen, so bring it into view when it (re)opens
+  // The player rides the tail of the transcript with every other desk result,
+  // so opening one from deep in a catalog grid still lands below the fold —
+  // bring it into view when it (re)opens.
   const playerRef = useRef(null);
   // "start", not "nearest": a 16:9 frame can be taller than the viewport, and nearest would
   // align its bottom — pushing the panel's title/close row off the top of the screen.
@@ -13503,6 +13504,72 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     </div>
   );
 
+  // ---- the embedded player, as a chat attachment ----
+  //
+  // The last thing on the desk that was still docked. It sat pinned to the TOP
+  // of the column, above the conversation, under a comment explaining that a
+  // trailer opened from a tall catalog grid would otherwise need scrolling to —
+  // which was true, and was solved by moving the frame away from the grid that
+  // opened it rather than by putting it where the answer belongs. Asking "what's
+  // on Netflix" and then playing something put the reply at the bottom of the
+  // transcript and the video at the top, with the whole conversation between
+  // them; the exchange read as two unrelated events.
+  //
+  // Everything else the desk produces already rides the transcript, and the
+  // note where this used to sit said so. Now it wears the same shell as the
+  // rest, and the scroll-into-view below carries it the rest of the way.
+  const playerPanel = player && (
+    <div key="player" ref={playerRef} style={{ minWidth: 0 }}>
+      <DeskCard
+        icon={<DeskIcon name="play" size={16} />}
+        title={player.title}
+        note={player.channel}
+        onClose={() => setPlayer(null)}
+        closeLabel="Close embedded player"
+        padded={false}>
+        {player.archive ? (
+          <ArchiveFrame id={player.archive} title={player.title} />
+        ) : player.id ? (
+          <VideoFrame id={player.id} title={player.title} />
+        ) : (
+          <div style={{ padding: 14, fontFamily: SANS, fontSize: 13, color: C.text, lineHeight: 1.7 }}>
+            {player.brief || "This link cannot be embedded directly, but the desk brief is below."}
+          </div>
+        )}
+        {player.archive ? (
+          <div style={{ padding: "10px 16px", borderTop: `1px solid ${C.edge}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>Public-domain film · playing inside Vantage</span>
+            <a href={`https://archive.org/details/${player.archive}`} target="_blank" rel="noopener noreferrer"
+              style={{ fontFamily: MONO, fontSize: 12, color: C.accentText, textDecoration: "none", border: `1px solid ${C.accentEdge}`, borderRadius: R.xs, padding: "3px 9px" }}>
+              Open on Archive ↗
+            </a>
+          </div>
+        ) : (
+          <div style={{ padding: "10px 16px", borderTop: `1px solid ${C.edge}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.accentText }}>DESK BRIEF</span>
+              <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <a href={ytWatchUrl(player)} target="_blank" rel="noopener noreferrer"
+                  style={{ fontFamily: MONO, fontSize: 12, color: C.accentText, textDecoration: "none", border: `1px solid ${C.accentEdge}`, borderRadius: R.xs, padding: "3px 9px" }}>
+                  Watch on YouTube ↗
+                </a>
+                {player.brief && (
+                  <button onClick={() => speak("brief", player.brief)}
+                    style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "3px 9px", cursor: "pointer" }}>
+                    ▶ read
+                  </button>
+                )}
+              </span>
+            </div>
+            <div style={{ fontFamily: SANS, fontSize: 12.5, lineHeight: 1.7, color: C.text, marginTop: 6 }}>
+              {player.brief || "Researching what this video covers…"}
+            </div>
+          </div>
+        )}
+      </DeskCard>
+    </div>
+  );
+
   // What rides at the tail of the transcript.
   //
   // Everything the desk produces is the answer to something that was asked, so
@@ -13511,7 +13578,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // and the spoken reply in one column, the thing the question actually produced
   // in another. Order is the order they arrive in.
   const deskPanels = [
-    navPanel, videoDeskPanel, calendarPanel, portfolioPanel, newsPanel, reportPanel,
+    navPanel, videoDeskPanel, playerPanel, calendarPanel, portfolioPanel, newsPanel, reportPanel,
     // These two were already attachments; they carry no key of their own.
     gamePanel && <React.Fragment key="game">{gamePanel}</React.Fragment>,
     catalogPanel && <React.Fragment key="catalog">{catalogPanel}</React.Fragment>,
@@ -13948,59 +14015,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             </div>
           )}
 
-          {/* embedded player — docked at the TOP of the desk so a trailer opened from a
-              tall catalog grid is visible without scrolling */}
-          {player && (
-            <div ref={playerRef} style={{ margin: "12px 12px 0", border: `1px solid ${C.accent}`, borderRadius: R.md, overflow: "hidden", background: C.surfaceRaised }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
-                <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>
-                  <span style={{ color: C.down }}>▶</span> {player.title}
-                  <span style={{ color: C.faint, fontWeight: 400, marginLeft: 8 }}>{player.channel}</span>
-                </span>
-                <button onClick={() => setPlayer(null)} aria-label="Close embedded player"
-                  style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, padding: "3px 10px", cursor: "pointer" }}>✕</button>
-              </div>
-              {player.archive ? (
-                <ArchiveFrame id={player.archive} title={player.title} />
-              ) : player.id ? (
-                <VideoFrame id={player.id} title={player.title} />
-              ) : (
-                <div style={{ padding: 12, fontFamily: SANS, fontSize: 12, color: C.text, lineHeight: 1.6 }}>
-                  {player.brief || "This link cannot be embedded directly, but the desk brief is available above."}
-                </div>
-              )}
-              {player.archive ? (
-                <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>Public-domain film · playing inside Vantage</span>
-                  <a href={`https://archive.org/details/${player.archive}`} target="_blank" rel="noopener noreferrer"
-                    style={{ fontFamily: MONO, fontSize: 12, color: C.accentText, textDecoration: "none", border: `1px solid ${C.accentEdge}`, borderRadius: R.xs, padding: "3px 9px" }}>
-                    Open on Archive ↗
-                  </a>
-                </div>
-              ) : (
-                <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.panelEdge}` }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.accentText }}>DESK BRIEF</span>
-                    <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <a href={ytWatchUrl(player)} target="_blank" rel="noopener noreferrer"
-                        style={{ fontFamily: MONO, fontSize: 12, color: C.accentText, textDecoration: "none", border: `1px solid ${C.accentEdge}`, borderRadius: R.xs, padding: "3px 9px" }}>
-                        Watch on YouTube ↗
-                      </a>
-                      {player.brief && (
-                        <button onClick={() => speak("brief", player.brief)}
-                          style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "3px 9px", cursor: "pointer" }}>
-                          ▶ read
-                        </button>
-                      )}
-                    </span>
-                  </div>
-                  <div style={{ fontFamily: SANS, fontSize: 11, lineHeight: 1.7, color: C.text, marginTop: 6 }}>
-                    {player.brief || "Researching what this video covers…"}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {/* The embedded player used to dock here, above the conversation.
+              It rides the transcript now — see playerPanel. */}
           {/* The results box that used to live here is gone. Everything it held
               — the navigator's answer, the calendar, the portfolio, the news and
               the written report — now rides the conversation as a chat
