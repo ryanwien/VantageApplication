@@ -4357,7 +4357,7 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
   };
 
   return (
-    <div style={{ fontFamily: SANS, display: "flex", flexDirection: "column" }}>
+    <div className="v-gamepanel" style={{ fontFamily: SANS, display: "flex", flexDirection: "column" }}>
       {/* ---- header ---- */}
       {/* The game owns this bar rather than the games shell, because everything
           live in it — whose turn it is, the move number — is this component's
@@ -6736,7 +6736,7 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
   );
 
   return (
-    <div style={{ fontFamily: SANS, background: C.base, color: C.text }}>
+    <div className="v-gamepanel" style={{ fontFamily: SANS, background: C.base, color: C.text }}>
       {/* ---- header ---- */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceAlt, flexWrap: "wrap" }}>
         <span aria-hidden="true" style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", fontFamily: MONO, fontWeight: 700, fontSize: 12, flexShrink: 0 }}>21</span>
@@ -7375,7 +7375,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
         : t("Nothing was left open — they simply out-traded you. Open with a Hedge-Fund."));
 
   return (
-    <div style={{ fontFamily: SANS, display: "flex", flexDirection: "column" }}>
+    <div className="v-gamepanel" style={{ fontFamily: SANS, display: "flex", flexDirection: "column" }}>
       {/* ---- header ---- */}
       {/* The game owns this bar rather than the games shell, because everything
           live in it — the clock, the logic in force — is this component's

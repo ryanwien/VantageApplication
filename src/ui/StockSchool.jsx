@@ -215,7 +215,7 @@ export default function StockSchool({
 
   // ---- the lesson ----
   return (
-    <div style={{ fontFamily: SANS, background: C.base, color: C.text }}>
+    <div className="v-gamepanel" style={{ fontFamily: SANS, background: C.base, color: C.text }}>
       <div style={HEAD}>
         {numTile(lessonNo(step))}
         <span style={{ fontWeight: 700, fontSize: 14.5 }}>{t("Stock School")}</span>

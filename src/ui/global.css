@@ -427,11 +427,54 @@ a:hover { text-decoration: underline; }
 }
 .v-chipfly { animation: v-chipfly 1500ms cubic-bezier(0.4, 0, 0.2, 1) both; }
 
+/* ---------- the four game panels measure themselves ----------
+   Overheat, Bulls vs Bears Chess, Algorithm Wars and Stock School are all the
+   same shape: a wide left column with a fixed 292–300px rail beside it, and a
+   break where the rail unhooks and stacks underneath with a top border in place
+   of its left one. All four wrote that break as a VIEWPORT media query, and all
+   four are drawn inside the game room, which is not the window.
+
+   The two do not track each other. Measured with the room open:
+
+     viewport 1400 → panel 990     viewport 620 → panel 532
+     viewport 1040 → panel 630     viewport 460 → panel 372
+     viewport 1004 → panel 594
+
+   Wide, the shell keeps a sidebar and the panel runs about 410px behind the
+   window; narrow, the sidebar is gone and it runs about 88px behind. One
+   viewport number therefore names two different panels depending on which side
+   of the shell's own breakpoint you are on, which is why no viewport number
+   could have been right.
+
+   What that cost, all measured at viewport 1004 — four pixels above the old
+   1000px break, so the rail stayed hooked — on a 594px panel:
+
+     Overheat        felt 294, rail 300   (the rail wider than the game)
+     Chess           board column 294, rail 300, squares 27x27px — the same 27
+                     the note further down calls "the smallest the board is
+                     ever asked to be", on a phone
+     Algorithm Wars  field 268 x 111, rail 286 — the comment below says 124px
+                     "is not a battlefield, it is a strip"; this is that
+     Stock School    lesson column 302, rail 292 — a lesson at forty characters
+                     a line
+
+   The panel is the container and 740px is the break, derived rather than
+   picked: chess wants 58px squares, which needs 464 for eight files plus 42 of
+   rank gutter and well padding plus 38 of column padding — 544, so a 300px rail
+   fits beside it down to a 844px panel. Squares reach 44px, HIT from theme.js
+   and the product's touch minimum, at a 432px column, which is a 732px panel.
+   740 gives that eight pixels. The four panels break together, as they did
+   before, because they are one layout drawn four times.
+
+   A 1400px desktop is unchanged: the panel is 990 there and the rail keeps its
+   place. */
+.v-gamepanel { container-type: inline-size; }
+
 /* Overheat's felt and its rail sit side by side while there is room for both.
    Below that the rail goes under the felt with a top border instead of a left
    one — the same break the other full-width panels take, at the same width, so
    the whole product reflows on one line rather than six. */
-@media (max-width: 1000px) {
+@container (max-width: 740px) {
   .v-ohbody { flex-direction: column; }
   .v-ohrail {
     width: auto !important;
@@ -440,7 +483,8 @@ a:hover { text-decoration: underline; }
     padding: 18px 22px !important;
   }
 }
-@media (max-width: 620px) {
+/* 540 of panel is the 620 of viewport this used to name (532, measured). */
+@container (max-width: 540px) {
   .v-ohbody > div:first-child { padding: 14px !important; }
   .v-ohrail { padding: 14px !important; }
   .v-ohhud { padding: 12px 14px !important; gap: 14px !important; }
@@ -808,16 +852,16 @@ button:not(:disabled):active { transform: scale(0.97); }
 @media (prefers-reduced-motion: reduce) { .v-deploycard:hover:not(:disabled) { transform: none; } }
 
 /* The two arcade screens are drawn against a 1240px reference: a wide field
-   with a fixed 286–300px rail beside it. Below roughly a thousand pixels that
-   rail stops being a margin and starts eating the game — at 700px the field
-   was 124px wide, which is not a battlefield, it is a strip.
+   with a fixed 286–300px rail beside it. Below the break above, that rail stops
+   being a margin and starts eating the game — at a 268px field it is not a
+   battlefield, it is a strip.
 
-   So under 1000px the rail unhooks and stacks beneath, taking a top border in
-   place of its left one, and the deploy row drops to a single column where
-   three cards would each be too narrow to hold a name and a cost on one line.
-   The field keeps its aspect ratio throughout — it is a canvas, and letting it
-   letterbox is what stops the units squashing. */
-@media (max-width: 1000px) {
+   So the rail unhooks and stacks beneath, taking a top border in place of its
+   left one, and the deploy row drops to a single column where three cards would
+   each be too narrow to hold a name and a cost on one line. The field keeps its
+   aspect ratio throughout — it is a canvas, and letting it letterbox is what
+   stops the units squashing. */
+@container (max-width: 740px) {
   .v-awbody, .v-chessbody { flex-direction: column; }
   .v-awrail, .v-chessrail {
     width: auto !important;
@@ -827,20 +871,20 @@ button:not(:disabled):active { transform: scale(0.97); }
   }
 }
 
-/* The Video desk keeps the same rule and the same thousand pixels, measured
-   against the PANEL. It is a chat attachment, so the window's width was never
-   the question — and the paragraph above states the principle exactly ("at
-   700px the field was 124px wide, which is not a battlefield, it is a strip")
-   while enforcing it against the one box that could not answer it.
+/* The Video desk takes the same break against the PANEL, at its own number. It
+   is a chat attachment rather than a game-room panel, so the desk hands it a
+   different range of widths and a different rail — 320px — but the failure was
+   identical.
 
    Measured on a 1400px desktop, where the desk hands this panel about 640px:
    the rail held its full 320 and the video played at 264 by 149. At a 520px
    panel the rail was WIDER than the column beside it — 320 against 182 — and
    the video was 144 by 81. A video desk whose sidebar outweighs the video.
 
-   On a phone nothing changes: viewport 375, panel 359, under a thousand either
-   way. Chess and Algorithm Wars still measure the window here, and have the
-   same latent bug for the same reason. */
+   A thousand rather than the games' 740 because a video has no minimum square
+   to derive one from: this keeps the number the rule already named, now
+   measured against a box that can answer it. On a phone nothing changes —
+   viewport 375, panel 359, under a thousand either way. */
 .v-videopanel { container-type: inline-size; }
 
 @container (max-width: 1000px) {
@@ -978,7 +1022,11 @@ button:not(:disabled):active { transform: scale(0.97); }
 .v-chessboard { container-type: inline-size; }
 .v-chessgrid { --sq: min(58px, max(22px, calc((100cqi - 42px) / 8))); }
 
-@media (max-width: 460px) {
+/* 380 of panel is the 460 of viewport this used to name (372, measured). The
+   query resolves against .v-gamepanel, not .v-chessboard — an element cannot
+   ask its own size, and .v-chessboard is a container for the --sq expression
+   above, which is a different question asked by its children. */
+@container (max-width: 380px) {
   .v-chessboard { padding: 12px 14px !important; }
   .v-chessrail { padding: 14px 16px !important; }
 }
@@ -1216,8 +1264,8 @@ button:not(:disabled):active { transform: scale(0.97); }
 /* ---------- Stock School ----------
    The lesson and its rail sit side by side while there is room, then the rail
    goes underneath with a top border instead of a left one — the same break, at
-   the same width, as every other two-column panel in the product. */
-@media (max-width: 1000px) {
+   the same width, as the other three game-room panels, against the panel. */
+@container (max-width: 740px) {
   .v-schoolbody { flex-direction: column; }
   .v-schoolrail {
     width: auto !important;
@@ -1226,7 +1274,7 @@ button:not(:disabled):active { transform: scale(0.97); }
     padding: 18px 22px !important;
   }
 }
-@media (max-width: 620px) {
+@container (max-width: 540px) {
   .v-schoolbody > div:first-child { padding: 18px 14px !important; }
   .v-schoolrail { padding: 14px !important; }
   .v-schoolhud { padding: 12px 14px !important; gap: 14px !important; }
