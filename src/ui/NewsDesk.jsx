@@ -21,6 +21,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { C, MONO, SANS, TYPE, R, SP, SHADOW, MOTION, button, chip, panelHead } from "./theme.js";
 import DeskIcon from "./DeskIcon.jsx";
+import VideoFrame, { ytId, ytThumb, ytThumbIsReal } from "./VideoFrame.jsx";
 // A stable accent per source so the same outlet always looks the same, without
 // maintaining a hand-written colour map. Hashing the name is enough: we only need
 // consistency, not meaning.
@@ -158,36 +159,86 @@ function StoryCard({ item, href, index, onRead, onAsk, reading = false }) {
 }
 
 // ---------- video card ----------
-function VideoCard({ video, onPlay }) {
+// The row IS the player. It used to be a link: you clicked a video here and it
+// began playing in a frame docked at the top of the desk — which is why this
+// panel read as a list of references rather than as coverage.
+//
+// The thumbnail does two jobs. It is the picture the panel never had, and it is
+// the id check. YouTube answers a dead id with a 120x90 grey placeholder rather
+// than a 404, so a thumbnail that comes back 120 wide is an id that would have
+// embedded as a black box — and models invent video ids constantly. Those rows
+// keep the neutral tile and go OUT to YouTube instead of pretending to play,
+// which is also why the element type changes with them: a row that leaves the
+// product is a link, not a button.
+function VideoCard({ video, playing, onPlay, onStop }) {
+  const id = ytId(video.url);
+  const [thumbBad, setThumbBad] = useState(false);
+  const canPlay = !!id && !thumbBad;
+
+  if (playing && canPlay) {
+    return (
+      <div style={{
+        background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, overflow: "hidden",
+        boxShadow: "0 26px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(70,167,88,0.06)",
+      }}>
+        <VideoFrame id={id} title={video.title} autoStart />
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: SP[3] }}>
+          <span style={{ minWidth: 0, flex: 1 }}>
+            <span style={{ display: "block", ...TYPE.bodySm, color: C.text, lineHeight: 1.4 }}>{video.title}</span>
+            <span style={{ display: "block", ...TYPE.eyebrowSm, color: C.faint, marginTop: 4 }}>{video.channel}</span>
+          </span>
+          <button onClick={onStop} className="v-clearx" aria-label="Stop this video" title="Stop this video"
+            style={{ flexShrink: 0, background: "transparent", border: `1px solid ${C.edge}`, borderRadius: R.sm, color: C.muted, fontFamily: SANS, fontSize: 12, padding: "3px 9px", cursor: "pointer" }}>✕</button>
+        </div>
+      </div>
+    );
+  }
+
+  const Row = canPlay ? "button" : "a";
+  const rowProps = canPlay
+    ? { type: "button", onClick: onPlay }
+    : { href: video.url, target: "_blank", rel: "noopener noreferrer" };
   return (
-    <button
-      onClick={() => onPlay?.(video)}
-      className="v-lift"
+    <Row {...rowProps} className="v-lift"
       style={{
         display: "flex", alignItems: "flex-start", gap: 12, width: "100%",
-        padding: SP[3], textAlign: "left", cursor: "pointer",
+        padding: SP[3], textAlign: "left", cursor: "pointer", textDecoration: "none",
         background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg,
       }}
     >
-      {/* Play affordance doubles as the thumbnail — we have no image, so the
-          gradient tile stands in for one rather than leaving a grey hole. */}
+      {/* 96x54 — the same 16:9 the player is, so the row is a small version of
+          what it opens rather than a different shape. The neutral tile survives
+          underneath as the fallback for a video with no usable thumbnail. */}
       <span aria-hidden="true" style={{
-        width: 46, height: 34, borderRadius: R.sm, flexShrink: 0,
-        // Neutral, deliberately. This used to be a warm orange fill, which the
-        // redesign's one-accent rule rules out: a coloured play tile on every
-        // video row competes with the screen's single primary action, and the
-        // system's remaining warm colour (amber) means "caution" — market
-        // closed, alert fired — so borrowing it here would blur that meaning.
+        position: "relative", width: 96, height: 54, borderRadius: R.sm, flexShrink: 0, overflow: "hidden",
         background: C.surfaceRaised, border: `1px solid ${C.edge}`,
         display: "grid", placeItems: "center", color: C.text, fontSize: 13,
-      }}>▶</span>
+      }}>
+        {!!id && !thumbBad && (
+          <img src={ytThumb(id, "mqdefault")} alt="" loading="lazy"
+            onError={() => setThumbBad(true)}
+            onLoad={e => { if (!ytThumbIsReal(e.currentTarget)) setThumbBad(true); }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+        )}
+        {/* Green only when it will actually play. On a row that leaves for
+            YouTube a green play button would be promising something the row
+            cannot do. */}
+        <span style={{
+          position: "relative", width: 26, height: 26, borderRadius: "50%",
+          display: "grid", placeItems: "center", lineHeight: 1,
+          background: canPlay ? C.accent : "transparent",
+          color: canPlay ? C.textOnAccent : C.text,
+          fontSize: canPlay ? 10 : 13, paddingLeft: canPlay ? 2 : 0,
+          boxShadow: canPlay ? "0 12px 40px rgba(0,0,0,0.5)" : "none",
+        }}>▶</span>
+      </span>
       <span style={{ minWidth: 0, flex: 1 }}>
         <span style={{ display: "block", ...TYPE.bodySm, color: C.text, lineHeight: 1.4 }}>{video.title}</span>
         <span style={{ display: "block", ...TYPE.eyebrowSm, color: C.faint, marginTop: 4 }}>
-          {video.channel} · plays in-desk
+          {video.channel} · {canPlay ? "plays here" : "opens on YouTube ↗"}
         </span>
       </span>
-    </button>
+    </Row>
   );
 }
 
@@ -235,6 +286,14 @@ export default function NewsDesk({
   const [sourceFilter, setSourceFilter] = useState(null);
   const [toneFilter, setToneFilter] = useState(null);   // "bull" | "quiet" | "bear" | null
   useEffect(() => { setSourceFilter(null); setToneFilter(null); }, [items]);
+
+  // Which video is playing, if any. One at a time: three autoplaying frames in
+  // one column is a panel nobody can hear. Keyed by url rather than index so a
+  // new wire cannot leave the player pointed at a different video, and reset on
+  // the urls themselves because the parent hands us a fresh array every render.
+  const [playingVideo, setPlayingVideo] = useState(null);
+  const videoKey = videos.map(v => v.url).join("|");
+  useEffect(() => { setPlayingVideo(null); }, [videoKey]);
   const srcOf = (n) => n.source || hostOf(n.url) || "Source";
   const sources = useMemo(() => {
     const seen = new Map();
@@ -393,7 +452,12 @@ export default function NewsDesk({
               Video coverage
             </div>
             <div style={{ display: "grid", gap: SP[2], gridTemplateColumns: compact ? "1fr" : "repeat(auto-fill, minmax(300px, 1fr))" }}>
-              {videos.map((v, i) => <VideoCard key={`v${i}`} video={v} onPlay={onPlayVideo} />)}
+              {videos.map((v, i) => (
+                <VideoCard key={v.url || `v${i}`} video={v}
+                  playing={playingVideo === v.url}
+                  onPlay={() => { setPlayingVideo(v.url); onPlayVideo?.(v); }}
+                  onStop={() => setPlayingVideo(null)} />
+              ))}
             </div>
           </>
         )}

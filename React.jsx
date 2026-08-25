@@ -22,6 +22,7 @@ import { AuthProvider, useAuth } from "./src/api/auth-context.jsx";
 import AppShell from "./src/ui/AppShell.jsx";
 import ChatAssistant from "./src/ui/ChatAssistant.jsx";
 import NewsDesk, { sourceColor, toneOf } from "./src/ui/NewsDesk.jsx";
+import VideoFrame, { ytId } from "./src/ui/VideoFrame.jsx";
 import VantageMark from "./src/ui/VantageMark.jsx";
 import DeskIcon from "./src/ui/DeskIcon.jsx";
 import HomePage from "./src/ui/HomePage.jsx";
@@ -5942,49 +5943,8 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
     </div>
   );
 }
-// ---- YouTube frame: thumbnail + ▶ tries INLINE playback; a corner link opens YouTube in a new tab
-//      as the escape hatch (inline embeds render black when a browser/network blocks them) ----
-function VideoFrame({ id, title }) {
-  const [playing, setPlaying] = useState(false);
-  const [thumbBad, setThumbBad] = useState(false);
-  const watch = `https://www.youtube.com/watch?v=${id}`;
-  const ytLink = (label, pos) => (
-    <a href={watch} target="_blank" rel="noopener noreferrer"
-      style={{ position: "absolute", ...pos, zIndex: 2, background: "rgba(0,0,0,0.78)", color: "#fff", fontFamily: MONO, fontSize: 12, padding: "3px 8px", borderRadius: R.sm, textDecoration: "none" }}>
-      {label}
-    </a>
-  );
-  if (playing) {
-    return (
-      <div style={{ position: "relative", width: "100%", paddingTop: "56.25%", background: "#000" }}>
-        <iframe
-          src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&modestbranding=1&rel=0`}
-          title={title}
-          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-          allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
-        />
-        {ytLink("black? open on YouTube ↗", { top: 6, right: 6 })}
-      </div>
-    );
-  }
-  return (
-    <div style={{ position: "relative", width: "100%", paddingTop: "56.25%", background: "#000", overflow: "hidden" }}>
-      {!thumbBad && (
-        <img src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="" onError={() => setThumbBad(true)}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-      )}
-      <button onClick={() => setPlaying(true)} aria-label={`Play ${title || "video"} inline`}
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ width: 62, height: 62, borderRadius: "50%", background: "rgba(0,0,0,0.6)", border: "2px solid rgba(255,255,255,0.9)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ color: "#fff", fontSize: 24, marginLeft: 4, lineHeight: 1 }}>▶</span>
-        </span>
-      </button>
-      {ytLink("YouTube ↗", { bottom: 8, right: 8 })}
-    </div>
-  );
-}
+
+
 // Internet Archive player — public-domain films that DO permit iframe embedding, so they play
 // fully inside Vantage (unlike Netflix/Disney+/Hulu, which block framing entirely).
 function ArchiveFrame({ id, title }) {
@@ -10914,10 +10874,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       if (text) setPlayer(p => (p && p.url === v.url ? { ...p, brief: text } : p));
     } catch { /* brief is a bonus — theater works without it */ }
   }, []);
-  const ytId = (url) => {
-    const m = url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([\w-]{6,})/);
-    return m ? m[1] : null;
-  };
+
   // an always-valid outbound link: the real video if we have one, else a YouTube search for the title
   const ytWatchUrl = (v) =>
     (v?.url && /youtube\.com|youtu\.be/.test(v.url)) ? v.url
@@ -10942,6 +10899,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       setPlayer({ id: null, ...v, brief: v.brief || "This exact video couldn't be embedded — use “Watch on YouTube” below to find it." });
     }
   };
+  // The news panel plays its own videos, in the row you clicked, so it does not
+  // want a second frame docked at the top of the desk — only the bookkeeping.
+  const noteVideoPlayed = () => completeMission("watch");
 
   // ---- YouTube Data API: real, embeddable search results (no hallucinated IDs) ----
   const searchYouTube = useCallback(async (query, max = 3) => {
@@ -12346,7 +12306,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         stale={!!news && newsFor !== selected}
         onLoad={fetchNews}
         onBroadcast={broadcastNews}
-        onPlayVideo={openVideo}
+        onPlayVideo={noteVideoPlayed}
         onReadStory={readStory}
         readingTitle={typeof speakingId === "string" && speakingId.startsWith("story:") ? speakingId.slice(6) : null}
         onAskStory={askStory}
@@ -13354,7 +13314,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     </svg>
                   </span>
                   {chartVs && (
-                    <button onClick={() => setChartVs(null)} className="v-tap v-cmpclear" aria-label={t("Stop comparing")} title={t("Stop comparing")}
+                    <button onClick={() => setChartVs(null)} className="v-tap v-clearx" aria-label={t("Stop comparing")} title={t("Stop comparing")}
                       style={{ alignSelf: "stretch", background: "transparent", border: "none", borderLeft: `1px solid ${C.edge}`,
                         color: C.muted, fontFamily: SANS, fontSize: 11, lineHeight: 1, padding: "5px 11px", cursor: "pointer" }}>
                       ✕
