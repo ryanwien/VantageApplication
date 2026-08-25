@@ -109,7 +109,7 @@ export default function StockSchool({
   // a sixth layout for it.
   if (phase === "done") {
     return (
-      <div style={{ fontFamily: SANS, background: C.base, color: C.text }}>
+      <div className="v-gamepanel" style={{ fontFamily: SANS, background: C.base, color: C.text }}>
         <div style={HEAD}>
           {numTile(lessonNo(Math.max(0, total - 1)))}
           <span style={{ fontWeight: 700, fontSize: 14.5 }}>{t("Stock School")}</span>
@@ -133,7 +133,7 @@ export default function StockSchool({
   // ---- the quiz ----
   if (phase === "quiz" || revealed) {
     return (
-      <div style={{ fontFamily: SANS, background: C.base, color: C.text }}>
+      <div className="v-gamepanel" style={{ fontFamily: SANS, background: C.base, color: C.text }}>
         <div style={HEAD}>
           {numTile(lessonNo(step))}
           <span style={{ fontWeight: 700, fontSize: 14.5 }}>{t("Quiz · lesson {n}").replace("{n}", String(step + 1))}</span>

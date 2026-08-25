@@ -778,10 +778,6 @@ button:not(:disabled):active { transform: scale(0.97); }
 }
 .v-awover { animation: v-awover 260ms cubic-bezier(0.4, 0, 0.2, 1) both; }
 
-@media (max-width: 620px) {
-  .v-awroom { padding: 14px !important; }
-}
-
 /* ---------- game rooms ----------
    Algorithm Wars and the chess room. Everything here is silenced by the
    blanket prefers-reduced-motion rule near the top of this file, which is why
@@ -902,9 +898,22 @@ button:not(:disabled):active { transform: scale(0.97); }
      panel. Measured on a phone: 23px of inset on the left, 17px on the right. */
   .v-videomain { padding-right: 22px !important; }
 }
-@media (max-width: 720px) {
-  .v-awdeploy { grid-template-columns: 1fr !important; }
-}
+/* The three deploy cards drop to one column by CONTENT, not at a breakpoint —
+   the same argument the HUD below makes, and it turned out to be the same bug.
+   This was `@media (max-width: 720px)`, and the deploy row is not in the rail
+   or the body: it is a full-width strip under both, so its width is the panel
+   less 44px of padding and it never had anything to do with the rail unhooking.
+   The rule fired on the window instead, roughly ninety pixels early — measured
+   at viewport 700 the panel was 612 and the row 568, and it drew ONE 568px-wide
+   card stacked three deep, 414px tall, where three cards of 181 sat comfortably
+   side by side one pixel of viewport earlier.
+
+   170px is the card's own floor: min-content across the three is 152, 153 and
+   157 — the width at which "long range, high burst — melts" stops fitting — and
+   thirteen pixels over the widest of them is where the stat row still reads.
+   Three columns therefore need 534 of row and two need 352, so the fold happens
+   when the cards actually run out of room and not when the window does. */
+.v-awdeploy { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
 
 /* The HUD wraps by CONTENT, not at a breakpoint — the same argument the board
    makes below, and for the same reason. Its three parts need roughly 780px
@@ -1291,10 +1300,12 @@ button:not(:disabled):active { transform: scale(0.97); }
 .v-syllabus { transition: background var(--v-fast) var(--v-ease); }
 .v-syllabus:hover { background: var(--v-surface-raised); }
 
-/* ---------- Ticker Match ----------
-   The round strip wraps on its own; below the phone break it just needs the
-   same tighter gutter every other game takes. */
-@media (max-width: 620px) {
+/* ---------- Ticker Match (and Bull or Bear, which shares the strip) ----------
+   The round strip wraps on its own; narrow, it just needs the same tighter
+   gutter every other game takes. Against the panel at 540, which is the 620 of
+   viewport this used to name (532, measured) — the same pair of numbers Overheat
+   and Stock School take above. */
+@container (max-width: 540px) {
   .v-tmhud { padding: 12px 14px !important; gap: 14px !important; }
 }
 
@@ -1308,5 +1319,16 @@ button:not(:disabled):active { transform: scale(0.97); }
 .v-calldown:hover { transform: translateY(-3px); border-color: #dd6a6e !important; box-shadow: 0 12px 28px rgba(221, 106, 110, 0.14); }
 
 /* Two calls side by side while there is room; stacked once there is not, since
-   a 38px tile and a 16px label do not fit twice across a phone. */
-@media (max-width: 620px) { .v-bbcalls { grid-template-columns: 1fr !important; } }
+   a 38px tile and a 16px label do not fit twice across a phone.
+   "While there is room" was a 620px window, and the window is not the panel:
+   measured at viewport 619 the panel was 531 and the two calls stacked at 487px
+   wide each, one above the other, when a single pixel of viewport earlier they
+   had sat side by side at 278. Bullish and Bearish are opposite answers and the
+   pair is the control — stacking them at nearly five hundred pixels apiece, on a
+   width that holds both, is the one arrangement that hides that.
+
+   190px is the calls' own floor: min-content is 187 for Bullish (the wider of
+   the two, carrying "your call · correct" and the score) and 170 for Bearish.
+   Two columns need 392 of grid, so they stay paired down to a 436px panel and
+   stack below it, which is a phone and nothing else. */
+.v-bbcalls { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }

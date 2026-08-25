@@ -7643,7 +7643,9 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
             {t("{n} CAPITAL AVAILABLE").replace("{n}", String(cap))}
           </span>
         </div>
-        <div className="v-awdeploy" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 10 }}>
+        {/* The columns live in global.css, not here: they were declared in both
+            places and the stylesheet only ever won by !important. */}
+        <div className="v-awdeploy" style={{ display: "grid", gap: 12, marginTop: 10 }}>
           {AW_ORDER.map((id, i) => {
             const b = AW_BOTS[id];
             const afford = cap >= b.cost && !over;

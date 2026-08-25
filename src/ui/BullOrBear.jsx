@@ -106,7 +106,7 @@ export default function BullOrBear({
   // ---- the run's score ----
   if (done) {
     return (
-      <div style={{ fontFamily: SANS, background: C.base, color: C.text }}>
+      <div className="v-gamepanel" style={{ fontFamily: SANS, background: C.base, color: C.text }}>
         <div style={HEAD}>
           {mark}
           <span style={{ fontWeight: 700, fontSize: 14.5 }}>{t("Bull or Bear")}</span>
@@ -136,7 +136,7 @@ export default function BullOrBear({
   ];
 
   return (
-    <div style={{ fontFamily: SANS, background: C.base, color: C.text }}>
+    <div className="v-gamepanel" style={{ fontFamily: SANS, background: C.base, color: C.text }}>
       {/* ---- header ---- */}
       <div style={HEAD}>
         {mark}
@@ -234,7 +234,8 @@ export default function BullOrBear({
           </div>
 
           {/* ---- the two calls ---- */}
-          <div className="v-bbcalls" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
+          {/* The columns live in global.css, not here — see .v-bbcalls. */}
+          <div className="v-bbcalls" style={{ display: "grid", gap: 12, marginTop: 16 }}>
             {CALLS.map((c, i) => {
               const mine = choice === i;
               const lit = answered && ((i === 0) === !!round.bullish);

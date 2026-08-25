@@ -125,7 +125,7 @@ export default function TickerMatch({
   if (done) {
     const got = awards.filter(a => a?.correct).length;
     return (
-      <div style={{ fontFamily: SANS, background: C.base, color: C.text }}>
+      <div className="v-gamepanel" style={{ fontFamily: SANS, background: C.base, color: C.text }}>
         {header}
         <div style={{ padding: "40px 22px", textAlign: "center" }}>
           <div style={{ ...railLabel, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>{t("ROUND OVER")}</div>
@@ -143,7 +143,7 @@ export default function TickerMatch({
   }
 
   return (
-    <div style={{ fontFamily: SANS, background: C.base, color: C.text }}>
+    <div className="v-gamepanel" style={{ fontFamily: SANS, background: C.base, color: C.text }}>
       {/* ---- header ---- */}
       <div style={HEAD}>
         <span aria-hidden="true" style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", fontFamily: MONO, fontWeight: 700, fontSize: 11, flexShrink: 0 }}>ABC</span>
