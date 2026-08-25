@@ -24,9 +24,14 @@ import { C } from "./theme.js";
 // one indicator appearing in several places rather than several indicators.
 const HEIGHTS = [60, 100, 45, 80];
 
-export default function Waveform({ height = 12, bars = 4, width = 2.5, gap = 2, color = C.accent }) {
+// `still` draws the same silhouette without the animation. Stock School's
+// "Read again" button wears one: it is the mark for "this is the thing that
+// talks", on a control that is not talking yet. Moving bars there would be the
+// meter lying about the present, which is the one thing this file exists to
+// stop — so the shape carries the meaning and the motion stays honest.
+export default function Waveform({ height = 12, bars = 4, width = 2.5, gap = 2, color = C.accent, still = false }) {
   return (
-    <span className="vt-bars" aria-hidden="true" style={{ display: "flex", alignItems: "flex-end", gap, height }}>
+    <span className={still ? undefined : "vt-bars"} aria-hidden="true" style={{ display: "flex", alignItems: "flex-end", gap, height }}>
       {HEIGHTS.slice(0, bars).map((h, i) => (
         <span key={i} style={{ width, height: `${h}%`, background: color, borderRadius: 2 }} />
       ))}

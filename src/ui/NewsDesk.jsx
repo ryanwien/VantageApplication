@@ -42,6 +42,7 @@ import DeskIcon from "./DeskIcon.jsx";
 import Waveform from "./Waveform.jsx";
 import VideoFrame, { ytId, ytThumb, ytThumbIsReal } from "./VideoFrame.jsx";
 import { clock, relAge } from "../lib/time.js";
+import useSpeechProgress from "./useSpeechProgress.js";
 import { toneOf, toneLabel, wireTone, categoryOf, sourceColor, sourceOf, ageOf } from "../news/news.js";
 
 
@@ -143,29 +144,6 @@ function StoryCard({ item, href, index, primary, onAir, speaking, onRead, onAsk 
 }
 
 // ---------- the story on air ----------
-// Reads its position out of the ref the caller updates, at 4Hz, so a clock
-// ticking once a second re-renders this block and nothing else. The dashboard
-// around it is fourteen thousand lines; a word-boundary event is not a reason
-// to run all of it.
-function useSpeechProgress(progressRef, key) {
-  const [p, setP] = useState({ frac: 0, elapsedSec: 0, totalSec: null });
-  useEffect(() => {
-    if (!progressRef) return undefined;
-    const read = () => {
-      const c = progressRef.current;
-      const next = c && c.id === key
-        ? { frac: Math.max(0, Math.min(1, c.frac || 0)), elapsedSec: Math.floor((c.elapsedMs || 0) / 1000), totalSec: c.totalMs ? Math.round(c.totalMs / 1000) : null }
-        : { frac: 0, elapsedSec: 0, totalSec: null };
-      // Only when a rendered value actually moved — otherwise this is four
-      // re-renders a second that draw the identical pixels.
-      setP(prev => (prev.elapsedSec === next.elapsedSec && prev.totalSec === next.totalSec && Math.abs(prev.frac - next.frac) < 0.005 ? prev : next));
-    };
-    read();
-    const iv = setInterval(read, 250);
-    return () => clearInterval(iv);
-  }, [progressRef, key]);
-  return p;
-}
 
 function OnAir({ item, href, index, total, speaking, means, progressRef, onNext, onStop }) {
   const source = sourceOf(item, href);

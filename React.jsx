@@ -26,6 +26,8 @@ import VideoFrame, { ytId } from "./src/ui/VideoFrame.jsx";
 import VideoDesk from "./src/ui/VideoDesk.jsx";
 import { ytDurationSec, parseChapters, chapterMentions, relAge } from "./src/video/video.js";
 import { newestFirst, sourceOf } from "./src/news/news.js";
+import { clock } from "./src/lib/time.js";
+import useSpeechProgress from "./src/ui/useSpeechProgress.js";
 import MoviesDesk from "./src/ui/MoviesDesk.jsx";
 import { shape as shapeTitle, genreMap } from "./src/movies/movies.js";
 // Overheat's rules and, more to the point, its arithmetic. `settle` and
@@ -39,6 +41,8 @@ import {
   money, tapeLine, LIMIT as OH_LIMIT, START_CAPITAL as OH_START, MIN_POSITION as OH_MIN,
   COOL_OPTIONS,
 } from "./src/games/overheat.js";
+import { LESSONS as STOCK_LESSONS } from "./src/games/school.js";
+import StockSchool from "./src/ui/StockSchool.jsx";
 import Waveform from "./src/ui/Waveform.jsx";
 import VantageMark from "./src/ui/VantageMark.jsx";
 import DeskIcon from "./src/ui/DeskIcon.jsx";
@@ -733,6 +737,33 @@ const I18N = {
     "{n} level": "{n} en tablas",
     // --- settings: the plain-language sidebar ---
     "MARKET COOLED AT {c}": "EL MERCADO SE ENFRIABA EN {c}",
+    // --- settings: the plain-language sidebar ---
+    "READING": "LEYENDO",
+    "LESSON": "LECCIÓN",
+    "SCORE": "PUNTOS",
+    "TIME": "TIEMPO",
+    "WORKED EXAMPLE": "EJEMPLO RESUELTO",
+    "Quiz me →": "Ponme a prueba →",
+    "Read again": "Leer otra vez",
+    "Skip ahead": "Saltar adelante",
+    "SYLLABUS": "TEMARIO",
+    "+ {n} more": "+ {n} más",
+    "TERMS FROM THIS LESSON": "TÉRMINOS DE ESTA LECCIÓN",
+    "NARRATION": "NARRACIÓN",
+    "{name} is reading this lesson aloud.": "{name} está leyendo esta lección en voz alta.",
+    "Press play to hear the lesson read aloud.": "Pulsa reproducir para escuchar la lección en voz alta.",
+    "Quiz · lesson {n}": "Prueba · lección {n}",
+    "lesson {n} of {m}": "lección {n} de {m}",
+    "lesson": "lección",
+    "Correct · +{n}": "Correcto · +{n}",
+    "The answer": "La respuesta",
+    "Next →": "Siguiente →",
+    "Finish →": "Terminar →",
+    "SCHOOL COMPLETE": "ESCUELA COMPLETADA",
+    "You graduated": "Te has graduado",
+    "{a} of {b} right, for {p} points.": "{a} de {b} correctas, {p} puntos.",
+    "Start again": "Empezar de nuevo",
+    "Back to the games": "Volver a los juegos",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -1334,6 +1365,33 @@ const I18N = {
     "{n} level": "{n} à égalité",
     // --- settings: the plain-language sidebar ---
     "MARKET COOLED AT {c}": "LE MARCHÉ REFROIDISSAIT À {c}",
+    // --- settings: the plain-language sidebar ---
+    "READING": "LECTURE",
+    "LESSON": "LEÇON",
+    "SCORE": "SCORE",
+    "TIME": "TEMPS",
+    "WORKED EXAMPLE": "EXEMPLE DÉTAILLÉ",
+    "Quiz me →": "Interrogez-moi →",
+    "Read again": "Relire",
+    "Skip ahead": "Passer à la suite",
+    "SYLLABUS": "PROGRAMME",
+    "+ {n} more": "+ {n} de plus",
+    "TERMS FROM THIS LESSON": "TERMES DE CETTE LEÇON",
+    "NARRATION": "NARRATION",
+    "{name} is reading this lesson aloud.": "{name} lit cette leçon à voix haute.",
+    "Press play to hear the lesson read aloud.": "Appuyez sur lecture pour écouter la leçon à voix haute.",
+    "Quiz · lesson {n}": "Quiz · leçon {n}",
+    "lesson {n} of {m}": "leçon {n} sur {m}",
+    "lesson": "leçon",
+    "Correct · +{n}": "Correct · +{n}",
+    "The answer": "La réponse",
+    "Next →": "Suivant →",
+    "Finish →": "Terminer →",
+    "SCHOOL COMPLETE": "ÉCOLE TERMINÉE",
+    "You graduated": "Vous avez obtenu votre diplôme",
+    "{a} of {b} right, for {p} points.": "{a} sur {b} justes, soit {p} points.",
+    "Start again": "Recommencer",
+    "Back to the games": "Retour aux jeux",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -1935,6 +1993,33 @@ const I18N = {
     "{n} level": "{n} unentschieden",
     // --- settings: the plain-language sidebar ---
     "MARKET COOLED AT {c}": "MARKT KÜHLTE BEI {c}",
+    // --- settings: the plain-language sidebar ---
+    "READING": "LIEST",
+    "LESSON": "LEKTION",
+    "SCORE": "PUNKTE",
+    "TIME": "ZEIT",
+    "WORKED EXAMPLE": "RECHENBEISPIEL",
+    "Quiz me →": "Frag mich ab →",
+    "Read again": "Nochmal lesen",
+    "Skip ahead": "Überspringen",
+    "SYLLABUS": "LEHRPLAN",
+    "+ {n} more": "+ {n} weitere",
+    "TERMS FROM THIS LESSON": "BEGRIFFE AUS DIESER LEKTION",
+    "NARRATION": "ERZÄHLUNG",
+    "{name} is reading this lesson aloud.": "{name} liest diese Lektion vor.",
+    "Press play to hear the lesson read aloud.": "Auf Wiedergabe drücken, um die Lektion vorgelesen zu hören.",
+    "Quiz · lesson {n}": "Quiz · Lektion {n}",
+    "lesson {n} of {m}": "Lektion {n} von {m}",
+    "lesson": "Lektion",
+    "Correct · +{n}": "Richtig · +{n}",
+    "The answer": "Die Antwort",
+    "Next →": "Weiter →",
+    "Finish →": "Abschließen →",
+    "SCHOOL COMPLETE": "SCHULE ABGESCHLOSSEN",
+    "You graduated": "Du hast bestanden",
+    "{a} of {b} right, for {p} points.": "{a} von {b} richtig, macht {p} Punkte.",
+    "Start again": "Von vorn beginnen",
+    "Back to the games": "Zurück zu den Spielen",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -2535,6 +2620,33 @@ const I18N = {
     "{n} level": "{n} empatadas",
     // --- settings: the plain-language sidebar ---
     "MARKET COOLED AT {c}": "O MERCADO ARREFECIA NOS {c}",
+    // --- settings: the plain-language sidebar ---
+    "READING": "A LER",
+    "LESSON": "LIÇÃO",
+    "SCORE": "PONTOS",
+    "TIME": "TEMPO",
+    "WORKED EXAMPLE": "EXEMPLO RESOLVIDO",
+    "Quiz me →": "Põe-me à prova →",
+    "Read again": "Ler outra vez",
+    "Skip ahead": "Saltar à frente",
+    "SYLLABUS": "PROGRAMA",
+    "+ {n} more": "+ {n} mais",
+    "TERMS FROM THIS LESSON": "TERMOS DESTA LIÇÃO",
+    "NARRATION": "NARRAÇÃO",
+    "{name} is reading this lesson aloud.": "{name} está a ler esta lição em voz alta.",
+    "Press play to hear the lesson read aloud.": "Carrega em reproduzir para ouvir a lição em voz alta.",
+    "Quiz · lesson {n}": "Teste · lição {n}",
+    "lesson {n} of {m}": "lição {n} de {m}",
+    "lesson": "lição",
+    "Correct · +{n}": "Correto · +{n}",
+    "The answer": "A resposta",
+    "Next →": "Seguinte →",
+    "Finish →": "Terminar →",
+    "SCHOOL COMPLETE": "ESCOLA CONCLUÍDA",
+    "You graduated": "Formaste-te",
+    "{a} of {b} right, for {p} points.": "{a} de {b} certas, {p} pontos.",
+    "Start again": "Começar de novo",
+    "Back to the games": "Voltar aos jogos",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -3135,6 +3247,33 @@ const I18N = {
     "{n} level": "{n} pari",
     // --- settings: the plain-language sidebar ---
     "MARKET COOLED AT {c}": "IL MERCATO SI RAFFREDDAVA A {c}",
+    // --- settings: the plain-language sidebar ---
+    "READING": "IN LETTURA",
+    "LESSON": "LEZIONE",
+    "SCORE": "PUNTEGGIO",
+    "TIME": "TEMPO",
+    "WORKED EXAMPLE": "ESEMPIO SVOLTO",
+    "Quiz me →": "Mettimi alla prova →",
+    "Read again": "Rileggi",
+    "Skip ahead": "Salta avanti",
+    "SYLLABUS": "PROGRAMMA",
+    "+ {n} more": "+ altre {n}",
+    "TERMS FROM THIS LESSON": "TERMINI DI QUESTA LEZIONE",
+    "NARRATION": "NARRAZIONE",
+    "{name} is reading this lesson aloud.": "{name} sta leggendo questa lezione ad alta voce.",
+    "Press play to hear the lesson read aloud.": "Premi play per ascoltare la lezione letta ad alta voce.",
+    "Quiz · lesson {n}": "Quiz · lezione {n}",
+    "lesson {n} of {m}": "lezione {n} di {m}",
+    "lesson": "lezione",
+    "Correct · +{n}": "Corretto · +{n}",
+    "The answer": "La risposta",
+    "Next →": "Avanti →",
+    "Finish →": "Concludi →",
+    "SCHOOL COMPLETE": "SCUOLA COMPLETATA",
+    "You graduated": "Ti sei diplomato",
+    "{a} of {b} right, for {p} points.": "{a} su {b} giuste, per {p} punti.",
+    "Start again": "Ricomincia",
+    "Back to the games": "Torna ai giochi",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -3668,73 +3807,10 @@ function etNow() {
 }
 
 // ---- Stock School: a beginner tutorial the anchor teaches, no API/credits needed (all local) ----
-// Each lesson: the anchor explains it, then a one-question check. Right answers earn a cheer.
-const STOCK_LESSONS = [
-  {
-    title: "What is a stock?",
-    teach: "A stock is a tiny slice of ownership in a company. Buy one share of a company and you literally own a small piece of it — if the business grows more valuable, so can your slice.",
-    q: "Owning a share of a company means…",
-    choices: ["You own a small piece of that company", "You lent the company money for fixed interest", "You are an employee of the company"],
-    answer: 0,
-    explain: "Correct — a share is part-ownership. (Lending a company money for interest is a bond, not a stock.)",
-  },
-  {
-    title: "Ticker symbols",
-    teach: "Every public company has a short ticker symbol so it's quick to look up — Apple is AAPL, Nvidia is NVDA, Tesla is TSLA. It's just a nickname for the stock on the exchange.",
-    q: "What is a ticker symbol?",
-    choices: ["The company's phone number", "A short code that identifies a stock", "The price of one share"],
-    answer: 1,
-    explain: "Right — it's a short code (like NVDA) that names the stock. The price is a separate, constantly-changing number.",
-  },
-  {
-    title: "Why prices move",
-    teach: "A stock's price is set by supply and demand — how many people want to buy versus sell right now. Good news (strong earnings, new products) pulls buyers in and lifts the price; bad news does the opposite.",
-    q: "A stock's price mostly moves because of…",
-    choices: ["A government-fixed daily rate", "Buyers and sellers reacting to news and demand", "The alphabetical order of its ticker"],
-    answer: 1,
-    explain: "Exactly — price is a live tug-of-war between buyers and sellers reacting to information.",
-  },
-  {
-    title: "Gains and losses (%)",
-    teach: "Change is shown as a percentage from the previous close. Green and a plus sign means it's up; red and a minus means it's down. A stock at $100 that rises to $105 is +5%.",
-    q: "A stock closed yesterday at $50 and is now $55. That's…",
-    choices: ["-10%", "+10%", "+5%"],
-    answer: 1,
-    explain: "Correct — a $5 gain on $50 is +10%. Percentages let you compare moves across stocks of very different prices.",
-  },
-  {
-    title: "Bid, ask & the spread",
-    teach: "At any moment there's a bid (the highest price buyers will pay) and an ask (the lowest price sellers will accept). The small gap between them is the spread — the cost of trading instantly.",
-    q: "The 'ask' price is…",
-    choices: ["The lowest price a seller will accept", "A question you send the company", "Last year's average price"],
-    answer: 0,
-    explain: "Right — ask = sellers' lowest price, bid = buyers' highest. You usually buy at the ask and sell at the bid.",
-  },
-  {
-    title: "Bull vs bear markets",
-    teach: "A bull market is a stretch of rising prices and optimism; a bear market is a prolonged fall of about 20% or more, with caution and fear. Remember: bulls charge up, bears swipe down.",
-    q: "A 'bear market' means prices are broadly…",
-    choices: ["Rising strongly", "Falling for a sustained period", "Completely frozen"],
-    answer: 1,
-    explain: "Correct — bear = sustained decline. These cycles are normal; markets have historically recovered over time.",
-  },
-  {
-    title: "Don't put all your eggs in one basket",
-    teach: "Diversification means spreading money across many stocks (or funds) instead of betting everything on one. If one company stumbles, the others cushion the blow. It's the closest thing investing has to a free lunch.",
-    q: "Diversification mainly helps by…",
-    choices: ["Guaranteeing you never lose money", "Spreading risk so one bad pick hurts less", "Doubling your returns automatically"],
-    answer: 1,
-    explain: "Right — it reduces risk. Nothing guarantees against losses, but spreading out softens any single blow.",
-  },
-  {
-    title: "Time in the market",
-    teach: "Prices bounce around daily, but historically the broad market has trended upward over years. Investing regularly and staying patient tends to beat trying to jump in and out at the perfect moment.",
-    q: "For most beginners, a sensible mindset is…",
-    choices: ["Panic-sell the moment a stock dips", "Invest steadily and think long-term", "Only buy the single hottest stock"],
-    answer: 1,
-    explain: "Correct — steady, long-term, diversified investing beats panic. You've graduated Stock School! 🎓",
-  },
-];
+// The eight lessons moved to src/games/school.js when the handoff gave each one
+// two takeaway cards, a worked example and a set of terms. That is a shape with
+// eight instances, and a shape wants a contract — there is a test walking every
+// lesson now, including one that checks the worked examples actually compute.
 
 // Bull or Bear: read a headline, predict which way the stock likely moves. Teaches cause → effect.
 const BULLBEAR_ROUNDS = [
@@ -6216,6 +6292,7 @@ function ArchiveFrame({ id, title }) {
     </div>
   );
 }
+
 // ============================================================
 //  OVERHEAT — twenty-one, told as a market.
 //
@@ -10299,6 +10376,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [gamePhase, setGamePhase] = useState("teach");  // teach | quiz | reveal | done
   const [gameChoice, setGameChoice] = useState(null);   // index the player picked
   const [gameScore, setGameScore] = useState(0);
+  // When this run began. The reference's third HUD card says "TIME LEFT", and
+  // that is the one number on the screen this game cannot honestly print: a
+  // lesson is read at your own pace, and a countdown over a paragraph you are
+  // still reading is a pressure the design does not intend. So the card counts
+  // UP, from a real timestamp, and says TIME.
+  const [gameStartedAt, setGameStartedAt] = useState(null);
   const gameSet = (mode) => mode === "school" ? STOCK_LESSONS : mode === "bullbear" ? BULLBEAR_ROUNDS : mode === "ticker" ? TICKER_ROUNDS : [];
   // narrate a round: the anchor reads the lesson / headline / prompt aloud
   const narrateRound = useCallback((mode, i) => {
@@ -10308,7 +10391,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   }, [speak]);
   const openGames = useCallback(() => { setGameOn(true); setGameMode("menu"); stopSpeak(); }, [stopSpeak]);
   const startMode = useCallback((mode) => {
-    setGameMode(mode); setGameStep(0); setGameChoice(null); setGameScore(0);
+    setGameMode(mode); setGameStep(0); setGameChoice(null); setGameScore(0); setGameStartedAt(Date.now());
     setGamePhase(mode === "school" ? "teach" : "quiz");
     narrateRound(mode, 0);
   }, [narrateRound]);
@@ -13016,16 +13099,41 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         />, true);
     }
 
-    // ---- an active quiz game (school / bullbear / ticker) ----
+    // ---- Stock School: its own two screens, in src/ui/StockSchool.jsx ----
+    if (gameMode === "school") {
+      return shell(null, null, null, (
+        <StockSchool
+          lessons={STOCK_LESSONS}
+          step={gameStep}
+          phase={gamePhase}
+          score={gameScore}
+          choice={gameChoice}
+          startedAt={gameStartedAt}
+          reading={speakingId === "school"}
+          progressRef={speechProgressRef}
+          anchorName={anchorName}
+          onAnswer={gameAnswer}
+          onNext={gameNext}
+          onToQuiz={gameToQuiz}
+          onBackToLesson={() => { setGameChoice(null); setGamePhase("teach"); }}
+          onJump={(i) => { if (i !== gameStep) { setGameStep(i); setGameChoice(null); setGamePhase("teach"); narrateRound("school", i); } }}
+          onToggleRead={() => (speakingId === "school" ? stopSpeak() : narrateRound("school", gameStep))}
+          onRestart={() => startMode("school")}
+          onBack={() => { setGameMode("menu"); stopSpeak(); }}
+          onClose={closeGame}
+          t={t}
+        />
+      ), true);
+    }
+
+    // ---- an active quiz game (bullbear / ticker) ----
     // NB: named `round`, never `R` — a local `R` here shadows the theme's
     // radius token across this whole closure (TDZ crash on open).
     const data = gameSet(gameMode), total = data.length, round = data[gameStep] || {};
     const done = gamePhase === "done";
     // `hdr` is gone: the header reads from GAMES like every other game, so the
     // three quizzes can no longer carry a second, differently-cased name.
-    const meta = gameMode === "school"
-      ? { unit: "lesson", title: round.title, question: round.q, choices: round.choices || [], answer: round.answer, explain: round.explain }
-      : gameMode === "bullbear"
+    const meta = gameMode === "bullbear"
         ? { unit: "round", title: "Will the stock go up or down?", question: round.headline, choices: ["Bullish — likely UP", "Bearish — likely DOWN"], answer: round.bullish ? 0 : 1, explain: round.why }
         : { unit: "round", title: "Pick the real ticker symbol", question: `Which symbol is ${round.company}?`, choices: round.options || [], answer: round.answer, explain: `${round.company} trades as ${round.options?.[round.answer]}.` };
     const headerRight = (
@@ -13042,9 +13150,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         <div style={{ padding: 14, fontFamily: MONO, display: "flex", flexDirection: "column", gap: 12 }}>
           {done ? (
             <>
-              <div style={{ fontSize: 17, fontWeight: 700, color: C.accentText }}>{gameMode === "school" ? "🎓 You graduated!" : "🏁 Round complete!"}</div>
+              <div style={{ fontSize: 17, fontWeight: 700, color: C.accentText }}>🏁 Round complete!</div>
               <div style={{ fontSize: 12, lineHeight: 1.7, color: C.text }}>
-                You scored <b style={{ color: gameScore > total / 2 ? C.up : C.accentText }}>{gameScore} / {total}</b>. {gameMode === "school" ? "You now know the basics of how stocks work." : gameScore === total ? "Perfect run!" : "Play again to beat your score."}
+                You scored <b style={{ color: gameScore > total / 2 ? C.up : C.accentText }}>{gameScore} / {total}</b>. {gameScore === total ? "Perfect run!" : "Play again to beat your score."}
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button onClick={() => startMode(gameMode)} style={primaryBtn}>Play again ↻</button>
@@ -13053,15 +13161,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           ) : (
             <>
               <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{meta.title}</div>
-              {gameMode === "school" && gamePhase === "teach" && (
-                <>
-                  <div style={{ fontSize: 12, lineHeight: 1.7, color: C.text }}>{R.teach}</div>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <button onClick={gameToQuiz} style={primaryBtn}>Quiz me →</button>
-                    <button onClick={() => speak("school", R.teach)} style={ghostBtn}>🔊 read again</button>
-                  </div>
-                </>
-              )}
+
               {(gamePhase === "quiz" || gamePhase === "reveal") && (
                 <>
                   <div style={{ fontSize: 12, lineHeight: 1.6, color: C.muted }}>{gameMode === "bullbear" ? "📰 " : ""}{meta.question}</div>
@@ -13073,7 +13173,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       return (
                         <button key={i} disabled={revealed} onClick={() => gameAnswer(i)}
                           style={{ textAlign: "left", background: bg, border: `1px solid ${bd}`, color: C.text, borderRadius: 5, fontFamily: SANS, fontSize: 12, padding: "9px 11px", cursor: revealed ? "default" : "pointer" }}>
-                          {gameMode === "school" ? `${String.fromCharCode(65 + i)}. ` : ""}{c}{revealed && isRight ? "  ✓" : revealed && chosen ? "  ✕" : ""}
+                          {c}{revealed && isRight ? "  ✓" : revealed && chosen ? "  ✕" : ""}
                         </button>
                       );
                     })}
@@ -13083,7 +13183,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       <div style={{ fontSize: 12, lineHeight: 1.6, color: gameChoice === meta.answer ? C.up : C.muted }}>
                         {meta.explain}
                       </div>
-                      <button onClick={gameNext} style={primaryBtn}>{gameStep >= total - 1 ? (gameMode === "school" ? "Finish 🎓" : "See score 🏁") : "Next →"}</button>
+                      <button onClick={gameNext} style={primaryBtn}>{gameStep >= total - 1 ? "See score 🏁" : "Next →"}</button>
                     </>
                   )}
                 </>

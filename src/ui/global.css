@@ -1078,3 +1078,33 @@ button:not(:disabled):active { transform: scale(0.97); }
    link does. */
 .v-readlink { transition: color var(--v-fast) var(--v-ease); }
 .v-readlink:hover { color: var(--v-text); text-decoration: underline; }
+
+/* ---------- Stock School ----------
+   The lesson and its rail sit side by side while there is room, then the rail
+   goes underneath with a top border instead of a left one — the same break, at
+   the same width, as every other two-column panel in the product. */
+@media (max-width: 1000px) {
+  .v-schoolbody { flex-direction: column; }
+  .v-schoolrail {
+    width: auto !important;
+    border-left: none !important;
+    border-top: 1px solid var(--v-edge);
+    padding: 18px 22px !important;
+  }
+}
+@media (max-width: 620px) {
+  .v-schoolbody > div:first-child { padding: 18px 14px !important; }
+  .v-schoolrail { padding: 14px !important; }
+  .v-schoolhud { padding: 12px 14px !important; gap: 14px !important; }
+}
+
+/* "rows slide 4px right with a green border on hover" — the handoff's words
+   for the answer rows, and a sideways nudge rather than a lift because these
+   are list rows in a column, where a lift reads as the row detaching. */
+.v-answer { transition: transform 0.2s var(--v-ease), border-color 0.2s var(--v-ease); }
+.v-answer:hover { transform: translateX(4px); border-color: var(--v-accent) !important; }
+
+/* A syllabus row is a jump, so it has to answer a pointer. The current row
+   already carries the accent border and just brightens. */
+.v-syllabus { transition: background var(--v-fast) var(--v-ease); }
+.v-syllabus:hover { background: var(--v-surface-raised); }
