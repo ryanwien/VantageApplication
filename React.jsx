@@ -810,6 +810,7 @@ const I18N = {
     "{n} days left in your free trial": "Te quedan {n} días de prueba gratuita",
     "Last day of your free trial": "Último día de tu prueba gratuita",
     "Your free trial ended on {date}": "Tu prueba gratuita terminó el {date}",
+    "Show": "Mostrar",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -1476,6 +1477,7 @@ const I18N = {
     "{n} days left in your free trial": "Il vous reste {n} jours d'essai gratuit",
     "Last day of your free trial": "Dernier jour de votre essai gratuit",
     "Your free trial ended on {date}": "Votre essai gratuit s'est terminé le {date}",
+    "Show": "Afficher",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -2142,6 +2144,7 @@ const I18N = {
     "{n} days left in your free trial": "Noch {n} Tage deiner kostenlosen Testphase",
     "Last day of your free trial": "Letzter Tag deiner kostenlosen Testphase",
     "Your free trial ended on {date}": "Deine kostenlose Testphase endete am {date}",
+    "Show": "Anzeigen",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -2807,6 +2810,7 @@ const I18N = {
     "{n} days left in your free trial": "Faltam {n} dias da tua avaliação gratuita",
     "Last day of your free trial": "Último dia da tua avaliação gratuita",
     "Your free trial ended on {date}": "A tua avaliação gratuita terminou a {date}",
+    "Show": "Mostrar",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -3472,6 +3476,7 @@ const I18N = {
     "{n} days left in your free trial": "Ti restano {n} giorni di prova gratuita",
     "Last day of your free trial": "Ultimo giorno della tua prova gratuita",
     "Your free trial ended on {date}": "La tua prova gratuita è finita il {date}",
+    "Show": "Mostra",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -7832,7 +7837,7 @@ function AppCalendar({ extra = [] }) {
           <div key={e.id || `m${i}`} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
             <span style={{ fontFamily: MONO, fontSize: 12, color: e.time ? C.accentText : C.faint, border: `1px solid ${C.panelEdge}`, borderRadius: R.xs, padding: "2px 6px", minWidth: 58, textAlign: "center" }}>{e.time ? to12h(e.time) : (e.kind === "market" ? "market" : "all day")}</span>
             <span style={{ fontFamily: SANS, fontSize: 12, color: e.kind === "market" ? C.amber : C.text, flex: 1, lineHeight: 1.35 }}>{e.title}</span>
-            {e.kind === "user" && <button onClick={() => del(e.id)} aria-label="Delete event" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 11 }}>✕</button>}
+            {e.kind === "user" && <button onClick={() => del(e.id)} className="v-rowx" aria-label={`Delete "${e.title}"`} style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 11 }}>✕</button>}
           </div>
         ))}
         <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
@@ -13408,7 +13413,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           <span style={{ textAlign: "right", color: C.muted, fontSize: 12, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{fmt(r.cost / r.shares)}→{r.price != null ? fmt(r.price) : "—"}</span>
           <span style={{ textAlign: "right", color: C.text, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.val != null ? fmt(r.val) : "—"}</span>
           <span style={{ textAlign: "right", color: dirColorN(r.pnl), ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}{r.pnlPct != null ? <span style={{ fontSize: 11, display: "block", color: dirColorN(r.pnl) }}>{r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%</span> : null}</span>
-          <button onClick={() => removePosition(r.id)} aria-label="Remove" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 13 }}>✕</button>
+          <button onClick={() => removePosition(r.id)} className="v-rowx" aria-label={`Remove ${r.sym}`} style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 13 }}>✕</button>
         </div>
       ))}
       {positions.length > 0 && (
@@ -13684,7 +13689,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <div id="export-modal" onClick={e => e.stopPropagation()} className="v-rise" style={{ width: 620, maxWidth: "94vw", maxHeight: "88vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${C.panelEdge}` }}>
                 <span style={{ ...TYPE.eyebrow, color: C.muted }}>⬇ REVIEW & EDIT <span style={{ color: C.faint, fontWeight: 600, letterSpacing: "-0.013em", textTransform: "none" }}>· before you export</span></span>
-                <button onClick={() => setExportDraft(null)} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 14, cursor: "pointer" }}>✕</button>
+                <button onClick={() => setExportDraft(null)} className="v-clearx" aria-label="Close the export preview" style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 14, cursor: "pointer" }}>✕</button>
               </div>
               <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
                 <div>
@@ -14810,25 +14815,42 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             {(() => {
               const maxPnl = Math.max(0.5, ...portfolioRows.map(r => Math.abs(r.pnlPct ?? 0)));
               return portfolioRows.map(r => (
-              <button key={r.id} className="wl-row" onClick={() => setSelected(r.sym)} aria-current={r.sym === selected ? "true" : undefined}
-                style={{ display: "block", width: "100%", padding: "8px 12px", background: r.sym === selected ? C.surfaceRaised : "transparent", border: "none", borderLeft: `2px solid ${r.sym === selected ? C.accent : "transparent"}`, borderTop: `1px solid ${C.grid}`, cursor: "pointer", textAlign: "left" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              // A div wrapping a stretched button, not a button wrapping a
+              // span. The row used to be one big <button> with the remove ✕
+              // nested inside it as a <span onClick>, which is two faults in one
+              // element: interactive content inside a button is invalid, and a
+              // span with a click handler is not a control at all — no tab stop,
+              // no role, no name, so deleting a holding was reachable by mouse
+              // only and announced as nothing.
+              //
+              // The select action is now an absolutely-positioned button filling
+              // the row, and the ✕ is its sibling above it. Clicking anywhere on
+              // the row still selects, because the overlay covers the row; the
+              // text is inert so it never intercepts, and only the ✕ opts back
+              // into taking clicks.
+              <div key={r.id} className="wl-row"
+                style={{ position: "relative", display: "block", width: "100%", padding: "8px 12px", background: r.sym === selected ? C.surfaceRaised : "transparent", borderLeft: `2px solid ${r.sym === selected ? C.accent : "transparent"}`, borderTop: `1px solid ${C.grid}`, textAlign: "left" }}>
+                <button onClick={() => setSelected(r.sym)} aria-current={r.sym === selected ? "true" : undefined}
+                  aria-label={`${t("Show")} ${r.sym}`}
+                  style={{ position: "absolute", inset: 0, width: "100%", background: "transparent", border: "none", cursor: "pointer", padding: 0 }} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", pointerEvents: "none" }}>
                   <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span></span>
                   {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>)}
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 2, position: "relative", pointerEvents: "none" }}>
                   {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>@{fmt(r.cost / r.shares)} → {r.price != null ? fmt(r.price) : "—"}</span>)}
                   {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.pnl) }}>{r.pnlPct == null ? "" : `${r.pnlPct >= 0 ? "+" : ""}${r.pnlPct.toFixed(1)}%`}</span>)}
-                  <span onClick={e => { e.stopPropagation(); removePosition(r.id); }} style={{ fontFamily: MONO, fontSize: 12, color: C.faint, cursor: "pointer" }}>✕</span>
+                  <button onClick={() => removePosition(r.id)} className="v-rowx" aria-label={`Remove ${r.sym}`}
+                    style={{ background: "transparent", border: "none", padding: 0, fontFamily: MONO, fontSize: 12, color: C.faint, cursor: "pointer", pointerEvents: "auto" }}>✕</button>
                 </div>
                 {r.pnlPct != null && (
-                  <div style={{ position: "relative", height: 4, background: C.grid, borderRadius: 2, marginTop: 6, overflow: "hidden" }}>
+                  <div style={{ position: "relative", height: 4, background: C.grid, borderRadius: 2, marginTop: 6, overflow: "hidden", pointerEvents: "none" }}>
                     <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: C.panelEdge }} />
                     <div style={{ position: "absolute", top: 0, bottom: 0, background: dirColorN(r.pnl), transition: "left 0.5s ease, width 0.5s ease",
                       left: r.pnlPct >= 0 ? "50%" : `${50 - (Math.abs(r.pnlPct) / maxPnl) * 50}%`, width: `${(Math.abs(r.pnlPct) / maxPnl) * 50}%` }} />
                   </div>
                 )}
-              </button>
+              </div>
               ));
             })()}
             <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16, borderTop: positions.length ? `1px solid ${C.panelEdge}` : "none" }}>
@@ -14862,7 +14884,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   <span style={{ fontFamily: MONO, fontSize: 12, color: C.text }}>{a.sym}</span>
                   <span style={{ fontFamily: MONO, fontSize: 12, color: a.op === ">" ? C.up : C.down }}>{a.op === ">" ? "▲ ≥" : "▼ ≤"} {fmt(a.price)}</span>
                   <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint, marginLeft: "auto" }}>now {cur != null ? fmt(cur) : "—"}</span>
-                  <button onClick={() => removeAlert(a.id)} aria-label="Remove alert" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 11 }}>✕</button>
+                  <button onClick={() => removeAlert(a.id)} className="v-rowx" aria-label={`Remove the ${a.sym} alert at ${fmt(a.price)}`} style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 11 }}>✕</button>
                 </div>
               );
             })}
@@ -14916,7 +14938,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <div style={{ position: "absolute", boxSizing: "border-box", width: TIPW, maxWidth: "calc(100vw - 24px)", left: tip.left, top: tip.top, maxHeight: maxH, overflowY: "auto", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.md, padding: 16, boxShadow: "0 16px 50px rgba(0,0,0,0.6)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>TOUR · {tourStep + 1}/{TOUR_STEPS.length}</span>
-                <button onClick={endSpotlight} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 11, cursor: "pointer" }}>{t("exit")} ✕</button>
+                <button onClick={endSpotlight} className="v-clearx" style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 11, cursor: "pointer" }}>{t("exit")} ✕</button>
               </div>
               <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 15, letterSpacing: "-0.011em", color: C.accentText, marginTop: 6 }}>{t(step.title)}</div>
               <div style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.65, color: C.text, marginTop: 8 }}>{t(step.body)}</div>
@@ -14956,7 +14978,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           <div className="v-rise" style={{ position: "fixed", left: 12, bottom: 12, zIndex: 55, width: 268, maxWidth: "92vw", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.lg, boxShadow: "0 12px 40px rgba(0,0,0,0.55)", overflow: "hidden" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
               <span style={{ ...TYPE.eyebrow, color: C.muted }}>{t("Getting started")} · <span style={{ color: C.accentText }}>{done}/{MISSIONS.length}</span></span>
-              <button onClick={() => setMissionsOpen(false)} aria-label="Close missions" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
+              <button onClick={() => setMissionsOpen(false)} className="v-clearx" aria-label="Close missions" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
             </div>
             <div style={{ padding: "6px 12px 10px" }}>
               {MISSIONS.map(m => {

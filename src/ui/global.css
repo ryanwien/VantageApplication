@@ -1162,6 +1162,40 @@ button:not(:disabled):active { transform: scale(0.97); }
   width: 30px; height: 44px;
 }
 
+/* ---------- the same ✕, in a list ----------
+   Remove this holding, delete this event, drop this price alert. Same glyph and
+   the same problem — measured at 9 by 16.5 on the alerts and the calendar,
+   10.6 by 19.5 in the portfolio card — but it cannot take the 44 above, because
+   these stack. A 44-tall target on a row pitch of 34 overhangs its neighbours by
+   nine pixels each way, and the overlap does not fail politely: later siblings
+   paint over earlier ones, so a tap aimed just above one row's ✕ would land on
+   the NEXT row's and delete the wrong thing. A missed tap is an annoyance; a
+   deletion you did not ask for is not.
+
+   So the height is the tightest pitch in the product, less a gutter. Measured
+   with two of each on screen: calendar events 34, price alerts 35, portfolio
+   card rows 52.2, the Markets rail 77. 32 clears the 24x24 floor everywhere and
+   still leaves two pixels between adjacent targets on the tightest of them.
+   Width stays 30, the same as above, and nothing interactive sits within 30 of
+   these — the cells to their left are all plain text.
+
+   The export draft's row ✕s are deliberately NOT in this set: their grid cell
+   already sizes them to 28 by 30, which is over the floor, and their pitch is
+   31 — there is no room to grow and no need.
+
+   Note what this does NOT do: it never reaches 44, on a phone or anywhere else,
+   and it does not take the .v-tap rule that would. 44 on a 34px pitch is the
+   overlap described above, and a wrong deletion is worse than a small target.
+   Getting to 44 here means giving these lists a 46px row, which is a density
+   decision about the rail and the calendar rather than a fix to a ✕. */
+.v-rowx { transition: color var(--v-fast) var(--v-ease); position: relative; }
+.v-rowx:hover { color: var(--v-text); }
+.v-rowx::after {
+  content: ""; position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 30px; height: 32px;
+}
+
 /* ---------- video desk ----------
    Everything a pointer can act on in this panel answers it the same way the
    rest of the product does: the border goes to the accent. The handoff asks
