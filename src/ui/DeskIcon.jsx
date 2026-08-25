@@ -279,6 +279,18 @@ export default function DeskIcon({ name, size = 18 }) {
           <path d="M7.5 7.5h.01" />
         </svg>
       );
+    // The poster wall. The handoff draws this one as the glyph ▦ — a grid, not
+    // a film reel — because what the panel shows you is six posters, and that
+    // is the shape worth putting in the tile.
+    case "catalog":
+      return (
+        <svg {...p}>
+          <rect x="3" y="3" width="7.5" height="7.5" rx="1.5" />
+          <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" />
+          <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" />
+          <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5" />
+        </svg>
+      );
     case "cards":
       return (
         <svg {...p}>

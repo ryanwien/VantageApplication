@@ -1040,3 +1040,23 @@ button:not(:disabled):active { transform: scale(0.97); }
    ordinary card hover; a story card is a thing you are meant to act on, so it
    goes the rest of the way to the accent. */
 .v-storycard:hover { border-color: var(--v-accent) !important; }
+
+/* ---------- movies on the desk ----------
+   Six across, as the reference draws it. The step-downs are 3 and 2 rather
+   than whatever fits, because 6, 3 and 2 all divide the six titles exactly —
+   an auto-fill grid at five columns would leave one poster stranded on a row
+   of its own, which looks like a bug in a list whose header says "top 6". */
+.v-moviegrid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1100px) { .v-moviegrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px)  { .v-moviegrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* "posters lift 4px with a green border on hover" — the handoff's own words,
+   and 4px rather than .v-lift's 2px because a 2:3 poster is a big target and
+   a small lift on a big object reads as a wobble. */
+.v-poster { transition: transform 0.22s var(--v-ease), border-color 0.22s var(--v-ease); }
+.v-poster:hover { transform: translateY(-4px); border-color: var(--v-accent) !important; }
+
+/* The card's verb is a link, not a button, so it answers a pointer the way a
+   link does. */
+.v-readlink { transition: color var(--v-fast) var(--v-ease); }
+.v-readlink:hover { color: var(--v-text); text-decoration: underline; }

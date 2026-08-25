@@ -402,6 +402,9 @@ const RATE_BUCKETS = new Map();
 // inside a 5-minute candle's own resolution, so nothing is lost by it.
 const CANDLE_TTL_MS = 5 * 60 * 1000;
 const candleCache = new Map();
+// TMDB's genre table, by kind. Two entries at most, and no TTL: the list of
+// film genres is not a thing that changes while a process is up.
+const genreCache = new Map();
 
 function rateLimit(key, limit, windowMs) {
   const now = Date.now(), slot = Math.floor(now / windowMs), id = `${key}:${slot}`;
@@ -727,6 +730,20 @@ const server = http.createServer(async (req, res) => {
         const id = url.searchParams.get("id");
         if (!num(id)) return send(res, 400, { error: "id must be a TMDB id." });
         upstream = `${base}/${kind}/${id}/videos?${key}`;
+      } else if (p === "/api/tmdb/genres") {
+        // discover and trending return genre_IDS. The names live here, in a
+        // list that changes about once a decade — so it is answered from
+        // memory after the first call rather than spending a request per
+        // catalogue open on a table of nineteen rows.
+        const hit = genreCache.get(kind);
+        if (hit) return send(res, 200, hit);
+        upstream = `${base}/genre/${kind}/list?${key}`;
+      } else if (p === "/api/tmdb/details") {
+        // The one call that carries a runtime. Made for the single title whose
+        // summary is open, never for the grid.
+        const id = url.searchParams.get("id");
+        if (!num(id)) return send(res, 400, { error: "id must be a TMDB id." });
+        upstream = `${base}/${kind}/${id}?${key}`;
       } else return send(res, 404, { error: "Unknown TMDB endpoint." });
 
       let r;
@@ -736,7 +753,9 @@ const server = http.createServer(async (req, res) => {
         const ours = r.status === 401 || r.status === 403;
         return send(res, ours ? 502 : r.status, { error: ours ? "The server's TMDB key was rejected." : `TMDB HTTP ${r.status}` });
       }
-      return send(res, 200, await r.json());
+      const body = await r.json();
+      if (p === "/api/tmdb/genres") genreCache.set(kind, body);
+      return send(res, 200, body);
     }
 
     // ---- the rest of the Finnhub surface ----

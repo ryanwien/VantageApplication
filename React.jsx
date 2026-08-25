@@ -26,6 +26,8 @@ import VideoFrame, { ytId } from "./src/ui/VideoFrame.jsx";
 import VideoDesk from "./src/ui/VideoDesk.jsx";
 import { ytDurationSec, parseChapters, chapterMentions, relAge } from "./src/video/video.js";
 import { newestFirst, sourceOf } from "./src/news/news.js";
+import MoviesDesk from "./src/ui/MoviesDesk.jsx";
+import { shape as shapeTitle, genreMap } from "./src/movies/movies.js";
 import Waveform from "./src/ui/Waveform.jsx";
 import VantageMark from "./src/ui/VantageMark.jsx";
 import DeskIcon from "./src/ui/DeskIcon.jsx";
@@ -10897,44 +10899,53 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // align its bottom — pushing the panel's title/close row off the top of the screen.
   useEffect(() => { if (player) playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [player]);
   // ---- streaming catalog (TMDB for Netflix/Disney+/Hulu libraries; archive.org for in-desk films) ----
-  const [catalog, setCatalog] = useState(null); // {service?, kind?, archive?, popular?, query?, loading, items:[], error?}
+  const [catalog, setCatalog] = useState(null); // {service?, kind?, archive?, popular?, query?, region?, loading, items:[], error?, ms?}
   const [catalogPick, setCatalogPick] = useState(null); // an item whose summary is expanded
-  const browseCatalog = useCallback(async (svc, kind = "movie") => {
-    setCatalogPick(null);
-    if (!planAllows("tmdb")) { setCatalog({ service: svc, kind, loading: false, items: [], error: `Streaming catalog is a ${planFor("tmdb")} feature — upgrade in settings → ACCOUNT.` }); return; }
-    if (!canBrowseCatalog) { setCatalog({ service: svc, kind, loading: false, items: [], error: "The streaming catalog isn't configured on this server." }); return; }
-    setCatalog({ service: svc, kind, loading: true, items: [] });
+  const [catalogAt, setCatalogAt] = useState(null);     // when the list landed → "refreshed 4m ago"
+  const [catalogDetails, setCatalogDetails] = useState(null); // {runtime, genres} for the open title
+  // TMDB's genre table, by kind. discover and trending answer with genre_IDS
+  // and nothing else, so without this a card has a year and no genre. Fetched
+  // once per kind and kept — the server caches it too, so a second browse of
+  // the same kind costs nothing at either end.
+  const genresRef = useRef({});
+  const loadGenres = useCallback(async (kind) => {
+    if (genresRef.current[kind]) return genresRef.current[kind];
     try {
-      const r = await fetch(`/api/tmdb/discover?kind=${kind}&provider=${svc.tmdb}&region=US`);
+      const r = await fetch(`/api/tmdb/genres?kind=${kind}`);
+      if (!r.ok) return {};
+      const map = genreMap((await r.json()).genres);
+      genresRef.current = { ...genresRef.current, [kind]: map };
+      return map;
+    } catch { return {}; }   // a card with no genre is the honest failure here
+  }, []);
+
+  // Both browse paths land here. `top` is 6 because the header says "top 6",
+  // and a header that says six over a grid of twelve is the panel lying about
+  // its own contents.
+  const CATALOG_TOP = 6;
+  const runBrowse = useCallback(async (base, url, kind) => {
+    setCatalogPick(null); setCatalogDetails(null);
+    if (!planAllows("tmdb")) { setCatalog({ ...base, kind, loading: false, items: [], error: `Streaming catalog is a ${planFor("tmdb")} feature — upgrade in settings → ACCOUNT.` }); return; }
+    if (!canBrowseCatalog) { setCatalog({ ...base, kind, loading: false, items: [], error: "The streaming catalog isn't configured on this server." }); return; }
+    setCatalog({ ...base, kind, loading: true, items: [] });
+    const t0 = performance.now();
+    try {
+      // The genre table in parallel with the list: it is a separate request and
+      // waiting for it in series would put a second round trip in front of the
+      // posters for the sake of one word per card.
+      const [r, gmap] = await Promise.all([fetch(url), loadGenres(kind)]);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const d = await r.json();
-      const items = (d.results || []).slice(0, 12).map(m => ({
-        id: m.id, kind, title: m.title || m.name, rating: m.vote_average,
-        year: String(m.release_date || m.first_air_date || "").slice(0, 4),
-        poster: m.poster_path ? `https://image.tmdb.org/t/p/w185${m.poster_path}` : null,
-        overview: m.overview,
-      }));
-      setCatalog({ service: svc, kind, loading: false, items });
-    } catch (e) { setCatalog({ service: svc, kind, loading: false, items: [], error: humanizeError(e) }); }
-  }, [canBrowseCatalog, planAllows]);
-  const browsePopular = useCallback(async (kind = "movie") => {
-    setCatalogPick(null);
-    if (!planAllows("tmdb")) { setCatalog({ popular: true, kind, loading: false, items: [], error: `Streaming catalog is a ${planFor("tmdb")} feature — upgrade in settings → ACCOUNT.` }); return; }
-    if (!canBrowseCatalog) { setCatalog({ popular: true, kind, loading: false, items: [], error: "The streaming catalog isn't configured on this server." }); return; }
-    setCatalog({ popular: true, kind, loading: true, items: [] });
-    try {
-      const r = await fetch(`/api/tmdb/trending?kind=${kind}`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const d = await r.json();
-      const items = (d.results || []).slice(0, 12).map(m => ({
-        id: m.id, kind, title: m.title || m.name, rating: m.vote_average,
-        year: String(m.release_date || m.first_air_date || "").slice(0, 4),
-        poster: m.poster_path ? `https://image.tmdb.org/t/p/w185${m.poster_path}` : null,
-        overview: m.overview,
-      }));
-      setCatalog({ popular: true, kind, loading: false, items });
-    } catch (e) { setCatalog({ popular: true, kind, loading: false, items: [], error: humanizeError(e) }); }
-  }, [canBrowseCatalog, planAllows]);
+      const items = (d.results || []).slice(0, CATALOG_TOP).map(m => shapeTitle(m, kind, gmap));
+      setCatalog({ ...base, kind, loading: false, items, ms: Math.round(performance.now() - t0) });
+      setCatalogAt(Date.now());
+    } catch (e) { setCatalog({ ...base, kind, loading: false, items: [], error: humanizeError(e) }); }
+  }, [canBrowseCatalog, planAllows, loadGenres]);
+
+  const browseCatalog = useCallback((svc, kind = "movie") =>
+    runBrowse({ service: svc, region: "US" }, `/api/tmdb/discover?kind=${kind}&provider=${svc.tmdb}&region=US`, kind), [runBrowse]);
+  const browsePopular = useCallback((kind = "movie") =>
+    runBrowse({ popular: true }, `/api/tmdb/trending?kind=${kind}`, kind), [runBrowse]);
   const playTrailer = useCallback(async (item, svc) => {
     if (!planAllows("tmdb")) return; // plan-gated: TMDB trailers need Pro Desk
     if (!canBrowseCatalog) return;
@@ -10949,6 +10960,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     } catch { /* trailer is a bonus */ }
   }, [canBrowseCatalog, completeMission]);
   const browseArchive = useCallback(async (query) => {
+    setCatalogPick(null); setCatalogDetails(null);
     setCatalog({ archive: true, loading: true, items: [], query });
     try {
       const q = (query && query.length > 1) ? query : "feature_films";
@@ -10961,12 +10973,43 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         poster: `https://archive.org/services/img/${doc.identifier}`,
       }));
       setCatalog({ archive: true, loading: false, items, query });
+      setCatalogAt(Date.now());
     } catch (e) { setCatalog({ archive: true, loading: false, items: [], error: humanizeError(e), query }); }
   }, []);
   const playArchive = useCallback((item) => {
     setPlayer({ archive: item.archiveId, title: item.title, channel: "Internet Archive" });
     completeMission("watch");
   }, [completeMission]);
+
+  // Opening a title does both things the card's own label promises: it shows
+  // the summary AND the anchor starts reading it. One card, one verb.
+  //
+  // An archive row is a different object with a different verb — it plays in
+  // the desk — so it goes straight to the player.
+  const openTitle = useCallback((it) => {
+    if (catalog?.archive) { playArchive(it); return; }
+    if (catalogPick && catalogPick.id === it.id) { stopSpeak(); setCatalogPick(null); setCatalogDetails(null); return; }
+    setCatalogPick(it); setCatalogDetails(null);
+    // The runtime lives only on /{kind}/{id}, so it is fetched for the one
+    // title that is open and never for the grid. Stamped with the id it
+    // belongs to: open two titles quickly and the slower answer must not land
+    // a runtime on the wrong film.
+    fetch(`/api/tmdb/details?kind=${it.kind}&id=${it.id}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) setCatalogDetails({ id: it.id, runtime: d.runtime, genres: d.genres }); })
+      .catch(() => { /* the summary reads fine without a runtime */ });
+    if (it.overview) speak(`movie:${it.id}`, `${it.title}. ${it.overview}`);
+  }, [catalog, catalogPick, playArchive, speak, stopSpeak]);
+
+  // The desk picks one, out loud, in the chat thread — the same route a news
+  // headline takes when you hand it over. It names the six it was given, so
+  // the answer is about what is on the screen rather than about films in
+  // general.
+  const askDeskToPick = useCallback(() => {
+    const list = (catalog?.items || []).map(i => `${i.title}${i.year ? ` (${i.year})` : ""}`).filter(Boolean).join("; ");
+    if (!list) return;
+    askDesk(`Pick one of these for me tonight and say why in two short sentences: ${list}.`);
+  }, [catalog, askDesk]);
   const fetchVideoBrief = useCallback(async (v) => {
     try {
       if (!anthropicApiKey.trim()) return;
@@ -12255,84 +12298,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // above the conversation, which left the question in one place and the
   // thing it produced in another. It rides the transcript now.
   const catalogPanel = catalog && (
-    <div style={{ display: "flex", flexDirection: "column", background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, overflow: "hidden" }}>
-      <div style={{ minHeight: 32, boxSizing: "border-box", padding: "0 12px", borderBottom: `1px solid ${C.panelEdge}`, ...TYPE.eyebrow, color: C.muted, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
-        <span>🎬 {catalog.archive ? "FREE FILMS · Internet Archive" : `${catalog.popular ? "🔥 POPULAR" : catalog.service?.name?.toUpperCase()} · ${catalog.kind === "tv" ? "SHOWS" : "MOVIES"}`}</span>
-        <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          {!catalog.archive && (
-            <>
-              {["movie", "tv"].map(k => (
-                <button key={k} onClick={() => catalog.popular ? browsePopular(k) : browseCatalog(catalog.service, k)}
-                  style={{ background: catalog.kind === k ? "rgba(255,255,255,0.08)" : "transparent", border: `1px solid ${catalog.kind === k ? C.accent : C.panelEdge}`, color: catalog.kind === k ? C.accentText : C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "2px 8px", cursor: "pointer" }}>
-                  {k === "tv" ? "shows" : "movies"}
-                </button>
-              ))}
-            </>
-          )}
-          <button onClick={() => { setCatalog(null); setCatalogPick(null); }} aria-label="Close catalog" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
-        </span>
-      </div>
-      {catalog.loading ? (
-        <div style={{ padding: 12, fontFamily: MONO, fontSize: 12, color: C.faint }}>Loading catalog… <span className="cursor">▍</span></div>
-      ) : catalog.error ? (
-        <div style={{ padding: 12, fontFamily: SANS, fontSize: 11, color: C.down, lineHeight: 1.6 }}>{catalog.error}</div>
-      ) : catalog.items.length === 0 ? (
-        <div style={{ padding: 12, fontFamily: MONO, fontSize: 12, color: C.faint }}>Nothing found. Try another search.</div>
-      ) : (
-        <>
-          {/* summary panel for the picked title */}
-          {catalogPick && !catalog.archive && (
-            <div style={{ display: "flex", gap: 10, padding: 12, borderBottom: `1px solid ${C.panelEdge}`, background: C.surfaceRaised }}>
-              {catalogPick.poster && <img src={catalogPick.poster} alt="" style={{ width: 70, height: 105, objectFit: "cover", borderRadius: R.sm, flexShrink: 0 }} />}
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0, flex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                  <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{catalogPick.title}{catalogPick.year ? ` (${catalogPick.year})` : ""}{catalogPick.rating > 0 ? <span style={{ color: C.accentText, fontWeight: 400 }}>  ★{Number(catalogPick.rating).toFixed(1)}</span> : null}</span>
-                  <button onClick={() => setCatalogPick(null)} aria-label="Close summary" style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12 }}>✕</button>
-                </div>
-                <div style={{ fontFamily: SANS, fontSize: 11, lineHeight: 1.55, color: C.muted, maxHeight: 96, overflowY: "auto" }}>{catalogPick.overview || "No summary available."}</div>
-                <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
-                  <button onClick={() => playTrailer(catalogPick, catalog.service)} style={{ background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 600, padding: "4px 10px", cursor: "pointer" }}>▶ trailer</button>
-                  {catalog.service
-                    ? <button onClick={() => openEmbed(catalog.service.search(catalogPick.title), catalog.service.name)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 10px", cursor: "pointer" }}>watch on {catalog.service.name} ↗</button>
-                    : <a href={`https://www.themoviedb.org/${catalogPick.kind}/${catalogPick.id}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 10px" }}>details ↗</a>}
-                </div>
-              </div>
-            </div>
-          )}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 10, padding: 12 }}>
-            {catalog.items.map((it, i) => (
-              <div key={i} style={{ display: "flex", flexDirection: "column", background: C.surfaceRaised, border: `1px solid ${catalogPick && catalogPick.id === it.id && catalogPick.archiveId === it.archiveId ? C.accent : C.panelEdge}`, borderRadius: R.md, overflow: "hidden" }}>
-                <div onClick={() => catalog.archive ? playArchive(it) : setCatalogPick(p => (p && p.id === it.id ? null : it))}
-                  title={catalog.archive ? "Play in-desk" : "Show summary"}
-                  style={{ position: "relative", width: "100%", paddingTop: "150%", background: C.surfaceRaised, cursor: "pointer" }}>
-                  {it.poster && <img src={it.poster} alt="" loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
-                  {it.rating > 0 && <span style={{ position: "absolute", top: 4, right: 4, background: "rgba(0,0,0,0.75)", color: C.accentText, fontFamily: MONO, fontSize: 12, padding: "1px 5px", borderRadius: R.xs }}>★ {Number(it.rating).toFixed(1)}</span>}
-                  {!catalog.archive && <span style={{ position: "absolute", bottom: 4, left: 4, background: "rgba(0,0,0,0.7)", color: C.faint, fontFamily: MONO, fontSize: 12, padding: "1px 5px", borderRadius: R.xs }}>ⓘ summary</span>}
-                </div>
-                <div style={{ padding: "6px 7px", display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
-                  <span style={{ fontFamily: SANS, fontSize: 10, color: C.text, lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{it.title}{it.year ? ` (${it.year})` : ""}</span>
-                  <span style={{ marginTop: "auto", display: "flex", gap: 4 }}>
-                    {catalog.archive ? (
-                      <>
-                        <button onClick={() => playArchive(it)} title="Play in-desk" style={{ flex: 1, background: alpha(C.accent, 0.14), border: `1px solid ${C.up}`, color: C.up, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 600, padding: "4px 0", cursor: "pointer" }}>▶ play</button>
-                        <a href={`https://archive.org/details/${it.archiveId}`} target="_blank" rel="noopener noreferrer" title="Open on Archive" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 7px" }}>↗</a>
-                      </>
-                    ) : (
-                      <>
-                        <button onClick={() => playTrailer(it, catalog.service)} title="Play trailer in-desk" style={{ flex: 1, background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, fontWeight: 600, padding: "4px 0", cursor: "pointer" }}>▶ trailer</button>
-                        {catalog.service
-                          ? <button onClick={() => openEmbed(catalog.service.search(it.title), catalog.service.name)} title={`Watch on ${catalog.service.name}`} style={{ border: `1px solid ${C.panelEdge}`, color: C.muted, background: "transparent", borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 7px", cursor: "pointer" }}>↗</button>
-                          : <a href={`https://www.themoviedb.org/${it.kind}/${it.id}`} target="_blank" rel="noopener noreferrer" title="Details" style={{ textDecoration: "none", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "4px 7px" }}>↗</a>}
-                      </>
-                    )}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+    <MoviesDesk
+      catalog={catalog}
+      fetchedAt={catalogAt}
+      pick={catalogPick}
+      pickDetails={catalogDetails && catalogPick && catalogDetails.id === catalogPick.id ? catalogDetails : null}
+      speaking={!!catalogPick && speakingId === `movie:${catalogPick.id}`}
+      onOpen={openTitle}
+      onStopRead={stopSpeak}
+      onKind={(k) => (catalog.popular ? browsePopular(k) : browseCatalog(catalog.service, k))}
+      onTrailer={(it) => playTrailer(it, catalog.service)}
+      onWatchOn={catalog.service ? (it) => openEmbed(catalog.service.search(it.title), catalog.service.name) : null}
+      // Only when there is a model to ask. A button that hands six titles to
+      // nothing is a button that does nothing.
+      onAskPick={usableAiModels().length ? askDeskToPick : null}
+      onClose={() => { stopSpeak(); setCatalog(null); setCatalogPick(null); setCatalogDetails(null); }}
+    />
   );
   // ---- the games, as a chat attachment ----
   // Games are hosted BY the anchor — it teaches the lesson, calls the round and
