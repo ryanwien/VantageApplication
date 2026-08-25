@@ -43,6 +43,8 @@ import {
 } from "./src/games/overheat.js";
 import { LESSONS as STOCK_LESSONS } from "./src/games/school.js";
 import StockSchool from "./src/ui/StockSchool.jsx";
+import TickerMatch from "./src/ui/TickerMatch.jsx";
+import { ROUNDS as TICKER_ROUNDS, answerIndex as tickerAnswer, award as tickerAward } from "./src/games/ticker.js";
 import Waveform from "./src/ui/Waveform.jsx";
 import VantageMark from "./src/ui/VantageMark.jsx";
 import DeskIcon from "./src/ui/DeskIcon.jsx";
@@ -764,6 +766,23 @@ const I18N = {
     "{a} of {b} right, for {p} points.": "{a} de {b} correctas, {p} puntos.",
     "Start again": "Empezar de nuevo",
     "Back to the games": "Volver a los juegos",
+    // --- settings: the plain-language sidebar ---
+    "CORRECT": "CORRECTO",
+    "WRONG": "INCORRECTO",
+    "OUT OF TIME": "SE ACABÓ EL TIEMPO",
+    "ROUND": "RONDA",
+    "STREAK": "RACHA",
+    "WHICH SYMBOL TRADES AS": "QUÉ SÍMBOLO COTIZA COMO",
+    "SECTOR": "SECTOR",
+    "LAST TRADE": "ÚLTIMA OPERACIÓN",
+    "press {k}": "pulsa {k}",
+    "Answer inside {n} seconds for a speed bonus": "Responde en menos de {n} segundos para un bonus de rapidez",
+    "Next round →": "Siguiente ronda →",
+    "See the score →": "Ver la puntuación →",
+    "ROUND OVER": "RONDA TERMINADA",
+    "{a} of {b} symbols matched.": "{a} de {b} símbolos acertados.",
+    // --- settings: the plain-language sidebar ---
+    "not this company's symbol": "no es el símbolo de esta empresa",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -1392,6 +1411,23 @@ const I18N = {
     "{a} of {b} right, for {p} points.": "{a} sur {b} justes, soit {p} points.",
     "Start again": "Recommencer",
     "Back to the games": "Retour aux jeux",
+    // --- settings: the plain-language sidebar ---
+    "CORRECT": "CORRECT",
+    "WRONG": "FAUX",
+    "OUT OF TIME": "TEMPS ÉCOULÉ",
+    "ROUND": "MANCHE",
+    "STREAK": "SÉRIE",
+    "WHICH SYMBOL TRADES AS": "QUEL SYMBOLE POUR",
+    "SECTOR": "SECTEUR",
+    "LAST TRADE": "DERNIER ÉCHANGE",
+    "press {k}": "touche {k}",
+    "Answer inside {n} seconds for a speed bonus": "Répondez en moins de {n} secondes pour un bonus de rapidité",
+    "Next round →": "Manche suivante →",
+    "See the score →": "Voir le score →",
+    "ROUND OVER": "MANCHE TERMINÉE",
+    "{a} of {b} symbols matched.": "{a} symboles sur {b} trouvés.",
+    // --- settings: the plain-language sidebar ---
+    "not this company's symbol": "ce n'est pas le symbole de cette société",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -2020,6 +2056,23 @@ const I18N = {
     "{a} of {b} right, for {p} points.": "{a} von {b} richtig, macht {p} Punkte.",
     "Start again": "Von vorn beginnen",
     "Back to the games": "Zurück zu den Spielen",
+    // --- settings: the plain-language sidebar ---
+    "CORRECT": "RICHTIG",
+    "WRONG": "FALSCH",
+    "OUT OF TIME": "ZEIT ABGELAUFEN",
+    "ROUND": "RUNDE",
+    "STREAK": "SERIE",
+    "WHICH SYMBOL TRADES AS": "WELCHES KÜRZEL HAT",
+    "SECTOR": "SEKTOR",
+    "LAST TRADE": "LETZTER HANDEL",
+    "press {k}": "Taste {k}",
+    "Answer inside {n} seconds for a speed bonus": "Antworte in unter {n} Sekunden für einen Tempobonus",
+    "Next round →": "Nächste Runde →",
+    "See the score →": "Punktestand ansehen →",
+    "ROUND OVER": "RUNDE VORBEI",
+    "{a} of {b} symbols matched.": "{a} von {b} Kürzeln erkannt.",
+    // --- settings: the plain-language sidebar ---
+    "not this company's symbol": "nicht das Kürzel dieses Unternehmens",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -2647,6 +2700,23 @@ const I18N = {
     "{a} of {b} right, for {p} points.": "{a} de {b} certas, {p} pontos.",
     "Start again": "Começar de novo",
     "Back to the games": "Voltar aos jogos",
+    // --- settings: the plain-language sidebar ---
+    "CORRECT": "CORRETO",
+    "WRONG": "ERRADO",
+    "OUT OF TIME": "TEMPO ESGOTADO",
+    "ROUND": "RONDA",
+    "STREAK": "SEQUÊNCIA",
+    "WHICH SYMBOL TRADES AS": "QUE SÍMBOLO NEGOCEIA COMO",
+    "SECTOR": "SETOR",
+    "LAST TRADE": "ÚLTIMA NEGOCIAÇÃO",
+    "press {k}": "carrega {k}",
+    "Answer inside {n} seconds for a speed bonus": "Responde em menos de {n} segundos para um bónus de rapidez",
+    "Next round →": "Ronda seguinte →",
+    "See the score →": "Ver a pontuação →",
+    "ROUND OVER": "RONDA TERMINADA",
+    "{a} of {b} symbols matched.": "{a} de {b} símbolos acertados.",
+    // --- settings: the plain-language sidebar ---
+    "not this company's symbol": "não é o símbolo desta empresa",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -3274,6 +3344,23 @@ const I18N = {
     "{a} of {b} right, for {p} points.": "{a} su {b} giuste, per {p} punti.",
     "Start again": "Ricomincia",
     "Back to the games": "Torna ai giochi",
+    // --- settings: the plain-language sidebar ---
+    "CORRECT": "CORRETTO",
+    "WRONG": "SBAGLIATO",
+    "OUT OF TIME": "TEMPO SCADUTO",
+    "ROUND": "TURNO",
+    "STREAK": "SERIE",
+    "WHICH SYMBOL TRADES AS": "QUALE SIMBOLO QUOTA COME",
+    "SECTOR": "SETTORE",
+    "LAST TRADE": "ULTIMO SCAMBIO",
+    "press {k}": "premi {k}",
+    "Answer inside {n} seconds for a speed bonus": "Rispondi entro {n} secondi per un bonus velocità",
+    "Next round →": "Turno successivo →",
+    "See the score →": "Vedi il punteggio →",
+    "ROUND OVER": "TURNO CONCLUSO",
+    "{a} of {b} symbols matched.": "{a} simboli su {b} indovinati.",
+    // --- settings: the plain-language sidebar ---
+    "not this company's symbol": "non è il simbolo di questa società",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -3823,18 +3910,11 @@ const BULLBEAR_ROUNDS = [
   { headline: "The company launches a large share buyback program.", bullish: true, why: "Buybacks shrink the share count and often support the price." },
   { headline: "A rival ships a cheaper product that undercuts the company's prices.", bullish: false, why: "More competition can steal customers and squeeze profit margins." },
 ];
-
-// Ticker Match: pick the real stock symbol for a well-known company. Teaches how to look stocks up.
-const TICKER_ROUNDS = [
-  { company: "Apple", options: ["APL", "AAPL", "APPL"], answer: 1 },
-  { company: "Nvidia", options: ["NVDA", "NVID", "NDA"], answer: 0 },
-  { company: "Tesla", options: ["TSL", "TLA", "TSLA"], answer: 2 },
-  { company: "Amazon", options: ["AMZN", "AMZ", "AZN"], answer: 0 },
-  { company: "Microsoft", options: ["MCST", "MSF", "MSFT"], answer: 2 },
-  { company: "Meta (Facebook)", options: ["META", "FB", "MTA"], answer: 0 },
-  { company: "Alphabet (Google)", options: ["GGL", "GOOGL", "ALPH"], answer: 1 },
-  { company: "Netflix", options: ["NFX", "NFLX", "NTFL"], answer: 1 },
-];
+// Ticker Match: pick the real stock symbol for a well-known company.
+// The rounds moved to src/games/ticker.js when the handoff asked each one for a
+// sector, an exchange, a reason beside every wrong option and a teaching line —
+// and asked the game for a clock, which is what turns the score into something
+// worth testing.
 
 
 
@@ -10382,26 +10462,39 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // still reading is a pressure the design does not intend. So the card counts
   // UP, from a real timestamp, and says TIME.
   const [gameStartedAt, setGameStartedAt] = useState(null);
+  // Ticker Match records one award per round played — {correct, points, bonus}.
+  // Its score, its streak and its count of right answers are all read back out
+  // of this list, so none of the three can drift from the rounds above them.
+  const [gameAwards, setGameAwards] = useState([]);
   const gameSet = (mode) => mode === "school" ? STOCK_LESSONS : mode === "bullbear" ? BULLBEAR_ROUNDS : mode === "ticker" ? TICKER_ROUNDS : [];
   // narrate a round: the anchor reads the lesson / headline / prompt aloud
   const narrateRound = useCallback((mode, i) => {
     if (mode === "school") speak("school", `${i === 0 ? "Welcome to Stock School! " : ""}Lesson ${i + 1}. ${STOCK_LESSONS[i].teach}`);
     else if (mode === "bullbear") speak("school", `${i === 0 ? "Bull or Bear! " : ""}Here's the news: ${BULLBEAR_ROUNDS[i].headline} Bullish, or bearish?`);
-    else if (mode === "ticker") speak("school", `${i === 0 ? "Ticker Match! " : ""}Which symbol is ${TICKER_ROUNDS[i].company}?`);
+    else if (mode === "ticker") speak("school", `${i === 0 ? "Ticker Match! " : ""}Which symbol does ${TICKER_ROUNDS[i].company} trade as?`);
   }, [speak]);
   const openGames = useCallback(() => { setGameOn(true); setGameMode("menu"); stopSpeak(); }, [stopSpeak]);
   const startMode = useCallback((mode) => {
-    setGameMode(mode); setGameStep(0); setGameChoice(null); setGameScore(0); setGameStartedAt(Date.now());
+    setGameMode(mode); setGameStep(0); setGameChoice(null); setGameScore(0); setGameStartedAt(Date.now()); setGameAwards([]);
     setGamePhase(mode === "school" ? "teach" : "quiz");
     narrateRound(mode, 0);
   }, [narrateRound]);
   const gameToQuiz = useCallback(() => { setGamePhase("quiz"); stopSpeak(); }, [stopSpeak]);
-  const gameAnswer = useCallback((i) => {
+  // `secondsLeft` matters only to Ticker Match, which is the one round with a
+  // clock on it — and it comes FROM that component, because the component owns
+  // the countdown and is therefore the only thing that knows when the click
+  // landed. A null choice is the clock running out.
+  const gameAnswer = useCallback((i, secondsLeft) => {
     setGameChoice(i); setGamePhase("reveal");
     let correct = false, explain = "";
     if (gameMode === "school") { const R = STOCK_LESSONS[gameStep]; correct = i === R.answer; explain = R.explain; }
     else if (gameMode === "bullbear") { const R = BULLBEAR_ROUNDS[gameStep]; correct = i === (R.bullish ? 0 : 1); explain = R.why; }
-    else { const R = TICKER_ROUNDS[gameStep]; correct = i === R.answer; explain = `${R.company} trades as ${R.options[R.answer]}.`; }
+    else {
+      const R = TICKER_ROUNDS[gameStep];
+      correct = i != null && i === tickerAnswer(R);
+      explain = R.teach;
+      setGameAwards(a => [...a, tickerAward(correct, secondsLeft)]);
+    }
     if (correct) { setGameScore(s => s + 1); triggerAnchor("cheer", { label: "CORRECT! ✓" }); }
     speak("school", explain);
   }, [gameMode, gameStep, triggerAnchor, speak]);
@@ -13126,7 +13219,33 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       ), true);
     }
 
-    // ---- an active quiz game (bullbear / ticker) ----
+    // ---- Ticker Match: its own screens, in src/ui/TickerMatch.jsx ----
+    if (gameMode === "ticker") {
+      const round = TICKER_ROUNDS[gameStep];
+      // The desk holds a price for all eight of these, so LAST TRADE is a real
+      // quote rather than a prop — and the component falls back to the SECTOR
+      // block for any it does not.
+      const row = round ? getRow(round.symbol) : null;
+      return shell(null, null, null, (
+        <TickerMatch
+          rounds={TICKER_ROUNDS}
+          step={gameStep}
+          answered={gamePhase === "reveal"}
+          done={gamePhase === "done"}
+          choice={gameChoice}
+          awards={gameAwards}
+          quote={row?.price != null ? { price: row.price, chgPct: row.chgPct } : null}
+          onAnswer={gameAnswer}
+          onNext={gameNext}
+          onRestart={() => startMode("ticker")}
+          onBack={() => { setGameMode("menu"); stopSpeak(); }}
+          onClose={closeGame}
+          t={t}
+        />
+      ), true);
+    }
+
+    // ---- an active quiz game (bullbear) ----
     // NB: named `round`, never `R` — a local `R` here shadows the theme's
     // radius token across this whole closure (TDZ crash on open).
     const data = gameSet(gameMode), total = data.length, round = data[gameStep] || {};

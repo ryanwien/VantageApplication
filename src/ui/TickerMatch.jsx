@@ -1,0 +1,326 @@
+// ============================================================
+//  TickerMatch — match a company to the symbol it trades as.
+//
+//  THE CLOCK LIVES HERE
+//  The round is timed and the score depends on how much time was left when you
+//  answered, so the countdown is this component's state rather than the
+//  dashboard's. Answering reports the seconds remaining up with the choice —
+//  `onAnswer(index, secondsLeft)` — so the parent never has to guess when the
+//  click landed, and running out of time reports itself the same way with no
+//  choice at all.
+//
+//  WHAT THE ANSWERED CARD SAYS, AND WHAT IT WILL NOT
+//  The reference marks each wrong option "not a listed symbol". src/games/
+//  ticker.js explains why most of them say something weaker and truer instead;
+//  a row with no reason simply gets none, which is the same rule every other
+//  panel in this product follows.
+//
+//  LAST TRADE is a real quote. The caller hands in whatever the desk holds for
+//  the symbol, and all eight companies are in its universe — but a row with no
+//  price keeps the SECTOR block rather than printing an empty card.
+// ============================================================
+
+import React, { useState, useEffect, useRef } from "react";
+import { C, GRAD, FIELD, MONO, SANS, R } from "./theme.js";
+import { ROUNDS, ROUND_SECONDS, BONUS_WITHIN, answerIndex, award, totalPoints, streak, countdown } from "../games/ticker.js";
+
+const railLabel = { fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", color: C.faint };
+const headBtn = { background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, color: C.muted, fontFamily: SANS, fontSize: 13, padding: "6px 12px", cursor: "pointer" };
+const sheen = { background: GRAD.sheen, color: C.textOnAccent, fontFamily: SANS, fontWeight: 700, border: "none", borderRadius: 9, cursor: "pointer" };
+const HEAD = { display: "flex", alignItems: "center", gap: 12, padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceAlt, flexWrap: "wrap" };
+const KEYS = ["A", "B", "C"];
+
+export default function TickerMatch({
+  rounds = ROUNDS,
+  step = 0,
+  answered = false,     // the round has been called; the reveal is showing
+  choice = null,        // index picked, or null when the clock ran out
+  awards = [],          // one entry per answered round — score and streak read this
+  quote = null,         // { price, chgPct } for this round's symbol, when the desk has one
+  onAnswer,             // (index | null, secondsLeft)
+  done = false,         // every round called; show the run's score
+  onNext, onRestart, onBack, onClose,
+  t = (s) => s,
+}) {
+  const round = rounds[step] || {};
+  const options = round.options || [];
+  const right = answerIndex(round);
+  const total = rounds.length;
+  const [left, setLeft] = useState(ROUND_SECONDS);
+
+  // Refs, not state, for the two things the tick needs to read: the clock, and
+  // the callback. Depending on either would restart the interval — on the clock
+  // every second, and on the callback every time the dashboard re-creates it —
+  // and a restarted interval loses whatever fraction of a second it was into
+  // its phase, so the countdown drifts slower than the wall.
+  const leftRef = useRef(ROUND_SECONDS);
+  leftRef.current = left;
+  const answerRef = useRef(onAnswer);
+  answerRef.current = onAnswer;
+  // One report per round. The interval can tick once more between the timeout
+  // firing and the re-render that stops it, and a second report would push a
+  // second award for a round that was only played once.
+  const firedRef = useRef(false);
+  // What the clock read when the answer went in. Frozen so the reveal keeps
+  // showing the time that earned the points rather than a clock still running.
+  const [stopped, setStopped] = useState(null);
+
+  useEffect(() => { setLeft(ROUND_SECONDS); setStopped(null); firedRef.current = false; }, [step]);
+
+  useEffect(() => {
+    if (answered) return undefined;
+    const iv = setInterval(() => {
+      const next = Math.max(0, leftRef.current - 1);
+      setLeft(next);
+      // Out of time is an answer: no choice, no points, and the streak breaks.
+      if (next === 0 && !firedRef.current) { firedRef.current = true; setStopped(0); answerRef.current?.(null, 0); }
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [answered, step]);
+
+  const pick = (i) => {
+    if (answered || firedRef.current) return;
+    firedRef.current = true;
+    setStopped(leftRef.current);
+    answerRef.current?.(i, leftRef.current);
+  };
+
+  // Keyboard, because every row says "press A". Bound while the question is up.
+  useEffect(() => {
+    if (answered) return undefined;
+    const onKey = (e) => {
+      const i = KEYS.indexOf(String(e.key || "").toUpperCase());
+      if (i >= 0 && i < options.length) { e.preventDefault(); pick(i); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answered, step, options.length]);
+
+  const correct = answered && choice === right;
+  const shown = stopped == null ? left : stopped;
+  const paid = answered ? award(correct, shown) : null;
+  const points = totalPoints(awards);
+  const run = streak(awards);
+
+  const closeBtn = onClose && (
+    <button onClick={onClose} className="v-clearx" aria-label={t("Close games")}
+      style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 14, cursor: "pointer", padding: 2 }}>&#10005;</button>
+  );
+
+  const header = (
+    <div style={HEAD}>
+      <span aria-hidden="true" style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", fontFamily: MONO, fontWeight: 700, fontSize: 11, flexShrink: 0 }}>ABC</span>
+      <span style={{ fontWeight: 700, fontSize: 14.5 }}>{t("Ticker Match")}</span>
+      <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        {onBack && <button onClick={onBack} className="v-gamectl" style={headBtn}>← {t("games")}</button>}
+        {closeBtn}
+      </span>
+    </div>
+  );
+
+  // ---- the run's score ----
+  // The handoff does not design an end screen for the quiz games, so this stays
+  // plain and on-system rather than inventing a layout for it.
+  if (done) {
+    const got = awards.filter(a => a?.correct).length;
+    return (
+      <div style={{ fontFamily: SANS, background: C.base, color: C.text }}>
+        {header}
+        <div style={{ padding: "40px 22px", textAlign: "center" }}>
+          <div style={{ ...railLabel, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>{t("ROUND OVER")}</div>
+          <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.03em", color: C.accentText, marginTop: 10, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>{points}</div>
+          <div style={{ color: C.muted, fontSize: 15, marginTop: 8, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>
+            {t("{a} of {b} symbols matched.").replace("{a}", String(got)).replace("{b}", String(total))}
+          </div>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
+            <button onClick={onRestart} className="vt-sheen" style={{ ...sheen, fontSize: 14, padding: "11px 24px" }}>{t("Play again")}</button>
+            {onBack && <button onClick={onBack} className="v-outline" style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: 9, color: C.text, fontFamily: SANS, fontSize: 14, padding: "11px 20px", cursor: "pointer" }}>{t("Back to the games")}</button>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ fontFamily: SANS, background: C.base, color: C.text }}>
+      {/* ---- header ---- */}
+      <div style={HEAD}>
+        <span aria-hidden="true" style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", fontFamily: MONO, fontWeight: 700, fontSize: 11, flexShrink: 0 }}>ABC</span>
+        <span style={{ fontWeight: 700, fontSize: 14.5 }}>{t("Ticker Match")}</span>
+        {answered ? (
+          <span style={{
+            display: "flex", alignItems: "center", gap: 7, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5,
+            background: correct ? "#101d15" : "#1b1215",
+            border: `1px solid ${correct ? "#234a2f" : "#3a2226"}`,
+            color: correct ? C.accentText : C.down,
+          }}>
+            {correct ? t("CORRECT") : choice == null ? t("OUT OF TIME") : t("WRONG")}
+          </span>
+        ) : (
+          <span style={{
+            display: "flex", alignItems: "center", gap: 7, background: C.surface, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5,
+            border: `1px solid ${left <= 5 ? C.down : C.edge}`,
+            color: left <= 5 ? C.down : C.muted,
+          }}>
+            <span aria-hidden="true" className="v-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: left <= 5 ? C.down : C.accent }} />
+            {countdown(left)}
+          </span>
+        )}
+        <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          {onBack && <button onClick={onBack} className="v-gamectl" style={headBtn}>← {t("games")}</button>}
+          {closeBtn}
+        </span>
+      </div>
+
+      {/* ---- round strip ---- */}
+      <div className="v-tmhud" style={{ display: "flex", alignItems: "center", gap: 20, padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={railLabel}>{t("ROUND")}</span>
+            <span style={{ fontFamily: MONO, fontSize: 15, fontWeight: 700 }}>
+              {step + 1}<span style={{ color: FIELD.quinary }}>/{total}</span>
+            </span>
+          </div>
+          {/* Light green for a round already called, accent for the one you are
+              on. The reference lights the NEXT pip on its answered card, which
+              would have the strip claiming round two while the label beside it
+              still reads round one — so a called round goes light and nothing
+              runs ahead of the number. */}
+          <div aria-hidden="true" style={{ display: "flex", gap: 4, marginTop: 8 }}>
+            {rounds.map((_, i) => (
+              <span key={i} style={{
+                flex: 1, height: 4, borderRadius: 2,
+                background: i < step || (i === step && answered) ? C.up : i === step ? C.accent : C.edge,
+              }} />
+            ))}
+          </div>
+        </div>
+        <div style={{ width: 120, flexShrink: 0, background: C.surface, border: `1px solid ${answered && correct ? C.accent : C.edgeStrong}`, borderRadius: R.lg, padding: "8px 12px", textAlign: "center" }}>
+          <div style={railLabel}>{t("SCORE")}</div>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 5 }}>
+            <span style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: answered && correct ? C.accentText : C.text }}>{points}</span>
+            {answered && paid?.points > 0 && (
+              <span style={{ fontFamily: MONO, fontSize: 11, color: C.accentText }}>+{paid.points}</span>
+            )}
+          </div>
+        </div>
+        <div style={{ width: 120, flexShrink: 0, textAlign: "right" }}>
+          <div style={railLabel}>{t("STREAK")}</div>
+          <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: run > 0 ? C.accentText : FIELD.quinary }}>
+            {run > 0 ? `×${run}` : "—"}
+          </div>
+        </div>
+      </div>
+
+      {/* ---- the question ---- */}
+      <div className="vt-scan" style={{ position: "relative", padding: "26px 22px 24px", overflow: "hidden", animationDuration: "9s" }}>
+        <div style={{ position: "relative" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: 14, padding: "18px 20px", flexWrap: "wrap", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+            {/* The tile stops asking once it has been answered: it becomes the
+                symbol. It bobs only while the question stands. */}
+            <div className={answered ? undefined : "vt-bob"} style={{
+              width: 54, height: 54, borderRadius: 12, display: "grid", placeItems: "center", flexShrink: 0,
+              fontFamily: MONO, fontWeight: 700,
+              fontSize: answered ? (round.symbol || "").length > 4 ? 11 : 13 : 18,
+              background: answered ? "#101d15" : C.surfaceRaised,
+              border: `1px solid ${answered ? "#234a2f" : C.edgeStrong}`,
+              color: answered ? C.accentText : C.muted,
+              animationDuration: "3.2s",
+            }}>{answered ? round.symbol : "?"}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={railLabel}>{t("WHICH SYMBOL TRADES AS")}</div>
+              <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.023em", marginTop: 3, lineHeight: 1.2 }}>{round.company}</div>
+            </div>
+            <div style={{ marginLeft: "auto", textAlign: "right" }}>
+              {answered && quote?.price != null ? (
+                <>
+                  <div style={railLabel}>{t("LAST TRADE")}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, marginTop: 3 }}>
+                    {quote.price.toFixed(2)}
+                    {quote.chgPct != null && (
+                      <span style={{ fontSize: 12, color: quote.chgPct >= 0 ? C.up : C.down }}>
+                        {" "}{quote.chgPct >= 0 ? "+" : "−"}{Math.abs(quote.chgPct).toFixed(2)}%
+                      </span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={railLabel}>{t("SECTOR")}</div>
+                  <div style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>{round.sector} · {round.exchange}</div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* ---- the three candidates ---- */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
+            {options.map((o, i) => {
+              const isRight = i === right, chosen = choice === i;
+              const lit = answered && isRight, wrong = answered && chosen && !isRight;
+              return (
+                <button key={o.sym} disabled={answered} onClick={() => pick(i)} className={answered ? undefined : "v-answer"}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
+                    background: lit ? "rgba(70,167,88,0.1)" : C.surface,
+                    border: `1px solid ${lit ? C.accent : wrong ? C.down : C.edge}`,
+                    borderRadius: R.lg, padding: "15px 18px",
+                    opacity: answered && !lit && !wrong ? 0.45 : 1,
+                    cursor: answered ? "default" : "pointer",
+                    // Dropped on reveal on purpose: vt-fadeup ends on opacity 1
+                    // and runs with fill-mode `both`, and an animation outranks
+                    // an inline style — while it stays attached the dim above
+                    // silently never applies.
+                    animation: answered ? "none" : `vt-fadeup 0.5s var(--v-ease) ${0.08 + i * 0.08}s both`,
+                  }}>
+                  <span aria-hidden="true" style={{
+                    width: 26, height: 26, borderRadius: R.xs, display: "grid", placeItems: "center", flexShrink: 0,
+                    background: lit ? "#14261b" : C.surfaceRaised,
+                    border: `1px solid ${lit ? "#234a2f" : wrong ? C.down : C.edgeStrong}`,
+                    color: lit ? C.accentText : wrong ? C.down : C.faint,
+                    fontFamily: MONO, fontSize: lit || wrong ? 12 : 11,
+                  }}>{lit ? "✓" : wrong ? "✕" : KEYS[i]}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 19, fontWeight: 700, letterSpacing: "1px", color: lit ? C.accentText : C.text }}>{o.sym}</span>
+                  <span style={{ marginLeft: "auto", textAlign: "right", paddingLeft: 10 }}>
+                    {!answered && <span style={{ fontFamily: MONO, fontSize: 11, color: FIELD.quinary }}>{t("press {k}").replace("{k}", KEYS[i])}</span>}
+                    {lit && (
+                      <span style={{ color: C.accentText, fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap" }}>
+                        {correct ? t("Correct · +{n}").replace("{n}", String(paid.points)) : t("The answer")}
+                      </span>
+                    )}
+                    {/* Every wrong row gets a reason, as the reference draws
+                        it — but the DEFAULT is the weaker statement this file
+                        can stand behind for any four-letter string. "Not a
+                        listed symbol" is a claim about every exchange on
+                        earth; "not this company's symbol" is a claim about one
+                        company, and it is always true. The specific reasons
+                        are facts worth teaching and live in the round data. */}
+                    {answered && !isRight && (
+                      <span style={{ color: C.faint, fontSize: 12 }}>{o.why || t("not this company's symbol")}</span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {answered ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 14, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "14px 16px", marginTop: 16, flexWrap: "wrap", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+              <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: R.xs, background: C.surfaceRaised, display: "grid", placeItems: "center", color: C.accentText, fontFamily: MONO, fontSize: 13, flexShrink: 0 }}>i</span>
+              <span style={{ color: C.muted, fontSize: 13, lineHeight: 1.45, flex: "1 1 240px", minWidth: 0 }}>{round.teach}</span>
+              <button onClick={onNext} className="vt-sheen" style={{ ...sheen, marginLeft: "auto", fontSize: 13, padding: "10px 20px", whiteSpace: "nowrap" }}>
+                {step >= total - 1 ? t("See the score →") : t("Next round →")}
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16, color: C.faint, fontSize: 12.5 }}>
+              <span aria-hidden="true" className="v-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, flexShrink: 0 }} />
+              {t("Answer inside {n} seconds for a speed bonus").replace("{n}", String(BONUS_WITHIN))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

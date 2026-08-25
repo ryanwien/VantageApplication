@@ -1108,3 +1108,10 @@ button:not(:disabled):active { transform: scale(0.97); }
    already carries the accent border and just brightens. */
 .v-syllabus { transition: background var(--v-fast) var(--v-ease); }
 .v-syllabus:hover { background: var(--v-surface-raised); }
+
+/* ---------- Ticker Match ----------
+   The round strip wraps on its own; below the phone break it just needs the
+   same tighter gutter every other game takes. */
+@media (max-width: 620px) {
+  .v-tmhud { padding: 12px 14px !important; gap: 14px !important; }
+}
