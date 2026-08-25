@@ -810,6 +810,10 @@ const I18N = {
     "{n} days left in your free trial": "Te quedan {n} días de prueba gratuita",
     "Last day of your free trial": "Último día de tu prueba gratuita",
     "Your free trial ended on {date}": "Tu prueba gratuita terminó el {date}",
+    "Day {n} of {total}": "Día {n} de {total}",
+    "Ends {date}": "Termina el {date}",
+    "Then {price}": "Después {price}",
+    "Add payment card": "Añadir tarjeta",
     "Show": "Mostrar",
   },
   fr: {
@@ -1477,6 +1481,10 @@ const I18N = {
     "{n} days left in your free trial": "Il vous reste {n} jours d'essai gratuit",
     "Last day of your free trial": "Dernier jour de votre essai gratuit",
     "Your free trial ended on {date}": "Votre essai gratuit s'est terminé le {date}",
+    "Day {n} of {total}": "Jour {n} sur {total}",
+    "Ends {date}": "Se termine le {date}",
+    "Then {price}": "Ensuite {price}",
+    "Add payment card": "Ajouter une carte",
     "Show": "Afficher",
   },
   de: {
@@ -2144,6 +2152,10 @@ const I18N = {
     "{n} days left in your free trial": "Noch {n} Tage deiner kostenlosen Testphase",
     "Last day of your free trial": "Letzter Tag deiner kostenlosen Testphase",
     "Your free trial ended on {date}": "Deine kostenlose Testphase endete am {date}",
+    "Day {n} of {total}": "Tag {n} von {total}",
+    "Ends {date}": "Endet am {date}",
+    "Then {price}": "Danach {price}",
+    "Add payment card": "Karte hinzufügen",
     "Show": "Anzeigen",
   },
   pt: {
@@ -2810,6 +2822,10 @@ const I18N = {
     "{n} days left in your free trial": "Faltam {n} dias da tua avaliação gratuita",
     "Last day of your free trial": "Último dia da tua avaliação gratuita",
     "Your free trial ended on {date}": "A tua avaliação gratuita terminou a {date}",
+    "Day {n} of {total}": "Dia {n} de {total}",
+    "Ends {date}": "Termina a {date}",
+    "Then {price}": "Depois {price}",
+    "Add payment card": "Adicionar cartão",
     "Show": "Mostrar",
   },
   it: {
@@ -3476,6 +3492,10 @@ const I18N = {
     "{n} days left in your free trial": "Ti restano {n} giorni di prova gratuita",
     "Last day of your free trial": "Ultimo giorno della tua prova gratuita",
     "Your free trial ended on {date}": "La tua prova gratuita è finita il {date}",
+    "Day {n} of {total}": "Giorno {n} di {total}",
+    "Ends {date}": "Finisce il {date}",
+    "Then {price}": "Poi {price}",
+    "Add payment card": "Aggiungi una carta",
     "Show": "Mostra",
   },
 };
@@ -8665,6 +8685,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [agentPrefs, setAgentPrefs] = useState(null);     // server-stored opt-in scheduled briefing settings
   const [agentBusy, setAgentBusy] = useState(false);
 
+  // ---- the trial strip's dismissal ----
+  // What is stored is the DAY NUMBER it was dismissed on, not a boolean. So the
+  // strip goes away for the day someone has already read, and comes back
+  // tomorrow when the number on it has actually changed. A permanent dismissal
+  // would be a countdown with an off switch, and the charge on day 8 does not
+  // come with one. The lapsed strip carries no ✕ at all for the same reason:
+  // there is no tomorrow with new information on it.
+  const [trialDismissed, setTrialDismissed] = useState(() => {
+    try { return Number(localStorage.getItem("vantage-trial-dismissed")) || 0; } catch { return 0; }
+  });
+
   // ---- developer / testing mode: bypass ALL plan gates so every premium feature is testable now ----
   // Turn on via ?dev=1 in the URL (or ?local=…). Persisted per-browser. There is
   // deliberately no switch for it in settings: a control that unlocks every paid
@@ -11065,16 +11096,24 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   useEffect(() => { if (showSettings && settingsTab === "meetings") refreshMeetStatus(); }, [showSettings, settingsTab, refreshMeetStatus]);
 
 
-  // ---- billing (Layer 3): probe Stripe availability when the ACCOUNT tab opens ----
+  // ---- billing (Layer 3): probe Stripe availability ----
   // If the backend has Stripe keys, paid upgrades route through Stripe's hosted checkout.
   // Otherwise billingCfg.enabled stays false and paid plans unlock as a labelled simulation.
+  //
+  // Two triggers, not one. The account tab used to be the only one, which left
+  // the trial strip holding `null` for anyone who had never opened Settings —
+  // and a strip that cannot tell "add a card" from "nothing is charged in this
+  // build" would have had to guess at which one to print. So the probe also
+  // runs whenever the account carries a trial to count, before the strip draws.
+  const trialStart = trialStartOf(account);
   useEffect(() => {
-    if (!showSettings || settingsTab !== "account" || billingCfg) return;
+    const wanted = (showSettings && settingsTab === "account") || trialStart != null;
+    if (!wanted || billingCfg) return;
     let ok = true;
     fetch("/api/billing/config").then(r => r.ok ? r.json() : null).then(j => ok && setBillingCfg(j || { enabled: false }))
       .catch(() => ok && setBillingCfg({ enabled: false }));
     return () => { ok = false; };
-  }, [showSettings, settingsTab, billingCfg]);
+  }, [showSettings, settingsTab, trialStart, billingCfg]);
 
   useEffect(() => {
     if (!showSettings || settingsTab !== "account" || !account?.backend || !account?.token) return;
@@ -13904,6 +13943,69 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       </div>
       )}
 
+      {/* ===== the trial, somewhere a person will actually meet it =====
+          Every account now begins a paid seven days and the first charge falls
+          on day 8. Until this strip, the only place the running app said so was
+          Settings → Account → Your plan: a fine place to CONFIRM a countdown
+          and a poor place to discover that one is running.
+
+          It sits directly under the tape, ABOVE the transient rows below it, so
+          it holds still — a persistent status bar that got shoved down every
+          time a command echoed or a headline broke would read as another alert.
+
+          Nothing is drawn for an account with no start date. Those predate the
+          stamp, trialState returns null for them, and the honest output for "we
+          do not know when this began" is no countdown rather than a guessed
+          one. */}
+      {(() => {
+        const trial = trialState(account);
+        if (!trial) return null;
+        // daysLeft counts down 7…1, so day counts up 1…7 and never reads 0 of 7.
+        const day = TRIAL_DAYS - trial.daysLeft + 1;
+        if (trial.active && trialDismissed === day) return null;
+        // Formatted in the APP's language, not the browser's. Passing undefined
+        // here reads the browser locale, which produced "Termina el Aug 30" —
+        // a translated sentence with an untranslated date sitting inside it.
+        const ends = new Date(trial.ends).toLocaleDateString(lang || undefined, { day: "numeric", month: "short" });
+        // With Stripe configured there is a card to add and a price that will be
+        // charged on day 8. Without it there is neither, so the strip says
+        // neither: the price clause is absent rather than hedged, and the button
+        // opens the plan list — true in both builds, where "add payment card" is
+        // true in only one.
+        const live = !!billingCfg?.enabled;
+        const plan = live ? PLANS.find(p => p.id === account?.plan) : null;
+        const tone = trial.active ? C.accent : C.down;
+        return (
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px 12px", padding: "8px 20px", background: `linear-gradient(90deg, ${alpha(tone, 0.20)}, ${alpha(tone, 0.03)})`, borderBottom: `1px solid ${tone}` }}>
+            <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", flex: "0 0 auto", background: tone }} />
+            <span style={{ fontFamily: SANS, fontSize: 12.5, color: C.text, lineHeight: 1.45, flex: "1 1 auto", minWidth: 0 }}>
+              {trial.active ? (
+                <>
+                  <strong style={{ fontWeight: 600 }}>{t("Day {n} of {total}").replace("{n}", String(day)).replace("{total}", String(TRIAL_DAYS))}</strong>
+                  <span style={{ color: C.muted }}>{" · "}{t("Ends {date}").replace("{date}", ends)}</span>
+                  {plan && <span style={{ color: C.muted }}>{" · "}{t("Then {price}").replace("{price}", `${plan.price}${plan.cadence}`)}</span>}
+                </>
+              ) : (
+                <strong style={{ fontWeight: 600 }}>{t("Your free trial ended on {date}").replace("{date}", ends)}</strong>
+              )}
+            </span>
+            <button onClick={() => (live ? startPlanChange(account.plan) : (setSettingsTab("account"), setShowSettings(true)))}
+              disabled={!!billingBusy} className="v-taprow"
+              style={{ ...button(trial.active ? "ghost" : "primary", "sm"), fontSize: 12, whiteSpace: "nowrap", opacity: billingBusy ? 0.6 : 1 }}>
+              {billingBusy ? "…" : live ? t("Add payment card") : t("Your plan")}
+            </button>
+            {/* Only the ACTIVE strip closes, and only until the number on it
+                changes. A lapsed trial has no new fact coming tomorrow, so
+                dismissing it would just hide it. */}
+            {trial.active && (
+              <button onClick={() => { setTrialDismissed(day); try { localStorage.setItem("vantage-trial-dismissed", String(day)); } catch { /* ignore */ } }}
+                className="v-clearx" aria-label="Dismiss until tomorrow"
+                style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 13 }}>✕</button>
+            )}
+          </div>
+        );
+      })()}
+
       {cmdMsg && (
         <div style={{ padding: "6px 20px", fontFamily: MONO, fontSize: 12, color: C.accentText, borderBottom: `1px solid ${C.panelEdge}` }}>{cmdMsg}</div>
       )}
@@ -15763,7 +15865,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                           {(() => {
                             const trial = trialState(account);
                             if (!trial) return null;
-                            const ends = new Date(trial.ends).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+                            // Same fix as the trial strip: the app's language, not the browser's.
+                            const ends = new Date(trial.ends).toLocaleDateString(lang || undefined, { day: "numeric", month: "short" });
                             return (
                               <div style={{ display: "flex", alignItems: "center", gap: 10, border: `1px solid ${trial.active ? C.accent : C.edge}`, borderRadius: R.md, padding: "10px 14px", background: trial.active ? C.accentGlow : "transparent" }}>
                                 <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", flex: "0 0 auto", background: trial.active ? C.accent : C.faint }} />
