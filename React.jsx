@@ -10544,8 +10544,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
           }
           if (!text) throw new Error("empty response");
           setWrittenReport(text); setReportSym(selected);
-          setExportMsg(`✓ Report ready (via ${m.label})`);
-          setTimeout(() => setExportMsg(""), 5000);
+          // No "Report ready" line. The report arrives as its own titled card
+          // on the desk, so announcing it said the same thing twice — and since
+          // every ✓/✗ export message is echoed into the transcript, the anchor
+          // also announced the report directly underneath the report. Clearing
+          // the progress line IS the success signal.
+          setExportMsg("");
           return text;
         } catch (e) { errors.push(`${m.label}: ${humanizeError(e)}`); }
       }
