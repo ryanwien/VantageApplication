@@ -584,11 +584,57 @@ a:hover { text-decoration: underline; }
 .v-askrow-chat { flex: 1 1 240px; min-width: 0; }
 
 @media (max-width: 760px) {
-  /* The chat does not fit beside the anchor here, so it wraps below it — docked
-     LEFT with the rest of the desk's content, exactly as at full width. (The
-     anchor was centred once; that read as a misrender.) */
+  /* The chat does not fit beside the anchor here, so it wraps — docked LEFT
+     with the rest of the desk's content, exactly as at full width. (The anchor
+     was centred once; that read as a misrender.) */
   .v-askrow { justify-content: flex-start; }
   .v-askrow-chat { flex: 1 1 100%; }
+
+  /* ---------- and the conversation goes FIRST ----------
+     It wrapped below the anchor, which put the product below the fold. Measured
+     on a 375 by 812 phone: the desk starts at 122, the anchor column runs 257 to
+     872 — a 322px portrait, a roster row, a read button and a four-row status
+     block, 615px in all — and the conversation starts at 884. Every pixel of the
+     thread and the composer was off-screen on arrival. You landed on this app
+     and saw a cartoon.
+
+     The handoff asks for the opposite in as many words: on mobile, "the answer
+     text is the largest text block on the screen".
+
+     The reason the anchor led was that "the presenter is in view from the
+     composer" — and the composer is the LAST element inside .v-askrow-chat, so
+     this order serves that better than the old one did. Thread, composer, then
+     the presenter directly beneath it, rather than the presenter 615px above.
+
+     Full width rather than 300, so its edges line up with the chat and the desk
+     header instead of stopping 21px short of both. Overriding an inline width,
+     hence the !important.
+
+     Capped, though, because this card's portrait scales with its column and the
+     rule runs to 760px: uncapped it made a 706px column on a tablet, which drew
+     a 630 by 760 cartoon — 1107px of anchor. 336 is the reference's own mobile
+     measure: it draws the app at 390, which leaves 336 after the desk's 15px
+     sides and the row's 12px padding. So on any phone the card fills its row
+     exactly, and above that it stops rather than following the column. */
+  .v-askrow-chat { order: -1; }
+  /* Both !important: the element carries inline width:300 AND maxWidth:100%,
+     and a stylesheet loses to either without it. */
+  .v-deskrow-anchor { width: 100% !important; max-width: 336px !important; }
+
+  /* The one desk control that cannot take v-taprow. A <select> is a replaced
+     element and does not render ::before/::after, so the target has to be real
+     — and a real box reflows the row it is in, which is why this is the only
+     one scoped to a width instead of applied everywhere. It costs the tools row
+     8.5px here and nothing on a desktop, where the select already clears the
+     24x24 floor at 101 by 32 and only misses the 44 that touch asks for. */
+  #tour-lang { min-height: 44px; }
+
+  /* The quick-action chips are a horizontal scroller, and setting overflow-x to
+     auto forces overflow-y from visible to auto — so the box clipped their
+     v-taprow target back to its own 34.5px height and the 44 never arrived.
+     Padding the row rather than growing the chips: the pills keep the 32.5px
+     they are drawn at, and the strip gains ten pixels it can afford. */
+  .v-chiprow { padding-top: 6px; padding-bottom: 6px !important; }
 }
 
 /* Toggle switch (src/ui/Toggle.jsx): the input is invisible, so the focus ring

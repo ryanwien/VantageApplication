@@ -13943,7 +13943,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <span className="v-deskhead-tools">
               {/* visible export menu (Excel / Word / PowerPoint / report), all generated inside Vantage */}
               <span data-deskmenu="" style={{ position: "relative" }}>
-                <button id="tour-export" onClick={() => { setShowExportMenu(v => !v); setShowMoreMenu(false); }} aria-label="Export a document"
+                <button id="tour-export" className="v-taprow" onClick={() => { setShowExportMenu(v => !v); setShowMoreMenu(false); }} aria-label="Export a document"
                   title="Export as Excel, Word, or PowerPoint"
                   style={deskBtn(showExportMenu)} {...deskBtnHover(showExportMenu)}>
                   <DeskIcon name="download" size={15} /> {t("Export")} <span aria-hidden="true">▾</span>
@@ -13967,7 +13967,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
               </span>
               {/* consolidated "More" menu: games + ambient + music, so the row stays uncluttered */}
               <span data-deskmenu="" style={{ position: "relative" }}>
-                <button onClick={() => { setShowMoreMenu(v => !v); setShowExportMenu(false); }} aria-label="More — games, ambient sound and music"
+                <button className="v-taprow" onClick={() => { setShowMoreMenu(v => !v); setShowExportMenu(false); }} aria-label="More — games, ambient sound and music"
                   title="Games, ambient sound and music"
                   style={deskBtn(showMoreMenu || gameOn || ambienceOn || musicOn)} {...deskBtnHover(showMoreMenu || gameOn || ambienceOn || musicOn)}>
                   {t("More")} <span aria-hidden="true">▾</span>
@@ -14098,7 +14098,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                   <AnchorRoster characterId={characterId} onPick={setCharacterId} />
                   {/* The rest of the roster, the sets and the voice engine live
                       one click away rather than crowding this card. */}
-                  <button onClick={() => { setSettingsTab("anchor"); setShowSettings(true); }}
+                  <button onClick={() => { setSettingsTab("anchor"); setShowSettings(true); }} className="v-taprow"
                     style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: SANS, fontSize: 13, color: C.muted, whiteSpace: "nowrap" }}>
                     {t("Voice & settings")}
                   </button>
@@ -14117,6 +14117,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                       onClick={() => { if (reading) { stopSpeak(); return; } if (lastAnswer) speak(lastAnswer.id, lastAnswer.text); }}
                       disabled={!reading && !canRead}
                       title={!reading && !canRead ? t("Ask something first — there is no answer to read yet.") : undefined}
+                      className="v-taprow"
                       style={{
                         display: "flex", alignItems: "center", gap: 10, width: "100%",
                         background: C.surfaceRaised, border: "1px solid transparent", borderRadius: R.md,

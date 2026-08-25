@@ -545,6 +545,7 @@ export default function ChatAssistant({
               onClick={submit}
               disabled={!canSend}
               aria-label="Send message"
+              className="v-taprow"
               style={{
                 ...button(canSend ? "primary" : "solid", "sm"),
                 padding: "10px 22px", borderRadius: 9, flexShrink: 0,
@@ -563,9 +564,9 @@ export default function ChatAssistant({
             before the first message too, and the full set is offered while the
             thread is empty. */}
         {(messages.length > 0 || compact) && suggestions.length > 0 && !busy && (
-          <div style={{ display: "flex", gap: 6, marginTop: 8, overflowX: "auto", paddingBottom: 2 }}>
+          <div className="v-chiprow" style={{ display: "flex", gap: 6, marginTop: 8, overflowX: "auto", paddingBottom: 2 }}>
             {suggestions.slice(0, messages.length === 0 ? 5 : 4).map(s => (
-              <button key={sugLabel(s)} onClick={() => pick(sugValue(s))}
+              <button key={sugLabel(s)} onClick={() => pick(sugValue(s))} className="v-taprow"
                 style={{ ...button("quiet", "sm"), fontSize: 11, borderRadius: R.pill, border: `1px solid ${C.edge}`, color: C.faint, whiteSpace: "nowrap", flexShrink: 0 }}>
                 {sugLabel(s)}
               </button>
