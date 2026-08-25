@@ -13338,6 +13338,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         onStopAir={stopAir}
         airIndex={airIndex}
         airSpeaking={airIndex != null && speakingId === `story:${airIndex}`}
+        airAuto={airAuto}
         airMeans={airIndex != null ? (meansByTitle[orderedNews[airIndex]?.title] || null) : null}
         progressRef={speechProgressRef}
         onNextStory={airIndex != null && airIndex + 1 < orderedNews.length ? nextStory : null}

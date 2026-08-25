@@ -43,7 +43,7 @@ import Waveform from "./Waveform.jsx";
 import VideoFrame, { ytId, ytThumb, ytThumbIsReal } from "./VideoFrame.jsx";
 import { clock, relAge } from "../lib/time.js";
 import useSpeechProgress from "./useSpeechProgress.js";
-import { toneOf, toneLabel, wireTone, categoryOf, sourceColor, sourceOf, ageOf } from "../news/news.js";
+import { toneOf, toneLabel, wireTone, categoryOf, sourceColor, sourceOf, ageOf, spanLabel } from "../news/news.js";
 
 
 const railLabel = { ...TYPE.eyebrowSm, fontSize: 10, color: C.faint, letterSpacing: "1.5px" };
@@ -337,6 +337,7 @@ export default function NewsDesk({
   onStopAir,
   airIndex = null,     // index of the story currently on air
   airSpeaking = false, // ...and whether it is still talking
+  airAuto = false,     // ...and whether it is the BULLETIN walking the queue, or one card read on its own
   airMeans = null,     // { status, text, model, ms } for that story
   progressRef = null,  // { current: { id, frac, elapsedMs, totalMs } }
   onNextStory,
@@ -393,6 +394,7 @@ export default function NewsDesk({
   const moreCount = visible.length - shown.length;
 
   const tones = useMemo(() => wireTone(items), [items]);
+  const span = useMemo(() => spanLabel(items), [items]);
   const airItem = airIndex != null ? items[airIndex] : null;
 
   const chipBtn = (active) => ({
@@ -423,20 +425,37 @@ export default function NewsDesk({
             {loadedFor || subject}
           </span>
         )}
+        {/* "8 stories · last 24h" — but only the half we can prove. spanLabel
+            measures the OLDEST story actually in hand, so the window named is
+            the one the panel is holding rather than the seven days the server
+            asked Finnhub for. On the two model paths nothing carries a date,
+            it returns an empty string, and the line is just the count. That
+            rule was written and tested when this file was built; it was the
+            one piece of it that never got wired to the header. */}
         {items.length > 0 && (
           <span style={{ color: C.faint, fontFamily: MONO, fontSize: 11.5 }}>
-            {items.length} {items.length === 1 ? "story" : "stories"}
+            {[`${items.length} ${items.length === 1 ? "story" : "stories"}`, span].filter(Boolean).join(" · ")}
           </span>
         )}
 
         <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {/* Reading it on air is what makes this a news DESK rather than a
-              feed reader, so it is this panel's one primary action. */}
+              feed reader, so it is this panel's one primary action.
+
+              It is also a toggle — pressing it during a bulletin stops the
+              bulletin — and it used to wear one label for both halves of that,
+              so the way to stop the desk talking was to press a button reading
+              "Read all on air" and hope. Its meter was wrong in the other
+              direction: `airSpeaking` is true for ANY read, so pressing one
+              card's own Read on air lit the bars up here as though the whole
+              bulletin were running. Both halves are the same missing fact —
+              whether this button's bulletin is the thing on air — and airAuto
+              is it. */}
           {items.length > 0 && onBroadcast && (
-            <button onClick={onBroadcast} className="v-onair"
+            <button onClick={onBroadcast} className="v-onair" aria-pressed={airAuto}
               style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(70,167,88,0.1)", border: `1px solid ${C.accent}`, borderRadius: R.sm, padding: "7px 14px", fontFamily: SANS, fontSize: 13, fontWeight: 700, color: C.accentText, cursor: "pointer" }}>
-              {airSpeaking && <Waveform bars={3} />}
-              Read all on air
+              {airAuto && airSpeaking && <Waveform bars={3} />}
+              {airAuto ? "Stop the bulletin" : "Read all on air"}
             </button>
           )}
           <button onClick={onLoad} disabled={busy} className="v-outline"
@@ -513,14 +532,22 @@ export default function NewsDesk({
       {/* ---- source filter ---- */}
       {sources.length >= 2 && (
         <div style={{ display: "flex", gap: 7, padding: HEAD_PAD, borderBottom: `1px solid ${C.edge}`, alignItems: "center", flexWrap: "wrap" }}>
-          <button onClick={() => setSourceFilter(null)}
+          {/* aria-pressed on all of them. These chips carried their entire
+              state in a green fill, so to a screen reader the row was five
+              identical buttons and the list below just changed length for no
+              stated reason. The tone counts three inches above already say
+              which of them is on; there is no reason this row should not. */}
+          <button onClick={() => setSourceFilter(null)} aria-pressed={!sourceFilter}
+            title={sourceFilter ? "Show every outlet" : "Showing every outlet"}
             style={sourceFilter
               ? chipBtn(false)
               : { background: C.accent, color: C.textOnAccent, border: "1px solid transparent", borderRadius: 20, padding: "6px 14px", fontFamily: SANS, fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
             All {items.length}
           </button>
           {sources.map(([s, count]) => (
-            <button key={s} onClick={() => setSourceFilter(f => (f === s ? null : s))} className="v-interactive" style={chipBtn(sourceFilter === s)}>
+            <button key={s} onClick={() => setSourceFilter(f => (f === s ? null : s))} className="v-interactive"
+              aria-pressed={sourceFilter === s} title={sourceFilter === s ? "Show every outlet" : `Show only ${s}`}
+              style={chipBtn(sourceFilter === s)}>
               <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: sourceColor(s), flexShrink: 0 }} />
               {s} {count}
             </button>
@@ -561,9 +588,17 @@ export default function NewsDesk({
           </div>
         )}
 
+        {/* The green belongs to the top of the list you are LOOKING at, not to
+            the top of the wire. Keyed on the wire index it disappeared the
+            moment you filtered: narrow eight stories down to the one CNBC
+            story — which you did because that is the story you want read — and
+            the panel's one primary action was gone from the screen entirely,
+            because the card that owned it was filtered out. `row` is the
+            position in the visible list, which is what "the top story" means
+            to somebody reading it. */}
         {shown.map(({ n, i }, row) => (
           <StoryCard key={`n${i}`} item={n} href={href(n)} index={row}
-            primary={i === 0 && airIndex == null}
+            primary={row === 0 && airIndex == null}
             onAir={airIndex === i} speaking={airSpeaking}
             onRead={onReadStory ? (item) => onReadStory(item, i) : null}
             onAsk={onAskStory} />
