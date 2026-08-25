@@ -70,10 +70,18 @@ function Poster({ video, durationSec, onPlay }) {
       </div>
       {/* 22% down rather than centred — the reference puts it there so it does
           not land on the middle of the frame, which is where a thumbnail
-          usually carries its own title card. */}
+          usually carries its own title card.
+
+          With a floor, because 22% is a fraction of a height that collapses.
+          The circle is a fixed 62px and the chips above it are fixed too, so on
+          a phone — a 313 by 176 frame — 22% put the circle's centre 39px down
+          and it covered half the duration chip: 27 by 26 pixels of "18:24"
+          behind a green disc. 74px is the first centre that clears a chip row
+          ending at 39 with a 31px radius below it, and on the reference's
+          804-wide frame 22% is 99px, so nothing there moves. */}
       <button onClick={onPlay} aria-label={`Play ${video.title}`}
         style={{
-          position: "absolute", left: "50%", top: "22%", transform: "translate(-50%, -50%)",
+          position: "absolute", left: "50%", top: "max(22%, 74px)", transform: "translate(-50%, -50%)",
           width: 62, height: 62, borderRadius: "50%", border: "none", cursor: "pointer",
           background: "rgba(70,167,88,0.92)", color: C.textOnAccent,
           display: "grid", placeItems: "center", fontSize: 26, paddingLeft: 5, lineHeight: 1,
@@ -92,7 +100,7 @@ function Chapters({ chapters, durationSec, at, onSeek }) {
   const spans = chapterSpans(chapters, durationSec);
   const here = at == null ? -1 : chapterAt(chapters, at);
   return (
-    <div style={{ display: "flex", gap: 5, marginTop: 12 }}>
+    <div className="v-chapstrip" style={{ display: "flex", gap: 5, marginTop: 12 }}>
       {spans.map((c, i) => {
         const on = i === here;
         return (
@@ -153,7 +161,7 @@ export default function VideoDesk({
   const running = summary?.status === "running";
 
   return (
-    <div style={{ background: C.base, border: `1px solid ${C.edge}`, borderRadius: R.xl, overflow: "hidden", color: C.text }}>
+    <div className="v-videopanel" style={{ background: C.base, border: `1px solid ${C.edge}`, borderRadius: R.xl, overflow: "hidden", color: C.text }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceAlt, flexWrap: "wrap" }}>
         <span aria-hidden="true" style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: 7, display: "grid", placeItems: "center", fontSize: 11 }}>&#9654;</span>
         <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 14.5 }}>Video desk</span>
@@ -180,7 +188,7 @@ export default function VideoDesk({
       </div>
 
       <div className="v-videobody" style={{ display: "flex", alignItems: "stretch" }}>
-        <div style={{ flex: 1, minWidth: 0, padding: "18px 16px 20px 22px" }}>
+        <div className="v-videomain" style={{ flex: 1, minWidth: 0, padding: "18px 16px 20px 22px" }}>
           {at == null
             // Keyed on the id so a thumbnail that failed to load for one video
             // does not leave the next one posterless.
@@ -201,7 +209,7 @@ export default function VideoDesk({
               <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600 }}>{video.channel}</span>
               {/* Printed only when the API gave us the numbers. A missing view
                   count is a fact; an invented one is not. */}
-              {(video.publishedAt || video.views != null) && <span aria-hidden="true" style={{ color: C.edgeStrong }}>|</span>}
+              {(video.publishedAt || video.views != null) && <span aria-hidden="true" className="v-bylinesep" style={{ color: C.edgeStrong }}>|</span>}
               <span style={{ color: C.faint, fontFamily: MONO, fontSize: 11.5 }}>
                 {[relAge(video.publishedAt), video.views != null ? `${compactCount(video.views)} views` : ""].filter(Boolean).join(" · ")}
               </span>

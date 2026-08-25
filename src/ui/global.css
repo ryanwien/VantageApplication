@@ -818,13 +818,45 @@ button:not(:disabled):active { transform: scale(0.97); }
    The field keeps its aspect ratio throughout — it is a canvas, and letting it
    letterbox is what stops the units squashing. */
 @media (max-width: 1000px) {
-  .v-awbody, .v-chessbody, .v-videobody { flex-direction: column; }
-  .v-awrail, .v-chessrail, .v-videorail {
+  .v-awbody, .v-chessbody { flex-direction: column; }
+  .v-awrail, .v-chessrail {
     width: auto !important;
     border-left: none !important;
     border-top: 1px solid var(--v-edge);
     padding: 18px 22px !important;
   }
+}
+
+/* The Video desk keeps the same rule and the same thousand pixels, measured
+   against the PANEL. It is a chat attachment, so the window's width was never
+   the question — and the paragraph above states the principle exactly ("at
+   700px the field was 124px wide, which is not a battlefield, it is a strip")
+   while enforcing it against the one box that could not answer it.
+
+   Measured on a 1400px desktop, where the desk hands this panel about 640px:
+   the rail held its full 320 and the video played at 264 by 149. At a 520px
+   panel the rail was WIDER than the column beside it — 320 against 182 — and
+   the video was 144 by 81. A video desk whose sidebar outweighs the video.
+
+   On a phone nothing changes: viewport 375, panel 359, under a thousand either
+   way. Chess and Algorithm Wars still measure the window here, and have the
+   same latent bug for the same reason. */
+.v-videopanel { container-type: inline-size; }
+
+@container (max-width: 1000px) {
+  .v-videobody { flex-direction: column; }
+  .v-videorail {
+    width: auto !important;
+    border-left: none !important;
+    border-top: 1px solid var(--v-edge);
+    padding: 18px 22px !important;
+  }
+  /* The main column was padded 18/16/20/22 — sixteen on the right because a
+     rail was pressed against it there, twenty-two everywhere else. Once the
+     rail unhooks there is nothing on the right to be close to, and the six
+     pixels of difference are just a player sitting off-centre in its own
+     panel. Measured on a phone: 23px of inset on the left, 17px on the right. */
+  .v-videomain { padding-right: 22px !important; }
 }
 @media (max-width: 720px) {
   .v-awdeploy { grid-template-columns: 1fr !important; }
@@ -1038,6 +1070,31 @@ button:not(:disabled):active { transform: scale(0.97); }
 .v-clearx { transition: color var(--v-fast) var(--v-ease); }
 .v-clearx:hover { color: var(--v-text); }
 
+/* A ✕ glyph at 14px in a button with 2px of padding measures 15 by 25, which
+   is a fine thing to click and a poor thing to hit with a thumb — under even
+   the 24x24 floor, on the control that closes the panel it sits in. All twelve
+   of these are a close or a stop, so all twelve are the one control somebody
+   on a phone most needs to land.
+
+   Grown by a pseudo-element centred on the glyph rather than by padding, so
+   nothing moves: the ✕ is drawn exactly where it was and the extra target is
+   invisible. 44 tall, which is HIT from theme.js and free — these all sit on
+   their own line inside 14px of panel padding. 30 wide rather than 44, and
+   that number is the neighbour's, not a compromise: these ✕s sit 8 to 12px
+   from the control beside them, and a 44-wide box centred on a 15px glyph
+   reaches 14px past it. Measured at 44 it swallowed the last two pixels of
+   "Open on YouTube ↗", which is a tap that opens a video answered by closing
+   the panel. 30 clears the tightest of those gaps and still more than triples
+   the area. (A negative z-index would let it sit under the neighbour and keep
+   all 44 — but negative-z descendants paint before their ancestors'
+   backgrounds, so it would vanish behind the header instead.) */
+.v-clearx { position: relative; }
+.v-clearx::after {
+  content: ""; position: absolute;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 30px; height: 44px;
+}
+
 /* ---------- video desk ----------
    Everything a pointer can act on in this panel answers it the same way the
    rest of the product does: the border goes to the accent. The handoff asks
@@ -1049,6 +1106,40 @@ button:not(:disabled):active { transform: scale(0.97); }
   transition: border-color var(--v-base-dur) var(--v-ease), color var(--v-base-dur) var(--v-ease);
 }
 .v-chapseg:hover, .v-outline:hover, .v-upnext:hover > span:first-child { border-color: var(--v-accent); }
+
+/* ---------- the chapter strip, when it stops being a strip ----------
+   Segments are weighted by how long each chapter runs, and that is the whole
+   point of the strip — an 18-minute video is skimmable because its parts are
+   uneven. It is also what kills it on a phone: the SHORTEST chapter gets the
+   THINNEST slice exactly when there is least room to give it. Measured on a
+   375px phone, all four labels of the reference's own video were clipped —
+   "What he trimmed" got 39 pixels of the 91 it needs, and "Setup", a
+   five-letter word, got 26 of 31. On a desktop the ellipsis is survivable
+   because the title attribute carries the full label on hover. Touch has no
+   hover, so on a phone a clipped chapter is unrecoverable.
+
+   So below phone width the strip becomes a list: one full-width row per
+   chapter, its start time and its name side by side, both legible, each row a
+   proper target. The proportions are gone, and that is the trade — a
+   proportion nobody can read is not information.
+
+   Against the main column rather than the viewport, because this panel is a
+   chat attachment and its width has never had much to do with the window's. */
+.v-videomain { container-type: inline-size; }
+
+@container (max-width: 520px) {
+  .v-chapstrip { flex-direction: column; }
+  .v-chapseg {
+    flex: none !important;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .v-chapseg > :last-child { flex: 1; min-width: 0; }
+
+  /* A separator with nothing left to separate. The byline is one row on a
+     desk — avatar, channel, | , age · views — and three on a phone, which
+     left the pipe stranded at the end of the first line pointing at air. */
+  .v-bylinesep { display: none; }
+}
 
 /* The up-next row's target is the whole row, so the title has to acknowledge a
    pointer the thumbnail border alone would not sell. */
