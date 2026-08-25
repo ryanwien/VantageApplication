@@ -314,6 +314,8 @@ export default function ChatAssistant({
                       // header, no empty-state hero; the transcript grows above
                       // the bar once there are messages. For hosts (the AI desk)
                       // that already say what this input is.
+  roomy = false,      // an attachment that is a whole surface rather than a
+                      // result — a game. Drops the transcript cap; see below.
 }) {
   // The draft is normally ours. It becomes the caller's when `value` is given,
   // which is how the desk merged its command bar into this composer: the
@@ -434,9 +436,17 @@ export default function ChatAssistant({
           window or pushes the composer past the fold on a short one, so the cap is
           a share of the viewport with a floor and a ceiling. It is sized to hold a
           full answer — an answer that arrives already scrolled is an answer whose
-          first line you have to go looking for. */}
+          first line you have to go looking for.
+
+          EXCEPT when the attachment is a whole surface. A game is not an answer
+          you skim; it is a screen you sit in front of, and the reference designs
+          run past 1000px tall. Inside the cap it got a nested scroller with the
+          composer parked over its bottom edge, so the controls you were reaching
+          for were the half that was cut off. Roomy drops the cap entirely and
+          lets the PAGE scroll — one scrollbar instead of two, and the game is as
+          tall as it is. */}
       {(!compact || messages.length > 0 || attachments) && (
-      <div style={{ position: "relative", flex: compact ? "0 1 auto" : 1, minHeight: 0, display: "flex", maxHeight: compact ? "clamp(280px, 62vh, 760px)" : undefined }}>
+      <div style={{ position: "relative", flex: compact ? "0 1 auto" : 1, minHeight: 0, display: "flex", maxHeight: compact ? (roomy ? "none" : "clamp(280px, 62vh, 760px)") : undefined }}>
         <div
           ref={scrollRef} onScroll={onScroll}
           role="log" aria-live="polite" aria-relevant="additions text" aria-label="Conversation"

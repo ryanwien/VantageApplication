@@ -11411,6 +11411,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
               embedded
               compact
+              roomy={gameOn}
               messages={chatThread}
               attachments={deskAttachments}
               /* ===== the merged input =====
