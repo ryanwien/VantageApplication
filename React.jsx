@@ -7181,13 +7181,25 @@ function AppCalendar({ extra = [] }) {
 
 // The subscription tiers. `price` is display-only; real charges (if ever) happen
 // through Stripe in Layer 3. Feature copy is illustrative for the prototype.
+// The pricing table has ONE source of truth and it is FEATURE_PLAN, below.
+// Every perk here must name something the code actually gates, to the tier the
+// code actually gates it to. It had drifted badly in both directions: Explorer
+// advertised live data, AI answers and streaming — all three of which
+// FEATURE_PLAN puts behind Pro Desk, under a comment reading "Explorer (free)
+// unlocks none of these" — while the paid tiers sold priority model routing,
+// saved layouts and team seats, each of which appeared exactly once in this
+// repository, in its own perk string. They were not features. They were copy.
+//
+// A price is a promise about what happens after the card is charged, so the
+// rule is narrow: if you cannot point at the planAllows() call that enforces a
+// perk, it does not go on a card.
 const PLANS = [
-  { id: "free", label: "Explorer", price: "$0", cadence: "forever", tagline: "Everything you need to watch the tape.",
-    perks: ["Demo + live market data", "AI desk answers (bring your own key)", "Watchlist, portfolio & alerts", "Games, calendar & streaming"] },
+  { id: "free", label: "Explorer", price: "$0", cadence: "forever", tagline: "The whole desk, on simulated data.",
+    perks: ["Demo market data — tape, charts & P&F", "Watchlist, portfolio & price alerts", "The anchor, in your browser's voice", "Games & calendar"] },
   { id: "pro", label: "Pro Desk", price: "$12", cadence: "/mo", featured: true, tagline: "For the daily driver.",
-    perks: ["Everything in Explorer", "Priority AI model routing", "Breaking-news anchor alerts", "Unlimited saved layouts"] },
+    perks: ["Everything in Explorer", "Live market data", "AI desk answers & written reports", "Real video results & streaming"] },
   { id: "desk", label: "Trading Floor", price: "$39", cadence: "/mo", tagline: "The full broadcast desk.",
-    perks: ["Everything in Pro Desk", "Team seats & shared watchlists", "Studio ElevenLabs anchor voice", "Zoom / Meet briefing rooms"] },
+    perks: ["Everything in Pro Desk", "Studio anchor voice (ElevenLabs)"] },
 ];
 const planLabel = (id) => (PLANS.find(p => p.id === id)?.label || "Explorer");
 
