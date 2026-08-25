@@ -75,8 +75,15 @@ const alarm = {
   warningDim: "#8c6126",
   warningSoft: "rgba(221,154,60,0.12)",
 };
-// Chess board squares — named because the game reads them directly.
-const board = { lightSq: "#232c38", darkSq: "#161d27" };
+// Chess board squares and the two armies standing on them — named because the
+// game reads them directly. The pieces are NOT C.up / C.down: a 35px glyph
+// sitting on a mid-grey square needs more body than a +2.4% label does, so
+// both sides are a step heavier than the data colours, and the selected piece
+// is a step heavier again so it stays legible under the green square wash.
+const board = {
+  lightSq: "#232c38", darkSq: "#161d27",
+  bull: "#6ed49a", bullOn: "#8ee7b3", bear: "#e78b8e",
+};
 
 // ---------- the palette the app consumes ----------
 export const C = {
@@ -154,6 +161,9 @@ export const C = {
 
   // --- chess ---
   boardLight: board.lightSq,
+  bullPiece: board.bull,
+  bullPieceOn: board.bullOn,
+  bearPiece: board.bear,
   boardDark: board.darkSq,
 
   // --- additive / legacy aliases ---

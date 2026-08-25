@@ -8,7 +8,10 @@ import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled
 import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage, contextForLLM, isCloseMatch, missingDimension, namedAbsentColumn } from "./src/datahub/catalog.js";
 import { buildPnF, pnfTargets, visibleWindow, INTRADAY_BOX_PCT } from "./src/pnf/pnf.js";
 import { detectPattern } from "./src/pnf/patterns.js";
-import { CHESS_GLYPH, chessInit, legalMoves, chessApply, gameStatus, inCheck, chessAIMove } from "./src/chess/chess.js";
+import {
+  CHESS_VAL, chessGlyph, chessSquare, chessInit, legalMoves, chessApply, gameStatus, inCheck,
+  chessAIMove, chessAttacks, chessCount, chessCentre, chessSan, chessSuggest,
+} from "./src/chess/chess.js";
 import { C, GRAD, FIELD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, alpha, button, panel, panelHead, panelNote, field as fieldRecipe, chip, segmentTrack, segmentItem, pill } from "./src/ui/theme.js";
 import { passwordCheck, PW_MIN } from "./src/auth/password.js";
 import Sparkline from "./src/ui/Sparkline.jsx";
@@ -344,35 +347,15 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "2 player": "2 jugadores",
     "Bears are thinking": "Los Osos están pensando",
-    "Bears take": "Los Osos capturan",
-    "Bears to move": "Juegan los Osos",
-    "Bears win by checkmate": "Los Osos ganan por jaque mate",
-    "Bears · red": "Osos · rojo",
-    "Bulls take": "Los Toros capturan",
-    "Bulls to move": "Juegan los Toros",
-    "Bulls win by checkmate": "Los Toros ganan por jaque mate",
-    "Bulls · green": "Toros · verde",
-    "Captured": "Capturadas",
-    "Checkmate — you lose": "Jaque mate: has perdido",
-    "Checkmate — you win": "Jaque mate: has ganado",
-    "Hold on — the computer is choosing.": "Un momento: el ordenador está eligiendo.",
     "How to play": "Cómo se juega",
     "Moves": "Jugadas",
     "New game": "Partida nueva",
-    "No moves yet": "Aún no hay jugadas",
-    "Opponent": "Rival",
     "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "Los peones coronan dama automáticamente. Reglas informales: sin enroque ni captura al paso.",
-    "Stalemate — a draw": "Ahogado: tablas",
-    "Start a new game to play again.": "Empieza una partida nueva para volver a jugar.",
     "Tap a piece to see where it can go.": "Toca una pieza para ver adónde puede ir.",
     "The Bears' king is in check.": "El rey de los Osos está en jaque.",
-    "Two players, one screen: Bulls against Bears. Checkmate the other king to win.": "Dos jugadores, una pantalla: Toros contra Osos. Da jaque mate al otro rey para ganar.",
-    "You are the Bulls, in green. Checkmate the Bears' king to win — get checkmated and it's over.": "Eres los Toros, en verde. Da jaque mate al rey de los Osos para ganar; si te lo dan a ti, se acabó.",
     "Your king is in check — you have to answer it.": "Tu rey está en jaque: tienes que responder.",
     "Your move": "Te toca",
     "move {n} · casual rules": "jugada {n} · reglas informales",
-    "vs Computer": "contra la máquina",
-    "{sq} {piece} selected. Tap a highlighted square to move.": "{piece} de {sq} seleccionado. Toca una casilla marcada para mover.",
     "pawn": "peón",
     "knight": "caballo",
     "bishop": "alfil",
@@ -588,6 +571,105 @@ const I18N = {
     "{n} BOT": "{n} BOT",
     "{n} BOTS": "{n} BOTS",
     "{n} CAPITAL AVAILABLE": "{n} DE CAPITAL DISPONIBLE",
+    // --- settings: the plain-language sidebar ---
+    "A draw is a result. Ruthless will not offer you one.": "Las tablas también son un resultado. Despiadado no te va a ofrecer ninguna.",
+    "After {n}. {san}": "Tras {n}. {san}",
+    "BEARS": "OSOS",
+    "BEARS THINKING": "OSOS PENSANDO",
+    "BEARS TO MOVE": "JUEGAN LOS OSOS",
+    "BEARS · HOUSE": "OSOS · LA CASA",
+    "BULLS": "TOROS",
+    "BULLS TO MOVE": "JUEGAN LOS TOROS",
+    "BULLS · YOU": "TOROS · TÚ",
+    "Bears": "Osos",
+    "Bears are ahead": "Los Osos van por delante",
+    "Bears are winning": "Los Osos van ganando",
+    "Bears edge ahead": "Los Osos sacan algo de ventaja",
+    "Bears hold": "Los Osos tienen",
+    "Bulls": "Toros",
+    "Bulls are ahead": "Los Toros van por delante",
+    "Bulls are winning": "Los Toros van ganando",
+    "Bulls edge ahead": "Los Toros sacan algo de ventaja",
+    "Bulls hold": "Los Toros tienen",
+    "CAPTURED": "CAPTURADAS",
+    "COACH": "ENTRENADOR",
+    "Centre control": "Control del centro",
+    "Checkmate — Bears win": "Jaque mate: ganan los Osos",
+    "Checkmate — Bulls win": "Jaque mate: ganan los Toros",
+    "Flag — Bears win on time": "Caída de bandera: los Osos ganan por tiempo",
+    "Flag — Bulls win on time": "Caída de bandera: los Toros ganan por tiempo",
+    "GAME OVER": "PARTIDA TERMINADA",
+    "Game over": "Partida terminada",
+    "HOUSE ALGO": "ALGORITMO DE LA CASA",
+    "House": "La casa",
+    "House algo": "Algoritmo de la casa",
+    "It was close on material. Passive gives you room to see the pattern.": "El material estaba igualado. Pasivo te deja espacio para ver el patrón.",
+    "MATERIAL": "MATERIAL",
+    "MATERIAL {n}": "MATERIAL {n}",
+    "MOVE LOG": "REGISTRO DE JUGADAS",
+    "MOVE {n} · {clock}": "JUGADA {n} · {clock}",
+    "MOVES": "JUGADAS",
+    "Neither side could force it. Swap seats and go again.": "Ninguno de los dos pudo forzarla. Cambiad de sitio y otra vez.",
+    "Next move": "Jugada siguiente",
+    "No legal move left, and no check. That is a draw.": "No queda ninguna jugada legal y no hay jaque. Eso son tablas.",
+    "Nothing else matters until the check is answered.": "Nada más importa hasta responder al jaque.",
+    "POSITION": "POSICIÓN",
+    "Passive": "Pasivo",
+    "Play again": "Jugar otra vez",
+    "Previous move": "Jugada anterior",
+    "Pushing {push} claims the centre. Bears will likely answer {answer}.": "Avanzar a {push} reclama el centro. Los Osos responderán probablemente con {answer}.",
+    "Review moves": "Repasar la partida",
+    "Reviewing": "Repasando",
+    "Ruthless": "Despiadado",
+    "Ruthless is one segment along. The house stops trading pieces evenly.": "Despiadado está un segmento más allá. Ahí la casa deja de cambiar piezas de igual a igual.",
+    "Stalemate — nobody wins": "Rey ahogado: no gana nadie",
+    "Stepping back through the game. The board is not live.": "Estás repasando la partida. El tablero no está en juego.",
+    "Swap seats and play it back the other way.": "Cambiad de sitio y jugadla al revés.",
+    "THEIRS": "SUYO",
+    "TIME LEFT": "TIEMPO RESTANTE",
+    "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Toca una pieza para ver adónde puede ir y luego toca una casilla o una de las fichas del panel.",
+    "That was Ruthless. There is nothing harder here.": "Eso era Despiadado. Aquí no hay nada más difícil.",
+    "The Bears are yours to play. The house is sitting this one out.": "Los Osos son tuyos. La casa se queda fuera de esta partida.",
+    "The Bears own the centre. Challenge it before it settles.": "Los Osos dominan el centro. Discúteselo antes de que se asiente.",
+    "The Bears ran out of clock.": "A los Osos se les acabó el tiempo.",
+    "The Bears' king had nowhere to run.": "El rey de los Osos no tenía adónde huir.",
+    "The Bulls' king had nowhere to run.": "El rey de los Toros no tenía adónde huir.",
+    "The centre is still open. Whoever claims it first sets the shape of the game.": "El centro sigue abierto. Quien lo reclame primero marca la forma de la partida.",
+    "The game is over. Play again, or step back through it.": "La partida ha terminado. Juega otra vez o repásala hacia atrás.",
+    "The house is choosing its move.": "La casa está eligiendo su jugada.",
+    "The position stopped here. Step back through it to see where it turned.": "La posición se detuvo aquí. Repásala hacia atrás para ver dónde giró.",
+    "The starting position.": "La posición inicial.",
+    "Two players, one screen: Bulls first, then Bears. Checkmate the other king to win, or win on the clock.": "Dos jugadores, una pantalla: primero los Toros, después los Osos. Da jaque mate al otro rey para ganar, o gana por tiempo.",
+    "Who plays the Bears": "Quién juega con los Osos",
+    "YOUR TURN": "TU TURNO",
+    "YOURS": "TUYO",
+    "You are the Bulls, in green, and you move first. Checkmate the Bears' king to win — get checkmated, or run your clock to zero, and it is over.": "Eres los Toros, en verde, y mueves primero. Da jaque mate al rey de los Osos para ganar; si te lo dan a ti, o tu reloj llega a cero, se acabó.",
+    "You hold the middle. Bring a knight out behind it.": "Dominas el centro. Saca un caballo por detrás.",
+    "You ran out of clock.": "Se te acabó el tiempo.",
+    "You were well down on material before the mate. Trade only when you win the trade.": "Ibas muy por detrás en material antes del mate. Cambia solo cuando ganes el cambio.",
+    "Your king had nowhere to run.": "Tu rey no tenía adónde huir.",
+    "Your {piece} on {sq} is hanging — the Bears can take it for free.": "Tu {piece} en {sq} está colgado: los Osos pueden capturarlo gratis.",
+    "back to result": "volver al resultado",
+    "back to the game": "volver a la partida",
+    "dead even": "totalmente igualada",
+    "deselect": "deseleccionar",
+    "first player": "jugador uno",
+    "house algo · {algo}": "algoritmo de la casa · {algo}",
+    "looks a whole reply ahead": "mira una respuesta entera por delante",
+    "second player": "jugador dos",
+    "takes only what is free": "solo se lleva lo que está gratis",
+    "to move": "juega",
+    "will not hand you a piece": "no te va a regalar una pieza",
+    "you": "tú",
+    "you · to move": "tú · juegas",
+    "{i} of {n}": "{i} de {n}",
+    "{n} PIECES": "{n} PIEZAS",
+    "{n} TAKEN": "{n} CAPTURADAS",
+    "{p} selected — it has nowhere to go.": "{p} seleccionado: no tiene adónde ir.",
+    "{p} selected — {a} and {b} are open.": "{p} seleccionado: {a} y {b} están libres.",
+    "{p} selected — {a} is its only move.": "{p} seleccionado: {a} es su única jugada.",
+    "{p} selected — {n} squares are open.": "{p} seleccionado: hay {n} casillas libres.",
+    "— game just started": "— la partida acaba de empezar",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -821,35 +903,15 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "2 player": "2 joueurs",
     "Bears are thinking": "Les Ours réfléchissent",
-    "Bears take": "Prises des Ours",
-    "Bears to move": "Aux Ours de jouer",
-    "Bears win by checkmate": "Les Ours gagnent par échec et mat",
-    "Bears · red": "Ours · rouge",
-    "Bulls take": "Prises des Taureaux",
-    "Bulls to move": "Aux Taureaux de jouer",
-    "Bulls win by checkmate": "Les Taureaux gagnent par échec et mat",
-    "Bulls · green": "Taureaux · vert",
-    "Captured": "Prises",
-    "Checkmate — you lose": "Échec et mat — vous perdez",
-    "Checkmate — you win": "Échec et mat — vous gagnez",
-    "Hold on — the computer is choosing.": "Un instant — l'ordinateur choisit.",
     "How to play": "Comment jouer",
     "Moves": "Coups",
     "New game": "Nouvelle partie",
-    "No moves yet": "Aucun coup pour l'instant",
-    "Opponent": "Adversaire",
     "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "Les pions sont promus dame automatiquement. Règles simplifiées — ni roque, ni prise en passant.",
-    "Stalemate — a draw": "Pat — partie nulle",
-    "Start a new game to play again.": "Lancez une nouvelle partie pour rejouer.",
     "Tap a piece to see where it can go.": "Touchez une pièce pour voir où elle peut aller.",
     "The Bears' king is in check.": "Le roi des Ours est en échec.",
-    "Two players, one screen: Bulls against Bears. Checkmate the other king to win.": "Deux joueurs, un écran : Taureaux contre Ours. Matez le roi adverse pour gagner.",
-    "You are the Bulls, in green. Checkmate the Bears' king to win — get checkmated and it's over.": "Vous êtes les Taureaux, en vert. Matez le roi des Ours pour gagner — si vous êtes maté, c'est fini.",
     "Your king is in check — you have to answer it.": "Votre roi est en échec — vous devez y répondre.",
     "Your move": "À vous de jouer",
     "move {n} · casual rules": "coup {n} · règles simplifiées",
-    "vs Computer": "contre l'ordinateur",
-    "{sq} {piece} selected. Tap a highlighted square to move.": "{piece} en {sq} sélectionné. Touchez une case marquée pour jouer.",
     "pawn": "pion",
     "knight": "cavalier",
     "bishop": "fou",
@@ -1065,6 +1127,105 @@ const I18N = {
     "{n} BOT": "{n} BOT",
     "{n} BOTS": "{n} BOTS",
     "{n} CAPITAL AVAILABLE": "{n} DE CAPITAL DISPONIBLE",
+    // --- settings: the plain-language sidebar ---
+    "A draw is a result. Ruthless will not offer you one.": "Une nulle reste un résultat. Impitoyable ne vous en proposera pas.",
+    "After {n}. {san}": "Après {n}. {san}",
+    "BEARS": "OURS",
+    "BEARS THINKING": "OURS RÉFLÉCHISSENT",
+    "BEARS TO MOVE": "AUX OURS DE JOUER",
+    "BEARS · HOUSE": "OURS · LA MAISON",
+    "BULLS": "TAUREAUX",
+    "BULLS TO MOVE": "AUX TAUREAUX DE JOUER",
+    "BULLS · YOU": "TAUREAUX · VOUS",
+    "Bears": "Ours",
+    "Bears are ahead": "Les Ours mènent",
+    "Bears are winning": "Les Ours l'emportent",
+    "Bears edge ahead": "Les Ours prennent un léger avantage",
+    "Bears hold": "Les Ours détiennent",
+    "Bulls": "Taureaux",
+    "Bulls are ahead": "Les Taureaux mènent",
+    "Bulls are winning": "Les Taureaux l'emportent",
+    "Bulls edge ahead": "Les Taureaux prennent un léger avantage",
+    "Bulls hold": "Les Taureaux détiennent",
+    "CAPTURED": "PRISES",
+    "COACH": "COACH",
+    "Centre control": "Contrôle du centre",
+    "Checkmate — Bears win": "Échec et mat — les Ours gagnent",
+    "Checkmate — Bulls win": "Échec et mat — les Taureaux gagnent",
+    "Flag — Bears win on time": "Chute du drapeau — les Ours gagnent au temps",
+    "Flag — Bulls win on time": "Chute du drapeau — les Taureaux gagnent au temps",
+    "GAME OVER": "PARTIE TERMINÉE",
+    "Game over": "Partie terminée",
+    "HOUSE ALGO": "ALGO DE LA MAISON",
+    "House": "La maison",
+    "House algo": "Algo de la maison",
+    "It was close on material. Passive gives you room to see the pattern.": "Le matériel était serré. Passif vous laisse la place de voir le schéma.",
+    "MATERIAL": "MATÉRIEL",
+    "MATERIAL {n}": "MATÉRIEL {n}",
+    "MOVE LOG": "JOURNAL DES COUPS",
+    "MOVE {n} · {clock}": "COUP {n} · {clock}",
+    "MOVES": "COUPS",
+    "Neither side could force it. Swap seats and go again.": "Personne n'a pu conclure. Changez de place et rejouez.",
+    "Next move": "Coup suivant",
+    "No legal move left, and no check. That is a draw.": "Plus aucun coup légal, et pas d'échec. C'est une nulle.",
+    "Nothing else matters until the check is answered.": "Rien d'autre ne compte tant que l'échec n'est pas paré.",
+    "POSITION": "POSITION",
+    "Passive": "Passif",
+    "Play again": "Rejouer",
+    "Previous move": "Coup précédent",
+    "Pushing {push} claims the centre. Bears will likely answer {answer}.": "Pousser en {push} revendique le centre. Les Ours répondront sans doute {answer}.",
+    "Review moves": "Revoir les coups",
+    "Reviewing": "Relecture",
+    "Ruthless": "Impitoyable",
+    "Ruthless is one segment along. The house stops trading pieces evenly.": "Impitoyable est juste à côté. Là, la maison cesse d'échanger les pièces à parts égales.",
+    "Stalemate — nobody wins": "Pat — personne ne gagne",
+    "Stepping back through the game. The board is not live.": "Vous remontez la partie. L'échiquier n'est pas en jeu.",
+    "Swap seats and play it back the other way.": "Changez de place et rejouez-la dans l'autre sens.",
+    "THEIRS": "À EUX",
+    "TIME LEFT": "TEMPS RESTANT",
+    "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Touchez une pièce pour voir où elle peut aller, puis touchez une case ou l'une des pastilles du panneau.",
+    "That was Ruthless. There is nothing harder here.": "C'était Impitoyable. Il n'y a rien de plus dur ici.",
+    "The Bears are yours to play. The house is sitting this one out.": "Les Ours sont à vous. La maison ne joue pas celle-ci.",
+    "The Bears own the centre. Challenge it before it settles.": "Les Ours tiennent le centre. Contestez-le avant qu'il ne se fige.",
+    "The Bears ran out of clock.": "Les Ours n'avaient plus de temps.",
+    "The Bears' king had nowhere to run.": "Le roi des Ours n'avait nulle part où fuir.",
+    "The Bulls' king had nowhere to run.": "Le roi des Taureaux n'avait nulle part où fuir.",
+    "The centre is still open. Whoever claims it first sets the shape of the game.": "Le centre est encore libre. Qui s'en empare le premier donne sa forme à la partie.",
+    "The game is over. Play again, or step back through it.": "La partie est finie. Rejouez, ou remontez-la coup par coup.",
+    "The house is choosing its move.": "La maison choisit son coup.",
+    "The position stopped here. Step back through it to see where it turned.": "La position s'est arrêtée là. Remontez-la pour voir où elle a basculé.",
+    "The starting position.": "La position de départ.",
+    "Two players, one screen: Bulls first, then Bears. Checkmate the other king to win, or win on the clock.": "Deux joueurs, un écran : les Taureaux d'abord, puis les Ours. Matez le roi adverse pour gagner, ou gagnez au temps.",
+    "Who plays the Bears": "Qui joue les Ours",
+    "YOUR TURN": "À VOUS",
+    "YOURS": "À VOUS",
+    "You are the Bulls, in green, and you move first. Checkmate the Bears' king to win — get checkmated, or run your clock to zero, and it is over.": "Vous êtes les Taureaux, en vert, et vous jouez en premier. Matez le roi des Ours pour gagner — si vous êtes maté, ou si votre pendule tombe à zéro, c'est fini.",
+    "You hold the middle. Bring a knight out behind it.": "Vous tenez le centre. Sortez un cavalier derrière.",
+    "You ran out of clock.": "Vous n'avez plus de temps.",
+    "You were well down on material before the mate. Trade only when you win the trade.": "Vous étiez largement en retard au matériel avant le mat. N'échangez que quand l'échange est à votre avantage.",
+    "Your king had nowhere to run.": "Votre roi n'avait nulle part où fuir.",
+    "Your {piece} on {sq} is hanging — the Bears can take it for free.": "Votre {piece} en {sq} est en prise — les Ours peuvent le prendre gratuitement.",
+    "back to result": "retour au résultat",
+    "back to the game": "retour à la partie",
+    "dead even": "parfaitement égal",
+    "deselect": "désélectionner",
+    "first player": "joueur un",
+    "house algo · {algo}": "algo de la maison · {algo}",
+    "looks a whole reply ahead": "anticipe toute une réponse",
+    "second player": "joueur deux",
+    "takes only what is free": "ne prend que ce qui est gratuit",
+    "to move": "au trait",
+    "will not hand you a piece": "ne vous offrira pas de pièce",
+    "you": "vous",
+    "you · to move": "vous · au trait",
+    "{i} of {n}": "{i} sur {n}",
+    "{n} PIECES": "{n} PIÈCES",
+    "{n} TAKEN": "{n} PRISES",
+    "{p} selected — it has nowhere to go.": "{p} sélectionné — il n'a nulle part où aller.",
+    "{p} selected — {a} and {b} are open.": "{p} sélectionné — {a} et {b} sont libres.",
+    "{p} selected — {a} is its only move.": "{p} sélectionné — {a} est son seul coup.",
+    "{p} selected — {n} squares are open.": "{p} sélectionné — {n} cases sont libres.",
+    "— game just started": "— la partie vient de commencer",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -1298,35 +1459,15 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "2 player": "2 Spieler",
     "Bears are thinking": "Die Bären überlegen",
-    "Bears take": "Bären schlagen",
-    "Bears to move": "Bären am Zug",
-    "Bears win by checkmate": "Die Bären gewinnen durch Schachmatt",
-    "Bears · red": "Bären · Rot",
-    "Bulls take": "Bullen schlagen",
-    "Bulls to move": "Bullen am Zug",
-    "Bulls win by checkmate": "Die Bullen gewinnen durch Schachmatt",
-    "Bulls · green": "Bullen · Grün",
-    "Captured": "Geschlagen",
-    "Checkmate — you lose": "Schachmatt — du verlierst",
-    "Checkmate — you win": "Schachmatt — du gewinnst",
-    "Hold on — the computer is choosing.": "Moment — der Computer wählt gerade.",
     "How to play": "Spielanleitung",
     "Moves": "Züge",
     "New game": "Neue Partie",
-    "No moves yet": "Noch keine Züge",
-    "Opponent": "Gegner",
     "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "Bauern werden automatisch zur Dame. Lockere Regeln — keine Rochade, kein En passant.",
-    "Stalemate — a draw": "Patt — remis",
-    "Start a new game to play again.": "Starte eine neue Partie, um wieder zu spielen.",
     "Tap a piece to see where it can go.": "Tippe auf eine Figur, um ihre Züge zu sehen.",
     "The Bears' king is in check.": "Der König der Bären steht im Schach.",
-    "Two players, one screen: Bulls against Bears. Checkmate the other king to win.": "Zwei Spieler, ein Bildschirm: Bullen gegen Bären. Setze den anderen König matt, um zu gewinnen.",
-    "You are the Bulls, in green. Checkmate the Bears' king to win — get checkmated and it's over.": "Du bist die Bullen, in Grün. Setze den König der Bären matt, um zu gewinnen — wirst du mattgesetzt, ist Schluss.",
     "Your king is in check — you have to answer it.": "Dein König steht im Schach — du musst darauf antworten.",
     "Your move": "Du bist am Zug",
     "move {n} · casual rules": "Zug {n} · lockere Regeln",
-    "vs Computer": "gegen den Computer",
-    "{sq} {piece} selected. Tap a highlighted square to move.": "{piece} auf {sq} ausgewählt. Tippe auf ein markiertes Feld, um zu ziehen.",
     "pawn": "Bauer",
     "knight": "Springer",
     "bishop": "Läufer",
@@ -1542,6 +1683,105 @@ const I18N = {
     "{n} BOT": "{n} BOT",
     "{n} BOTS": "{n} BOTS",
     "{n} CAPITAL AVAILABLE": "{n} KAPITAL VERFÜGBAR",
+    // --- settings: the plain-language sidebar ---
+    "A draw is a result. Ruthless will not offer you one.": "Remis ist auch ein Ergebnis. Gnadenlos bietet dir keines an.",
+    "After {n}. {san}": "Nach {n}. {san}",
+    "BEARS": "BÄREN",
+    "BEARS THINKING": "BÄREN DENKEN NACH",
+    "BEARS TO MOVE": "BÄREN AM ZUG",
+    "BEARS · HOUSE": "BÄREN · HAUS",
+    "BULLS": "BULLEN",
+    "BULLS TO MOVE": "BULLEN AM ZUG",
+    "BULLS · YOU": "BULLEN · DU",
+    "Bears": "Bären",
+    "Bears are ahead": "Die Bären führen",
+    "Bears are winning": "Die Bären gewinnen",
+    "Bears edge ahead": "Die Bären liegen knapp vorn",
+    "Bears hold": "Bären halten",
+    "Bulls": "Bullen",
+    "Bulls are ahead": "Die Bullen führen",
+    "Bulls are winning": "Die Bullen gewinnen",
+    "Bulls edge ahead": "Die Bullen liegen knapp vorn",
+    "Bulls hold": "Bullen halten",
+    "CAPTURED": "GESCHLAGEN",
+    "COACH": "COACH",
+    "Centre control": "Zentrumskontrolle",
+    "Checkmate — Bears win": "Schachmatt — die Bären gewinnen",
+    "Checkmate — Bulls win": "Schachmatt — die Bullen gewinnen",
+    "Flag — Bears win on time": "Zeit abgelaufen — die Bären gewinnen nach Zeit",
+    "Flag — Bulls win on time": "Zeit abgelaufen — die Bullen gewinnen nach Zeit",
+    "GAME OVER": "PARTIE VORBEI",
+    "Game over": "Partie vorbei",
+    "HOUSE ALGO": "HAUS-ALGO",
+    "House": "Haus",
+    "House algo": "Haus-Algorithmus",
+    "It was close on material. Passive gives you room to see the pattern.": "Beim Material war es knapp. Passiv gibt dir Raum, das Muster zu sehen.",
+    "MATERIAL": "MATERIAL",
+    "MATERIAL {n}": "MATERIAL {n}",
+    "MOVE LOG": "ZUGLISTE",
+    "MOVE {n} · {clock}": "ZUG {n} · {clock}",
+    "MOVES": "ZÜGE",
+    "Neither side could force it. Swap seats and go again.": "Keine Seite konnte es erzwingen. Plätze tauschen und noch mal.",
+    "Next move": "Nächster Zug",
+    "No legal move left, and no check. That is a draw.": "Kein legaler Zug mehr, und kein Schach. Das ist ein Remis.",
+    "Nothing else matters until the check is answered.": "Nichts anderes zählt, bis das Schach beantwortet ist.",
+    "POSITION": "STELLUNG",
+    "Passive": "Passiv",
+    "Play again": "Nochmal spielen",
+    "Previous move": "Vorheriger Zug",
+    "Pushing {push} claims the centre. Bears will likely answer {answer}.": "Der Vorstoß nach {push} beansprucht das Zentrum. Die Bären antworten wohl mit {answer}.",
+    "Review moves": "Züge durchgehen",
+    "Reviewing": "Durchsicht",
+    "Ruthless": "Gnadenlos",
+    "Ruthless is one segment along. The house stops trading pieces evenly.": "Gnadenlos ist ein Segment weiter. Dort tauscht das Haus nicht mehr auf Augenhöhe.",
+    "Stalemate — nobody wins": "Patt — niemand gewinnt",
+    "Stepping back through the game. The board is not live.": "Du gehst die Partie zurück. Das Brett ist nicht im Spiel.",
+    "Swap seats and play it back the other way.": "Plätze tauschen und andersherum spielen.",
+    "THEIRS": "IHRES",
+    "TIME LEFT": "RESTZEIT",
+    "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Tippe eine Figur an, um zu sehen, wohin sie kann, und dann ein Feld oder einen der Chips in der Leiste.",
+    "That was Ruthless. There is nothing harder here.": "Das war Gnadenlos. Härter wird es hier nicht.",
+    "The Bears are yours to play. The house is sitting this one out.": "Die Bären gehören dir. Das Haus setzt diese Partie aus.",
+    "The Bears own the centre. Challenge it before it settles.": "Die Bären beherrschen das Zentrum. Fordere es heraus, bevor es sich festsetzt.",
+    "The Bears ran out of clock.": "Den Bären ist die Zeit ausgegangen.",
+    "The Bears' king had nowhere to run.": "Der König der Bären hatte kein Feld mehr.",
+    "The Bulls' king had nowhere to run.": "Der König der Bullen hatte kein Feld mehr.",
+    "The centre is still open. Whoever claims it first sets the shape of the game.": "Das Zentrum ist noch offen. Wer es zuerst nimmt, gibt der Partie ihre Form.",
+    "The game is over. Play again, or step back through it.": "Die Partie ist vorbei. Spiel noch mal, oder geh sie zurück durch.",
+    "The house is choosing its move.": "Das Haus wählt seinen Zug.",
+    "The position stopped here. Step back through it to see where it turned.": "Hier endete die Stellung. Geh sie zurück durch, um zu sehen, wo sie kippte.",
+    "The starting position.": "Die Ausgangsstellung.",
+    "Two players, one screen: Bulls first, then Bears. Checkmate the other king to win, or win on the clock.": "Zwei Spieler, ein Bildschirm: erst die Bullen, dann die Bären. Setze den anderen König matt, oder gewinne nach Zeit.",
+    "Who plays the Bears": "Wer die Bären spielt",
+    "YOUR TURN": "DU BIST DRAN",
+    "YOURS": "DEINS",
+    "You are the Bulls, in green, and you move first. Checkmate the Bears' king to win — get checkmated, or run your clock to zero, and it is over.": "Du bist die Bullen, in Grün, und du ziehst zuerst. Setze den König der Bären matt, um zu gewinnen — wirst du selbst mattgesetzt oder läuft deine Uhr ab, ist es vorbei.",
+    "You hold the middle. Bring a knight out behind it.": "Du hältst die Mitte. Bring einen Springer dahinter heraus.",
+    "You ran out of clock.": "Deine Zeit ist abgelaufen.",
+    "You were well down on material before the mate. Trade only when you win the trade.": "Vor dem Matt lagst du beim Material klar zurück. Tausche nur, wenn du den Tausch gewinnst.",
+    "Your king had nowhere to run.": "Dein König hatte kein Feld mehr.",
+    "Your {piece} on {sq} is hanging — the Bears can take it for free.": "Dein/e {piece} auf {sq} steht en prise — die Bären können sie umsonst nehmen.",
+    "back to result": "zurück zum Ergebnis",
+    "back to the game": "zurück zur Partie",
+    "dead even": "völlig ausgeglichen",
+    "deselect": "Auswahl aufheben",
+    "first player": "Spieler eins",
+    "house algo · {algo}": "Haus-Algo · {algo}",
+    "looks a whole reply ahead": "denkt eine ganze Antwort voraus",
+    "second player": "Spieler zwei",
+    "takes only what is free": "nimmt nur, was umsonst ist",
+    "to move": "am Zug",
+    "will not hand you a piece": "verschenkt dir keine Figur",
+    "you": "du",
+    "you · to move": "du · am Zug",
+    "{i} of {n}": "{i} von {n}",
+    "{n} PIECES": "{n} FIGUREN",
+    "{n} TAKEN": "{n} GESCHLAGEN",
+    "{p} selected — it has nowhere to go.": "{p} ausgewählt — kein Feld verfügbar.",
+    "{p} selected — {a} and {b} are open.": "{p} ausgewählt — {a} und {b} sind frei.",
+    "{p} selected — {a} is its only move.": "{p} ausgewählt — {a} ist der einzige Zug.",
+    "{p} selected — {n} squares are open.": "{p} ausgewählt — {n} Felder sind frei.",
+    "— game just started": "— die Partie hat gerade begonnen",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1774,35 +2014,15 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "2 player": "2 jogadores",
     "Bears are thinking": "Os Ursos estão a pensar",
-    "Bears take": "Os Ursos capturam",
-    "Bears to move": "Jogam os Ursos",
-    "Bears win by checkmate": "Os Ursos ganham por xeque-mate",
-    "Bears · red": "Ursos · vermelho",
-    "Bulls take": "Os Touros capturam",
-    "Bulls to move": "Jogam os Touros",
-    "Bulls win by checkmate": "Os Touros ganham por xeque-mate",
-    "Bulls · green": "Touros · verde",
-    "Captured": "Capturadas",
-    "Checkmate — you lose": "Xeque-mate — perdeste",
-    "Checkmate — you win": "Xeque-mate — ganhaste",
-    "Hold on — the computer is choosing.": "Um momento — o computador está a escolher.",
     "How to play": "Como jogar",
     "Moves": "Jogadas",
     "New game": "Novo jogo",
-    "No moves yet": "Ainda não há jogadas",
-    "Opponent": "Adversário",
     "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "Os peões promovem a dama automaticamente. Regras informais — sem roque nem captura en passant.",
-    "Stalemate — a draw": "Empate por afogamento",
-    "Start a new game to play again.": "Começa um novo jogo para jogar outra vez.",
     "Tap a piece to see where it can go.": "Toca numa peça para veres para onde pode ir.",
     "The Bears' king is in check.": "O rei dos Ursos está em xeque.",
-    "Two players, one screen: Bulls against Bears. Checkmate the other king to win.": "Dois jogadores, um ecrã: Touros contra Ursos. Dá xeque-mate ao outro rei para ganhar.",
-    "You are the Bulls, in green. Checkmate the Bears' king to win — get checkmated and it's over.": "És os Touros, a verde. Dá xeque-mate ao rei dos Ursos para ganhar — se te derem a ti, acabou.",
     "Your king is in check — you have to answer it.": "O teu rei está em xeque — tens de responder.",
     "Your move": "É a tua vez",
     "move {n} · casual rules": "jogada {n} · regras informais",
-    "vs Computer": "contra o computador",
-    "{sq} {piece} selected. Tap a highlighted square to move.": "{piece} em {sq} selecionado. Toca numa casa marcada para mover.",
     "pawn": "peão",
     "knight": "cavalo",
     "bishop": "bispo",
@@ -2018,6 +2238,105 @@ const I18N = {
     "{n} BOT": "{n} BOT",
     "{n} BOTS": "{n} BOTS",
     "{n} CAPITAL AVAILABLE": "{n} DE CAPITAL DISPONÍVEL",
+    // --- settings: the plain-language sidebar ---
+    "A draw is a result. Ruthless will not offer you one.": "Um empate também é um resultado. Impiedoso não te vai oferecer nenhum.",
+    "After {n}. {san}": "Depois de {n}. {san}",
+    "BEARS": "URSOS",
+    "BEARS THINKING": "URSOS A PENSAR",
+    "BEARS TO MOVE": "JOGAM OS URSOS",
+    "BEARS · HOUSE": "URSOS · A CASA",
+    "BULLS": "TOUROS",
+    "BULLS TO MOVE": "JOGAM OS TOUROS",
+    "BULLS · YOU": "TOUROS · TU",
+    "Bears": "Ursos",
+    "Bears are ahead": "Os Ursos estão à frente",
+    "Bears are winning": "Os Ursos estão a ganhar",
+    "Bears edge ahead": "Os Ursos ganham uma pequena vantagem",
+    "Bears hold": "Os Ursos têm",
+    "Bulls": "Touros",
+    "Bulls are ahead": "Os Touros estão à frente",
+    "Bulls are winning": "Os Touros estão a ganhar",
+    "Bulls edge ahead": "Os Touros ganham uma pequena vantagem",
+    "Bulls hold": "Os Touros têm",
+    "CAPTURED": "CAPTURADAS",
+    "COACH": "TREINADOR",
+    "Centre control": "Controlo do centro",
+    "Checkmate — Bears win": "Xeque-mate: ganham os Ursos",
+    "Checkmate — Bulls win": "Xeque-mate: ganham os Touros",
+    "Flag — Bears win on time": "Bandeira caída: os Ursos ganham por tempo",
+    "Flag — Bulls win on time": "Bandeira caída: os Touros ganham por tempo",
+    "GAME OVER": "JOGO TERMINADO",
+    "Game over": "Jogo terminado",
+    "HOUSE ALGO": "ALGORITMO DA CASA",
+    "House": "A casa",
+    "House algo": "Algoritmo da casa",
+    "It was close on material. Passive gives you room to see the pattern.": "O material estava equilibrado. Passivo dá-te espaço para ver o padrão.",
+    "MATERIAL": "MATERIAL",
+    "MATERIAL {n}": "MATERIAL {n}",
+    "MOVE LOG": "REGISTO DE LANCES",
+    "MOVE {n} · {clock}": "LANCE {n} · {clock}",
+    "MOVES": "LANCES",
+    "Neither side could force it. Swap seats and go again.": "Nenhum dos lados conseguiu forçar. Troquem de lugar e joguem outra vez.",
+    "Next move": "Lance seguinte",
+    "No legal move left, and no check. That is a draw.": "Não resta nenhum lance legal e não há xeque. Isso é empate.",
+    "Nothing else matters until the check is answered.": "Nada mais importa até responderes ao xeque.",
+    "POSITION": "POSIÇÃO",
+    "Passive": "Passivo",
+    "Play again": "Jogar outra vez",
+    "Previous move": "Lance anterior",
+    "Pushing {push} claims the centre. Bears will likely answer {answer}.": "Avançar para {push} reclama o centro. Os Ursos deverão responder com {answer}.",
+    "Review moves": "Rever os lances",
+    "Reviewing": "A rever",
+    "Ruthless": "Impiedoso",
+    "Ruthless is one segment along. The house stops trading pieces evenly.": "Impiedoso está um segmento adiante. Aí a casa deixa de trocar peças de igual para igual.",
+    "Stalemate — nobody wins": "Rei afogado: ninguém ganha",
+    "Stepping back through the game. The board is not live.": "Estás a recuar na partida. O tabuleiro não está em jogo.",
+    "Swap seats and play it back the other way.": "Troquem de lugar e joguem ao contrário.",
+    "THEIRS": "DELES",
+    "TIME LEFT": "TEMPO RESTANTE",
+    "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Toca numa peça para veres para onde pode ir e depois toca numa casa ou num dos chips do painel.",
+    "That was Ruthless. There is nothing harder here.": "Isso era Impiedoso. Aqui não há nada mais difícil.",
+    "The Bears are yours to play. The house is sitting this one out.": "Os Ursos são teus. A casa fica de fora desta.",
+    "The Bears own the centre. Challenge it before it settles.": "Os Ursos dominam o centro. Contesta-o antes que assente.",
+    "The Bears ran out of clock.": "Aos Ursos acabou-se o tempo.",
+    "The Bears' king had nowhere to run.": "O rei dos Ursos não tinha para onde fugir.",
+    "The Bulls' king had nowhere to run.": "O rei dos Touros não tinha para onde fugir.",
+    "The centre is still open. Whoever claims it first sets the shape of the game.": "O centro ainda está aberto. Quem o reclamar primeiro dá a forma à partida.",
+    "The game is over. Play again, or step back through it.": "A partida terminou. Joga outra vez ou percorre-a para trás.",
+    "The house is choosing its move.": "A casa está a escolher o lance.",
+    "The position stopped here. Step back through it to see where it turned.": "A posição parou aqui. Percorre-a para trás para veres onde virou.",
+    "The starting position.": "A posição inicial.",
+    "Two players, one screen: Bulls first, then Bears. Checkmate the other king to win, or win on the clock.": "Dois jogadores, um ecrã: primeiro os Touros, depois os Ursos. Dá xeque-mate ao outro rei para ganhar, ou ganha por tempo.",
+    "Who plays the Bears": "Quem joga com os Ursos",
+    "YOUR TURN": "É A TUA VEZ",
+    "YOURS": "TEU",
+    "You are the Bulls, in green, and you move first. Checkmate the Bears' king to win — get checkmated, or run your clock to zero, and it is over.": "És os Touros, em verde, e jogas primeiro. Dá xeque-mate ao rei dos Ursos para ganhar; se to derem a ti, ou o teu relógio chegar a zero, acabou.",
+    "You hold the middle. Bring a knight out behind it.": "Dominas o centro. Traz um cavalo para trás dele.",
+    "You ran out of clock.": "Acabou-se-te o tempo.",
+    "You were well down on material before the mate. Trade only when you win the trade.": "Estavas muito atrás em material antes do mate. Troca só quando ganhas a troca.",
+    "Your king had nowhere to run.": "O teu rei não tinha para onde fugir.",
+    "Your {piece} on {sq} is hanging — the Bears can take it for free.": "O teu {piece} em {sq} está pendurado: os Ursos podem capturá-lo de graça.",
+    "back to result": "voltar ao resultado",
+    "back to the game": "voltar à partida",
+    "dead even": "totalmente equilibrada",
+    "deselect": "desselecionar",
+    "first player": "jogador um",
+    "house algo · {algo}": "algoritmo da casa · {algo}",
+    "looks a whole reply ahead": "olha uma resposta inteira à frente",
+    "second player": "jogador dois",
+    "takes only what is free": "só leva o que está de graça",
+    "to move": "joga",
+    "will not hand you a piece": "não te vai dar uma peça",
+    "you": "tu",
+    "you · to move": "tu · jogas",
+    "{i} of {n}": "{i} de {n}",
+    "{n} PIECES": "{n} PEÇAS",
+    "{n} TAKEN": "{n} CAPTURADAS",
+    "{p} selected — it has nowhere to go.": "{p} selecionado: não tem para onde ir.",
+    "{p} selected — {a} and {b} are open.": "{p} selecionado: {a} e {b} estão livres.",
+    "{p} selected — {a} is its only move.": "{p} selecionado: {a} é o seu único lance.",
+    "{p} selected — {n} squares are open.": "{p} selecionado: há {n} casas livres.",
+    "— game just started": "— a partida acabou de começar",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -2250,35 +2569,15 @@ const I18N = {
     // --- settings: the plain-language sidebar ---
     "2 player": "2 giocatori",
     "Bears are thinking": "Gli Orsi stanno pensando",
-    "Bears take": "Prese degli Orsi",
-    "Bears to move": "Tocca agli Orsi",
-    "Bears win by checkmate": "Gli Orsi vincono per scacco matto",
-    "Bears · red": "Orsi · rosso",
-    "Bulls take": "Prese dei Tori",
-    "Bulls to move": "Tocca ai Tori",
-    "Bulls win by checkmate": "I Tori vincono per scacco matto",
-    "Bulls · green": "Tori · verde",
-    "Captured": "Catturati",
-    "Checkmate — you lose": "Scacco matto — hai perso",
-    "Checkmate — you win": "Scacco matto — hai vinto",
-    "Hold on — the computer is choosing.": "Un attimo — il computer sta scegliendo.",
     "How to play": "Come si gioca",
     "Moves": "Mosse",
     "New game": "Nuova partita",
-    "No moves yet": "Ancora nessuna mossa",
-    "Opponent": "Avversario",
     "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "I pedoni promuovono a donna automaticamente. Regole informali — niente arrocco, niente en passant.",
-    "Stalemate — a draw": "Stallo — patta",
-    "Start a new game to play again.": "Inizia una nuova partita per rigiocare.",
     "Tap a piece to see where it can go.": "Tocca un pezzo per vedere dove può andare.",
     "The Bears' king is in check.": "Il re degli Orsi è sotto scacco.",
-    "Two players, one screen: Bulls against Bears. Checkmate the other king to win.": "Due giocatori, uno schermo: Tori contro Orsi. Dai scacco matto all'altro re per vincere.",
-    "You are the Bulls, in green. Checkmate the Bears' king to win — get checkmated and it's over.": "Sei i Tori, in verde. Dai scacco matto al re degli Orsi per vincere — se lo prendi tu, è finita.",
     "Your king is in check — you have to answer it.": "Il tuo re è sotto scacco — devi rispondere.",
     "Your move": "Tocca a te",
     "move {n} · casual rules": "mossa {n} · regole informali",
-    "vs Computer": "contro il computer",
-    "{sq} {piece} selected. Tap a highlighted square to move.": "{piece} in {sq} selezionato. Tocca una casa evidenziata per muovere.",
     "pawn": "pedone",
     "knight": "cavallo",
     "bishop": "alfiere",
@@ -2494,6 +2793,105 @@ const I18N = {
     "{n} BOT": "{n} BOT",
     "{n} BOTS": "{n} BOT",
     "{n} CAPITAL AVAILABLE": "{n} DI CAPITALE DISPONIBILE",
+    // --- settings: the plain-language sidebar ---
+    "A draw is a result. Ruthless will not offer you one.": "Una patta è comunque un risultato. Spietato non te ne offrirà una.",
+    "After {n}. {san}": "Dopo {n}. {san}",
+    "BEARS": "ORSI",
+    "BEARS THINKING": "ORSI IN PENSIERO",
+    "BEARS TO MOVE": "TOCCA AGLI ORSI",
+    "BEARS · HOUSE": "ORSI · IL BANCO",
+    "BULLS": "TORI",
+    "BULLS TO MOVE": "TOCCA AI TORI",
+    "BULLS · YOU": "TORI · TU",
+    "Bears": "Orsi",
+    "Bears are ahead": "Gli Orsi sono avanti",
+    "Bears are winning": "Gli Orsi stanno vincendo",
+    "Bears edge ahead": "Gli Orsi prendono un piccolo vantaggio",
+    "Bears hold": "Gli Orsi hanno",
+    "Bulls": "Tori",
+    "Bulls are ahead": "I Tori sono avanti",
+    "Bulls are winning": "I Tori stanno vincendo",
+    "Bulls edge ahead": "I Tori prendono un piccolo vantaggio",
+    "Bulls hold": "I Tori hanno",
+    "CAPTURED": "CATTURATI",
+    "COACH": "ALLENATORE",
+    "Centre control": "Controllo del centro",
+    "Checkmate — Bears win": "Scacco matto — vincono gli Orsi",
+    "Checkmate — Bulls win": "Scacco matto — vincono i Tori",
+    "Flag — Bears win on time": "Bandierina — gli Orsi vincono a tempo",
+    "Flag — Bulls win on time": "Bandierina — i Tori vincono a tempo",
+    "GAME OVER": "PARTITA FINITA",
+    "Game over": "Partita finita",
+    "HOUSE ALGO": "ALGORITMO DEL BANCO",
+    "House": "Il banco",
+    "House algo": "Algoritmo del banco",
+    "It was close on material. Passive gives you room to see the pattern.": "Il materiale era in equilibrio. Passivo ti lascia spazio per vedere lo schema.",
+    "MATERIAL": "MATERIALE",
+    "MATERIAL {n}": "MATERIALE {n}",
+    "MOVE LOG": "REGISTRO MOSSE",
+    "MOVE {n} · {clock}": "MOSSA {n} · {clock}",
+    "MOVES": "MOSSE",
+    "Neither side could force it. Swap seats and go again.": "Nessuno dei due è riuscito a forzarla. Cambiate posto e si riparte.",
+    "Next move": "Mossa successiva",
+    "No legal move left, and no check. That is a draw.": "Non resta alcuna mossa legale e non c'è scacco. È patta.",
+    "Nothing else matters until the check is answered.": "Niente altro conta finché non rispondi allo scacco.",
+    "POSITION": "POSIZIONE",
+    "Passive": "Passivo",
+    "Play again": "Gioca ancora",
+    "Previous move": "Mossa precedente",
+    "Pushing {push} claims the centre. Bears will likely answer {answer}.": "Spingere in {push} rivendica il centro. Gli Orsi risponderanno probabilmente {answer}.",
+    "Review moves": "Rivedi le mosse",
+    "Reviewing": "In revisione",
+    "Ruthless": "Spietato",
+    "Ruthless is one segment along. The house stops trading pieces evenly.": "Spietato è un segmento più in là. Lì il banco smette di scambiare pezzi alla pari.",
+    "Stalemate — nobody wins": "Stallo — non vince nessuno",
+    "Stepping back through the game. The board is not live.": "Stai tornando indietro nella partita. La scacchiera non è in gioco.",
+    "Swap seats and play it back the other way.": "Cambiate posto e rigiocatela al contrario.",
+    "THEIRS": "LORO",
+    "TIME LEFT": "TEMPO RIMASTO",
+    "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Tocca un pezzo per vedere dove può andare, poi tocca una casa o uno dei chip nella barra.",
+    "That was Ruthless. There is nothing harder here.": "Quello era Spietato. Qui non c'è niente di più difficile.",
+    "The Bears are yours to play. The house is sitting this one out.": "Gli Orsi sono tuoi. Il banco resta fuori da questa.",
+    "The Bears own the centre. Challenge it before it settles.": "Gli Orsi controllano il centro. Contendiglielo prima che si consolidi.",
+    "The Bears ran out of clock.": "Agli Orsi è finito il tempo.",
+    "The Bears' king had nowhere to run.": "Il re degli Orsi non aveva dove scappare.",
+    "The Bulls' king had nowhere to run.": "Il re dei Tori non aveva dove scappare.",
+    "The centre is still open. Whoever claims it first sets the shape of the game.": "Il centro è ancora aperto. Chi lo prende per primo dà forma alla partita.",
+    "The game is over. Play again, or step back through it.": "La partita è finita. Gioca ancora, oppure ripercorrila a ritroso.",
+    "The house is choosing its move.": "Il banco sta scegliendo la mossa.",
+    "The position stopped here. Step back through it to see where it turned.": "La posizione si è fermata qui. Ripercorrila a ritroso per vedere dove ha girato.",
+    "The starting position.": "La posizione di partenza.",
+    "Two players, one screen: Bulls first, then Bears. Checkmate the other king to win, or win on the clock.": "Due giocatori, uno schermo: prima i Tori, poi gli Orsi. Dai scacco matto all'altro re per vincere, o vinci a tempo.",
+    "Who plays the Bears": "Chi gioca gli Orsi",
+    "YOUR TURN": "TOCCA A TE",
+    "YOURS": "TUO",
+    "You are the Bulls, in green, and you move first. Checkmate the Bears' king to win — get checkmated, or run your clock to zero, and it is over.": "Sei i Tori, in verde, e muovi per primo. Dai scacco matto al re degli Orsi per vincere — se lo subisci tu, o il tuo orologio arriva a zero, è finita.",
+    "You hold the middle. Bring a knight out behind it.": "Controlli il centro. Fai uscire un cavallo dietro.",
+    "You ran out of clock.": "Ti è finito il tempo.",
+    "You were well down on material before the mate. Trade only when you win the trade.": "Eri molto sotto di materiale prima del matto. Cambia solo quando il cambio è tuo.",
+    "Your king had nowhere to run.": "Il tuo re non aveva dove scappare.",
+    "Your {piece} on {sq} is hanging — the Bears can take it for free.": "Il tuo {piece} in {sq} è in presa: gli Orsi possono prenderlo gratis.",
+    "back to result": "torna al risultato",
+    "back to the game": "torna alla partita",
+    "dead even": "perfettamente pari",
+    "deselect": "deseleziona",
+    "first player": "giocatore uno",
+    "house algo · {algo}": "algoritmo del banco · {algo}",
+    "looks a whole reply ahead": "guarda un'intera risposta avanti",
+    "second player": "giocatore due",
+    "takes only what is free": "prende solo ciò che è gratis",
+    "to move": "al tratto",
+    "will not hand you a piece": "non ti regala un pezzo",
+    "you": "tu",
+    "you · to move": "tu · al tratto",
+    "{i} of {n}": "{i} di {n}",
+    "{n} PIECES": "{n} PEZZI",
+    "{n} TAKEN": "{n} CATTURATI",
+    "{p} selected — it has nowhere to go.": "{p} selezionato: non ha dove andare.",
+    "{p} selected — {a} and {b} are open.": "{p} selezionato: {a} e {b} sono liberi.",
+    "{p} selected — {a} is its only move.": "{p} selezionato: {a} è la sua unica mossa.",
+    "{p} selected — {n} squares are open.": "{p} selezionato: {n} case sono libere.",
+    "— game just started": "— la partita è appena iniziata",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -3133,33 +3531,59 @@ function bjValue(cards) {
   return sum;
 }
 
-// Board coordinates. Rank 8 is row 0, because the board is authored from
-// Black's back rank downwards.
-const sqName = (r, c) => `${"abcdefgh"[c]}${8 - r}`;
+// ============================================================
+//  BULLS VS BEARS CHESS — the match room.
+//
+//  Built to the games handoff, and its one hard rule for this screen is the
+//  reason the component is shaped the way it is:
+//
+//      THE RAIL MAY NEVER CONTRADICT THE BOARD.
+//
+//  So nothing here is stored twice. The position is a LIST of boards and the
+//  live one is the last of them; material, piece counts, the eval bar, the
+//  centre-control meter, the coach's advice, the move numbers and the pending
+//  move are all functions of that list, computed on the way past. There is no
+//  `evaluation` field to drift out of step with the pieces, because there is no
+//  way to write one without moving a piece.
+//
+//  Keeping the boards rather than only the moves is also what makes "Review
+//  moves" a control rather than a label: stepping back through the game is an
+//  index, not a replay.
+//
+//  Rules live in src/chess/chess.js — full legality (check, checkmate,
+//  stalemate, pins), casual scope otherwise: no castling, no en passant, pawns
+//  auto-queen.
+// ============================================================
+const CHESS_START = 300;                                   // 5:00 a side, the reference's clock
+const CHESS_ALGOS = ["passive", "balanced", "ruthless"];
 const PIECE_NAME = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
+const CHESS_FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
+const chessClock = (s) => {
+  const n = Math.max(0, Math.ceil(s));
+  return `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
+};
 
-// ---- Chess game component: pass-and-play, vs AI or 2-player ----
-// Rules live in src/chess/chess.js — full legality (check, checkmate, stalemate), casual scope
-// otherwise (no castling/en-passant, pawns auto-queen).
-function ChessGame({ onCheer, onWin, sfx }) {
+function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
   const { t } = useI18n();
-  const [vsAI, setVsAI] = useState(true);        // default: play the computer (Bears) — good for a lone player
-  const [board, setBoard] = useState(chessInit);
-  const [turn, setTurn] = useState("w");         // 'w' = Bulls (green, the human) move first
+  // The whole game is here: every position it has been in, oldest first.
+  const [hist, setHist] = useState(() => [chessInit()]);
+  const board = hist[hist.length - 1];
+  const [turn, setTurn] = useState("w");                   // 'w' = Bulls (green) move first
   const [sel, setSel] = useState(null);
-  const [targets, setTargets] = useState([]);
-  const [winner, setWinner] = useState(null);
-  const [captured, setCaptured] = useState({ w: [], b: [] });
-  // The move list the rail reads. It is the one record of what has happened in
-  // the game — before this the board was the only memory, so a move you looked
-  // away for was simply gone.
-  const [moves, setMoves] = useState([]);
+  const [moves, setMoves] = useState([]);                  // { san, side, from, to }
+  const [clock, setClock] = useState({ w: CHESS_START, b: CHESS_START });
+  const [algo, setAlgo] = useState("balanced");            // how the house plays
+  const [house, setHouse] = useState(true);                // is the house playing the Bears at all
+  const [end, setEnd] = useState(null);                    // { winner: 'w'|'b'|'draw', by }
+  const [review, setReview] = useState(null);              // index into hist, or null
   const [showRules, setShowRules] = useState(false);
-  // flying-piece overlay: the board state applies instantly, but the moved glyph slides
-  // from→to on top of the grid (~180ms) before the destination square shows its piece
-  const [anim, setAnim] = useState(null);        // { from, to, glyph, color, go }
+  // flying-piece overlay: the position applies instantly, but the moved glyph
+  // slides from→to on top of the grid before the destination shows its piece
+  const [anim, setAnim] = useState(null);                  // { from, to, glyph, color, go }
   const animTimer = useRef(null);
+  const logRef = useRef(null);
   const reducedMotion = typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+
   useLayoutEffect(() => {
     if (!anim || anim.go) return;
     const id = requestAnimationFrame(() => setAnim(a => (a && !a.go ? { ...a, go: true } : a)));
@@ -3167,273 +3591,734 @@ function ChessGame({ onCheer, onWin, sfx }) {
   }, [anim]);
   useEffect(() => () => clearTimeout(animTimer.current), []);
 
-  const reset = (ai = vsAI) => { setVsAI(ai); setBoard(chessInit()); setTurn("w"); setSel(null); setTargets([]); setWinner(null); setCaptured({ w: [], b: [] }); setMoves([]); clearTimeout(animTimer.current); setAnim(null); };
+  const reset = () => {
+    setHist([chessInit()]); setTurn("w"); setSel(null); setMoves([]);
+    setClock({ w: CHESS_START, b: CHESS_START });
+    setEnd(null); setReview(null);
+    clearTimeout(animTimer.current); setAnim(null);
+  };
 
-  // commit a move (from either the human or the AI), then end the game or pass the turn.
-  // Endings are real chess: checkmate wins, stalemate draws. King capture stays only as a
-  // backstop — legal-move filtering should make it impossible.
-  const commit = (next, taken, side, from, to) => {
+  const finish = (winner, by) => { setEnd({ winner, by }); onWin?.(winner); };
+
+  // Commit a move — from the player or from the house — then end the game or
+  // pass the turn. Endings are real chess: checkmate wins, stalemate draws.
+  // King capture stays only as a backstop; legal-move filtering makes it
+  // unreachable.
+  const commit = (from, to, side) => {
+    const cur = hist[hist.length - 1];
     const opp = side === "w" ? "b" : "w";
+    const san = chessSan(cur, from, to);
+    const { next, taken } = chessApply(cur, from, to);
     const outcome = taken?.t === "k" ? "checkmate" : gameStatus(next, opp);
-    setBoard(next);
-    // Record it before anything can end the game — a checkmating move is still
-    // a move, and it is the one people most want to read back.
-    if (from && to) {
-      const moved = next[to.r][to.c];
-      setMoves(m => [...m, `${CHESS_GLYPH[moved.t]} ${sqName(from.r, from.c)}${taken ? "\u00d7" : "\u2192"}${sqName(to.r, to.c)}`]);
-    }
-    // sounds land WITH the flying piece; checkmate adds the win/lose sting a beat later
-    const landed = () => {
+    const mark = outcome === "checkmate" ? "#" : inCheck(next, opp) ? "+" : "";
+    setHist(h => [...h, next]);
+    // Recorded before anything can end the game — a mating move is still a move,
+    // and it is the one people most want to read back.
+    setMoves(m => [...m, { san: san + mark, side, from, to, taken: taken?.t || null }]);
+
+    const landed = next[to.r][to.c];
+    const land = () => {
       setAnim(null);
       sfx?.(taken ? "capture" : "move");
-      if (outcome === "checkmate") setTimeout(() => sfx?.(vsAI ? (side === "w" ? "win" : "lose") : "win"), 170);
+      if (outcome === "checkmate") setTimeout(() => sfx?.(house ? (side === "w" ? "win" : "lose") : "win"), 170);
     };
     clearTimeout(animTimer.current);
-    if (reducedMotion || !from || !to) landed();
+    if (reducedMotion) land();
     else {
-      const moved = next[to.r][to.c];
-      // C.up / C.down, not #3FE08A / #FF6B7A: the flying glyph was a different
-      // green and a different red from the piece it lands as, so every move
-      // ended in a colour snap on the destination square.
-      setAnim({ from, to, glyph: CHESS_GLYPH[moved.t], color: moved.s === "w" ? C.up : C.down, go: false });
-      animTimer.current = setTimeout(landed, 200);
+      setAnim({ from, to, glyph: chessGlyph(side, landed.t), color: side === "w" ? C.bullPiece : C.bearPiece, go: false });
+      animTimer.current = setTimeout(land, 200);
     }
-    if (taken) {
-      setCaptured(cap => ({ ...cap, [side]: [...cap[side], taken.t] }));
-      if (!(vsAI && side === "b")) onCheer?.();            // cheer for the player's captures, not the computer's
-    }
-    if (outcome === "checkmate") { setWinner(side); onWin?.(side); return; }
-    if (outcome === "stalemate") { setWinner("draw"); return; }
+
+    // cheer the player's captures, not the computer's
+    if (taken && !(house && side === "b")) onCheer?.();
+    if (outcome === "checkmate") { finish(side, "checkmate"); return; }
+    if (outcome === "stalemate") { finish("draw", "stalemate"); return; }
     setTurn(opp);
   };
 
-  // the computer's turn (plays Bears/black) — fires shortly after the human moves
+  // ---- the clocks ----
+  // They start on the first move, not when the panel opens: a chess clock has
+  // always worked that way, and it means reading the board before you play
+  // cannot lose you the game.
+  const started = moves.length > 0;
   useEffect(() => {
-    if (!vsAI || winner || turn !== "b") return;
+    if (!started || end || review !== null) return;
+    // Ticked off real elapsed time rather than counted in whole seconds, so
+    // switching sides mid-second is not a small refund.
+    let last = performance.now();
+    const id = setInterval(() => {
+      const now = performance.now();
+      const dt = (now - last) / 1000; last = now;
+      setClock(c => ({ ...c, [turn]: Math.max(0, c[turn] - dt) }));
+    }, 500);
+    return () => clearInterval(id);
+  }, [started, end, turn, review]);
+
+  useEffect(() => {
+    if (end || !started) return;
+    if (clock.w <= 0) finish("b", "time");
+    else if (clock.b <= 0) finish("w", "time");
+  }, [clock, end, started]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ---- the house's turn ----
+  useEffect(() => {
+    if (!house || end || turn !== "b" || review !== null) return;
     const id = setTimeout(() => {
-      const mv = chessAIMove(board, "b");
-      if (!mv) {                                            // backstop — commit ends mated/stalemated games before the turn passes
-        if (inCheck(board, "b")) { setWinner("w"); onWin?.("w"); } else setWinner("draw");
+      const mv = chessAIMove(board, "b", algo);
+      if (!mv) {                                           // backstop — commit ends games before the turn passes
+        if (inCheck(board, "b")) finish("w", "checkmate"); else finish("draw", "stalemate");
         return;
       }
-      const { next, taken } = chessApply(board, mv.from, mv.to);
-      commit(next, taken, "b", mv.from, mv.to);
-    }, 900 + Math.random() * 800);                          // humanlike pause — instant replies felt like a vending machine
+      commit(mv.from, mv.to, "b");
+    }, 800 + Math.random() * 700);                         // a humanlike pause; instant replies read as a vending machine
     return () => clearTimeout(id);
-  }, [turn, vsAI, winner, board]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [turn, house, end, board, algo, review]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // click a square: if it's a legal target, move the selected piece; otherwise select/deselect
+  // ---- what the board is showing right now ----
+  const shown = review === null ? board : hist[review];
+  const live = !end && review === null;
+  const yours = !house || turn === "w";                    // is the side to move the one at this keyboard
+  const canAct = live && yours;
+  const targets = useMemo(() => (sel && review === null ? legalMoves(board, sel.r, sel.c) : []), [sel, board, review]);
+  const suggest = useMemo(() => (sel && live ? chessSuggest(board, sel) : null), [sel, board, live]);
+  const lastMove = review === null ? moves[moves.length - 1] : (review > 0 ? moves[review - 1] : null);
+
+  const play = (to) => { const from = sel; setSel(null); commit(from, to, turn); };
   const clickSquare = (r, c) => {
-    if (winner || (vsAI && turn === "b")) return;          // ignore clicks while the computer is thinking
-    const piece = board[r][c];
-    if (sel && targets.some(t => t.r === r && t.c === c)) {
-      const { next, taken } = chessApply(board, sel, { r, c });
-      setSel(null); setTargets([]);
-      commit(next, taken, turn, sel, { r, c });
-      return;
-    }
-    if (piece && piece.s === turn) { setSel({ r, c }); setTargets(legalMoves(board, r, c)); }
-    else { setSel(null); setTargets([]); }
+    if (!canAct) return;
+    if (sel && targets.some(x => x.r === r && x.c === c)) { play({ r, c }); return; }
+    const p = board[r][c];
+    if (p && p.s === turn) setSel({ r, c }); else setSel(null);
   };
 
-
-  // ---- Render the chessboard, controls, and status ----
-  const checkNow = !winner && inCheck(board, turn);        // side to move is in check → say so and mark the king
+  // ---- readouts, all of them derived ----
+  const counts = useMemo(() => chessCount(shown), [shown]);
+  // Who is holding what, read off the moves rather than counted up as they
+  // happen — so stepping back through the game empties the trays with it.
+  const held = useMemo(() => {
+    const out = { w: [], b: [] };
+    const upto = review === null ? moves.length : review;
+    for (let i = 0; i < upto; i++) if (moves[i].taken) out[moves[i].side].push(moves[i].taken);
+    return out;
+  }, [moves, review]);
+  const edge = counts.w.material - counts.b.material;      // in pawns, Bulls' point of view
+  const evalText = edge === 0 ? "0.0" : `${edge > 0 ? "+" : "−"}${Math.abs(edge).toFixed(1)}`;
+  // tanh rather than a linear clamp: the difference between level and a pawn up
+  // is worth seeing, and the difference between eight up and nine up is not.
+  const evalFrac = 0.5 + 0.5 * Math.tanh(edge / 6);
+  const centre = useMemo(() => chessCentre(shown), [shown]);
+  const cenTotal = centre.w + centre.b;
+  const cenFrac = cenTotal === 0 ? 0.5 : centre.w / cenTotal;
+  const cenState = Math.abs(centre.w - centre.b) <= 1 ? "open" : centre.w > centre.b ? "yours" : "theirs";
+  const checkNow = live && inCheck(board, turn);
   const checkedKing = useMemo(() => {
     if (!checkNow) return null;
-    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { const p = board[r][c]; if (p && p.t === "k" && p.s === turn) return { r, c }; }
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+      const p = board[r][c];
+      if (p && p.t === "k" && p.s === turn) return { r, c };
+    }
     return null;
   }, [checkNow, board, turn]);
-  // ---- the rail's copy ----
-  // All of this used to be one grey 10px sentence under the board, which is
-  // where the state of the game, the rules and the capture tally all went to
-  // be ignored. Each is now its own thing at its own weight.
-  const sideNote = turn === "w" ? t("Bulls · green") : t("Bears · red");
-  const headline = winner
-    ? (winner === "draw" ? t("Stalemate — a draw")
-      : vsAI ? (winner === "w" ? t("Checkmate — you win") : t("Checkmate — you lose"))
-      : (winner === "w" ? t("Bulls win by checkmate") : t("Bears win by checkmate")))
-    : (vsAI && turn === "b" ? t("Bears are thinking")
-      : vsAI ? t("Your move")
-      : turn === "w" ? t("Bulls to move") : t("Bears to move"));
-  const hint = winner
-    ? t("Start a new game to play again.")
-    : checkNow
-      ? (vsAI && turn === "b" ? t("The Bears' king is in check.") : t("Your king is in check — you have to answer it."))
-      : sel
-        ? t("{sq} {piece} selected. Tap a highlighted square to move.")
-            .replace("{sq}", sqName(sel.r, sel.c))
-            // Spelled out as static literals rather than t(PIECE_NAME[t]): the
-            // i18n audit only sees literal arguments, and a dynamic key is a
-            // translation that falls back to English with nothing to catch it.
-            .replace("{piece}", {
-              p: t("pawn"), n: t("knight"), b: t("bishop"),
-              r: t("rook"), q: t("queen"), k: t("king"),
-            }[board[sel.r][sel.c]?.t] || t("piece"))
-        : (vsAI && turn === "b" ? t("Hold on — the computer is choosing.") : t("Tap a piece to see where it can go."));
-  // Live while it is someone's turn; still once the game is over.
-  const dotColor = winner ? (winner === "draw" ? C.warn : winner === "w" ? C.up : C.down) : turn === "w" ? C.up : C.down;
+  // The most valuable thing of yours that the Bears can take for nothing. Only
+  // a knight or better — a coach that shouts about every loose pawn is one you
+  // stop reading.
+  const hanging = useMemo(() => {
+    if (!live || turn !== "w") return null;
+    let worst = null;
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+      const p = board[r][c];
+      if (!p || p.s !== "w" || p.t === "k" || CHESS_VAL[p.t] < 3) continue;
+      if (chessAttacks(board, r, c, "b") && !chessAttacks(board, r, c, "w")) {
+        if (!worst || CHESS_VAL[p.t] > CHESS_VAL[worst.t]) worst = { r, c, t: p.t };
+      }
+    }
+    return worst;
+  }, [board, turn, live]);
 
-  const RAIL_LABEL = { fontFamily: SANS, fontSize: 11.5, fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase", color: C.faint };
-  const railCard = { background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: 10 };
-  const tray = (label, taken, glyphColor) => (
-    <div style={{ ...railCard, flex: 1, minWidth: 0, minHeight: 40 }}>
-      <div style={{ fontFamily: SANS, fontSize: 11.5, color: C.faint }}>{label}</div>
-      <div style={{ fontSize: 18, lineHeight: 1.3, marginTop: 2, color: glyphColor, wordBreak: "break-all" }}>
-        {taken.length ? taken.map(x => CHESS_GLYPH[x]).join(" ") : "—"}
-      </div>
+  const moveNo = Math.floor(moves.length / 2) + 1;
+  const pairs = [];
+  for (let i = 0; i < moves.length; i += 2) pairs.push([moves[i], moves[i + 1]]);
+
+  // ---- copy ----
+  // Every lookup below is spelled out as literal t() calls rather than
+  // t(SOMETHING[key]): the i18n audit only sees literal arguments, so a computed
+  // key is a translation that silently falls back to English with nothing to
+  // catch it.
+  const ALGO_LABEL = { passive: t("Passive"), balanced: t("Balanced"), ruthless: t("Ruthless") };
+  const ALGO_HINT = {
+    passive: t("takes only what is free"),
+    balanced: t("will not hand you a piece"),
+    ruthless: t("looks a whole reply ahead"),
+  };
+  const PIECE_WORD = { p: t("pawn"), n: t("knight"), b: t("bishop"), r: t("rook"), q: t("queen"), k: t("king") };
+  const pieceWord = (type) => PIECE_WORD[type] || t("piece");
+
+  const pill = end ? t("GAME OVER")
+    : !house ? (turn === "w" ? t("BULLS TO MOVE") : t("BEARS TO MOVE"))
+    : turn === "w" ? t("YOUR TURN") : t("BEARS THINKING");
+
+  const evalNote = Math.abs(edge) < 0.5 ? t("dead even")
+    : Math.abs(edge) < 1.5 ? (edge > 0 ? t("Bulls edge ahead") : t("Bears edge ahead"))
+    : Math.abs(edge) < 4 ? (edge > 0 ? t("Bulls are ahead") : t("Bears are ahead"))
+    : (edge > 0 ? t("Bulls are winning") : t("Bears are winning"));
+
+  // What a selected piece can do, said in the fewest words that still answer it.
+  // One or two squares get NAMED — "d3 and d4 are open" is the whole answer,
+  // where "2 squares are open" only tells you to go and look. Past two, naming
+  // them is a list nobody reads and the chips below say it better anyway.
+  const selHead = sel ? `${chessSquare(sel.r, sel.c)} ${pieceWord(board[sel.r][sel.c]?.t)}` : "";
+  const selLine = !sel ? ""
+    : targets.length === 0 ? t("{p} selected — it has nowhere to go.").replace("{p}", selHead)
+    : targets.length === 1 ? t("{p} selected — {a} is its only move.")
+        .replace("{p}", selHead).replace("{a}", chessSquare(targets[0].r, targets[0].c))
+    : targets.length === 2 ? t("{p} selected — {a} and {b} are open.")
+        .replace("{p}", selHead)
+        .replace("{a}", chessSquare(targets[0].r, targets[0].c))
+        .replace("{b}", chessSquare(targets[1].r, targets[1].c))
+    : t("{p} selected — {n} squares are open.").replace("{p}", selHead).replace("{n}", String(targets.length));
+
+  // The turn card's sentence. It describes what is true of the board right now,
+  // and nothing else — which is why the selected-piece line lists the squares
+  // the rail's chips are about to offer.
+  const turnLine = review !== null
+    ? t("Stepping back through the game. The board is not live.")
+    : end ? t("The game is over. Play again, or step back through it.")
+    : checkNow && yours ? t("Your king is in check — you have to answer it.")
+    : checkNow ? t("The Bears' king is in check.")
+    : !yours ? t("The house is choosing its move.")
+    : sel ? selLine
+    : t("Tap a piece to see where it can go.");
+
+  // The coach speaks about the position, not about the interface, and it never
+  // names a move that is not on the board: the centre line only appears when
+  // that push is actually legal from here.
+  const centrePush = useMemo(() => {
+    if (!live || turn !== "w" || cenState !== "open") return null;
+    for (const [r, c] of [[4, 3], [4, 4]]) {               // d4, e4
+      const from = { r: 6, c };
+      const p = board[from.r][from.c];
+      if (p && p.s === "w" && p.t === "p" && legalMoves(board, from.r, from.c).some(m => m.r === r && m.c === c)) {
+        return { push: chessSquare(r, c), answer: chessSquare(3, c) };
+      }
+    }
+    return null;
+  }, [board, turn, live, cenState]);
+
+  const coachLine = end
+    ? t("The position stopped here. Step back through it to see where it turned.")
+    : checkNow && yours ? t("Nothing else matters until the check is answered.")
+    : hanging
+      ? t("Your {piece} on {sq} is hanging — the Bears can take it for free.")
+          .replace("{piece}", pieceWord(hanging.t)).replace("{sq}", chessSquare(hanging.r, hanging.c))
+      : centrePush
+        ? t("Pushing {push} claims the centre. Bears will likely answer {answer}.")
+            .replace("{push}", centrePush.push).replace("{answer}", centrePush.answer)
+        : cenState === "yours" ? t("You hold the middle. Bring a knight out behind it.")
+        : cenState === "theirs" ? t("The Bears own the centre. Challenge it before it settles.")
+        : t("The centre is still open. Whoever claims it first sets the shape of the game.");
+
+  const CEN_LABEL = { open: t("OPEN"), yours: t("YOURS"), theirs: t("THEIRS") };
+  const cenColor = cenState === "open" ? C.warn : cenState === "yours" ? C.accentText : C.down;
+
+  // ---- the end card ----
+  const won = end && (end.winner === "w");
+  const headline = !end ? ""
+    : end.by === "stalemate" ? t("Stalemate — nobody wins")
+    : end.by === "time" ? (won ? t("Flag — Bulls win on time") : t("Flag — Bears win on time"))
+    : won ? t("Checkmate — Bulls win") : t("Checkmate — Bears win");
+  const subline = !end ? ""
+    : end.by === "stalemate" ? t("No legal move left, and no check. That is a draw.")
+    : end.by === "time" ? (won ? t("The Bears ran out of clock.") : t("You ran out of clock."))
+    : won ? t("The Bears' king had nowhere to run.")
+    : house ? t("Your king had nowhere to run.") : t("The Bulls' king had nowhere to run.");
+  // Not an unlock — everything here is always available. What changes is which
+  // setting is worth reaching for next, and that is read off how it went.
+  const footLine = !end ? ""
+    : !house
+      // Nothing to say about the house in a game it did not play.
+      ? (end.winner === "draw" ? t("Neither side could force it. Swap seats and go again.")
+        : t("Swap seats and play it back the other way."))
+    : end.winner === "draw" ? t("A draw is a result. Ruthless will not offer you one.")
+    : won
+      ? (algo === "ruthless" ? t("That was Ruthless. There is nothing harder here.")
+        : t("Ruthless is one segment along. The house stops trading pieces evenly."))
+      : (edge < -4 ? t("You were well down on material before the mate. Trade only when you win the trade.")
+        : t("It was close on material. Passive gives you room to see the pattern."));
+
+  // ---- shared vocabulary ----
+  const railLabel = { fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", color: C.faint, textTransform: "uppercase" };
+  const railCard = { background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.md, marginTop: 8, padding: 12 };
+  const metaMono = { fontFamily: MONO, fontSize: 10.5, color: C.faint };
+  const coord = { display: "grid", placeItems: "center", fontFamily: MONO, fontSize: 10.5, color: FIELD.quaternary };
+  const outlineBtn = {
+    background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm,
+    color: C.muted, fontFamily: SANS, fontSize: 13, padding: "6px 12px", cursor: "pointer", whiteSpace: "nowrap",
+  };
+  const sep = <span aria-hidden="true" style={{ color: C.edgeStrong }}>|</span>;
+  const meter = (frac, ramp) => (
+    <div aria-hidden="true" style={{ height: 9, borderRadius: 5, background: C.surface, border: `1px solid ${C.edge}`, overflow: "hidden", position: "relative" }}>
+      <div style={{ width: `${Math.max(0, Math.min(1, frac)) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${ramp[0]}, ${ramp[1]})`, transition: "width 200ms linear" }} />
+      <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(90deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 11px)" }} />
     </div>
   );
+  // A row of glyphs one side is holding. Taken pieces belong to the other army,
+  // so they are drawn in the other army's set and colour — the tray is a pile of
+  // THEIR pieces, not a tally in yours.
+  const spoils = (list, side, size) => (
+    list.length
+      ? <span style={{ color: side === "w" ? C.bullPiece : C.bearPiece, fontSize: size, lineHeight: 1.2, wordBreak: "break-all" }}>
+          {list.map(x => chessGlyph(side, x)).join("")}
+        </span>
+      : <span style={{ color: FIELD.quinary, fontSize: size, lineHeight: 1.2 }}>—</span>
+  );
 
-  // Moves read in pairs, the way a move list is actually written: white's move
-  // and black's reply on one numbered row.
-  const movePairs = [];
-  for (let i = 0; i < moves.length; i += 2) movePairs.push([moves[i], moves[i + 1]]);
+  // The two player strips. The one whose turn it is takes the green border, so
+  // "who is on the clock" is answered by the board area itself and not only by
+  // the rail three hundred pixels away.
+  const strip = (side, extra) => {
+    const on = live && turn === side;
+    const mine = side === "w";
+    return (
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+        background: C.surface, border: `1px solid ${on ? C.accent : C.edge}`, borderRadius: R.md, padding: "9px 12px",
+        transition: `border-color ${MOTION.base} ${MOTION.ease}`,
+      }}>
+        <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: R.xs, display: "grid", placeItems: "center", fontSize: 15, flexShrink: 0, background: mine ? "#14261b" : "#2a1a1c", color: mine ? C.bullPiece : C.bearPiece }}>
+          {chessGlyph(side, "r")}
+        </span>
+        <span style={{ fontWeight: 700, fontSize: 13.5, color: C.text }}>{mine ? t("Bulls") : t("Bears")}</span>
+        {extra}
+        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", minHeight: 20, flexShrink: 0 }}>
+          {spoils(held[side], side === "w" ? "b" : "w", 17)}
+        </span>
+      </div>
+    );
+  };
 
   return (
-    <div style={{ fontFamily: SANS }}>
-      {/* The move number and the rules scope. The reference puts these in the
-          panel's header bar; that bar belongs to the games shell, which cannot
-          see this component's state — and lifting a per-move counter into the
-          dashboard would re-render the whole desk on every move. */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "12px 20px", borderBottom: `1px solid ${C.edge}` }}>
-        <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>
-          {t("move {n} · casual rules").replace("{n}", String(Math.floor(moves.length / 2) + 1))}
+    <div style={{ fontFamily: SANS, display: "flex", flexDirection: "column" }}>
+      {/* ---- header ---- */}
+      {/* The game owns this bar rather than the games shell, because everything
+          live in it — whose turn it is, the move number — is this component's
+          state, and lifting a per-move counter into the dashboard would
+          re-render the whole desk on every move. */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceAlt }}>
+        <span style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", color: C.text, flexShrink: 0 }}>
+          <DeskIcon name="chess" size={17} />
         </span>
-        <span style={{ marginLeft: "auto" }}>
-          <Segmented label={t("Opponent")} value={vsAI}
-            options={[[true, t("vs Computer")], [false, t("2 player")]]}
-            onChange={(v) => reset(v)} />
+        <span style={{ fontWeight: 700, fontSize: 14.5, color: C.text }}>{t("Bulls vs Bears Chess")}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 7, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5, color: C.muted, whiteSpace: "nowrap" }}>
+          <span aria-hidden="true" className={live ? "v-pulse" : undefined}
+            style={{ width: 6, height: 6, borderRadius: "50%", background: !live ? C.faint : turn === "w" ? C.accent : C.down }} />
+          {pill}
+        </span>
+        <span style={{ ...metaMono, fontSize: 11.5 }}>
+          {t("move {n} · casual rules").replace("{n}", String(moveNo))}
+        </span>
+        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <button className="v-gameout" onClick={() => setShowRules(v => !v)} aria-expanded={showRules} style={outlineBtn}>{t("How to play")}</button>
+          <button className="v-gameout" onClick={reset} style={outlineBtn}>{t("New game")}</button>
+          {onBack && <button className="v-gameout" onClick={onBack} style={outlineBtn}>← {t("games")}</button>}
+          {onClose && <button onClick={onClose} aria-label={t("Close games")} style={{ ...outlineBtn, border: "none", color: C.faint, padding: "6px 4px" }}>✕</button>}
         </span>
       </div>
 
-      <div className="v-chessroom" style={{ display: "flex", gap: 24, alignItems: "flex-start", padding: 20, flexWrap: "wrap" }}>
-        {/* ---- board ---- */}
-        {/* The 8x8 stays a grid of its own so the flying-piece overlay's 12.5%
-            arithmetic still lands on a square; the rank and file gutters are
-            separate tracks around it rather than extra cells inside it. */}
-        <div className="v-chessgrid" style={{ display: "grid", gridTemplateColumns: "20px auto", gridTemplateRows: "auto 20px", flex: "0 0 auto" }}>
-          <div style={{ display: "grid", gridTemplateRows: "repeat(8, var(--sq))" }}>
-            {[8, 7, 6, 5, 4, 3, 2, 1].map(n => (
-              <span key={n} style={{ display: "grid", placeItems: "center", fontFamily: MONO, fontSize: 11, color: C.faint }}>{n}</span>
-            ))}
+      {/* ---- HUD strip ---- */}
+      {/* Mirrored on purpose. Both sides carry the same three facts in the same
+          three places, so "am I ahead" is a comparison of two positions rather
+          than a reading of six numbers. */}
+      <div className="v-awhud" style={{ display: "flex", alignItems: "center", gap: 20, padding: "15px 22px", borderBottom: `1px solid ${C.edge}` }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+          <div style={{ textAlign: "right", minWidth: 96 }}>
+            <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{house ? t("BULLS · YOU") : t("BULLS")}</div>
+            <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: C.accentText, lineHeight: 1.1 }}>{chessClock(clock.w)}</div>
           </div>
-          <div style={{
-            position: "relative", display: "grid",
-            gridTemplateColumns: "repeat(8, var(--sq))", gridTemplateRows: "repeat(8, var(--sq))",
-            opacity: (vsAI && turn === "b" && !winner) ? 0.75 : 1,
-            transition: `opacity ${MOTION.base} ${MOTION.ease}`,
-          }}>
-            {board.map((row, r) => row.map((p, c) => {
-              const light = (r + c) % 2 === 0;
-              const isSel = sel && sel.r === r && sel.c === c;
-              const isTarget = targets.some(t2 => t2.r === r && t2.c === c);
-              const inFlight = anim && anim.to.r === r && anim.to.c === c;   // real piece hides until the overlay lands
-              const inDanger = checkedKing && checkedKing.r === r && checkedKing.c === c; // this king is in check
-              return (
-                <button key={`${r}-${c}`} onClick={() => clickSquare(r, c)}
-                  aria-label={`${sqName(r, c)}${p ? ` — ${p.s === "w" ? "Bulls" : "Bears"} ${PIECE_NAME[p.t]}` : ""}`}
-                  style={{
-                    position: "relative", border: "none", cursor: winner ? "default" : "pointer", padding: 0,
-                    // The selected square FILLS as well as rings: a 2px ring
-                    // alone is easy to lose under a 30px glyph.
-                    background: isSel ? alpha(C.accent, 0.22) : light ? C.boardLight : C.boardDark,
-                    boxShadow: isSel ? `inset 0 0 0 2px ${C.accent}` : inDanger ? `inset 0 0 0 2px ${C.down}` : "none",
-                    display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
-                  }}>
-                  {p && <span style={{ fontSize: "calc(var(--sq) * 0.54)", color: p.s === "w" ? C.up : C.down, textShadow: "0 1px 2px rgba(0,0,0,0.6)", opacity: inFlight ? 0 : 1 }}>{CHESS_GLYPH[p.t]}</span>}
-                  {/* An empty destination gets a dot; an occupied one gets a
-                      ring around the piece, because "you can capture this" and
-                      "you can move here" are not the same offer. */}
-                  {isTarget && (
-                    <span aria-hidden="true" style={{
-                      position: "absolute", boxSizing: "border-box",
-                      width: p ? "82%" : 12, height: p ? "82%" : 12,
-                      borderRadius: p ? 6 : "50%",
-                      border: p ? `2px solid ${alpha(C.accent, 0.75)}` : "none",
-                      background: p ? "transparent" : alpha(C.accent, 0.55),
-                    }} />
-                  )}
-                </button>
-              );
-            }))}
-            {anim && (
-              <span aria-hidden="true" style={{
-                position: "absolute", width: "12.5%", height: "12.5%", pointerEvents: "none", zIndex: 2,
-                left: `${(anim.go ? anim.to.c : anim.from.c) * 12.5}%`,
-                top: `${(anim.go ? anim.to.r : anim.from.r) * 12.5}%`,
-                transition: "left 0.18s ease, top 0.18s ease",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "calc(var(--sq) * 0.54)", lineHeight: 1, color: anim.color, textShadow: "0 1px 2px rgba(0,0,0,0.6)",
-              }}>{anim.glyph}</span>
-            )}
-          </div>
-          <div />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(8, var(--sq))" }}>
-            {["a", "b", "c", "d", "e", "f", "g", "h"].map(f => (
-              <span key={f} style={{ display: "grid", placeItems: "center", fontFamily: MONO, fontSize: 11, color: C.faint }}>{f}</span>
-            ))}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {meter(counts.w.material / 39, FIELD.youMeter)}
+            <div style={{ display: "flex", gap: 8, marginTop: 7, ...metaMono }}>
+              <span>{t("{n} PIECES").replace("{n}", String(counts.w.pieces))}</span>{sep}
+              <span>{t("MATERIAL {n}").replace("{n}", String(counts.w.material))}</span>{sep}
+              <span>{t("{n} TAKEN").replace("{n}", String(held.w.length))}</span>
+            </div>
           </div>
         </div>
 
-        {/* ---- rail ---- */}
-        <div style={{ flex: "1 1 260px", minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span aria-hidden="true" className={winner ? undefined : "v-pulse"}
-                style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor, flex: "0 0 auto" }} />
-              <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 14, color: C.text }}>{headline}</span>
-              <span style={{ marginLeft: "auto", fontFamily: SANS, fontSize: 12, color: C.faint, whiteSpace: "nowrap" }}>{sideNote}</span>
-            </div>
-            <div role="status" style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.5, color: C.muted, marginTop: 8 }}>{hint}</div>
+        <div style={{ width: 158, flexShrink: 0, background: C.surface, border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, padding: "10px 14px", textAlign: "center" }}>
+          <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{t("POSITION")}</div>
+          <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.25, color: C.text }}>{evalText}</div>
+          {/* One bar read from both ends: the green share is the Bulls' share of
+              the material, so the tick in the middle is a level game. */}
+          <div aria-hidden="true" style={{ position: "relative", height: 5, borderRadius: 3, background: C.down, marginTop: 6, overflow: "hidden" }}>
+            <div style={{ width: `${evalFrac * 100}%`, height: "100%", background: C.accent, transition: "width 260ms var(--v-ease)" }} />
+            <div style={{ position: "absolute", left: "50%", top: -2, bottom: -2, width: 1, background: C.base }} />
           </div>
+          <div style={{ fontFamily: SANS, fontSize: 10.5, color: C.faint, marginTop: 5 }}>{evalNote}</div>
+        </div>
 
-          <div>
-            <div style={RAIL_LABEL}>{t("Captured")}</div>
-            <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-              {tray(t("Bulls take"), captured.w, C.down)}
-              {tray(t("Bears take"), captured.b, C.up)}
-            </div>
-          </div>
-
-          <div style={{ flex: 1, minHeight: 0 }}>
-            <div style={RAIL_LABEL}>{t("Moves")}</div>
-            <div style={{ ...railCard, marginTop: 8, padding: 12, maxHeight: 190, overflowY: "auto" }}>
-              {movePairs.length === 0
-                ? <span style={{ fontFamily: MONO, fontSize: 12.5, color: C.faint }}>{t("No moves yet")}</span>
-                : movePairs.map(([w, b], i) => (
-                    <div key={i} style={{ display: "grid", gridTemplateColumns: "26px 1fr 1fr", gap: 8, fontFamily: MONO, fontSize: 12.5, padding: "2px 0" }}>
-                      <span style={{ color: C.faint }}>{i + 1}.</span>
-                      <span style={{ color: C.up }}>{w}</span>
-                      <span style={{ color: C.down }}>{b || ""}</span>
-                    </div>
-                  ))}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {meter(counts.b.material / 39, FIELD.foeMeter)}
+            <div style={{ display: "flex", gap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
+              <span>{t("{n} TAKEN").replace("{n}", String(held.b.length))}</span>{sep}
+              <span>{t("MATERIAL {n}").replace("{n}", String(counts.b.material))}</span>{sep}
+              <span>{t("{n} PIECES").replace("{n}", String(counts.b.pieces))}</span>
             </div>
           </div>
+          <div style={{ minWidth: 96 }}>
+            <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{house ? t("BEARS · HOUSE") : t("BEARS")}</div>
+            <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: C.down, lineHeight: 1.1 }}>{chessClock(clock.b)}</div>
+          </div>
+        </div>
+      </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => setShowRules(v => !v)} aria-expanded={showRules}
-              style={{ flex: 1, background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: 9, padding: 10, fontFamily: SANS, fontSize: 13, color: C.muted, cursor: "pointer" }}>
-              {t("How to play")}
-            </button>
-            <button onClick={() => reset()}
-              style={{ flex: 1, background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: 9, padding: 10, fontFamily: SANS, fontSize: 13, color: C.muted, cursor: "pointer" }}>
-              {t("New game")}
-            </button>
+      {/* ---- board + rail ---- */}
+      <div className="v-chessbody" style={{ display: "flex", alignItems: "stretch" }}>
+        <div className="v-chessboard" style={{ flex: 1, minWidth: 0, padding: "18px 16px 20px 22px" }}>
+          {/* Who is playing the Bears belongs on the Bears, not in a settings
+              row: this strip is the opponent, so it is where you change them. */}
+          {strip("b",
+            <>
+              <span style={{ fontFamily: SANS, fontSize: 11.5, color: C.faint }}>
+                {house
+                  ? t("house algo · {algo}").replace("{algo}", ALGO_LABEL[algo].toLowerCase())
+                  : t("second player")}
+              </span>
+              <span role="radiogroup" aria-label={t("Who plays the Bears")}
+                style={{ display: "flex", gap: 3, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.xs, padding: 3 }}>
+                {[[true, t("House")], [false, t("2 player")]].map(([v, label]) => (
+                  <button key={String(v)} role="radio" aria-checked={house === v} onClick={() => setHouse(v)}
+                    style={{ ...segmentItem(house === v, "accent", { pad: "3px 9px" }), fontSize: 11.5, borderRadius: 5 }}>
+                    {label}
+                  </button>
+                ))}
+              </span>
+            </>
+          )}
+
+          {/* The board sits in a well rather than on the panel: a framed, inset
+              gradient is what stops eight rows of near-black squares reading as
+              a hole in the page. */}
+          <div className="v-chessgrid" style={{
+            position: "relative", marginTop: 10, padding: 10,
+            border: `1px solid ${C.edge}`, borderRadius: R.lg,
+            background: "linear-gradient(180deg, #101720, #0b1015)", boxShadow: "inset 0 0 46px rgba(0,0,0,0.6)",
+            display: "flex", justifyContent: "center",
+          }}>
+            <div style={{ position: "relative", borderRadius: 5, overflow: "hidden", flex: "0 0 auto" }}>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "20px repeat(8, var(--sq))",
+                gridTemplateRows: "repeat(8, var(--sq)) 20px",
+                opacity: (!yours && live) ? 0.78 : 1,
+                transition: `opacity ${MOTION.base} ${MOTION.ease}`,
+              }}>
+                {shown.map((row, r) => (
+                  <React.Fragment key={r}>
+                    <span aria-hidden="true" style={coord}>{8 - r}</span>
+                    {row.map((p, c) => {
+                      const lightSq = (r + c) % 2 === 0;
+                      const isSel = review === null && sel && sel.r === r && sel.c === c;
+                      const ti = targets.findIndex(x => x.r === r && x.c === c);
+                      const isTarget = ti >= 0;
+                      const isPick = isTarget && suggest && suggest.r === r && suggest.c === c;
+                      const wasMove = lastMove && ((lastMove.from.r === r && lastMove.from.c === c) || (lastMove.to.r === r && lastMove.to.c === c));
+                      const inDanger = checkedKing && checkedKing.r === r && checkedKing.c === c;
+                      const inFlight = anim && anim.to.r === r && anim.to.c === c;
+                      return (
+                        <button key={`${r}-${c}`} onClick={() => clickSquare(r, c)} disabled={!canAct}
+                          className={`v-chesssq${isSel ? " v-selring" : ""}`}
+                          aria-label={`${chessSquare(r, c)}${p ? ` — ${p.s === "w" ? t("Bulls") : t("Bears")} ${pieceWord(p.t)}` : ""}`}
+                          style={{
+                            position: "relative", border: "none", padding: 0, lineHeight: 1,
+                            cursor: canAct ? "pointer" : "default",
+                            // The selected square FILLS as well as rings: a 2px
+                            // ring alone is easy to lose under a 35px glyph.
+                            background: isSel ? "rgba(70,167,88,0.26)" : lightSq ? C.boardLight : C.boardDark,
+                            boxShadow: !isSel && inDanger ? `inset 0 0 0 2px ${C.down}` : undefined,
+                            display: "grid", placeItems: "center",
+                          }}>
+                          {/* Where the last move came from and went to. Faint,
+                              because it is history — and absent at move one,
+                              which is the state the handoff is explicit about. */}
+                          {wasMove && !isSel && (
+                            <span aria-hidden="true" style={{ position: "absolute", inset: 0, background: alpha(C.accent, 0.12) }} />
+                          )}
+                          {p && (
+                            <span style={{
+                              position: "relative", fontSize: "calc(var(--sq) * 0.6)", lineHeight: 1, opacity: inFlight ? 0 : 1,
+                              color: p.s === "w" ? (isSel ? C.bullPieceOn : C.bullPiece) : C.bearPiece,
+                              textShadow: p.s === "w"
+                                ? `0 2px 0 rgba(0,0,0,0.55), 0 0 ${isSel ? 18 : 16}px rgba(76,195,138,${isSel ? 0.45 : 0.3})`
+                                : "0 2px 0 rgba(0,0,0,0.55), 0 0 16px rgba(221,106,110,0.28)",
+                            }}>{chessGlyph(p.s, p.t)}</span>
+                          )}
+                          {/* An empty destination gets a dot; an occupied one
+                              gets a ring around the piece, because "you can move
+                              here" and "you can take this" are not the same
+                              offer. The suggested square is brighter — it is the
+                              same square the rail's green chip names. */}
+                          {isTarget && (
+                            <span aria-hidden="true" className="v-movedot"
+                              style={{
+                                position: "absolute", boxSizing: "border-box",
+                                animationDelay: `${(ti % 4) * 0.2}s`,
+                                width: p ? "80%" : 15, height: p ? "80%" : 15,
+                                borderRadius: p ? 7 : "50%",
+                                border: p ? `2px solid ${alpha(C.accent, isPick ? 0.95 : 0.7)}` : "none",
+                                background: p ? "transparent" : `rgba(70,167,88,${isPick ? 0.8 : 0.5})`,
+                                boxShadow: `0 0 12px rgba(70,167,88,${isPick ? 0.7 : 0.45})`,
+                              }} />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
+                <span />
+                {CHESS_FILES.map(f => <span key={f} aria-hidden="true" style={coord}>{f}</span>)}
+              </div>
+
+              {/* Decoration, and a DOM layer rather than anything the board
+                  knows about, so prefers-reduced-motion can switch it off on
+                  its own. */}
+              <div aria-hidden="true" className="v-boardscan" style={{ position: "absolute", left: 0, right: 0, top: 0, height: 120, background: "linear-gradient(180deg, transparent, rgba(76,195,138,0.045), transparent)", pointerEvents: "none" }} />
+
+              {anim && review === null && (
+                <span aria-hidden="true" style={{
+                  position: "absolute", width: "var(--sq)", height: "var(--sq)", pointerEvents: "none", zIndex: 2,
+                  left: `calc(20px + var(--sq) * ${anim.go ? anim.to.c : anim.from.c})`,
+                  top: `calc(var(--sq) * ${anim.go ? anim.to.r : anim.from.r})`,
+                  transition: "left 0.18s ease, top 0.18s ease",
+                  display: "grid", placeItems: "center",
+                  fontSize: "calc(var(--sq) * 0.6)", lineHeight: 1, color: anim.color, textShadow: "0 2px 0 rgba(0,0,0,0.55)",
+                }}>{anim.glyph}</span>
+              )}
+            </div>
+
+            {end && review === null && (
+              <div className="v-awover" style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: alpha("#07090d", 0.72), padding: 16, borderRadius: R.lg }}>
+                {/* The piece the whole screen was about, at the size the moment
+                    deserves, behind everything else. */}
+                <span aria-hidden="true" style={{
+                  position: "absolute", left: "50%", top: "44%", transform: "translate(-50%, -50%)",
+                  fontSize: 90, lineHeight: 1, pointerEvents: "none",
+                  color: end.winner === "draw" ? "rgba(221,154,60,0.12)" : won ? "rgba(110,212,154,0.14)" : "rgba(231,139,142,0.14)",
+                  textShadow: `0 0 60px ${end.winner === "draw" ? "rgba(221,154,60,0.2)" : won ? "rgba(70,167,88,0.25)" : "rgba(221,106,110,0.22)"}`,
+                }}>{chessGlyph(won ? "w" : "b", "k")}</span>
+                <div style={{ position: "relative" }}>
+                  <div style={{ ...metaMono, fontSize: 10.5, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+                    {t("MOVE {n} · {clock}").replace("{n}", String(moves.length)).replace("{clock}", chessClock(end.winner === "b" ? clock.b : clock.w))}
+                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 34, fontWeight: 700, letterSpacing: "-1px", marginTop: 10, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both", color: end.winner === "draw" ? C.warn : won ? C.accentText : C.down }}>
+                    {headline}
+                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 15, color: C.muted, marginTop: 8, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>{subline}</div>
+                  <div style={{ display: "flex", gap: 26, justifyContent: "center", marginTop: 22, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
+                    {[
+                      [t("MOVES"), String(moves.length), C.text],
+                      [t("MATERIAL"), evalText, edge > 0 ? C.accentText : edge < 0 ? C.down : C.text],
+                      // The winner's clock, because the headline is about them.
+                      [t("TIME LEFT"), chessClock(end.winner === "b" ? clock.b : clock.w), C.text],
+                    ].map(([label, value, color]) => (
+                      <div key={label}>
+                        <div style={{ ...metaMono, fontSize: 9.5, letterSpacing: "1.5px" }}>{label}</div>
+                        <div style={{ fontFamily: MONO, fontSize: 20, fontWeight: 700, marginTop: 3, color }}>{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.4s both" }}>
+                    <button onClick={reset} className="vt-sheen"
+                      style={{ background: `linear-gradient(100deg, ${C.accent} 40%, #79dd94 50%, ${C.accent} 60%)`, color: C.textOnAccent, border: "none", fontFamily: SANS, fontWeight: 700, fontSize: 14, padding: "11px 24px", borderRadius: 9, cursor: "pointer" }}>
+                      {t("Play again")}
+                    </button>
+                    {/* A real control, not a label: the boards were kept, so
+                        this steps through the game that was just played. */}
+                    <button className="v-gameout" onClick={() => setReview(hist.length - 1)} disabled={moves.length === 0}
+                      style={{ ...outlineBtn, color: C.text, fontSize: 14, padding: "11px 20px", borderRadius: 9, opacity: moves.length ? 1 : 0.45 }}>
+                      {t("Review moves")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* The rules the grey sentence used to carry, on request rather than
-              permanently in the way of the game. */}
-          {showRules && (
-            <div style={{ ...railCard, fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: C.muted, padding: 12 }}>
-              {vsAI
-                ? t("You are the Bulls, in green. Checkmate the Bears' king to win — get checkmated and it's over.")
-                : t("Two players, one screen: Bulls against Bears. Checkmate the other king to win.")}
-              {" "}{t("Pawns promote to queens automatically. Casual rules — no castling, no en passant.")}
+          {strip("w", <span style={{ fontFamily: SANS, fontSize: 11.5, color: live && turn === "w" ? C.accentText : C.faint }}>
+            {house ? (live && turn === "w" ? t("you · to move") : t("you")) : (live && turn === "w" ? t("to move") : t("first player"))}
+          </span>)}
+
+          {end && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.edge}` }}>
+              <span style={{ width: 26, height: 26, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", color: won ? C.accentText : C.warn, flexShrink: 0 }}>
+                <DeskIcon name={won ? "rise" : "alert"} size={15} />
+              </span>
+              <span style={{ fontFamily: SANS, fontSize: 13, color: C.muted }}>{footLine}</span>
             </div>
           )}
         </div>
+
+        {/* ---- rail ---- */}
+        <div className="v-chessrail" style={{ width: 300, flexShrink: 0, borderLeft: `1px solid ${C.edge}`, padding: "18px 22px 20px 18px", display: "flex", flexDirection: "column", gap: 15 }}>
+          {/* Turn card — or, once you are stepping back through the game, the
+              scrubber that replaces it. Both answer the same question: what is
+              the board in front of me, and what can I do with it. */}
+          {review !== null ? (
+            <div style={{ background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "13px 14px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontWeight: 700, fontSize: 14, color: C.text }}>{t("Reviewing")}</span>
+                <span style={{ marginLeft: "auto", ...metaMono, fontSize: 11.5 }}>
+                  {t("{i} of {n}").replace("{i}", String(review)).replace("{n}", String(moves.length))}
+                </span>
+              </div>
+              <div style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.5, color: C.muted, marginTop: 8 }}>
+                {review === 0
+                  ? t("The starting position.")
+                  : t("After {n}. {san}")
+                      .replace("{n}", String(Math.floor((review - 1) / 2) + 1))
+                      .replace("{san}", `${moves[review - 1].side === "w" ? "" : "… "}${moves[review - 1].san}`)}
+              </div>
+              <div style={{ display: "flex", gap: 7, marginTop: 11, alignItems: "center" }}>
+                <button className="v-movechip" onClick={() => setReview(i => Math.max(0, i - 1))} disabled={review === 0} aria-label={t("Previous move")}
+                  style={{ background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: R.xs, padding: "5px 12px", fontFamily: MONO, fontSize: 11.5, color: C.muted, cursor: "pointer" }}>‹</button>
+                <button className="v-movechip" onClick={() => setReview(i => Math.min(hist.length - 1, i + 1))} disabled={review >= hist.length - 1} aria-label={t("Next move")}
+                  style={{ background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: R.xs, padding: "5px 12px", fontFamily: MONO, fontSize: 11.5, color: C.muted, cursor: "pointer" }}>›</button>
+                <button onClick={() => setReview(null)}
+                  style={{ marginLeft: "auto", background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 11.5, cursor: "pointer", padding: 0 }}>
+                  {end ? t("back to result") : t("back to the game")}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "13px 14px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span aria-hidden="true" className={live ? "v-pulse" : undefined}
+                  style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: !live ? C.faint : turn === "w" ? C.accent : C.down }} />
+                <span style={{ fontWeight: 700, fontSize: 14, color: C.text }}>
+                  {end ? t("Game over") : yours ? t("Your move") : t("Bears are thinking")}
+                </span>
+                <span style={{ marginLeft: "auto", ...metaMono, fontSize: 11.5 }}>{chessClock(clock[turn])}</span>
+              </div>
+              <div role="status" style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.5, color: C.muted, marginTop: 8 }}>{turnLine}</div>
+              {/* The same offers the board is showing, as text you can click.
+                  The green one is the square the coach is pointing at. */}
+              {sel && targets.length > 0 && (
+                <div style={{ display: "flex", gap: 7, marginTop: 11, flexWrap: "wrap", alignItems: "center" }}>
+                  {targets.map(x => {
+                    const pick = suggest && suggest.r === x.r && suggest.c === x.c;
+                    return (
+                      <button key={`${x.r}-${x.c}`} className="v-movechip" onClick={() => play(x)} disabled={!canAct}
+                        style={{
+                          background: C.surfaceRaised, border: `1px solid ${pick ? C.accent : C.edgeStrong}`, borderRadius: R.xs,
+                          padding: "5px 10px", fontFamily: MONO, fontSize: 11.5, cursor: "pointer",
+                          color: pick ? C.accentText : C.muted,
+                        }}>
+                        {chessSquare(x.r, x.c)}
+                      </button>
+                    );
+                  })}
+                  <button onClick={() => setSel(null)}
+                    style={{ marginLeft: "auto", background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 11.5, cursor: "pointer", padding: 0 }}>
+                    {t("deselect")}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) 0.08s both" }}>
+            <div style={railLabel}>{t("MOVE LOG")}</div>
+            <div ref={logRef} style={{ ...railCard, padding: "11px 12px", fontFamily: MONO, fontSize: 11.5, lineHeight: 1.9, maxHeight: 168, overflowY: "auto" }}>
+              {pairs.map(([w, b], i) => (
+                <div key={i} style={{ display: "flex", gap: 12 }}>
+                  <span style={{ color: FIELD.quinary, width: 16, flexShrink: 0 }}>{i + 1}.</span>
+                  <span style={{ color: C.bullPiece, minWidth: 54 }}>{w.san}</span>
+                  <span style={{ color: C.bearPiece }}>{b ? b.san : ""}</span>
+                </div>
+              ))}
+              {/* The move that has not happened yet. It carries the suggestion
+                  when there is one, so the row is a question rather than a
+                  placeholder — and the suggestion is the same square the board
+                  and the chips are already pointing at. */}
+              {live && (
+                <div style={{ display: "flex", gap: 12, opacity: 0.6 }}>
+                  <span style={{ color: FIELD.quinary, width: 16, flexShrink: 0 }}>{moveNo}.</span>
+                  <span style={{ color: FIELD.quaternary }}>
+                    {turn === "b" ? "… " : ""}{sel && suggest ? `${chessSan(board, sel, suggest)} ?` : "?"}
+                  </span>
+                </div>
+              )}
+              {moves.length === 0 && <div style={{ color: FIELD.quinary }}>{t("— game just started")}</div>}
+            </div>
+          </div>
+
+          <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) 0.16s both" }}>
+            <div style={railLabel}>{t("CAPTURED")}</div>
+            <div style={{ display: "flex", gap: 9, marginTop: 8 }}>
+              {[["w", t("Bulls hold")], ["b", t("Bears hold")]].map(([side, label]) => (
+                <div key={side} style={{ flex: 1, minWidth: 0, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: "10px 11px" }}>
+                  <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint }}>{label}</div>
+                  <div style={{ display: "flex", alignItems: "center", minHeight: 22, marginTop: 4 }}>
+                    {spoils(held[side], side === "w" ? "b" : "w", 18)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) 0.24s both" }}>
+            <div style={railLabel}>{t("COACH")}</div>
+            <div style={railCard}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontFamily: SANS, fontSize: 12.5, color: C.muted }}>{t("Centre control")}</span>
+                <span style={{ fontFamily: MONO, fontSize: 12, color: cenColor }}>{CEN_LABEL[cenState]}</span>
+              </div>
+              <div aria-hidden="true" style={{ height: 5, borderRadius: 3, background: C.surface, marginTop: 9, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${cenFrac * 100}%`, transition: "width 260ms var(--v-ease)", background: cenState === "theirs" ? C.down : `linear-gradient(90deg, ${C.warn}, ${C.accent})` }} />
+              </div>
+              <div style={{ fontFamily: SANS, fontSize: 11.5, color: C.faint, marginTop: 9, lineHeight: 1.45 }}>{coachLine}</div>
+            </div>
+          </div>
+
+          {/* Pinned to the bottom because it is the one control here you change
+              between games rather than read during one. */}
+          <div style={{ marginTop: "auto", animation: "vt-fadeup 0.5s var(--v-ease) 0.32s both" }}>
+            <div style={railLabel}>{t("HOUSE ALGO")}</div>
+            {house ? (
+              // Accent, not the neutral thumb: everywhere else in this product a
+              // green segment is reserved for a choice that changes what the
+              // product IS, and inside a game this is that choice — it is a
+              // different opponent, not a different display.
+              <div role="radiogroup" aria-label={t("House algo")}
+                style={{ display: "flex", gap: 4, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: 4, marginTop: 8 }}>
+                {CHESS_ALGOS.map(id => (
+                  <button key={id} role="radio" aria-checked={algo === id} onClick={() => setAlgo(id)} title={ALGO_HINT[id]}
+                    style={{ ...segmentItem(algo === id, "accent", { pad: "8px 0" }), flex: 1, borderRadius: R.xs }}>
+                    {ALGO_LABEL[id]}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              // Not a disabled control. There is no house in a two-player game,
+              // so there is nothing here to set — and a greyed-out switch would
+              // suggest otherwise.
+              <div style={{ ...railCard, fontFamily: SANS, fontSize: 12, color: C.faint, lineHeight: 1.5 }}>
+                {t("The Bears are yours to play. The house is sitting this one out.")}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      {showRules && (
+        <div style={{ margin: "0 22px 20px", background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: 12, fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: C.muted }}>
+          {house
+            ? t("You are the Bulls, in green, and you move first. Checkmate the Bears' king to win — get checkmated, or run your clock to zero, and it is over.")
+            : t("Two players, one screen: Bulls first, then Bears. Checkmate the other king to win, or win on the clock.")}
+          {" "}{t("Tap a piece to see where it can go, then tap a square or one of the chips in the rail.")}
+          {" "}{t("Pawns promote to queens automatically. Casual rules — no castling, no en passant.")}
+        </div>
+      )}
     </div>
   );
 }
@@ -11287,8 +12172,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         <BlackjackGame onCheer={() => triggerAnchor("cheer", { label: "WINNER" })} onWin={() => triggerAnchor("cheer", { label: "BLACKJACK" })} />);
     }
     if (gameMode === "chess") {
-      return shell(gameMeta("chess").icon, gameMeta("chess").name, backBtn,
-        <ChessGame sfx={chessSfx} onWin={(w) => triggerAnchor("cheer", { label: w === "w" ? "BULLS WIN" : "BEARS WIN" })} />);
+      return shell(null, null, null,
+        <ChessGame
+          sfx={chessSfx}
+          onWin={(w) => triggerAnchor(w === "b" ? "break" : "cheer", {
+            label: w === "draw" ? "STALEMATE" : w === "w" ? "BULLS WIN" : "BEARS WIN",
+          })}
+          onCheer={() => {}}
+          onBack={() => { setGameMode("menu"); stopSpeak(); }}
+          onClose={closeGame}
+        />, true);
     }
     if (gameMode === "algowars") {
       return shell(null, null, null,
