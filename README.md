@@ -219,7 +219,7 @@ It listens on **http://localhost:8787**; the Vite dev server proxies `/api` to i
 ZOOM_CLIENT_ID / ZOOM_CLIENT_SECRET          # meetings (optional)
 GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET       # meetings + calendar (optional)
 STRIPE_SECRET_KEY                             # billing (optional; else simulated)
-STRIPE_PRICE_PRO / STRIPE_PRICE_DESK          # Stripe Price IDs for the two paid plans
+STRIPE_PRICE_EXPLORER / _PRO / _DESK          # Stripe Price IDs; every plan is paid
 STRIPE_WEBHOOK_SECRET                         # Stripe endpoint-signing secret
 GOOGLE_CLOUD_PROJECT / GOOGLE_CLOUD_LOCATION  # Vertex AI project and region
 GCP_SERVICE_ACCOUNT_EMAIL / _PRIVATE_KEY      # Vertex AI service account (server-only)
@@ -253,8 +253,11 @@ APP_ORIGIN     (default http://127.0.0.1:5173 — where the dashboard runs)
 - **Sign up / log in** at the gate (or **Explore as guest** to skip it).
 - When the backend is running, auth is real (hashed passwords + server sessions). Otherwise it's a
   client-side prototype in localStorage.
-- **Plans**: Explorer (free) · Pro Desk · Trading Floor. Paid upgrades open **Stripe's hosted
-  checkout** when `STRIPE_SECRET_KEY` is set; without it, the plan unlocks as a labelled simulation.
+- **Plans**: Explorer $12/mo · Pro Desk $25/mo · Trading Floor $39/mo. There is **no free tier** —
+  every plan starts with a 7-day trial, which the server adds to the Checkout session
+  (`subscription_data[trial_period_days]`) so the first charge really does fall on day 8.
+  Upgrades open **Stripe's hosted checkout** when `STRIPE_SECRET_KEY` is set; without it, the plan
+  unlocks as a labelled simulation and nothing is charged on day 8 either.
   Card details are only ever entered on Stripe's page — this app never renders a card form.
 
 ---

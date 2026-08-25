@@ -9,19 +9,24 @@
 //  Layout follows the reference top to bottom — nav, ticker tape, hero,
 //  features, plans, footer note — at the handoff's 1200px measure.
 //
-//  ONE DELIBERATE DEPARTURE, AND IT IS ABOUT HONESTY
-//  The reference sells a 7-day trial: "Start 7-day free trial", "7 days free,
-//  then $12/mo", card up front, charged on day 8. This product does not do
-//  that. PLANS carries a genuinely free Explorer tier, signup takes no card,
-//  and nothing in the billing code charges anyone on day 8. Rendering the
-//  reference's copy would put a false pricing promise on the front door — a
-//  worse outcome than deviating from a mock, and someone's problem later
-//  rather than a design decision now.
+//  THE TRIAL
+//  This page used to carry a deliberate departure from the reference. The
+//  reference sold a 7-day trial — "Start 7-day free trial", "7 days free, then
+//  $12/mo", card up front, charged on day 8 — and the product had a genuinely
+//  free Explorer tier and no code that charged anyone on day 8, so rendering
+//  that copy would have put a false pricing promise on the front door. The note
+//  left here said the trial model would be "a billing change first and a copy
+//  change second".
 //
-//  So: the reference's layout, type, colour and motion exactly, and the
-//  product's real plans and real terms inside them. If the trial model is
-//  meant to become real, that is a billing change first and a copy change
-//  second.
+//  It is now both, in that order. There is no free tier; all three plans are
+//  paid; the server adds trial_period_days to the Stripe Checkout session, so
+//  the day-8 charge on this page is the one Stripe actually makes. The
+//  reference's copy is back because it finally describes the product.
+//
+//  The one thing this page will not borrow is the reference's "We take payment
+//  details up front" — this app has no card form and never will, and what is
+//  true instead (they are entered on Stripe's page) is the better sentence
+//  anyway.
 //
 //  MOTION
 //  Uses the eight named animations from the handoff (vt-marquee, vt-fadeup,
@@ -208,15 +213,17 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
             </p>
 
             {/* The one primary action on the page. */}
-            <button onClick={onStart} className="vt-sheen"
+            <button onClick={() => onStart()} className="vt-sheen"
               style={{ ...button("primary", "lg"), marginTop: 26, background: GRAD.sheen, fontWeight: 700, fontSize: 15.5 }}>
-              {t("Start free")}
+              {t("Start 7-day free trial")}
             </button>
 
-            {/* True, and checkable in the product: signup takes no card, and
-                Explorer is free with no end date. */}
+            {/* The entry price, taken from PLANS rather than typed here, so the
+                number under the button cannot drift from the number on the card
+                forty lines below it. */}
             <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, marginTop: 12 }}>
-              {t("No card. The demo desk works the moment you land.")}
+              {t("7 days free, then {price}/mo. Cancel before day 8 and you pay nothing.")
+                .replace("{price}", plans[0]?.price || "")}
             </div>
           </div>
 
@@ -262,9 +269,7 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
                     <div style={{ fontFamily: SANS, fontSize: 16, fontWeight: 700 }}>{p.label}</div>
                     <div style={{ marginTop: 6 }}>
                       <span style={{ fontFamily: MONO, fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em" }}>{p.price}</span>
-                      <span style={{ fontFamily: SANS, fontSize: 13, color: C.faint }}>
-                        {p.cadence === "forever" ? ` ${t("forever")}` : p.cadence}
-                      </span>
+                      <span style={{ fontFamily: SANS, fontSize: 13, color: C.faint }}>{p.cadence}</span>
                     </div>
                     <div style={{ fontFamily: SANS, fontSize: 13.5, lineHeight: 1.5, color: C.muted, marginTop: 8 }}>{p.tagline}</div>
                   </div>
@@ -278,16 +283,18 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
                     ))}
                   </ul>
 
-                  <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.accentText }}>
-                    {p.id === "free" ? t("Free, with no end date") : t("Change or cancel any time")}
-                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.accentText }}>{t("7 days free")}</div>
                   {/* Only the featured card takes the fill. Three green buttons
-                      in a row is three primaries, which is none. */}
-                  <button onClick={onStart}
+                      in a row is three primaries, which is none.
+                      The plan id goes with the click: the label used to read
+                      "Choose Trading Floor" and then drop you on a picker with
+                      Explorer selected, which is a button that does not do what
+                      it says. */}
+                  <button onClick={() => onStart(p.id)}
                     style={featured
                       ? { ...button("primary", "md"), width: "100%", fontWeight: 700 }
                       : { ...button("ghost", "md"), width: "100%" }}>
-                    {p.id === "free" ? t("Start free") : t("Choose {plan}").replace("{plan}", p.label)}
+                    {t("Start trial")}
                   </button>
                 </div>
               );
@@ -295,7 +302,7 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
           </div>
 
           <p style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.7, color: C.faint, textAlign: "center", maxWidth: 620, margin: "26px auto 0" }}>
-            {t("Explorer is free and stays free — no card, no expiry. Paid plans are billed monthly and can be changed or cancelled from Settings at any time.")}
+            {t("Every plan starts with 7 days free. Card details are entered on Stripe's page, never here — cancel before day 8 and you pay nothing. After that, plans are billed monthly and can be changed or cancelled from Settings at any time.")}
           </p>
         </section>
 

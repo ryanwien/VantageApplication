@@ -399,14 +399,9 @@ const I18N = {
     "Alerts, on air": "Avisos, en directo",
     "An AI news anchor for the markets": "Un presentador de noticias con IA para los mercados",
     "Answers with receipts": "Respuestas con pruebas",
-    "Change or cancel any time": "Cámbialo o cancélalo cuando quieras",
-    "Choose {plan}": "Elegir {plan}",
     "Down 0.84% on light volume. Support held at 156.": "Baja un 0,84 % con poco volumen. El soporte aguantó en 156.",
     "Every answer cites the catalog it came from. When the data isn't there, Sterling says so instead of guessing.": "Cada respuesta cita el catálogo del que salió. Cuando el dato no está, Sterling lo dice en vez de inventarlo.",
-    "Explorer is free and stays free — no card, no expiry. Paid plans are billed monthly and can be changed or cancelled from Settings at any time.": "Explorer es gratis y sigue siéndolo: sin tarjeta y sin caducidad. Los planes de pago se facturan cada mes y puedes cambiarlos o cancelarlos desde Ajustes cuando quieras.",
-    "Free, with no end date": "Gratis, sin fecha de caducidad",
     "Main": "Principal",
-    "No card. The demo desk works the moment you land.": "Sin tarjeta. El escritorio de demostración funciona nada más entrar.",
     "One command bar": "Una sola barra de comandos",
     "POPULAR": "POPULAR",
     "Pick your desk": "Elige tu escritorio",
@@ -807,6 +802,14 @@ const I18N = {
     "{a} of {b} calls right.": "{a} de {b} aciertos.",
     "ROUND {n} · {clock}": "RONDA {n} · {clock}",
     "round {n} · {logic}": "ronda {n} · {logic}",
+    "Start 7-day free trial": "Empezar prueba gratis de 7 días",
+    "Start trial": "Empezar la prueba",
+    "7 days free": "7 días gratis",
+    "7 days free, then {price}/mo. Cancel before day 8 and you pay nothing.": "7 días gratis y luego {price}/mes. Cancela antes del día 8 y no pagas nada.",
+    "Every plan starts with 7 days free. Card details are entered on Stripe's page, never here — cancel before day 8 and you pay nothing. After that, plans are billed monthly and can be changed or cancelled from Settings at any time.": "Todos los planes empiezan con 7 días gratis. Los datos de la tarjeta se introducen en la página de Stripe, nunca aquí: cancela antes del día 8 y no pagas nada. Después, los planes se facturan cada mes y puedes cambiarlos o cancelarlos desde Ajustes cuando quieras.",
+    "{n} days left in your free trial": "Te quedan {n} días de prueba gratuita",
+    "Last day of your free trial": "Último día de tu prueba gratuita",
+    "Your free trial ended on {date}": "Tu prueba gratuita terminó el {date}",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -1062,14 +1065,9 @@ const I18N = {
     "Alerts, on air": "Alertes, à l'antenne",
     "An AI news anchor for the markets": "Un présentateur info IA pour les marchés",
     "Answers with receipts": "Des réponses sourcées",
-    "Change or cancel any time": "Modifiable ou résiliable à tout moment",
-    "Choose {plan}": "Choisir {plan}",
     "Down 0.84% on light volume. Support held at 156.": "En baisse de 0,84 % sur de faibles volumes. Le support a tenu à 156.",
     "Every answer cites the catalog it came from. When the data isn't there, Sterling says so instead of guessing.": "Chaque réponse cite le catalogue dont elle provient. Quand la donnée manque, Sterling le dit au lieu de deviner.",
-    "Explorer is free and stays free — no card, no expiry. Paid plans are billed monthly and can be changed or cancelled from Settings at any time.": "Explorer est gratuit et le reste — sans carte, sans expiration. Les forfaits payants sont facturés au mois et peuvent être modifiés ou résiliés depuis les Réglages à tout moment.",
-    "Free, with no end date": "Gratuit, sans date de fin",
     "Main": "Principal",
-    "No card. The demo desk works the moment you land.": "Sans carte. Le pupitre de démonstration fonctionne dès votre arrivée.",
     "One command bar": "Une seule barre de commande",
     "POPULAR": "POPULAIRE",
     "Pick your desk": "Choisissez votre pupitre",
@@ -1470,6 +1468,14 @@ const I18N = {
     "{a} of {b} calls right.": "{a} bons paris sur {b}.",
     "ROUND {n} · {clock}": "MANCHE {n} · {clock}",
     "round {n} · {logic}": "manche {n} · {logic}",
+    "Start 7-day free trial": "Commencer l'essai gratuit de 7 jours",
+    "Start trial": "Commencer l'essai",
+    "7 days free": "7 jours offerts",
+    "7 days free, then {price}/mo. Cancel before day 8 and you pay nothing.": "7 jours offerts, puis {price}/mois. Annulez avant le 8e jour et vous ne payez rien.",
+    "Every plan starts with 7 days free. Card details are entered on Stripe's page, never here — cancel before day 8 and you pay nothing. After that, plans are billed monthly and can be changed or cancelled from Settings at any time.": "Chaque forfait commence par 7 jours offerts. Les informations de carte sont saisies sur la page de Stripe, jamais ici — annulez avant le 8e jour et vous ne payez rien. Ensuite, les forfaits sont facturés au mois et peuvent être modifiés ou résiliés depuis les Réglages à tout moment.",
+    "{n} days left in your free trial": "Il vous reste {n} jours d'essai gratuit",
+    "Last day of your free trial": "Dernier jour de votre essai gratuit",
+    "Your free trial ended on {date}": "Votre essai gratuit s'est terminé le {date}",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -1725,14 +1731,9 @@ const I18N = {
     "Alerts, on air": "Alarme, auf Sendung",
     "An AI news anchor for the markets": "Ein KI-Nachrichtensprecher für die Märkte",
     "Answers with receipts": "Antworten mit Belegen",
-    "Change or cancel any time": "Jederzeit änderbar oder kündbar",
-    "Choose {plan}": "{plan} wählen",
     "Down 0.84% on light volume. Support held at 156.": "Minus 0,84 % bei dünnem Volumen. Die Unterstützung hielt bei 156.",
     "Every answer cites the catalog it came from. When the data isn't there, Sterling says so instead of guessing.": "Jede Antwort nennt den Katalog, aus dem sie stammt. Fehlen die Daten, sagt Sterling das, statt zu raten.",
-    "Explorer is free and stays free — no card, no expiry. Paid plans are billed monthly and can be changed or cancelled from Settings at any time.": "Explorer ist kostenlos und bleibt es — ohne Karte, ohne Ablauf. Bezahlte Tarife werden monatlich abgerechnet und lassen sich jederzeit in den Einstellungen ändern oder kündigen.",
-    "Free, with no end date": "Kostenlos, ohne Enddatum",
     "Main": "Haupt",
-    "No card. The demo desk works the moment you land.": "Keine Karte. Der Demo-Desk läuft, sobald du hier bist.",
     "One command bar": "Eine Befehlszeile",
     "POPULAR": "BELIEBT",
     "Pick your desk": "Wähle deinen Desk",
@@ -2133,6 +2134,14 @@ const I18N = {
     "{a} of {b} calls right.": "{a} von {b} richtig getippt.",
     "ROUND {n} · {clock}": "RUNDE {n} · {clock}",
     "round {n} · {logic}": "Runde {n} · {logic}",
+    "Start 7-day free trial": "7 Tage gratis testen",
+    "Start trial": "Test starten",
+    "7 days free": "7 Tage gratis",
+    "7 days free, then {price}/mo. Cancel before day 8 and you pay nothing.": "7 Tage gratis, danach {price}/Monat. Vor Tag 8 kündigen und du zahlst nichts.",
+    "Every plan starts with 7 days free. Card details are entered on Stripe's page, never here — cancel before day 8 and you pay nothing. After that, plans are billed monthly and can be changed or cancelled from Settings at any time.": "Jeder Tarif beginnt mit 7 Tagen gratis. Kartendaten werden auf der Seite von Stripe eingegeben, niemals hier — vor Tag 8 kündigen und du zahlst nichts. Danach werden Tarife monatlich abgerechnet und lassen sich jederzeit in den Einstellungen ändern oder kündigen.",
+    "{n} days left in your free trial": "Noch {n} Tage deiner kostenlosen Testphase",
+    "Last day of your free trial": "Letzter Tag deiner kostenlosen Testphase",
+    "Your free trial ended on {date}": "Deine kostenlose Testphase endete am {date}",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -2387,14 +2396,9 @@ const I18N = {
     "Alerts, on air": "Alertas, no ar",
     "An AI news anchor for the markets": "Um apresentador de notícias com IA para os mercados",
     "Answers with receipts": "Respostas com provas",
-    "Change or cancel any time": "Muda ou cancela quando quiseres",
-    "Choose {plan}": "Escolher {plan}",
     "Down 0.84% on light volume. Support held at 156.": "A descer 0,84 % com pouco volume. O suporte aguentou nos 156.",
     "Every answer cites the catalog it came from. When the data isn't there, Sterling says so instead of guessing.": "Cada resposta cita o catálogo de onde veio. Quando o dado não existe, o Sterling di-lo em vez de adivinhar.",
-    "Explorer is free and stays free — no card, no expiry. Paid plans are billed monthly and can be changed or cancelled from Settings at any time.": "O Explorer é grátis e continua grátis — sem cartão, sem prazo. Os planos pagos são faturados mensalmente e podem ser mudados ou cancelados nas Definições a qualquer momento.",
-    "Free, with no end date": "Grátis, sem data de fim",
     "Main": "Principal",
-    "No card. The demo desk works the moment you land.": "Sem cartão. A bancada de demonstração funciona mal entras.",
     "One command bar": "Uma única barra de comandos",
     "POPULAR": "POPULAR",
     "Pick your desk": "Escolhe a tua bancada",
@@ -2795,6 +2799,14 @@ const I18N = {
     "{a} of {b} calls right.": "{a} de {b} acertos.",
     "ROUND {n} · {clock}": "RONDA {n} · {clock}",
     "round {n} · {logic}": "ronda {n} · {logic}",
+    "Start 7-day free trial": "Começar avaliação grátis de 7 dias",
+    "Start trial": "Começar avaliação",
+    "7 days free": "7 dias grátis",
+    "7 days free, then {price}/mo. Cancel before day 8 and you pay nothing.": "7 dias grátis e depois {price}/mês. Cancela antes do dia 8 e não pagas nada.",
+    "Every plan starts with 7 days free. Card details are entered on Stripe's page, never here — cancel before day 8 and you pay nothing. After that, plans are billed monthly and can be changed or cancelled from Settings at any time.": "Todos os planos começam com 7 dias grátis. Os dados do cartão são introduzidos na página do Stripe, nunca aqui — cancela antes do dia 8 e não pagas nada. Depois disso, os planos são faturados mensalmente e podem ser mudados ou cancelados nas Definições a qualquer momento.",
+    "{n} days left in your free trial": "Faltam {n} dias da tua avaliação gratuita",
+    "Last day of your free trial": "Último dia da tua avaliação gratuita",
+    "Your free trial ended on {date}": "A tua avaliação gratuita terminou a {date}",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -3049,14 +3061,9 @@ const I18N = {
     "Alerts, on air": "Avvisi, in onda",
     "An AI news anchor for the markets": "Un conduttore di notizie IA per i mercati",
     "Answers with receipts": "Risposte con le fonti",
-    "Change or cancel any time": "Modificabile o annullabile in qualsiasi momento",
-    "Choose {plan}": "Scegli {plan}",
     "Down 0.84% on light volume. Support held at 156.": "In calo dello 0,84% con volumi sottili. Il supporto ha tenuto a 156.",
     "Every answer cites the catalog it came from. When the data isn't there, Sterling says so instead of guessing.": "Ogni risposta cita il catalogo da cui proviene. Quando il dato non c'è, Sterling lo dice invece di tirare a indovinare.",
-    "Explorer is free and stays free — no card, no expiry. Paid plans are billed monthly and can be changed or cancelled from Settings at any time.": "Explorer è gratuito e resta gratuito — nessuna carta, nessuna scadenza. I piani a pagamento sono fatturati ogni mese e si possono cambiare o annullare dalle Impostazioni quando vuoi.",
-    "Free, with no end date": "Gratis, senza scadenza",
     "Main": "Principale",
-    "No card. The demo desk works the moment you land.": "Nessuna carta. Il desk demo funziona appena arrivi.",
     "One command bar": "Una sola barra dei comandi",
     "POPULAR": "POPOLARE",
     "Pick your desk": "Scegli il tuo desk",
@@ -3457,6 +3464,14 @@ const I18N = {
     "{a} of {b} calls right.": "{a} scelte giuste su {b}.",
     "ROUND {n} · {clock}": "ROUND {n} · {clock}",
     "round {n} · {logic}": "round {n} · {logic}",
+    "Start 7-day free trial": "Inizia la prova gratuita di 7 giorni",
+    "Start trial": "Inizia la prova",
+    "7 days free": "7 giorni gratis",
+    "7 days free, then {price}/mo. Cancel before day 8 and you pay nothing.": "7 giorni gratis, poi {price}/mese. Disdici prima dell'ottavo giorno e non paghi nulla.",
+    "Every plan starts with 7 days free. Card details are entered on Stripe's page, never here — cancel before day 8 and you pay nothing. After that, plans are billed monthly and can be changed or cancelled from Settings at any time.": "Ogni piano inizia con 7 giorni gratis. I dati della carta si inseriscono sulla pagina di Stripe, mai qui — disdici prima dell'ottavo giorno e non paghi nulla. Dopodiché i piani sono fatturati ogni mese e si possono cambiare o annullare dalle Impostazioni quando vuoi.",
+    "{n} days left in your free trial": "Ti restano {n} giorni di prova gratuita",
+    "Last day of your free trial": "Ultimo giorno della tua prova gratuita",
+    "Your free trial ended on {date}": "La tua prova gratuita è finita il {date}",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -7865,27 +7880,62 @@ function AppCalendar({ extra = [] }) {
 // A price is a promise about what happens after the card is charged, so the
 // rule is narrow: if you cannot point at the planAllows() call that enforces a
 // perk, it does not go on a card.
+//
+// THERE IS NO FREE TIER. Explorer used to be $0/forever, and the whole product
+// was built around that: "Start free" on the front door, "Free, with no end
+// date" on the card, a footnote promising no card and no expiry. All three
+// plans are now paid and all three start with the same seven days.
+const TRIAL_DAYS = 7;
+
 const PLANS = [
-  { id: "free", label: "Explorer", price: "$0", cadence: "forever", tagline: "The whole desk, on simulated data.",
+  // `id: "free"` is a STORAGE KEY, not a claim. It is written into every
+  // tape-users record, every server users.json row, and the ?plan= parameter
+  // the social-sign-in bounce carries, so renaming it to "explorer" would
+  // strand every account already saved under it for the sake of a string
+  // nobody sees. Nothing below derives copy from it any more — the id decides
+  // which Stripe price to fetch and nothing else.
+  { id: "free", label: "Explorer", price: "$12", cadence: "/mo", tagline: "The whole desk, on simulated data.",
     perks: ["Demo market data — tape, charts & P&F", "Watchlist, portfolio & price alerts", "The anchor, in your browser's voice", "Games & calendar"] },
-  { id: "pro", label: "Pro Desk", price: "$12", cadence: "/mo", featured: true, tagline: "For the daily driver.",
+  { id: "pro", label: "Pro Desk", price: "$25", cadence: "/mo", featured: true, tagline: "For the daily driver.",
     perks: ["Everything in Explorer", "Live market data", "AI desk answers & written reports", "Real video results & streaming"] },
   { id: "desk", label: "Trading Floor", price: "$39", cadence: "/mo", tagline: "The full broadcast desk.",
     perks: ["Everything in Pro Desk", "Studio anchor voice (ElevenLabs)"] },
 ];
 const planLabel = (id) => (PLANS.find(p => p.id === id)?.label || "Explorer");
 
+// ---- the trial, measured rather than asserted ----
+// A countdown is a factual claim about a date, so it needs a date. Three
+// fields could be it and they are checked in order of how well each one means
+// "this account began": trialStart if a future billing layer ever writes one,
+// then createdAt (the server stamps it at signup), then agreedAt (Layer 1's
+// local record stamps that). An account predating all three — anything created
+// while Explorer was free — returns null, and every caller renders NOTHING
+// rather than guessing a start date and counting down from it.
+const trialStartOf = (account) => account?.trialStart ?? account?.createdAt ?? account?.agreedAt ?? null;
+function trialState(account, now = Date.now()) {
+  const start = trialStartOf(account);
+  if (!start) return null;
+  const ends = start + TRIAL_DAYS * 86400000;
+  const msLeft = ends - now;
+  // Ceil, so the last 23 hours read "1 day left" rather than "0 days left" on
+  // a trial that has not ended.
+  return { ends, msLeft, active: msLeft > 0, daysLeft: Math.max(0, Math.ceil(msLeft / 86400000)) };
+}
+
 // ---- feature gating (enforced via planAllows() inside MarketDashboard) ----
 // Every premium integration requires BOTH a minimum plan AND its own API key. The key is checked
-// at each feature; the PLAN is checked here. Explorer (free) unlocks none of these.
+// at each feature; the PLAN is checked here. Explorer unlocks none of these.
 //   Pro Desk    → AI models, live Finnhub data, YouTube, TMDB, Spotify
-//   Trading Floor → adds the ElevenLabs studio voice (browser TTS stays free for everyone)
+//   Trading Floor → adds the ElevenLabs studio voice (browser TTS is on every plan)
 const PLAN_RANK = { free: 0, pro: 1, desk: 2 };
 const FEATURE_PLAN = { ai: "pro", finnhub: "pro", youtube: "pro", tmdb: "pro", spotify: "pro", elevenlabs: "desk" };
 
 // Plain-language legal copy shown behind the "I agree" gate. Intentionally short and
 // honest for a prototype — it names the app's real behaviour (keys stay in the browser).
-const LEGAL_VERSION = "2026-07-14";
+// Bumped when the terms below change in substance. This revision is the one
+// that added the trial: there is no longer a free plan to fall back to, so the
+// day-8 charge is a term someone has to have been shown.
+const LEGAL_VERSION = "2026-08-25";
 
 // The dashboard panels, in the order Settings shows them. Both cases are
 // carried because they are two different jobs: the settings pill is a heading
@@ -7906,7 +7956,8 @@ const LEGAL_TERMS = [
   "Vantage is a market-information and entertainment dashboard. It is NOT financial advice, and nothing shown here is a recommendation to buy or sell any security.",
   "Market data may be delayed, simulated, or inaccurate. Do not rely on it for trading decisions.",
   "Any API keys you enter yourself are stored only in your own browser's localStorage and are sent only to those providers' APIs. When the desk runs on this server's own model key instead, your question is sent to our backend, which forwards it to the model provider.",
-  "This build may include a simulated subscription flow. Unless a real Stripe checkout is explicitly presented, no payment is taken and any paid plan is unlocked for demonstration only.",
+  "Every plan begins with a 7-day free trial and there is no free tier after it. Where a real Stripe checkout is presented, payment details are entered on Stripe's own page — never in this app — the first charge falls on day 8, and cancelling before then costs nothing.",
+  "This build may include a simulated subscription flow. Unless a real Stripe checkout is explicitly presented, no payment is taken, nothing is charged on day 8, and any plan is unlocked for demonstration only.",
   "The software is provided “as is”, without warranty of any kind. Use it at your own risk.",
 ];
 const LEGAL_PRIVACY = [
@@ -7935,6 +7986,20 @@ const loadUsers = () => { try { return JSON.parse(localStorage.getItem("tape-use
 const saveUsers = (u) => { try { localStorage.setItem("tape-users", JSON.stringify(u)); } catch { /* quota */ } };
 const loadAccount = () => { try { return JSON.parse(localStorage.getItem("tape-account") || "null"); } catch { return null; } };
 const saveAccount = (a) => { try { a ? localStorage.setItem("tape-account", JSON.stringify(a)) : localStorage.removeItem("tape-account"); } catch { /* quota */ } };
+
+// The signed-in account object, built the same way from both sources. It used
+// to be assembled inline at each of the four sign-in paths as
+// { email, name, plan, … }, which is why the account pane's "· v{version}"
+// suffix never rendered: it tested account.agreedAt, and no path had ever put
+// agreedAt on the object. The three dates travel together now — trial start,
+// terms accepted, and which version of them. Never the salt or the hash.
+const accountFrom = (src, extra) => ({
+  email: src.email, name: src.name, plan: src.plan,
+  createdAt: src.createdAt ?? null,
+  agreedAt: src.agreedAt ?? null,
+  legalVersion: src.legalVersion ?? null,
+  ...extra,
+});
 
 // Is the optional backend (server/index.js) reachable? Decides local-vs-backend authority
 // at runtime. Kept deliberately simple — one probe, short timeout, no cross-store syncing.
@@ -8075,7 +8140,16 @@ function AuthScreen({ onAuthed }) {
   const [touched, setTouched] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
-  const [plan, setPlan] = useState("free");
+  // Opens on the card the visitor clicked on the marketing page, if they clicked
+  // one. Validated against PLANS rather than trusted, because sessionStorage is
+  // as writable as any other browser store.
+  const [plan, setPlan] = useState(() => {
+    try {
+      const picked = window.sessionStorage.getItem("vantage-auth-plan");
+      if (PLANS.some(p => p.id === picked)) return picked;
+    } catch { /* private mode */ }
+    return "free";
+  });
   const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -8139,7 +8213,7 @@ function AuthScreen({ onAuthed }) {
         // Goes through the REST client, which normalises the error, stores the
         // session token and lower-cases the email in one place.
         const j = await api.auth.login({ email, password });
-        onAuthed({ email: j.email, name: j.name, plan: j.plan, token: j.token, backend: true });
+        onAuthed(accountFrom(j, { token: j.token, backend: true }));
         return;
       }
       const users = loadUsers();
@@ -8147,7 +8221,7 @@ function AuthScreen({ onAuthed }) {
       if (!rec) throw new Error("No account found for that email — try signing up.");
       const { hashHex } = await hashPassword(password, rec.saltHex);
       if (hashHex !== rec.hashHex) throw new Error("Incorrect password.");
-      onAuthed({ email: rec.email, name: rec.name, plan: rec.plan, backend: false });
+      onAuthed(accountFrom(rec, { backend: false }));
     } catch (e) { setErr(humanizeError(e)); } finally { setBusy(false); }
   }
 
@@ -8163,7 +8237,7 @@ function AuthScreen({ onAuthed }) {
       const em = email.trim().toLowerCase();
       if (useBackend) {
         const j = await api.auth.signup({ email: em, name: name.trim(), password, plan, legalVersion: LEGAL_VERSION });
-        onAuthed({ email: j.email, name: j.name, plan: j.plan, token: j.token, backend: true });
+        onAuthed(accountFrom(j, { token: j.token, backend: true }));
         return;
       }
       const users = loadUsers();
@@ -8171,7 +8245,7 @@ function AuthScreen({ onAuthed }) {
       const { saltHex, hashHex } = await hashPassword(password);
       const rec = { email: em, name: name.trim() || em.split("@")[0], saltHex, hashHex, plan, agreedAt: Date.now(), legalVersion: LEGAL_VERSION };
       users[em] = rec; saveUsers(users);
-      onAuthed({ email: rec.email, name: rec.name, plan: rec.plan, backend: false });
+      onAuthed(accountFrom(rec, { backend: false }));
     } catch (e) { setErr(humanizeError(e)); } finally { setBusy(false); }
   }
 
@@ -8339,7 +8413,7 @@ function AuthScreen({ onAuthed }) {
           {/* ---------- PLAN PICKER ---------- */}
           {step === "plan" && (<>
             <div style={{ ...TYPE.title, textAlign: "center" }}>Choose your plan</div>
-            <div style={{ ...TYPE.caption, color: C.faint, textAlign: "center", marginTop: -6 }}>You can change or cancel anytime. Paid plans are simulated in this build unless a real checkout appears.</div>
+            <div style={{ ...TYPE.caption, color: C.faint, textAlign: "center", marginTop: -6 }}>{`Every plan starts with ${TRIAL_DAYS} days free — change or cancel any time. Plans are simulated in this build unless a real checkout appears.`}</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 12, marginTop: 4 }}>
               {PLANS.map(p => {
                 const on = plan === p.id;
@@ -8354,6 +8428,9 @@ function AuthScreen({ onAuthed }) {
                       <span style={{ ...TYPE.caption, color: C.faint }}>{p.cadence}</span>
                     </div>
                     <div style={{ ...TYPE.caption, color: C.muted }}>{p.tagline}</div>
+                    {/* On every card, because the trial is on every plan. The
+                        card the eye lands on is the one that has to carry it. */}
+                    <div style={{ ...TYPE.caption, color: C.accentText }}>{`${TRIAL_DAYS} days free`}</div>
                     <div style={{ height: 1, background: C.edge, margin: "2px 0" }} />
                     {p.perks.map((k, i) => <div key={i} style={{ ...TYPE.caption, color: C.text, display: "flex", gap: 7, lineHeight: 1.5 }}><span style={{ color: C.up, flex: "0 0 auto" }}>✓</span>{k}</div>)}
                   </button>
@@ -10988,11 +11065,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     finally { setAgentBusy(false); }
   };
 
-  // ---- change plan. Free/downgrade is instant & local. A paid upgrade with Stripe
-  // configured opens Stripe Checkout in this tab; without Stripe it's a simulated unlock. ----
+  // ---- change plan. With Stripe configured this opens Stripe Checkout in this
+  // tab; without Stripe it's a simulated unlock. ----
+  // Every plan is a paid subscription now, so every switch is a checkout —
+  // including the one that used to be the free tier. This branched on
+  // `planId !== "free"` and sent Explorer down the local path, which was right
+  // when Explorer cost nothing and would now hand somebody a $12 plan for a
+  // click. ----
   const startPlanChange = async (planId) => {
-    const paid = planId !== "free";
-    if (paid && billingCfg?.enabled && account) {
+    if (billingCfg?.enabled && account) {
       setBillingBusy(planId);
       try {
         const r = await fetch("/api/billing/checkout", {
@@ -15612,14 +15693,38 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                           ? t("Paid upgrades open Stripe's secure checkout (test mode). Card details are entered on Stripe, never here.")
                           : t("No payment processor is connected, so paid plans are unlocked as a simulation — no card is asked for and nothing is charged.")}>
                         <div style={{ display: "grid", gap: 8 }}>
+                          {/* The trial, if this account carries a date to measure one
+                              from. Accounts created while Explorer was free carry
+                              none, and trialState returns null for them rather than
+                              counting down from a start it had to invent. */}
+                          {(() => {
+                            const trial = trialState(account);
+                            if (!trial) return null;
+                            const ends = new Date(trial.ends).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+                            return (
+                              <div style={{ display: "flex", alignItems: "center", gap: 10, border: `1px solid ${trial.active ? C.accent : C.edge}`, borderRadius: R.md, padding: "10px 14px", background: trial.active ? C.accentGlow : "transparent" }}>
+                                <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", flex: "0 0 auto", background: trial.active ? C.accent : C.faint }} />
+                                <span style={{ fontFamily: SANS, fontSize: 12.5, color: trial.active ? C.accentText : C.faint, lineHeight: 1.5 }}>
+                                  {!trial.active
+                                    ? t("Your free trial ended on {date}").replace("{date}", ends)
+                                    : trial.daysLeft === 1
+                                      ? t("Last day of your free trial")
+                                      : t("{n} days left in your free trial").replace("{n}", String(trial.daysLeft))}
+                                </span>
+                              </div>
+                            );
+                          })()}
                           {PLANS.map(p => {
                             const on = account.plan === p.id;
-                            const paid = p.id !== "free";
+                            // "Upgrade" was every row but the free one, which made
+                            // Trading Floor → Pro Desk an upgrade. It is a rank
+                            // question, and PLAN_RANK already answers it.
+                            const up = PLAN_RANK[p.id] > (PLAN_RANK[account.plan] ?? 0);
                             return (
                               <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 14, border: `1px solid ${on ? C.accent : C.edge}`, borderRadius: R.md, padding: "12px 14px", background: on ? C.accentGlow : "transparent" }}>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{ fontFamily: SANS, fontWeight: 600, fontSize: 14, color: C.text }}>
-                                    {p.label} <span style={{ fontFamily: MONO, fontSize: 12.5, color: C.faint, fontWeight: 400 }}>{p.price}{p.cadence === "forever" ? "" : p.cadence}</span>
+                                    {p.label} <span style={{ fontFamily: MONO, fontSize: 12.5, color: C.faint, fontWeight: 400 }}>{p.price}{p.cadence}</span>
                                   </div>
                                   <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.muted, lineHeight: 1.5, marginTop: 2 }}>{p.tagline}</div>
                                 </div>
@@ -15627,8 +15732,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                                   <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: C.accentText, whiteSpace: "nowrap" }}>{t("Current")}</span>
                                 ) : (
                                   <button onClick={() => startPlanChange(p.id)} disabled={!!billingBusy}
-                                    style={{ ...(paid ? button("primary", "sm") : button("ghost", "sm")), fontSize: 12.5, opacity: billingBusy ? 0.6 : 1 }}>
-                                    {billingBusy === p.id ? "…" : paid ? t("Upgrade") : t("Switch")}
+                                    style={{ ...(up ? button("primary", "sm") : button("ghost", "sm")), fontSize: 12.5, opacity: billingBusy ? 0.6 : 1 }}>
+                                    {billingBusy === p.id ? "…" : up ? t("Upgrade") : t("Switch")}
                                   </button>
                                 )}
                               </div>
@@ -15639,7 +15744,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, borderTop: `1px solid ${C.edge}`, paddingTop: 16 }}>
                         <span style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, lineHeight: 1.6 }}>
-                          {t("Terms & Privacy accepted")}{account.agreedAt ? " · v" + LEGAL_VERSION : ""}
+                          {/* The version the account ACCEPTED, not the one this
+                              build ships. It printed LEGAL_VERSION, so every
+                              account claimed to have agreed to the current
+                              terms the moment the constant moved — and since
+                              onAuthed never carried agreedAt, the suffix never
+                              rendered at all and the bug stayed invisible. */}
+                          {t("Terms & Privacy accepted")}{account.legalVersion ? " · v" + account.legalVersion : ""}
                         </span>
                         <button onClick={() => { setShowSettings(false); onSignOut?.(); }}
                           style={{ ...button("danger", "sm"), fontSize: 12.5 }}>{t("Sign out")}</button>
@@ -15685,9 +15796,14 @@ export default function App() {
   useEffect(() => {
     const u = new URL(window.location.href);
     if (u.searchParams.get("auth") === "1" && u.searchParams.get("token")) {
-      const a = { email: u.searchParams.get("email"), name: u.searchParams.get("name") || u.searchParams.get("email"), plan: u.searchParams.get("plan") || "free", token: u.searchParams.get("token"), backend: true };
+      const a = accountFrom({
+        email: u.searchParams.get("email"),
+        name: u.searchParams.get("name") || u.searchParams.get("email"),
+        plan: u.searchParams.get("plan") || "free",
+        createdAt: Number(u.searchParams.get("created")) || null,
+      }, { token: u.searchParams.get("token"), backend: true });
       saveAccount(a); setAccount(a);
-      ["auth", "token", "email", "name", "plan"].forEach(k => u.searchParams.delete(k));
+      ["auth", "token", "email", "name", "plan", "created"].forEach(k => u.searchParams.delete(k));
       window.history.replaceState({}, "", u.toString());
     }
   }, []);
@@ -15701,9 +15817,16 @@ export default function App() {
       return !!h && h !== "home";
     } catch { return false; }
   });
-  const goAuth = (intent) => {
-    // The gate reads this to open on the right tab. Harmless if it does not.
-    try { window.sessionStorage.setItem("vantage-auth-intent", intent); } catch { /* private mode */ }
+  const goAuth = (intent, planId) => {
+    // The gate reads these to open on the right tab and, when a specific plan
+    // card was the thing clicked, on the right plan. Harmless if it does not.
+    // The plan is cleared when absent so a later plain "Start trial" from the
+    // hero does not silently reopen on whatever was picked last time.
+    try {
+      window.sessionStorage.setItem("vantage-auth-intent", intent);
+      if (planId) window.sessionStorage.setItem("vantage-auth-plan", planId);
+      else window.sessionStorage.removeItem("vantage-auth-plan");
+    } catch { /* private mode */ }
     setShowAuth(true);
   };
 
@@ -15735,7 +15858,7 @@ export default function App() {
         ? <MarketDashboard account={account} onSignOut={signOut} onChangePlan={changePlan} />
         : showAuth
           ? <AuthScreen onAuthed={signIn} />
-          : <HomePage plans={PLANS} t={t} onStart={() => goAuth("up")} onSignIn={() => goAuth("in")} />}
+          : <HomePage plans={PLANS} t={t} onStart={(planId) => goAuth("up", planId)} onSignIn={() => goAuth("in")} />}
     </I18nContext.Provider>
   );
 }

@@ -11,7 +11,8 @@
 //   ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET          — real Zoom meetings (optional)
 //   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET       — real Google Meet + calendar (optional)
 //   STRIPE_SECRET_KEY                            — real paid upgrades (optional; else simulated)
-//   STRIPE_PRICE_PRO, STRIPE_PRICE_DESK          — Stripe Price IDs for the two paid plans
+//   STRIPE_PRICE_EXPLORER, STRIPE_PRICE_PRO,
+//   STRIPE_PRICE_DESK                            — Stripe Price IDs; every plan is paid
 //   PORT            (default 8787)
 //   PUBLIC_ORIGIN   (default http://localhost:8787 — must match the OAuth redirect URIs)
 //   APP_ORIGIN      (default http://127.0.0.1:5173 — where the dashboard runs, for post-login redirect)
@@ -88,11 +89,21 @@ const CFG = {
 };
 // Stripe (Layer 3). No secret key ⇒ billing.enabled is false and the front-end
 // falls back to a clearly-labelled simulated unlock. Prices map a plan id → Stripe Price.
+//
+// THREE prices, not two. Explorer used to be $0/forever and needed no Stripe
+// price at all; it is $12/mo now, so a checkout for it has to be able to find
+// one. The key stays "free" because that is the id every stored account is
+// already written under (see PLANS in React.jsx); the env var is named for the
+// plan a human would recognise.
 const STRIPE = {
   secret: process.env.STRIPE_SECRET_KEY,
   webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-  prices: { pro: process.env.STRIPE_PRICE_PRO, desk: process.env.STRIPE_PRICE_DESK },
+  prices: { free: process.env.STRIPE_PRICE_EXPLORER, pro: process.env.STRIPE_PRICE_PRO, desk: process.env.STRIPE_PRICE_DESK },
 };
+// Every plan starts with the same seven days. Kept in step with TRIAL_DAYS in
+// React.jsx by hand — the front end draws the countdown, Stripe does the
+// charging, and the two have to name the same number of days.
+const TRIAL_DAYS = 7;
 
 const VERTEX = {
   project: process.env.GOOGLE_CLOUD_PROJECT,
@@ -236,7 +247,11 @@ const tokenFromReq = (req, url) => {
 };
 const emailFromReq = (req, url) => SESSIONS[tokenFromReq(req, url)]?.email || null;
 // the safe public view of an account (never the salt/hash)
-const accountView = (email) => { const u = USERS[email]; return u ? { email: u.email, name: u.name, plan: u.plan } : null; };
+// createdAt is here because the front end draws the trial countdown from it —
+// a countdown needs a start date, and this is the one the server already
+// stamps. legalVersion so the account pane can name the terms this user
+// actually accepted rather than the ones the build currently ships.
+const accountView = (email) => { const u = USERS[email]; return u ? { email: u.email, name: u.name, plan: u.plan, createdAt: u.createdAt ?? null, agreedAt: u.agreedAt ?? null, legalVersion: u.legalVersion ?? null } : null; };
 
 // ---- social sign-in (OpenID Connect): exchange the code, then fetch the profile ----
 // Returns { email, name }. The caller creates-or-logs-in the user and mints a session.
@@ -367,6 +382,11 @@ async function stripeCheckout(email, plan) {
     client_reference_id: email || "",
     "metadata[plan]": plan,
     "metadata[email]": email || "",
+    // The trial, made real. The front end counts the days down and the front
+    // door promises no charge until day 8; this is the parameter that keeps
+    // that promise. Without it Stripe bills immediately and the countdown
+    // becomes decoration on top of a charge that already happened.
+    "subscription_data[trial_period_days]": String(TRIAL_DAYS),
     "subscription_data[metadata][plan]": plan,
     "subscription_data[metadata][email]": email || "",
     ...(email ? { customer_email: email } : {}),
@@ -458,6 +478,14 @@ const server = http.createServer(async (req, res) => {
       if (email && USERS[email]) {
         if (event.type === "checkout.session.completed" || event.type === "customer.subscription.updated") {
           const plan = planFromStripeObject(obj); if (plan) USERS[email].plan = plan;
+        // A cancelled subscription drops back to the entry id. That id is no
+        // longer a free tier, so this looks like it hands out $12 of Explorer —
+        // but Explorer's perks (demo data, watchlist, portfolio, games, the
+        // browser's own voice) are all client-side and the server has never
+        // enforced one of them. What this line actually grants is the anonymous
+        // AI allowance, which planQuota gives an unknown plan anyway. Locking a
+        // lapsed account out of the demo desk is a product decision and would
+        // have to be enforced here, not in the browser.
         } else if (event.type === "customer.subscription.deleted") USERS[email].plan = "free";
         writeJSON(USERS_FILE, USERS);
       }
@@ -471,7 +499,13 @@ const server = http.createServer(async (req, res) => {
       if (String(password || "").length < 6) return send(res, 400, { error: "Password must be at least 6 characters." });
       if (USERS[em]) return send(res, 409, { error: "An account with that email already exists — log in instead." });
       const { salt, hash } = hashPw(password);
-      USERS[em] = { email: em, name: String(name || "").trim() || em.split("@")[0], plan: plan || "free", salt, hash, agreedAt: Date.now(), legalVersion: legalVersion || null, createdAt: Date.now() };
+      // With Stripe live, the plan a signup asks for is a REQUEST, not a grant.
+      // /api/auth/plan already refuses client-set plans for exactly this reason,
+      // and this route was the way around it: POST a signup with plan:"desk" and
+      // the $39 tier was yours, no checkout involved. New accounts start on the
+      // entry plan and a verified webhook moves them. Without Stripe the whole
+      // flow is a labelled simulation, so the picked plan is honoured.
+      USERS[em] = { email: em, name: String(name || "").trim() || em.split("@")[0], plan: STRIPE.secret ? "free" : (plan || "free"), salt, hash, agreedAt: Date.now(), legalVersion: legalVersion || null, createdAt: Date.now() };
       writeJSON(USERS_FILE, USERS);
       return send(res, 200, { ...accountView(em), token: newSession(em) });
     }
@@ -1024,7 +1058,11 @@ const server = http.createServer(async (req, res) => {
       const email = emailFromReq(req, url);
       if (!email || !USERS[email]) return send(res, 401, { error: "Not signed in." });
       const { plan } = await readBody(req);
-      if (STRIPE.secret && plan && plan !== "free") return send(res, 403, { error: "Paid plans are updated only by verified Stripe webhooks." });
+      // Every plan is paid now, so the "except the free one" exemption is gone:
+      // with Stripe live no client may set any plan, and the webhook is the only
+      // writer. The front end already re-reads /api/auth/me after a checkout
+      // returns, so a 403 here costs it nothing.
+      if (STRIPE.secret) return send(res, 403, { error: "Plans are updated only by verified Stripe webhooks." });
       USERS[email].plan = plan || "free"; writeJSON(USERS_FILE, USERS);
       return send(res, 200, { ok: true, plan: USERS[email].plan });
     }
@@ -1063,13 +1101,16 @@ const server = http.createServer(async (req, res) => {
       }
       const token = newSession(email);
       // token in the redirect URL: the app reads it once and cleans the URL (prototype-acceptable)
-      const q = new URLSearchParams({ auth: "1", token, email: rec.email, name: rec.name || "", plan: rec.plan || "free" });
+      // `created` rides along so a social sign-in gets the same trial countdown
+      // as an email one — without it the app has no start date for this account
+      // and, correctly, draws nothing.
+      const q = new URLSearchParams({ auth: "1", token, email: rec.email, name: rec.name || "", plan: rec.plan || "free", created: String(rec.createdAt || "") });
       return send(res, 302, "", { Location: `${APP_ORIGIN}/?${q}` });
     }
 
     // ---- BILLING (Layer 3) ----
     if (p === "/api/billing/config" && req.method === "GET") {
-      return send(res, 200, { enabled: !!STRIPE.secret, plans: { pro: !!STRIPE.prices.pro, desk: !!STRIPE.prices.desk } });
+      return send(res, 200, { enabled: !!STRIPE.secret, trialDays: TRIAL_DAYS, plans: { free: !!STRIPE.prices.free, pro: !!STRIPE.prices.pro, desk: !!STRIPE.prices.desk } });
     }
     if (p === "/api/billing/checkout" && req.method === "POST") {
       if (!STRIPE.secret) return send(res, 400, { error: "Billing is not configured on this server." });
