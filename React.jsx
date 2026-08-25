@@ -9,7 +9,7 @@ import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage,
 import { buildPnF, pnfTargets, visibleWindow, INTRADAY_BOX_PCT } from "./src/pnf/pnf.js";
 import { detectPattern } from "./src/pnf/patterns.js";
 import { CHESS_GLYPH, chessInit, legalMoves, chessApply, gameStatus, inCheck, chessAIMove } from "./src/chess/chess.js";
-import { C, GRAD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, alpha, button, panel, panelHead, panelNote, field as fieldRecipe, chip, segmentTrack, segmentItem, pill } from "./src/ui/theme.js";
+import { C, GRAD, FIELD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, alpha, button, panel, panelHead, panelNote, field as fieldRecipe, chip, segmentTrack, segmentItem, pill } from "./src/ui/theme.js";
 import { passwordCheck, PW_MIN } from "./src/auth/password.js";
 import Sparkline from "./src/ui/Sparkline.jsx";
 import RichText from "./src/ui/RichText.jsx";
@@ -435,8 +435,6 @@ const I18N = {
     "Terms": "Términos",
     "Privacy": "Privacidad",
     // --- settings: the plain-language sidebar ---
-    "Aggressive": "Agresiva",
-    "Algorithms crushed": "Algoritmos aplastados",
     "Army logic": "Lógica del ejército",
     "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "La lógica del ejército cambia lo que hacen todos tus bots, en directo. El enemigo adapta la suya, así que adapta la tuya.",
     "Balanced": "Equilibrada",
@@ -446,14 +444,11 @@ const I18N = {
     "Bust at {n} — you lose": "Te pasas con {n}: pierdes",
     "Buy back in": "Recargar fichas",
     "Capital": "Capital",
-    "Capital regenerates on its own — spend it to deploy bots that march and fight without you. Destroy the enemy server to win.": "El capital se regenera solo: gástalo para desplegar bots que marchan y combaten sin ti. Destruye el servidor enemigo para ganar.",
     "Day-Trader": "Day-trader",
     "Deal": "Repartir",
     "Dealer": "Crupier",
     "Dealer busts at {n} — you win": "El crupier se pasa con {n}: ganas",
-    "Defensive": "Defensiva",
     "Deploy": "Desplegar",
-    "Enemy server": "Servidor enemigo",
     "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Acércate más a 21 que el crupier sin pasarte. Las figuras valen 10; el as vale 11 salvo que te haga pasarte, y entonces vale 1.",
     "Hand settled": "Mano resuelta",
     "Hit": "Pedir",
@@ -466,8 +461,6 @@ const I18N = {
     "Raise the bet": "Subir la apuesta",
     "Rematch": "Revancha",
     "Restart": "Reiniciar",
-    "Sniper": "Francotirador",
-    "Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers.": "Los francotiradores funden a los fondos indexados, los fondos indexados absorben a los day-traders y los day-traders enjambran a los francotiradores.",
     "Stand": "Plantarse",
     "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "El crupier pide hasta 17 y se planta. Un 21 con dos cartas es blackjack y paga 3 a 2.",
     "The enemy overran your server.": "El enemigo arrasó tu servidor.",
@@ -475,21 +468,17 @@ const I18N = {
     "You lose, {a} against {b}": "Pierdes, {a} contra {b}",
     "You win, {a} against {b}": "Ganas, {a} contra {b}",
     "Your bots took the enemy server.": "Tus bots tomaron el servidor enemigo.",
-    "Your server": "Tu servidor",
     "engage nearest, then advance": "ataca al más cercano y luego avanza",
     "fast, cheap, fragile — swarm and rush": "rápido, barato y frágil: enjambre y avalancha",
     "hand {n} · dealer stands on 17": "mano {n} · el crupier se planta en 17",
     "hold your line, counter-punch": "mantén la línea y contraataca",
     "long range, high burst — melts tanks, dies fast": "largo alcance y mucho daño: funde tanques, muere rápido",
     "push the enemy server": "avanza hacia el servidor enemigo",
-    "spend it to deploy": "gástalo para desplegar",
     "tanky, slow — soaks damage, holds the line": "resistente y lento: absorbe daño y aguanta la línea",
-    "{n} bots": "{n} bots",
     // --- settings: the plain-language sidebar ---
     "21 against the dealer, with a chip bankroll.": "21 contra el crupier, con fondos en fichas.",
     "A trading-floor RTS: script bot armies in real time.": "Un RTS de parqué: programa ejércitos de bots en tiempo real.",
     "Algorithm Wars": "Guerra de algoritmos",
-    "Battlefield": "Campo de batalla",
     "Bull or Bear": "Alcista o bajista",
     "Bulls vs Bears Chess": "Ajedrez: toros contra osos",
     "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Los gráficos, las noticias, los juegos, la música y el calendario funcionan, pero la mesa no puede responder preguntas hasta que añadas una.",
@@ -537,6 +526,68 @@ const I18N = {
     "The live feed rejected this server's key.": "El feed en directo rechazó la clave de este servidor.",
     "The live feed turned down that request.": "El feed en directo rechazó esa petición.",
     "{sym} isn't a symbol the feed knows, so I've taken it off the watchlist.": "{sym} no es un símbolo que el feed reconozca, así que lo he quitado de la lista.",
+    // --- settings: the plain-language sidebar ---
+    "A Day-Trader": "Un Day-Trader",
+    "A Hedge-Fund": "Un Hedge-Fund",
+    "An Index-Fund": "Un Index-Fund",
+    "a Day-Trader": "un Day-Trader",
+    "a Hedge-Fund": "un Hedge-Fund",
+    "an Index-Fund": "un Index-Fund",
+    "ARMY LOGIC": "LÓGICA DEL EJÉRCITO",
+    "Aggro": "Agresivo",
+    "Algorithm crashed": "El algoritmo se cayó",
+    "BATTLE LOG": "REGISTRO DE BATALLA",
+    "BOTS SENT": "BOTS ENVIADOS",
+    "BURST": "RÁFAGA",
+    "CALM": "CALMA",
+    "CAPITAL": "CAPITAL",
+    "CAPITAL LEFT": "CAPITAL RESTANTE",
+    "Capital regenerates on its own. Pick a bot, then click a lane to send it in — it marches and fights without you. Destroy the enemy server to win.": "El capital se regenera solo. Elige un bot y haz clic en un carril para enviarlo: avanza y combate sin ti. Destruye el servidor enemigo para ganar.",
+    "Change logic": "Cambiar la lógica",
+    "DAMAGE DEALT": "DAÑO INFLIGIDO",
+    "DEPLOY": "DESPLEGAR",
+    "DMG": "DÑO",
+    "DPS {n}": "DPS {n}",
+    "Defend": "Defensivo",
+    "Deploy {bot} to lane {lane}": "Desplegar {bot} en el carril {lane}",
+    "ENEMY": "ENEMIGO",
+    "ENEMY SERVER": "SERVIDOR ENEMIGO",
+    "Every lane held. That is what this is supposed to look like.": "Aguantaste los tres carriles. Así es como debería verse esto.",
+    "HIGH": "ALTA",
+    "HP": "PV",
+    "Hedge-Fund": "Hedge-Fund",
+    "Hedge-Funds melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Hedge-Funds.": "Los Hedge-Funds derriten a los Index-Funds, los Index-Funds aguantan a los Day-Traders y los Day-Traders enjambran a los Hedge-Funds.",
+    "INTEGRITY {n}%": "INTEGRIDAD {n}%",
+    "LANE {lane}": "CARRIL {lane}",
+    "Lane {lane} pressure": "Presión en el carril {lane}",
+    "Lane {lane} was undefended for {n} seconds. Try one Index-Fund early.": "El carril {lane} quedó sin defensa {n} segundos. Prueba un Index-Fund pronto.",
+    "Lane {lane} — pick a bot first": "Carril {lane}: elige antes un bot",
+    "MIDLINE": "CENTRO",
+    "Nothing incoming. Push a lane while it is quiet.": "No viene nada. Empuja un carril mientras hay calma.",
+    "Nothing was left open — they simply out-traded you. Open with a Hedge-Fund.": "No dejaste nada abierto: simplemente te ganaron la partida. Abre con un Hedge-Fund.",
+    "Now click a lane to send the {bot} in.": "Ahora haz clic en un carril para enviar al {bot}.",
+    "OVER": "FIN",
+    "Pick a bot below, then click a lane to deploy": "Elige un bot abajo y haz clic en un carril para desplegarlo",
+    "ROUND 1 · {clock}": "RONDA 1 · {clock}",
+    "SPD": "VEL",
+    "SWARM": "ENJAMBRE",
+    "TANK": "TANQUE",
+    "THREAT": "AMENAZA",
+    "WATCH": "VIGILAR",
+    "Won with lane {lane} open for {n} seconds — they never punished it.": "Ganaste con el carril {lane} abierto {n} segundos: nunca lo castigaron.",
+    "YOU": "TÚ",
+    "YOUR SERVER": "TU SERVIDOR",
+    "enemy deployed": "el enemigo desplegó",
+    "enemy server down": "servidor enemigo caído",
+    "logic set": "lógica fijada",
+    "round 1 · {logic}": "ronda 1 · {logic}",
+    "round started": "ronda iniciada",
+    "you deployed": "desplegaste",
+    "your server down": "tu servidor cayó",
+    "{enemy} is closing on your server. Deploy {counter} to answer it.": "{enemy} se acerca a tu servidor. Despliega {counter} para responder.",
+    "{n} BOT": "{n} BOT",
+    "{n} BOTS": "{n} BOTS",
+    "{n} CAPITAL AVAILABLE": "{n} DE CAPITAL DISPONIBLE",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -861,8 +912,6 @@ const I18N = {
     "Terms": "Conditions",
     "Privacy": "Confidentialité",
     // --- settings: the plain-language sidebar ---
-    "Aggressive": "Agressive",
-    "Algorithms crushed": "Algorithmes écrasés",
     "Army logic": "Logique de l'armée",
     "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "La logique de l'armée change ce que font tous vos bots, en direct. L'ennemi adapte la sienne — adaptez la vôtre.",
     "Balanced": "Équilibrée",
@@ -872,14 +921,11 @@ const I18N = {
     "Bust at {n} — you lose": "Vous sautez à {n} — perdu",
     "Buy back in": "Recharger les jetons",
     "Capital": "Capital",
-    "Capital regenerates on its own — spend it to deploy bots that march and fight without you. Destroy the enemy server to win.": "Le capital se régénère tout seul — dépensez-le pour déployer des bots qui avancent et combattent sans vous. Détruisez le serveur ennemi pour gagner.",
     "Day-Trader": "Day-trader",
     "Deal": "Distribuer",
     "Dealer": "Croupier",
     "Dealer busts at {n} — you win": "Le croupier saute à {n} — gagné",
-    "Defensive": "Défensive",
     "Deploy": "Déployer",
-    "Enemy server": "Serveur ennemi",
     "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Approchez-vous de 21 plus que le croupier sans dépasser. Les figures valent 10 ; l'as vaut 11, sauf s'il vous fait sauter, auquel cas il vaut 1.",
     "Hand settled": "Main réglée",
     "Hit": "Tirer",
@@ -892,8 +938,6 @@ const I18N = {
     "Raise the bet": "Augmenter la mise",
     "Rematch": "Revanche",
     "Restart": "Recommencer",
-    "Sniper": "Tireur d'élite",
-    "Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers.": "Les tireurs d'élite fondent les fonds indiciels, les fonds indiciels encaissent les day-traders, les day-traders submergent les tireurs d'élite.",
     "Stand": "Rester",
     "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "Le croupier tire jusqu'à 17 puis reste. Un 21 en deux cartes est un blackjack et paie 3 contre 2.",
     "The enemy overran your server.": "L'ennemi a submergé votre serveur.",
@@ -901,21 +945,17 @@ const I18N = {
     "You lose, {a} against {b}": "Perdu, {a} contre {b}",
     "You win, {a} against {b}": "Gagné, {a} contre {b}",
     "Your bots took the enemy server.": "Vos bots ont pris le serveur ennemi.",
-    "Your server": "Votre serveur",
     "engage nearest, then advance": "engager le plus proche, puis avancer",
     "fast, cheap, fragile — swarm and rush": "rapide, bon marché, fragile — en essaim, à la charge",
     "hand {n} · dealer stands on 17": "main {n} · le croupier reste à 17",
     "hold your line, counter-punch": "tenir la ligne, contre-attaquer",
     "long range, high burst — melts tanks, dies fast": "longue portée, gros dégâts — fond les tanks, meurt vite",
     "push the enemy server": "foncer sur le serveur ennemi",
-    "spend it to deploy": "à dépenser pour déployer",
     "tanky, slow — soaks damage, holds the line": "résistant, lent — encaisse et tient la ligne",
-    "{n} bots": "{n} bots",
     // --- settings: the plain-language sidebar ---
     "21 against the dealer, with a chip bankroll.": "21 contre le croupier, avec une cagnotte de jetons.",
     "A trading-floor RTS: script bot armies in real time.": "Un RTS de salle des marchés : programmez des armées de bots en temps réel.",
     "Algorithm Wars": "Guerre des algorithmes",
-    "Battlefield": "Champ de bataille",
     "Bull or Bear": "Haussier ou baissier",
     "Bulls vs Bears Chess": "Échecs : taureaux contre ours",
     "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Les graphiques, les actualités, les jeux, le streaming et le calendrier fonctionnent — mais le desk ne peut pas répondre tant que vous n'en ajoutez pas une.",
@@ -963,6 +1003,68 @@ const I18N = {
     "The live feed rejected this server's key.": "Le flux en direct a refusé la clé de ce serveur.",
     "The live feed turned down that request.": "Le flux en direct a refusé cette requête.",
     "{sym} isn't a symbol the feed knows, so I've taken it off the watchlist.": "{sym} n'est pas un symbole connu du flux, je l'ai donc retiré de la liste.",
+    // --- settings: the plain-language sidebar ---
+    "A Day-Trader": "Un Day-Trader",
+    "A Hedge-Fund": "Un Hedge-Fund",
+    "An Index-Fund": "Un Index-Fund",
+    "a Day-Trader": "un Day-Trader",
+    "a Hedge-Fund": "un Hedge-Fund",
+    "an Index-Fund": "un Index-Fund",
+    "ARMY LOGIC": "LOGIQUE D'ARMÉE",
+    "Aggro": "Agressif",
+    "Algorithm crashed": "L'algorithme a planté",
+    "BATTLE LOG": "JOURNAL DE BATAILLE",
+    "BOTS SENT": "BOTS ENVOYÉS",
+    "BURST": "SALVE",
+    "CALM": "CALME",
+    "CAPITAL": "CAPITAL",
+    "CAPITAL LEFT": "CAPITAL RESTANT",
+    "Capital regenerates on its own. Pick a bot, then click a lane to send it in — it marches and fights without you. Destroy the enemy server to win.": "Le capital se régénère tout seul. Choisissez un bot, puis cliquez sur un couloir pour l'envoyer — il avance et se bat sans vous. Détruisez le serveur ennemi pour gagner.",
+    "Change logic": "Changer de logique",
+    "DAMAGE DEALT": "DÉGÂTS INFLIGÉS",
+    "DEPLOY": "DÉPLOYER",
+    "DMG": "DGT",
+    "DPS {n}": "DPS {n}",
+    "Defend": "Défensif",
+    "Deploy {bot} to lane {lane}": "Déployer {bot} dans le couloir {lane}",
+    "ENEMY": "ENNEMI",
+    "ENEMY SERVER": "SERVEUR ENNEMI",
+    "Every lane held. That is what this is supposed to look like.": "Les trois couloirs ont tenu. Voilà à quoi ça doit ressembler.",
+    "HIGH": "ÉLEVÉE",
+    "HP": "PV",
+    "Hedge-Fund": "Hedge-Fund",
+    "Hedge-Funds melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Hedge-Funds.": "Les Hedge-Funds fondent les Index-Funds, les Index-Funds encaissent les Day-Traders, les Day-Traders submergent les Hedge-Funds.",
+    "INTEGRITY {n}%": "INTÉGRITÉ {n}%",
+    "LANE {lane}": "COULOIR {lane}",
+    "Lane {lane} pressure": "Pression sur le couloir {lane}",
+    "Lane {lane} was undefended for {n} seconds. Try one Index-Fund early.": "Le couloir {lane} est resté sans défense {n} secondes. Essayez un Index-Fund tôt.",
+    "Lane {lane} — pick a bot first": "Couloir {lane} — choisissez d'abord un bot",
+    "MIDLINE": "MILIEU",
+    "Nothing incoming. Push a lane while it is quiet.": "Rien n'arrive. Poussez un couloir pendant que c'est calme.",
+    "Nothing was left open — they simply out-traded you. Open with a Hedge-Fund.": "Rien n'était laissé ouvert — ils vous ont simplement mieux joué. Ouvrez avec un Hedge-Fund.",
+    "Now click a lane to send the {bot} in.": "Cliquez maintenant sur un couloir pour envoyer le {bot}.",
+    "OVER": "FINI",
+    "Pick a bot below, then click a lane to deploy": "Choisissez un bot en bas, puis cliquez sur un couloir pour le déployer",
+    "ROUND 1 · {clock}": "MANCHE 1 · {clock}",
+    "SPD": "VIT",
+    "SWARM": "ESSAIM",
+    "TANK": "TANK",
+    "THREAT": "MENACE",
+    "WATCH": "SURVEILLER",
+    "Won with lane {lane} open for {n} seconds — they never punished it.": "Gagné avec le couloir {lane} ouvert {n} secondes — ils ne l'ont jamais puni.",
+    "YOU": "VOUS",
+    "YOUR SERVER": "VOTRE SERVEUR",
+    "enemy deployed": "l'ennemi a déployé",
+    "enemy server down": "serveur ennemi à terre",
+    "logic set": "logique réglée",
+    "round 1 · {logic}": "manche 1 · {logic}",
+    "round started": "manche lancée",
+    "you deployed": "vous avez déployé",
+    "your server down": "votre serveur est à terre",
+    "{enemy} is closing on your server. Deploy {counter} to answer it.": "{enemy} approche de votre serveur. Déployez {counter} pour répondre.",
+    "{n} BOT": "{n} BOT",
+    "{n} BOTS": "{n} BOTS",
+    "{n} CAPITAL AVAILABLE": "{n} DE CAPITAL DISPONIBLE",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -1287,8 +1389,6 @@ const I18N = {
     "Terms": "Bedingungen",
     "Privacy": "Datenschutz",
     // --- settings: the plain-language sidebar ---
-    "Aggressive": "Aggressiv",
-    "Algorithms crushed": "Algorithmen zerschlagen",
     "Army logic": "Armee-Logik",
     "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "Die Armee-Logik ändert live, was jeder deiner Bots tut. Der Gegner passt seine an — also passe deine an.",
     "Balanced": "Ausgewogen",
@@ -1298,14 +1398,11 @@ const I18N = {
     "Bust at {n} — you lose": "Überkauft mit {n} — verloren",
     "Buy back in": "Chips nachkaufen",
     "Capital": "Kapital",
-    "Capital regenerates on its own — spend it to deploy bots that march and fight without you. Destroy the enemy server to win.": "Kapital wächst von selbst nach — gib es aus, um Bots auszuspielen, die ohne dich marschieren und kämpfen. Zerstöre den gegnerischen Server, um zu gewinnen.",
     "Day-Trader": "Daytrader",
     "Deal": "Geben",
     "Dealer": "Geber",
     "Dealer busts at {n} — you win": "Geber überkauft mit {n} — gewonnen",
-    "Defensive": "Defensiv",
     "Deploy": "Ausspielen",
-    "Enemy server": "Gegnerischer Server",
     "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Komm näher an 21 als der Geber, ohne zu überkaufen. Bildkarten zählen 10; ein Ass zählt 11, außer das würde dich überkaufen — dann 1.",
     "Hand settled": "Hand abgerechnet",
     "Hit": "Karte",
@@ -1318,8 +1415,6 @@ const I18N = {
     "Raise the bet": "Einsatz erhöhen",
     "Rematch": "Revanche",
     "Restart": "Neu starten",
-    "Sniper": "Scharfschütze",
-    "Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers.": "Scharfschützen schmelzen Indexfonds, Indexfonds stecken Daytrader weg, Daytrader überrennen Scharfschützen.",
     "Stand": "Halten",
     "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "Der Geber zieht bis 17 und hält dann. Ein 21 aus zwei Karten ist ein Blackjack und zahlt 3 zu 2.",
     "The enemy overran your server.": "Der Gegner hat deinen Server überrannt.",
@@ -1327,21 +1422,17 @@ const I18N = {
     "You lose, {a} against {b}": "Verloren, {a} gegen {b}",
     "You win, {a} against {b}": "Gewonnen, {a} gegen {b}",
     "Your bots took the enemy server.": "Deine Bots haben den gegnerischen Server genommen.",
-    "Your server": "Dein Server",
     "engage nearest, then advance": "nächsten Gegner binden, dann vorrücken",
     "fast, cheap, fragile — swarm and rush": "schnell, billig, zerbrechlich — im Schwarm überrennen",
     "hand {n} · dealer stands on 17": "Hand {n} · Geber hält bei 17",
     "hold your line, counter-punch": "Linie halten, kontern",
     "long range, high burst — melts tanks, dies fast": "große Reichweite, hoher Schaden — schmilzt Tanks, stirbt schnell",
     "push the enemy server": "auf den gegnerischen Server vorstoßen",
-    "spend it to deploy": "zum Ausspielen ausgeben",
     "tanky, slow — soaks damage, holds the line": "zäh, langsam — steckt Schaden weg, hält die Linie",
-    "{n} bots": "{n} Bots",
     // --- settings: the plain-language sidebar ---
     "21 against the dealer, with a chip bankroll.": "21 gegen den Geber, mit einem Chip-Guthaben.",
     "A trading-floor RTS: script bot armies in real time.": "Ein Trading-Floor-RTS: Bot-Armeen in Echtzeit programmieren.",
     "Algorithm Wars": "Algorithmen-Krieg",
-    "Battlefield": "Schlachtfeld",
     "Bull or Bear": "Bulle oder Bär",
     "Bulls vs Bears Chess": "Schach: Bullen gegen Bären",
     "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Charts, Nachrichten, Spiele, Streaming und Kalender funktionieren — aber das Desk kann erst antworten, wenn du einen hinzufügst.",
@@ -1389,6 +1480,68 @@ const I18N = {
     "The live feed rejected this server's key.": "Der Live-Feed hat den Schlüssel dieses Servers abgelehnt.",
     "The live feed turned down that request.": "Der Live-Feed hat diese Anfrage abgelehnt.",
     "{sym} isn't a symbol the feed knows, so I've taken it off the watchlist.": "{sym} kennt der Feed nicht, also habe ich es von der Liste genommen.",
+    // --- settings: the plain-language sidebar ---
+    "A Day-Trader": "Ein Day-Trader",
+    "A Hedge-Fund": "Ein Hedge-Fund",
+    "An Index-Fund": "Ein Index-Fund",
+    "a Day-Trader": "einen Day-Trader",
+    "a Hedge-Fund": "einen Hedge-Fund",
+    "an Index-Fund": "einen Index-Fund",
+    "ARMY LOGIC": "ARMEE-LOGIK",
+    "Aggro": "Aggro",
+    "Algorithm crashed": "Algorithmus abgestürzt",
+    "BATTLE LOG": "KAMPFPROTOKOLL",
+    "BOTS SENT": "BOTS GESCHICKT",
+    "BURST": "BURST",
+    "CALM": "RUHIG",
+    "CAPITAL": "KAPITAL",
+    "CAPITAL LEFT": "KAPITAL ÜBRIG",
+    "Capital regenerates on its own. Pick a bot, then click a lane to send it in — it marches and fights without you. Destroy the enemy server to win.": "Kapital regeneriert von selbst. Wähle einen Bot und klicke dann auf eine Bahn, um ihn loszuschicken — er marschiert und kämpft ohne dich. Zerstöre den gegnerischen Server, um zu gewinnen.",
+    "Change logic": "Logik ändern",
+    "DAMAGE DEALT": "SCHADEN VERURSACHT",
+    "DEPLOY": "EINSETZEN",
+    "DMG": "SCH",
+    "DPS {n}": "DPS {n}",
+    "Defend": "Verteidigen",
+    "Deploy {bot} to lane {lane}": "{bot} auf Bahn {lane} einsetzen",
+    "ENEMY": "GEGNER",
+    "ENEMY SERVER": "GEGNERISCHER SERVER",
+    "Every lane held. That is what this is supposed to look like.": "Alle Bahnen gehalten. Genau so soll das aussehen.",
+    "HIGH": "HOCH",
+    "HP": "TP",
+    "Hedge-Fund": "Hedge-Fund",
+    "Hedge-Funds melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Hedge-Funds.": "Hedge-Funds schmelzen Index-Funds, Index-Funds schlucken Day-Trader, Day-Trader überrennen Hedge-Funds.",
+    "INTEGRITY {n}%": "INTEGRITÄT {n}%",
+    "LANE {lane}": "BAHN {lane}",
+    "Lane {lane} pressure": "Druck auf Bahn {lane}",
+    "Lane {lane} was undefended for {n} seconds. Try one Index-Fund early.": "Bahn {lane} war {n} Sekunden lang unverteidigt. Versuch es früh mit einem Index-Fund.",
+    "Lane {lane} — pick a bot first": "Bahn {lane} — erst einen Bot wählen",
+    "MIDLINE": "MITTELLINIE",
+    "Nothing incoming. Push a lane while it is quiet.": "Nichts im Anmarsch. Schieb eine Bahn vor, solange es ruhig ist.",
+    "Nothing was left open — they simply out-traded you. Open with a Hedge-Fund.": "Nichts stand offen — sie haben dich schlicht ausgespielt. Eröffne mit einem Hedge-Fund.",
+    "Now click a lane to send the {bot} in.": "Jetzt auf eine Bahn klicken, um den {bot} loszuschicken.",
+    "OVER": "ENDE",
+    "Pick a bot below, then click a lane to deploy": "Unten einen Bot wählen, dann auf eine Bahn klicken",
+    "ROUND 1 · {clock}": "RUNDE 1 · {clock}",
+    "SPD": "GES",
+    "SWARM": "SCHWARM",
+    "TANK": "TANK",
+    "THREAT": "BEDROHUNG",
+    "WATCH": "ACHTUNG",
+    "Won with lane {lane} open for {n} seconds — they never punished it.": "Gewonnen, obwohl Bahn {lane} {n} Sekunden offen stand — sie haben es nie bestraft.",
+    "YOU": "DU",
+    "YOUR SERVER": "DEIN SERVER",
+    "enemy deployed": "Gegner setzte ein",
+    "enemy server down": "gegnerischer Server down",
+    "logic set": "Logik gesetzt",
+    "round 1 · {logic}": "Runde 1 · {logic}",
+    "round started": "Runde gestartet",
+    "you deployed": "du hast eingesetzt",
+    "your server down": "dein Server ist down",
+    "{enemy} is closing on your server. Deploy {counter} to answer it.": "{enemy} nähert sich deinem Server. Setz {counter} dagegen ein.",
+    "{n} BOT": "{n} BOT",
+    "{n} BOTS": "{n} BOTS",
+    "{n} CAPITAL AVAILABLE": "{n} KAPITAL VERFÜGBAR",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -1712,8 +1865,6 @@ const I18N = {
     "Terms": "Termos",
     "Privacy": "Privacidade",
     // --- settings: the plain-language sidebar ---
-    "Aggressive": "Agressiva",
-    "Algorithms crushed": "Algoritmos esmagados",
     "Army logic": "Lógica do exército",
     "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "A lógica do exército muda o que todos os teus bots fazem, ao vivo. O inimigo adapta a dele — adapta a tua.",
     "Balanced": "Equilibrada",
@@ -1723,14 +1874,11 @@ const I18N = {
     "Bust at {n} — you lose": "Rebentaste com {n} — perdes",
     "Buy back in": "Recarregar fichas",
     "Capital": "Capital",
-    "Capital regenerates on its own — spend it to deploy bots that march and fight without you. Destroy the enemy server to win.": "O capital regenera-se sozinho — gasta-o para destacar bots que marcham e lutam sem ti. Destrói o servidor inimigo para ganhar.",
     "Day-Trader": "Day-trader",
     "Deal": "Distribuir",
     "Dealer": "Crupiê",
     "Dealer busts at {n} — you win": "O crupiê rebenta com {n} — ganhas",
-    "Defensive": "Defensiva",
     "Deploy": "Destacar",
-    "Enemy server": "Servidor inimigo",
     "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Chega mais perto de 21 do que o crupiê sem passar. As figuras valem 10; o ás vale 11, a não ser que te faça rebentar, e então vale 1.",
     "Hand settled": "Mão resolvida",
     "Hit": "Pedir",
@@ -1743,8 +1891,6 @@ const I18N = {
     "Raise the bet": "Aumentar a aposta",
     "Rematch": "Desforra",
     "Restart": "Reiniciar",
-    "Sniper": "Franco-atirador",
-    "Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers.": "Os franco-atiradores derretem os fundos de índice, os fundos de índice absorvem os day-traders e os day-traders enxameiam os franco-atiradores.",
     "Stand": "Parar",
     "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "O crupiê pede até 17 e para. Um 21 com duas cartas é blackjack e paga 3 para 2.",
     "The enemy overran your server.": "O inimigo arrasou o teu servidor.",
@@ -1752,21 +1898,17 @@ const I18N = {
     "You lose, {a} against {b}": "Perdes, {a} contra {b}",
     "You win, {a} against {b}": "Ganhas, {a} contra {b}",
     "Your bots took the enemy server.": "Os teus bots tomaram o servidor inimigo.",
-    "Your server": "O teu servidor",
     "engage nearest, then advance": "ataca o mais próximo e depois avança",
     "fast, cheap, fragile — swarm and rush": "rápido, barato e frágil — enxame e investida",
     "hand {n} · dealer stands on 17": "mão {n} · o crupiê para nos 17",
     "hold your line, counter-punch": "segura a linha e contra-ataca",
     "long range, high burst — melts tanks, dies fast": "longo alcance e muito dano — derrete tanques, morre depressa",
     "push the enemy server": "avança para o servidor inimigo",
-    "spend it to deploy": "gasta-o para destacar",
     "tanky, slow — soaks damage, holds the line": "resistente e lento — absorve dano e segura a linha",
-    "{n} bots": "{n} bots",
     // --- settings: the plain-language sidebar ---
     "21 against the dealer, with a chip bankroll.": "21 contra o crupiê, com fundos em fichas.",
     "A trading-floor RTS: script bot armies in real time.": "Um RTS de pregão: programa exércitos de bots em tempo real.",
     "Algorithm Wars": "Guerra de algoritmos",
-    "Battlefield": "Campo de batalha",
     "Bull or Bear": "Alta ou baixa",
     "Bulls vs Bears Chess": "Xadrez: touros contra ursos",
     "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Os gráficos, as notícias, os jogos, o streaming e o calendário funcionam — mas a mesa não consegue responder até adicionares uma.",
@@ -1814,6 +1956,68 @@ const I18N = {
     "The live feed rejected this server's key.": "O feed em direto rejeitou a chave deste servidor.",
     "The live feed turned down that request.": "O feed em direto recusou esse pedido.",
     "{sym} isn't a symbol the feed knows, so I've taken it off the watchlist.": "{sym} não é um símbolo que o feed conheça, por isso tirei-o da lista.",
+    // --- settings: the plain-language sidebar ---
+    "A Day-Trader": "Um Day-Trader",
+    "A Hedge-Fund": "Um Hedge-Fund",
+    "An Index-Fund": "Um Index-Fund",
+    "a Day-Trader": "um Day-Trader",
+    "a Hedge-Fund": "um Hedge-Fund",
+    "an Index-Fund": "um Index-Fund",
+    "ARMY LOGIC": "LÓGICA DO EXÉRCITO",
+    "Aggro": "Agressivo",
+    "Algorithm crashed": "O algoritmo caiu",
+    "BATTLE LOG": "REGISTO DA BATALHA",
+    "BOTS SENT": "BOTS ENVIADOS",
+    "BURST": "RAJADA",
+    "CALM": "CALMO",
+    "CAPITAL": "CAPITAL",
+    "CAPITAL LEFT": "CAPITAL RESTANTE",
+    "Capital regenerates on its own. Pick a bot, then click a lane to send it in — it marches and fights without you. Destroy the enemy server to win.": "O capital regenera-se sozinho. Escolhe um bot e clica numa faixa para o enviar — ele avança e luta sem ti. Destrói o servidor inimigo para ganhar.",
+    "Change logic": "Mudar a lógica",
+    "DAMAGE DEALT": "DANO CAUSADO",
+    "DEPLOY": "IMPLANTAR",
+    "DMG": "DAN",
+    "DPS {n}": "DPS {n}",
+    "Defend": "Defensivo",
+    "Deploy {bot} to lane {lane}": "Implantar {bot} na faixa {lane}",
+    "ENEMY": "INIMIGO",
+    "ENEMY SERVER": "SERVIDOR INIMIGO",
+    "Every lane held. That is what this is supposed to look like.": "Seguraste as três faixas. É assim que isto deve ser.",
+    "HIGH": "ALTA",
+    "HP": "PV",
+    "Hedge-Fund": "Hedge-Fund",
+    "Hedge-Funds melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Hedge-Funds.": "Os Hedge-Funds derretem os Index-Funds, os Index-Funds aguentam os Day-Traders e os Day-Traders enxameiam os Hedge-Funds.",
+    "INTEGRITY {n}%": "INTEGRIDADE {n}%",
+    "LANE {lane}": "FAIXA {lane}",
+    "Lane {lane} pressure": "Pressão na faixa {lane}",
+    "Lane {lane} was undefended for {n} seconds. Try one Index-Fund early.": "A faixa {lane} ficou sem defesa {n} segundos. Experimenta um Index-Fund cedo.",
+    "Lane {lane} — pick a bot first": "Faixa {lane} — escolhe primeiro um bot",
+    "MIDLINE": "CENTRO",
+    "Nothing incoming. Push a lane while it is quiet.": "Não vem nada. Empurra uma faixa enquanto está calmo.",
+    "Nothing was left open — they simply out-traded you. Open with a Hedge-Fund.": "Não deixaste nada aberto — simplesmente jogaram melhor. Abre com um Hedge-Fund.",
+    "Now click a lane to send the {bot} in.": "Agora clica numa faixa para enviar o {bot}.",
+    "OVER": "FIM",
+    "Pick a bot below, then click a lane to deploy": "Escolhe um bot abaixo e clica numa faixa para o implantar",
+    "ROUND 1 · {clock}": "RONDA 1 · {clock}",
+    "SPD": "VEL",
+    "SWARM": "ENXAME",
+    "TANK": "TANQUE",
+    "THREAT": "AMEAÇA",
+    "WATCH": "ATENÇÃO",
+    "Won with lane {lane} open for {n} seconds — they never punished it.": "Ganhaste com a faixa {lane} aberta {n} segundos — nunca a castigaram.",
+    "YOU": "TU",
+    "YOUR SERVER": "O TEU SERVIDOR",
+    "enemy deployed": "o inimigo implantou",
+    "enemy server down": "servidor inimigo em baixo",
+    "logic set": "lógica definida",
+    "round 1 · {logic}": "ronda 1 · {logic}",
+    "round started": "ronda iniciada",
+    "you deployed": "implantaste",
+    "your server down": "o teu servidor caiu",
+    "{enemy} is closing on your server. Deploy {counter} to answer it.": "{enemy} aproxima-se do teu servidor. Implanta {counter} para responder.",
+    "{n} BOT": "{n} BOT",
+    "{n} BOTS": "{n} BOTS",
+    "{n} CAPITAL AVAILABLE": "{n} DE CAPITAL DISPONÍVEL",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -2137,8 +2341,6 @@ const I18N = {
     "Terms": "Termini",
     "Privacy": "Privacy",
     // --- settings: the plain-language sidebar ---
-    "Aggressive": "Aggressiva",
-    "Algorithms crushed": "Algoritmi schiacciati",
     "Army logic": "Logica dell'esercito",
     "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "La logica dell'esercito cambia dal vivo ciò che fa ogni tuo bot. Il nemico adatta la sua — adatta la tua.",
     "Balanced": "Equilibrata",
@@ -2148,14 +2350,11 @@ const I18N = {
     "Bust at {n} — you lose": "Sballi a {n} — hai perso",
     "Buy back in": "Ricompra fiches",
     "Capital": "Capitale",
-    "Capital regenerates on its own — spend it to deploy bots that march and fight without you. Destroy the enemy server to win.": "Il capitale si rigenera da solo — spendilo per schierare bot che avanzano e combattono senza di te. Distruggi il server nemico per vincere.",
     "Day-Trader": "Day-trader",
     "Deal": "Distribuisci",
     "Dealer": "Banco",
     "Dealer busts at {n} — you win": "Il banco sballa a {n} — hai vinto",
-    "Defensive": "Difensiva",
     "Deploy": "Schiera",
-    "Enemy server": "Server nemico",
     "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Avvicinati a 21 più del banco senza sballare. Le figure valgono 10; l'asso vale 11, a meno che non ti faccia sballare, e allora vale 1.",
     "Hand settled": "Mano conclusa",
     "Hit": "Carta",
@@ -2168,8 +2367,6 @@ const I18N = {
     "Raise the bet": "Aumenta la puntata",
     "Rematch": "Rivincita",
     "Restart": "Ricomincia",
-    "Sniper": "Cecchino",
-    "Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers.": "I cecchini sciolgono i fondi indicizzati, i fondi indicizzati assorbono i day-trader, i day-trader sciamano sui cecchini.",
     "Stand": "Stare",
     "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "Il banco chiede fino a 17 e poi sta. Un 21 con due carte è blackjack e paga 3 a 2.",
     "The enemy overran your server.": "Il nemico ha travolto il tuo server.",
@@ -2177,21 +2374,17 @@ const I18N = {
     "You lose, {a} against {b}": "Hai perso, {a} contro {b}",
     "You win, {a} against {b}": "Hai vinto, {a} contro {b}",
     "Your bots took the enemy server.": "I tuoi bot hanno preso il server nemico.",
-    "Your server": "Il tuo server",
     "engage nearest, then advance": "ingaggia il più vicino, poi avanza",
     "fast, cheap, fragile — swarm and rush": "veloce, economico, fragile — sciame e carica",
     "hand {n} · dealer stands on 17": "mano {n} · il banco sta a 17",
     "hold your line, counter-punch": "tieni la linea e contrattacca",
     "long range, high burst — melts tanks, dies fast": "lunga gittata, danno alto — scioglie i tank, muore in fretta",
     "push the enemy server": "punta al server nemico",
-    "spend it to deploy": "spendilo per schierare",
     "tanky, slow — soaks damage, holds the line": "resistente, lento — assorbe danni e tiene la linea",
-    "{n} bots": "{n} bot",
     // --- settings: the plain-language sidebar ---
     "21 against the dealer, with a chip bankroll.": "21 contro il banco, con fondi in fiches.",
     "A trading-floor RTS: script bot armies in real time.": "Un RTS da sala mercati: programma eserciti di bot in tempo reale.",
     "Algorithm Wars": "Guerra degli algoritmi",
-    "Battlefield": "Campo di battaglia",
     "Bull or Bear": "Toro o orso",
     "Bulls vs Bears Chess": "Scacchi: tori contro orsi",
     "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Grafici, notizie, giochi, streaming e calendario funzionano — ma la postazione non può rispondere finché non ne aggiungi una.",
@@ -2239,6 +2432,68 @@ const I18N = {
     "The live feed rejected this server's key.": "Il feed in diretta ha rifiutato la chiave di questo server.",
     "The live feed turned down that request.": "Il feed in diretta ha rifiutato quella richiesta.",
     "{sym} isn't a symbol the feed knows, so I've taken it off the watchlist.": "{sym} non è un simbolo che il feed conosce, quindi l'ho tolto dalla lista.",
+    // --- settings: the plain-language sidebar ---
+    "A Day-Trader": "Un Day-Trader",
+    "A Hedge-Fund": "Un Hedge-Fund",
+    "An Index-Fund": "Un Index-Fund",
+    "a Day-Trader": "un Day-Trader",
+    "a Hedge-Fund": "un Hedge-Fund",
+    "an Index-Fund": "un Index-Fund",
+    "ARMY LOGIC": "LOGICA DELL'ESERCITO",
+    "Aggro": "Aggro",
+    "Algorithm crashed": "L'algoritmo è crollato",
+    "BATTLE LOG": "REGISTRO DELLA BATTAGLIA",
+    "BOTS SENT": "BOT INVIATI",
+    "BURST": "RAFFICA",
+    "CALM": "CALMO",
+    "CAPITAL": "CAPITALE",
+    "CAPITAL LEFT": "CAPITALE RIMASTO",
+    "Capital regenerates on its own. Pick a bot, then click a lane to send it in — it marches and fights without you. Destroy the enemy server to win.": "Il capitale si rigenera da solo. Scegli un bot, poi clicca su una corsia per mandarlo — avanza e combatte senza di te. Distruggi il server nemico per vincere.",
+    "Change logic": "Cambia la logica",
+    "DAMAGE DEALT": "DANNI INFLITTI",
+    "DEPLOY": "SCHIERA",
+    "DMG": "DAN",
+    "DPS {n}": "DPS {n}",
+    "Defend": "Difesa",
+    "Deploy {bot} to lane {lane}": "Schiera {bot} nella corsia {lane}",
+    "ENEMY": "NEMICO",
+    "ENEMY SERVER": "SERVER NEMICO",
+    "Every lane held. That is what this is supposed to look like.": "Hai tenuto tutte le corsie. Ecco come dovrebbe andare.",
+    "HIGH": "ALTA",
+    "HP": "PV",
+    "Hedge-Fund": "Hedge-Fund",
+    "Hedge-Funds melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Hedge-Funds.": "Gli Hedge-Fund sciolgono gli Index-Fund, gli Index-Fund assorbono i Day-Trader, i Day-Trader sciamano sugli Hedge-Fund.",
+    "INTEGRITY {n}%": "INTEGRITÀ {n}%",
+    "LANE {lane}": "CORSIA {lane}",
+    "Lane {lane} pressure": "Pressione sulla corsia {lane}",
+    "Lane {lane} was undefended for {n} seconds. Try one Index-Fund early.": "La corsia {lane} è rimasta scoperta {n} secondi. Prova un Index-Fund presto.",
+    "Lane {lane} — pick a bot first": "Corsia {lane} — scegli prima un bot",
+    "MIDLINE": "CENTRO",
+    "Nothing incoming. Push a lane while it is quiet.": "Non arriva nulla. Spingi su una corsia finché è tranquillo.",
+    "Nothing was left open — they simply out-traded you. Open with a Hedge-Fund.": "Non hai lasciato nulla di scoperto — ti hanno semplicemente giocato meglio. Apri con un Hedge-Fund.",
+    "Now click a lane to send the {bot} in.": "Ora clicca su una corsia per mandare il {bot}.",
+    "OVER": "FINE",
+    "Pick a bot below, then click a lane to deploy": "Scegli un bot qui sotto, poi clicca su una corsia per schierarlo",
+    "ROUND 1 · {clock}": "ROUND 1 · {clock}",
+    "SPD": "VEL",
+    "SWARM": "SCIAME",
+    "TANK": "TANK",
+    "THREAT": "MINACCIA",
+    "WATCH": "ATTENZIONE",
+    "Won with lane {lane} open for {n} seconds — they never punished it.": "Vinto con la corsia {lane} scoperta {n} secondi — non l'hanno mai punita.",
+    "YOU": "TU",
+    "YOUR SERVER": "IL TUO SERVER",
+    "enemy deployed": "il nemico ha schierato",
+    "enemy server down": "server nemico abbattuto",
+    "logic set": "logica impostata",
+    "round 1 · {logic}": "round 1 · {logic}",
+    "round started": "round iniziato",
+    "you deployed": "hai schierato",
+    "your server down": "il tuo server è caduto",
+    "{enemy} is closing on your server. Deploy {counter} to answer it.": "{enemy} si avvicina al tuo server. Schiera {counter} per rispondere.",
+    "{n} BOT": "{n} BOT",
+    "{n} BOTS": "{n} BOT",
+    "{n} CAPITAL AVAILABLE": "{n} DI CAPITALE DISPONIBILE",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -5131,12 +5386,34 @@ function BlackjackGame({ onCheer, onWin }) {
     </div>
   );
 }
-
 // ============================================================
-// Algorithm Wars — a real-time trading-floor auto-battler. You don't trade; you deploy & re-script
-// automated bots (RTS units) and flip your army's AI logic (stance) live to counter the enemy AI.
-// Self-contained (canvas + rAF); sim state lives in a ref so the loop never restarts on render.
-const AW_W = 560, AW_H = 300;
+//  Algorithm Wars — a trading-floor auto-battler.
+//
+//  You do not trade here. You spend regenerating capital on bots that fight
+//  without you, and you re-script your whole army's logic mid-fight to answer
+//  the enemy's. Self-contained: canvas + rAF, with the sim in a ref so the
+//  loop never restarts on a render.
+//
+//  THE FIELD IS THREE LANES.
+//  Deploying used to drop a bot at a random height, which left "which card" as
+//  the only decision in the game. The field is divided into three lanes now and
+//  the loop is pick-a-bot-then-pick-a-lane, so WHERE you commit matters as much
+//  as what — and the threat panel finally has something to point at, because
+//  "lane B is undefended" is a sentence you can only write once lanes exist.
+//
+//  WHAT IS CANVAS AND WHAT IS NOT.
+//  The canvas draws what moves: towers, units, tracers, death puffs. Everything
+//  a person READS — lane names, the midline tag, the hint, the whole HUD and
+//  rail — is DOM, because text baked into a canvas cannot be selected, cannot
+//  be translated and cannot be read aloud. The three lanes are real buttons
+//  laid over the field for the same reason: a canvas is not keyboard reachable,
+//  and "click a lane" has to work without a mouse.
+// ============================================================
+const AW_W = 900, AW_H = 372;
+const AW_LANES = 3;
+const AW_LANE_ID = ["A", "B", "C"];
+const awLaneY = (i) => (AW_H * (i + 0.5)) / AW_LANES;
+
 // A bot is told apart by SHAPE, not by hue.
 //
 // The three used to be a white circle, a cyan circle and an indigo circle —
@@ -5145,20 +5422,57 @@ const AW_W = 560, AW_H = 300;
 // So the battlefield asked the eye to read two colours per unit at 7px, and
 // the second one vanished on a colourblind screen entirely.
 //
-// Shape is free of all that: a swarm is round, a tank is a block, a sniper is
-// a dart aimed at the other side. The same three marks label the deploy cards,
-// so the card teaches the battlefield.
+// Shape is free of all that: a swarm is round, a tank is a block, a burst unit
+// is a dart aimed at the other side. The same three marks label the deploy
+// cards, so the card teaches the battlefield.
+//
+// No names or blurbs in this table on purpose. Those are translated, and a
+// table field translated at the call site is a key the audit cannot see.
 const AW_BOTS = {
-  day:    { name: "Day-Trader",  cost: 14, hp: 24, dmg: 6,  range: 26, speed: 48, rate: 0.55, r: 7,  shape: "circle",   blurb: "fast, cheap, fragile — swarm and rush" },
-  index:  { name: "Index-Fund",  cost: 28, hp: 92, dmg: 4,  range: 22, speed: 22, rate: 0.9,  r: 10, shape: "square",   blurb: "tanky, slow — soaks damage, holds the line" },
-  sniper: { name: "Sniper",      cost: 24, hp: 12, dmg: 22, range: 96, speed: 32, rate: 1.5,  r: 7,  shape: "triangle", blurb: "long range, high burst — melts tanks, dies fast" },
+  day:   { cost: 14, hp: 24, dmg: 6,  range: 26, speed: 48, rate: 0.55, r: 7,  shape: "circle" },
+  index: { cost: 28, hp: 92, dmg: 4,  range: 22, speed: 22, rate: 0.9,  r: 10, shape: "square" },
+  hedge: { cost: 24, hp: 12, dmg: 22, range: 96, speed: 32, rate: 1.5,  r: 7,  shape: "triangle" },
 };
+const AW_ORDER = ["day", "index", "hedge"];
+const AW_STANCES = ["aggressive", "balanced", "defensive"];
 const AW_CAP_MAX = 150, AW_BASE_HP = 200;
-const AW_STANCES = [
-  { id: "aggressive", label: "Aggressive", hint: "push the enemy server" },
-  { id: "balanced",   label: "Balanced",   hint: "engage nearest, then advance" },
-  { id: "defensive",  label: "Defensive",  hint: "hold your line, counter-punch" },
-];
+
+// Rock-paper-scissors, written down once. The threat panel reads this rather
+// than restating it in prose, so the coaching can never drift from the sim.
+const AW_COUNTER = { hedge: "day", day: "index", index: "hedge" };
+
+// The DMG / HP / SPD triple on a deploy card, as a fraction of the best in
+// class. SUSTAINED damage (dmg ÷ cooldown), not damage per shot: a Hedge-Fund
+// hits nearly four times harder than a Day-Trader and fires a third as often,
+// and a bar showing only the first half of that sells a unit the sim does not
+// deliver. Computed off the same table the fight runs on, so a card cannot lie
+// about the thing it deploys.
+const AW_BEST = {
+  dmg: Math.max(...AW_ORDER.map(k => AW_BOTS[k].dmg / AW_BOTS[k].rate)),
+  hp:  Math.max(...AW_ORDER.map(k => AW_BOTS[k].hp)),
+  spd: Math.max(...AW_ORDER.map(k => AW_BOTS[k].speed)),
+};
+const awStats = (k) => {
+  const b = AW_BOTS[k];
+  return [["dmg", (b.dmg / b.rate) / AW_BEST.dmg], ["hp", b.hp / AW_BEST.hp], ["spd", b.speed / AW_BEST.spd]];
+};
+
+// mm:ss off the SIM clock, not wall time — a backgrounded tab must not age the
+// round while nothing is being simulated.
+const awClock = (s) => {
+  const n = Math.max(0, Math.floor(s));
+  return `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
+};
+
+// The log holds STRUCTURE, not sentences: {kind, who, type}. The rail turns it
+// into words at render, which is what lets it be translated and lets a unit
+// name keep its side's colour inside the line.
+function awLog(sim, kind, who, type) {
+  sim.logId += 1;
+  sim.log.unshift({ id: sim.logId, at: sim.t, kind, who, type });
+  if (sim.log.length > 20) sim.log.length = 20;
+}
+
 // The DOM half of the shape vocabulary — the mark on a deploy card is the same
 // mark the unit wears on the field. currentColor, so the tile decides.
 function AwBotMark({ shape, size = 18 }) {
@@ -5168,7 +5482,7 @@ function AwBotMark({ shape, size = 18 }) {
   return <svg {...p}><circle cx="12" cy="12" r="6.5" /></svg>;
 }
 // The canvas half. `dir` points a triangle at the enemy: a dart that always
-// aimed up would say nothing about which side it belongs to.
+// aimed one way would say nothing about which side it belongs to.
 function awPath(ctx, shape, x, y, r, dir) {
   ctx.beginPath();
   if (shape === "square") ctx.rect(x - r, y - r, r * 2, r * 2);
@@ -5179,18 +5493,25 @@ function awPath(ctx, shape, x, y, r, dir) {
     ctx.closePath();
   } else ctx.arc(x, y, r, 0, Math.PI * 2);
 }
-// spend capital to spawn one bot of `type` for `side` at its base; returns false if unaffordable
-function awDeploy(sim, side, type) {
+
+// spend capital to spawn one bot of `type` for `side` in `lane`; false if unaffordable
+function awDeploy(sim, side, type, lane) {
   const b = AW_BOTS[type], S = sim[side];
   if (!sim || sim.over || S.cap < b.cost) return false;
   S.cap -= b.cost;
   // `born` drives the spawn pop — a unit that simply exists on one frame and
   // not the previous one reads as a rendering glitch, not as an arrival.
-  sim.units.push({ side, type, hp: b.hp, maxHp: b.hp, born: sim.t, x: S.spawnX, y: AW_H / 2 + (Math.random() * 2 - 1) * (AW_H * 0.34), cd: Math.random() * 0.3 });
+  sim.units.push({
+    side, type, hp: b.hp, maxHp: b.hp, born: sim.t, lane,
+    x: S.spawnX, y: awLaneY(lane) + (Math.random() * 2 - 1) * 14, cd: Math.random() * 0.3,
+  });
+  S.sent += 1;
+  awLog(sim, "deploy", side, type);
   return true;
 }
-// enemy (CPU) AI: read the board to pick a stance, then periodically deploy a counter-unit
-// (tanks to soak your snipers, snipers to melt your tanks, else a weighted-random pick)
+
+// enemy (CPU) AI: read the board to pick a stance, then periodically deploy a
+// counter-unit into whichever lane it holds least.
 function awBrain(sim, dt) {
   const cpu = sim.cpu;
   const us = sim.units;
@@ -5199,24 +5520,70 @@ function awBrain(sim, dt) {
   cpu.stance = youPushing ? "defensive" : cpuN > youN + 2 ? "aggressive" : "balanced";
   cpu.nextDeploy -= dt;
   if (cpu.nextDeploy > 0) return;
-  const youSnipers = us.filter(u => u.side === "you" && u.type === "sniper").length;
-  const youTanks = us.filter(u => u.side === "you" && u.type === "index").length;
+  const yourHedges = us.filter(u => u.side === "you" && u.type === "hedge").length;
+  const yourTanks = us.filter(u => u.side === "you" && u.type === "index").length;
   let type;
-  if (youSnipers >= 2 && cpu.cap >= AW_BOTS.index.cost) type = "index";       // tanks soak snipers
-  else if (youTanks >= 2 && cpu.cap >= AW_BOTS.sniper.cost) type = "sniper";   // snipers melt tanks
-  else { const r = Math.random(); type = r < 0.5 ? "day" : r < 0.8 ? "index" : "sniper"; }
-  if (awDeploy(sim, "cpu", type)) cpu.nextDeploy = 1.0 + Math.random() * 1.4;
+  if (yourHedges >= 2 && cpu.cap >= AW_BOTS.index.cost) type = "index";      // tanks soak burst
+  else if (yourTanks >= 2 && cpu.cap >= AW_BOTS.hedge.cost) type = "hedge";  // burst melts tanks
+  else { const r = Math.random(); type = r < 0.5 ? "day" : r < 0.8 ? "index" : "hedge"; }
+  // Reinforce the lane it holds least. An enemy that picked lanes at random
+  // never built the pressure the threat panel exists to warn you about.
+  const mine = [0, 0, 0];
+  for (const u of us) if (u.side === "cpu") mine[u.lane] += 1;
+  let lane = 0;
+  for (let i = 1; i < AW_LANES; i++) if (mine[i] < mine[lane]) lane = i;
+  if (awDeploy(sim, "cpu", type, lane)) cpu.nextDeploy = 1.0 + Math.random() * 1.4;
   else cpu.nextDeploy = 0.4;
 }
+
+// Where the pressure is, and what answers it.
+//
+// Weighted by how far a unit has come, not just by how many there are: two
+// fresh bots at the enemy's own wall are not the emergency that one Hedge-Fund
+// at your door is. The counter comes out of AW_COUNTER rather than a
+// hand-written sentence, so the advice cannot contradict the fight.
+function awThreat(sim) {
+  const span = Math.abs(sim.cpu.baseX - sim.you.baseX) || 1;
+  const load = [0, 0, 0];
+  const worst = [null, null, null];
+  for (const u of sim.units) {
+    if (u.side !== "cpu") continue;
+    const progress = Math.max(0, Math.min(1, (sim.cpu.baseX - u.x) / span));
+    const w = (u.hp / AW_BOTS[u.type].hp) * (0.35 + progress * 1.5);
+    load[u.lane] += w;
+    if (!worst[u.lane] || w > worst[u.lane].w) worst[u.lane] = { type: u.type, w };
+  }
+  let li = 0;
+  for (let i = 1; i < AW_LANES; i++) if (load[i] > load[li]) li = i;
+  const p = load[li];
+  return {
+    lane: AW_LANE_ID[li],
+    level: p < 0.5 ? "calm" : p < 1.3 ? "watch" : "high",
+    pct: Math.max(0.04, Math.min(1, p / 2.2)),
+    type: worst[li]?.type || null,
+    counter: worst[li] ? AW_COUNTER[worst[li].type] : null,
+  };
+}
+
 // advance the sim one frame: regen both sides' capital, run the CPU brain, then for every unit
 // acquire the nearest enemy and either fire (unit/server in range) or move per its stance; finally
 // clear dead units & expired tracers and decide a winner when a server's HP hits zero.
 function awStep(sim, dt, youStance) {
   if (sim.over) return;
   sim.t += dt;
-  sim.you.cap = Math.min(AW_CAP_MAX, sim.you.cap + dt * 5.6);
-  sim.cpu.cap = Math.min(AW_CAP_MAX, sim.cpu.cap + dt * 5.2);
+  sim.you.cap = Math.min(AW_CAP_MAX, sim.you.cap + dt * sim.you.rate);
+  sim.cpu.cap = Math.min(AW_CAP_MAX, sim.cpu.cap + dt * sim.cpu.rate);
   awBrain(sim, dt);
+  // How long each lane has gone with none of yours in it. This is the single
+  // most common way this game is lost and it is invisible while it is
+  // happening, so it is measured here and read back on the end card.
+  const held = [false, false, false];
+  for (const u of sim.units) if (u.side === "you") held[u.lane] = true;
+  for (let i = 0; i < AW_LANES; i++) {
+    sim.open[i] = held[i] ? 0 : sim.open[i] + dt;
+    if (sim.open[i] > sim.openMax[i]) sim.openMax[i] = sim.open[i];
+  }
+
   const aggro = 140;
   for (const u of sim.units) {
     const b = AW_BOTS[u.type];
@@ -5228,14 +5595,20 @@ function awStep(sim, dt, youStance) {
     for (const o of sim.units) { if (o.side === enemy) { const d = Math.hypot(o.x - u.x, o.y - u.y); if (d < td) { td = d; tgt = o; } } }
     u.cd -= dt;
     if (tgt && td <= b.range) { // attack enemy unit
-      if (u.cd <= 0) { tgt.hp -= b.dmg; u.cd = b.rate; if (b.range > 60) sim.tracers.push({ x1: u.x, y1: u.y, x2: tgt.x, y2: tgt.y, life: 0.12 }); }
+      if (u.cd <= 0) {
+        tgt.hp -= b.dmg; u.cd = b.rate; sim[u.side].dealt += b.dmg;
+        if (b.range > 60) sim.tracers.push({ x1: u.x, y1: u.y, x2: tgt.x, y2: tgt.y, life: 0.12 });
+      }
       continue;
     }
     if (Math.abs(u.x - enemyBaseX) <= b.range) { // attack enemy server
-      if (u.cd <= 0) { sim[enemy].baseHp -= b.dmg; u.cd = b.rate; if (b.range > 60) sim.tracers.push({ x1: u.x, y1: u.y, x2: enemyBaseX, y2: AW_H / 2, life: 0.12 }); }
+      if (u.cd <= 0) {
+        sim[enemy].baseHp -= b.dmg; u.cd = b.rate; sim[u.side].dealt += b.dmg;
+        if (b.range > 60) sim.tracers.push({ x1: u.x, y1: u.y, x2: enemyBaseX, y2: AW_H / 2, life: 0.12 });
+      }
       continue;
     }
-    let goalX = enemyBaseX, goalY = u.y, chase = false;
+    let goalX = enemyBaseX, goalY = awLaneY(u.lane), chase = false;
     if (stance === "balanced") { if (tgt && td <= aggro) { goalX = tgt.x; goalY = tgt.y; chase = true; } }
     else if (stance === "defensive") {
       const holdX = u.side === "you" ? AW_W * 0.44 : AW_W * 0.56;
@@ -5245,8 +5618,10 @@ function awStep(sim, dt, youStance) {
     } // aggressive → goalX stays enemyBaseX
     const dx = goalX - u.x, dy = goalY - u.y, dd = Math.hypot(dx, dy) || 1, sp = b.speed * dt;
     u.x += (dx / dd) * sp;
-    u.y += chase ? (dy / dd) * sp : Math.sin((sim.t + u.x) * 0.6) * 5 * dt;
-    u.y = Math.max(22, Math.min(AW_H - 22, u.y));
+    // Off-lane only to chase. Otherwise a unit eases back to its lane's centre,
+    // which is what keeps a lane readable as a lane across a whole round.
+    u.y += chase ? (dy / dd) * sp : Math.max(-sp, Math.min(sp, dy * dt * 2.4));
+    u.y = Math.max(18, Math.min(AW_H - 18, u.y));
   }
   // A kill leaves a mark. Without it a unit you were watching is simply absent
   // on the next frame and the fight reads as things blinking out.
@@ -5256,26 +5631,124 @@ function awStep(sim, dt, youStance) {
   sim.tracers = sim.tracers.filter(tr => tr.life > 0);
   for (const pf of sim.puffs) pf.life -= dt;
   sim.puffs = sim.puffs.filter(pf => pf.life > 0);
-  if (sim.cpu.baseHp <= 0) sim.over = "you";
-  else if (sim.you.baseHp <= 0) sim.over = "cpu";
+  if (sim.cpu.baseHp <= 0) { sim.over = "you"; awLog(sim, "won"); }
+  else if (sim.you.baseHp <= 0) { sim.over = "cpu"; awLog(sim, "lost"); }
 }
-// render one frame: grid + dashed centre line, both servers (with HP bars), shot tracers,
-// death puffs, then units. Every colour here is a token — the previous version hard-coded
-// #0f1011, #23252a and #ffffff, which is how a canvas survives a retheme unchanged.
-function awDraw(ctx, sim) {
-  ctx.fillStyle = C.base; ctx.fillRect(0, 0, AW_W, AW_H);
-  ctx.strokeStyle = C.edge; ctx.lineWidth = 1;
-  for (let x = 0; x <= AW_W; x += 28) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, AW_H); ctx.stroke(); }
-  for (let y = 0; y <= AW_H; y += 28) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(AW_W, y); ctx.stroke(); }
-  ctx.strokeStyle = C.edgeStrong; ctx.setLineDash([4, 6]); ctx.beginPath(); ctx.moveTo(AW_W / 2, 0); ctx.lineTo(AW_W / 2, AW_H); ctx.stroke(); ctx.setLineDash([]);
-  const base = (x, color, hp) => {
-    ctx.fillStyle = color; ctx.globalAlpha = 0.85; ctx.fillRect(x - 10, AW_H / 2 - 42, 20, 84); ctx.globalAlpha = 1;
-    ctx.fillStyle = alpha(C.base, 0.6); ctx.fillRect(x - 15, AW_H / 2 - 56, 30, 5);
-    ctx.fillStyle = color; ctx.fillRect(x - 15, AW_H / 2 - 56, 30 * Math.max(0, hp) / AW_BASE_HP, 5);
+
+// Everything the DOM needs, sampled ~8×/second. The loop runs at 60fps; setting
+// React state that often would re-render the desk on every frame for numbers
+// that cannot be read that fast anyway.
+function awBlankHud() {
+  return {
+    clock: 0, youHp: AW_BASE_HP, cpuHp: AW_BASE_HP, cap: 34, rate: 5.6,
+    youN: 0, cpuN: 0, youDps: 0, cpuDps: 0, sent: 0, dealt: 0, log: [],
+    threat: { lane: "A", level: "calm", pct: 0.04, type: null, counter: null },
+    openLane: "A", openSecs: 0,
   };
-  base(sim.you.baseX, C.up, sim.you.baseHp);
-  base(sim.cpu.baseX, C.down, sim.cpu.baseHp);
-  for (const tr of sim.tracers) { ctx.strokeStyle = alpha(C.text, Math.max(0, tr.life / 0.12) * 0.8); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(tr.x1, tr.y1); ctx.lineTo(tr.x2, tr.y2); ctx.stroke(); }
+}
+function awReadHud(sim) {
+  const dps = (side) => Math.round(sim.units.filter(u => u.side === side)
+    .reduce((n, u) => n + AW_BOTS[u.type].dmg / AW_BOTS[u.type].rate, 0));
+  let li = 0;
+  for (let i = 1; i < AW_LANES; i++) if (sim.openMax[i] > sim.openMax[li]) li = i;
+  return {
+    clock: sim.t,
+    youHp: Math.max(0, Math.ceil(sim.you.baseHp)),
+    cpuHp: Math.max(0, Math.ceil(sim.cpu.baseHp)),
+    cap: Math.floor(sim.you.cap),
+    rate: sim.you.rate,
+    youN: sim.units.filter(u => u.side === "you").length,
+    cpuN: sim.units.filter(u => u.side === "cpu").length,
+    youDps: dps("you"), cpuDps: dps("cpu"),
+    sent: sim.you.sent, dealt: Math.round(sim.you.dealt),
+    // Sliced, not handed over: sim.log is mutated in place by the loop, and a
+    // state value that aliases it would change under React without a render.
+    log: sim.log.slice(0, 4),
+    threat: awThreat(sim),
+    openLane: AW_LANE_ID[li], openSecs: Math.round(sim.openMax[li]),
+  };
+}
+
+// One tower: a lit slab with a scanline texture and an outer glow, drawn off
+// the FIELD ramp so the two sides are the same object in two colours.
+function awTower(ctx, x, ramp, glow, dim) {
+  const w = 48, h = 112, top = AW_H / 2 - h / 2;
+  const g = ctx.createLinearGradient(0, top, 0, top + h);
+  g.addColorStop(0, ramp[0]); g.addColorStop(1, ramp[1]);
+  ctx.save();
+  if (!dim) { ctx.shadowColor = glow; ctx.shadowBlur = 38; }
+  ctx.fillStyle = dim ? ramp[1] : g;
+  ctx.globalAlpha = dim ? 0.45 : 1;
+  ctx.beginPath(); ctx.roundRect(x - w / 2, top, w, h, 7); ctx.fill();
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath(); ctx.roundRect(x - w / 2, top, w, h, 7); ctx.clip();
+  // 2px on, 8px off — the same texture the integrity meters wear. It is what
+  // makes a rounded rectangle read as a rack of machines rather than a pill.
+  ctx.fillStyle = "rgba(0,0,0,0.2)";
+  for (let y = top; y < top + h; y += 10) ctx.fillRect(x - w / 2, y, w, 2);
+  ctx.restore();
+  // A 1px inside highlight: the lip that lifts the slab off the field.
+  ctx.strokeStyle = `rgba(255,255,255,${dim ? 0.04 : 0.1})`;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(x - w / 2 + 0.5, top + 0.5, w - 1, h - 1, 6.5); ctx.stroke();
+}
+
+// render one frame. Every colour here is a token: the previous version
+// hard-coded #0f1011, #23252a and #ffffff, which is how a canvas survives a
+// retheme unchanged while everything around it moves.
+//
+// `armedLane` is null when no bot is picked, -1 when one is picked but no lane
+// is under the pointer, else the lane index being offered.
+function awDraw(ctx, sim, armedLane) {
+  const rg = ctx.createRadialGradient(AW_W / 2, AW_H / 2, 0, AW_W / 2, AW_H / 2, AW_W * 0.72);
+  rg.addColorStop(0, "#0d1319"); rg.addColorStop(1, "#07090d");
+  ctx.fillStyle = rg; ctx.fillRect(0, 0, AW_W, AW_H);
+
+  ctx.save();
+  ctx.globalAlpha = 0.7;
+  ctx.strokeStyle = FIELD.grid; ctx.lineWidth = 1;
+  for (let x = 0; x <= AW_W; x += 44) { ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, AW_H); ctx.stroke(); }
+  for (let y = 0; y <= AW_H; y += 44) { ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(AW_W, y + 0.5); ctx.stroke(); }
+  ctx.restore();
+
+  // Each side bleeds its colour in from its own edge, so which half of the
+  // field you are looking at is legible before a single unit is.
+  const lg = ctx.createLinearGradient(0, 0, 90, 0);
+  lg.addColorStop(0, "rgba(70,167,88,0.10)"); lg.addColorStop(1, "rgba(70,167,88,0)");
+  ctx.fillStyle = lg; ctx.fillRect(0, 0, 90, AW_H);
+  const rl = ctx.createLinearGradient(AW_W, 0, AW_W - 90, 0);
+  rl.addColorStop(0, "rgba(221,106,110,0.10)"); rl.addColorStop(1, "rgba(221,106,110,0)");
+  ctx.fillStyle = rl; ctx.fillRect(AW_W - 90, 0, 90, AW_H);
+
+  // A bot is picked and the field is waiting to be told where: wash every lane
+  // so what you are being asked to click looks clickable, and light the one
+  // under the pointer brighter than the rest.
+  if (armedLane != null) {
+    for (let i = 0; i < AW_LANES; i++) {
+      ctx.fillStyle = i === armedLane ? "rgba(70,167,88,0.11)" : "rgba(70,167,88,0.05)";
+      ctx.fillRect(0, (AW_H * i) / AW_LANES, AW_W, AW_H / AW_LANES);
+    }
+  }
+
+  ctx.strokeStyle = FIELD.laneLine; ctx.lineWidth = 1;
+  for (let i = 1; i < AW_LANES; i++) {
+    const y = Math.round((AW_H * i) / AW_LANES) + 0.5;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(AW_W, y); ctx.stroke();
+  }
+
+  ctx.strokeStyle = FIELD.midline; ctx.lineWidth = 1; ctx.setLineDash([7, 7]);
+  ctx.beginPath(); ctx.moveTo(AW_W / 2 + 0.5, 0); ctx.lineTo(AW_W / 2 + 0.5, AW_H); ctx.stroke();
+  ctx.setLineDash([]);
+
+  awTower(ctx, sim.you.baseX, FIELD.youTower, "rgba(70,167,88,0.4)", sim.over === "cpu");
+  awTower(ctx, sim.cpu.baseX, FIELD.foeTower, "rgba(221,106,110,0.32)", sim.over === "you");
+
+  for (const tr of sim.tracers) {
+    ctx.strokeStyle = alpha(C.text, Math.max(0, tr.life / 0.12) * 0.8);
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(tr.x1, tr.y1); ctx.lineTo(tr.x2, tr.y2); ctx.stroke();
+  }
   for (const pf of sim.puffs) {
     const k = Math.max(0, pf.life / 0.34);                  // 1 at death, 0 when spent
     ctx.strokeStyle = alpha(pf.side === "you" ? C.up : C.down, k * 0.7);
@@ -5293,34 +5766,55 @@ function awDraw(ctx, sim) {
     // A near-black outline, not a second hue: it separates the unit from the
     // grid without asking the eye to decode another colour.
     ctx.lineWidth = 1.5; ctx.strokeStyle = C.base; ctx.stroke();
-    ctx.fillStyle = alpha(C.base, 0.7); ctx.fillRect(u.x - b.r, u.y - b.r - 6, b.r * 2, 3);
-    ctx.fillStyle = C.text; ctx.fillRect(u.x - b.r, u.y - b.r - 6, b.r * 2 * Math.max(0, u.hp) / u.maxHp, 3);
+    ctx.fillStyle = alpha(C.base, 0.75); ctx.fillRect(u.x - b.r, u.y - b.r - 9, b.r * 2, 4);
+    ctx.fillStyle = u.side === "you" ? C.up : C.down;
+    ctx.fillRect(u.x - b.r, u.y - b.r - 9, b.r * 2 * Math.max(0, u.hp) / u.maxHp, 4);
   }
 }
-function AlgoWarsGame({ onWin, onCheer }) {
+
+function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
   const { t } = useI18n();
   const canvasRef = useRef(null);
   const simRef = useRef(null);
   const rafRef = useRef(0);
+  const logicRef = useRef(null);
   const [stance, setStance] = useState("balanced");
-  const stanceRef = useRef(stance); stanceRef.current = stance;
   const [over, setOver] = useState(null);
   const [showRules, setShowRules] = useState(false);
-  const [hud, setHud] = useState({ youCap: 34, youBase: AW_BASE_HP, cpuBase: AW_BASE_HP, youN: 0, cpuN: 0, cpuStance: "balanced" });
-  // Which card was last pressed, and whether the deploy took. A button that
-  // does nothing when you cannot afford it is indistinguishable from a button
-  // that is broken, so the refusal gets a shake and the spend gets a flash.
+  // The bot you have picked but not yet placed. This is the whole two-step
+  // loop: a card arms the field, a lane fires it.
+  const [armed, setArmed] = useState(null);
+  const [hoverLane, setHoverLane] = useState(null);
+  const [hud, setHud] = useState(awBlankHud);
+  // Which card was last pressed, and whether it took. A control that does
+  // nothing when you cannot afford it is indistinguishable from a broken one,
+  // so the refusal gets a shake and the spend gets a flash.
   const [flash, setFlash] = useState(null);   // { type, ok, id }
   const wonRef = useRef(false);
+
+  // Read by the draw loop, which lives outside React and must not re-subscribe
+  // sixty times a second to find out what is selected.
+  const stanceRef = useRef(stance); stanceRef.current = stance;
+  const armedRef = useRef(armed); armedRef.current = armed;
+  const hoverRef = useRef(hoverLane); hoverRef.current = hoverLane;
+
   const newSim = () => ({
-    t: 0, lastHud: 0, over: null, tracers: [], puffs: [],
-    you: { cap: 34, baseHp: AW_BASE_HP, baseX: 22, spawnX: 40 },
-    cpu: { cap: 34, baseHp: AW_BASE_HP, baseX: AW_W - 22, spawnX: AW_W - 40, stance: "balanced", nextDeploy: 2.2 },
-    units: [],
+    t: 0, lastHud: 0, over: null, tracers: [], puffs: [], units: [],
+    log: [], logId: 0, open: [0, 0, 0], openMax: [0, 0, 0],
+    you: { cap: 34, rate: 5.6, baseHp: AW_BASE_HP, baseX: 46, spawnX: 78, sent: 0, dealt: 0 },
+    cpu: { cap: 34, rate: 5.2, baseHp: AW_BASE_HP, baseX: AW_W - 46, spawnX: AW_W - 78, sent: 0, dealt: 0, stance: "balanced", nextDeploy: 2.2 },
   });
+
   useEffect(() => {
-    if (!simRef.current) simRef.current = newSim();
-    const ctx = canvasRef.current.getContext("2d");
+    if (!simRef.current) { simRef.current = newSim(); awLog(simRef.current, "start"); }
+    const cvs = canvasRef.current;
+    const ctx = cvs.getContext("2d");
+    // Backing store at device resolution. Without it the field is a 900px
+    // bitmap stretched across a 900 CSS-px box on a 2× screen, and every
+    // hairline in the 44px grid lands between two device pixels and greys out.
+    const DPR = Math.min(2, window.devicePixelRatio || 1);
+    cvs.width = AW_W * DPR; cvs.height = AW_H * DPR;
+    ctx.scale(DPR, DPR);
     let last = performance.now();
     const loop = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
@@ -5329,162 +5823,408 @@ function AlgoWarsGame({ onWin, onCheer }) {
         awStep(sim, dt, stanceRef.current);
         if (sim.over && !wonRef.current) { wonRef.current = true; setOver(sim.over); onWin?.(sim.over); if (sim.over === "you") onCheer?.(); }
       }
-      awDraw(ctx, sim);
+      awDraw(ctx, sim, armedRef.current == null ? null : (hoverRef.current ?? -1));
       sim.lastHud += dt;
-      if (sim.lastHud > 0.12) {
-        sim.lastHud = 0;
-        setHud({ youCap: Math.floor(sim.you.cap), youBase: Math.max(0, Math.ceil(sim.you.baseHp)), cpuBase: Math.max(0, Math.ceil(sim.cpu.baseHp)), youN: sim.units.filter(u => u.side === "you").length, cpuN: sim.units.filter(u => u.side === "cpu").length, cpuStance: sim.cpu.stance });
-      }
+      if (sim.lastHud > 0.12) { sim.lastHud = 0; setHud(awReadHud(sim)); }
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const reset = () => { wonRef.current = false; simRef.current = newSim(); setOver(null); setStance("balanced"); setFlash(null); };
-  const deploy = (type) => {
-    const ok = awDeploy(simRef.current, "you", type);
-    setFlash(prev => ({ type, ok, id: (prev?.id || 0) + 1 }));
+
+  const reset = () => {
+    wonRef.current = false;
+    simRef.current = newSim();
+    awLog(simRef.current, "start");
+    setOver(null); setStance("balanced"); setFlash(null); setArmed(null); setHoverLane(null);
+    setHud(awReadHud(simRef.current));
   };
-  const cap = hud.youCap;
-  // Spelled out as static literals rather than translating b.name / s.hint at
-  // the call site (which would read as a computed key): the i18n
-  // audit only sees literal arguments, so a dynamic key is a translation that
-  // falls back to English silently, with nothing to catch it.
-  const STANCE_LABEL = { aggressive: t("Aggressive"), balanced: t("Balanced"), defensive: t("Defensive") };
+  const pickStance = (id) => {
+    setStance(id);
+    if (simRef.current && !simRef.current.over) awLog(simRef.current, "logic", "you", id);
+  };
+  const placeIn = (lane) => {
+    if (!armed || over) return;
+    const ok = awDeploy(simRef.current, "you", armed, lane);
+    setFlash(prev => ({ type: armed, ok, id: (prev?.id || 0) + 1 }));
+    if (ok) setArmed(null);
+  };
+
+  const cap = hud.cap;
+  const threat = hud.threat;
+
+  // Spelled out as static literals rather than translating a table field at the
+  // call site: the i18n audit only sees literal arguments, so a computed key is
+  // a translation that falls back to English silently with nothing to catch it.
+  const STANCE_LABEL = { aggressive: t("Aggro"), balanced: t("Balanced"), defensive: t("Defend") };
   const STANCE_HINT = {
     aggressive: t("push the enemy server"),
     balanced: t("engage nearest, then advance"),
     defensive: t("hold your line, counter-punch"),
   };
-  const BOT_NAME = { day: t("Day-Trader"), index: t("Index-Fund"), sniper: t("Sniper") };
+  const BOT_NAME = { day: t("Day-Trader"), index: t("Index-Fund"), hedge: t("Hedge-Fund") };
+  // The article travels with the name rather than sitting in the sentence:
+  // English chooses it by the following sound ("a Day-Trader", "an
+  // Index-Fund") and other languages choose it by gender, so a template that
+  // hard-codes "a {bot}" is wrong in English before it is even translated.
+  const BOT_ONE = { day: t("a Day-Trader"), index: t("an Index-Fund"), hedge: t("a Hedge-Fund") };
+  const BOT_ONE_CAP = { day: t("A Day-Trader"), index: t("An Index-Fund"), hedge: t("A Hedge-Fund") };
+  const BOT_TAG = { day: t("SWARM"), index: t("TANK"), hedge: t("BURST") };
   const BOT_BLURB = {
     day: t("fast, cheap, fragile — swarm and rush"),
     index: t("tanky, slow — soaks damage, holds the line"),
-    sniper: t("long range, high burst — melts tanks, dies fast"),
+    hedge: t("long range, high burst — melts tanks, dies fast"),
   };
-  const cpuStanceLabel = STANCE_LABEL[hud.cpuStance] || hud.cpuStance;
+  const STAT_LABEL = { dmg: t("DMG"), hp: t("HP"), spd: t("SPD") };
+  const THREAT_LEVEL = { calm: t("CALM"), watch: t("WATCH"), high: t("HIGH") };
 
-  // ---- HUD ----
-  const meterCard = { background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "11px 13px", flex: "1 1 150px", minWidth: 0 };
-  // linear, not eased: the sim samples the HUD roughly eight times a second, so
-  // an easing curve restarting on every sample reads as a stutter.
-  const meter = (frac, color) => (
-    <div aria-hidden="true" style={{ height: 5, borderRadius: 3, background: C.surfaceRaised, overflow: "hidden", marginTop: 9 }}>
-      <div style={{ height: "100%", width: `${Math.max(0, Math.min(1, frac)) * 100}%`, background: color, borderRadius: 3, transition: "width 140ms linear" }} />
+  // ---- the shared vocabulary of this screen ----
+  const railLabel = { fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", color: C.faint, textTransform: "uppercase" };
+  const railCard = { background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.md, marginTop: 8, padding: 12 };
+  const metaMono = { fontFamily: MONO, fontSize: 10.5, color: C.faint };
+  const outlineBtn = {
+    background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm,
+    color: C.muted, fontFamily: SANS, fontSize: 13, padding: "6px 12px", cursor: "pointer", whiteSpace: "nowrap",
+  };
+
+  // An integrity meter: a full ramp under a repeating 1px overlay, so it reads
+  // as segments of capacity rather than as a smooth percentage.
+  const meter = (frac, ramp) => (
+    <div aria-hidden="true" style={{ height: 9, borderRadius: 5, background: C.surface, border: `1px solid ${C.edge}`, overflow: "hidden", position: "relative" }}>
+      <div style={{ width: `${Math.max(0, Math.min(1, frac)) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${ramp[0]}, ${ramp[1]})`, transition: "width 140ms linear" }} />
+      <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(90deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 11px)" }} />
     </div>
   );
-  const stat = (label, value, sub, frac, color) => (
-    <div style={meterCard}>
-      <div style={{ ...TYPE.eyebrowSm, color: C.faint }}>{label}</div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 7, marginTop: 5 }}>
-        <span style={{ ...TYPE.num, fontSize: 17, fontWeight: 700, color }}>{value}</span>
-        <span style={{ fontFamily: SANS, fontSize: 11.5, color: C.faint, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub}</span>
-      </div>
-      {meter(frac, color)}
-    </div>
-  );
+  const sep = <span aria-hidden="true" style={{ color: C.edgeStrong }}>|</span>;
+  const pct = (hp) => Math.round((hp / AW_BASE_HP) * 100);
+
+  // One line about how it actually went, read off the round rather than written
+  // in advance. A lane you never held is how this is usually lost.
+  const verdict = hud.openSecs >= 8
+    ? (over === "you"
+        ? t("Won with lane {lane} open for {n} seconds — they never punished it.")
+        : t("Lane {lane} was undefended for {n} seconds. Try one Index-Fund early."))
+        .replace("{lane}", hud.openLane).replace("{n}", String(hud.openSecs))
+    : (over === "you"
+        ? t("Every lane held. That is what this is supposed to look like.")
+        : t("Nothing was left open — they simply out-traded you. Open with a Hedge-Fund."));
 
   return (
-    <div style={{ fontFamily: SANS }}>
-      <div className="v-awroom" style={{ display: "flex", flexDirection: "column", gap: 12, padding: 20 }}>
-        {/* Three readouts, each a number over the bar that number came from.
-            This was one row of coloured mono text with ▮ and ⚡ glyphs in it,
-            which is a status line, not an instrument panel. */}
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {stat(t("Your server"), hud.youBase, t("{n} bots").replace("{n}", String(hud.youN)), hud.youBase / AW_BASE_HP, C.up)}
-          {stat(t("Capital"), cap, t("spend it to deploy"), cap / AW_CAP_MAX, C.accentText)}
-          {stat(t("Enemy server"), hud.cpuBase, `${t("{n} bots").replace("{n}", String(hud.cpuN))} · ${cpuStanceLabel.toLowerCase()}`, hud.cpuBase / AW_BASE_HP, C.down)}
+    <div style={{ fontFamily: SANS, display: "flex", flexDirection: "column" }}>
+      {/* ---- header ---- */}
+      {/* The game owns this bar rather than the games shell, because everything
+          live in it — the clock, the logic in force — is this component's
+          state, and lifting a per-frame clock into the dashboard would
+          re-render the whole desk eight times a second. */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceAlt }}>
+        <span style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", color: C.accentText, flexShrink: 0 }}>
+          <DeskIcon name="algowars" size={17} />
+        </span>
+        <span style={{ fontWeight: 700, fontSize: 14.5, color: C.text }}>{t("Algorithm Wars")}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 7, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5, color: C.muted, whiteSpace: "nowrap" }}>
+          <span aria-hidden="true" className={over ? undefined : "v-pulse"}
+            style={{ width: 6, height: 6, borderRadius: "50%", background: over ? C.faint : C.accent }} />
+          {over ? t("OVER") : t("LIVE")} {awClock(hud.clock)}
+        </span>
+        <span style={{ ...metaMono, fontSize: 11.5 }}>
+          {t("round 1 · {logic}").replace("{logic}", STANCE_LABEL[stance].toLowerCase())}
+        </span>
+        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <button className="v-gameout" onClick={() => setShowRules(v => !v)} aria-expanded={showRules} style={outlineBtn}>{t("How to play")}</button>
+          <button className="v-gameout" onClick={reset} style={outlineBtn}>{t("Restart")}</button>
+          {onBack && <button className="v-gameout" onClick={onBack} style={outlineBtn}>← {t("games")}</button>}
+          {onClose && <button onClick={onClose} aria-label={t("Close games")} style={{ ...outlineBtn, border: "none", color: C.faint, padding: "6px 4px" }}>✕</button>}
+        </span>
+      </div>
+
+      {/* ---- HUD strip ---- */}
+      {/* Mirrored on purpose. Both sides carry the same three facts in the same
+          three places, so "am I ahead" is a comparison of two positions rather
+          than a reading of six numbers. */}
+      <div className="v-awhud" style={{ display: "flex", alignItems: "center", gap: 20, padding: "15px 22px", borderBottom: `1px solid ${C.edge}` }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+          <div style={{ textAlign: "right", minWidth: 108 }}>
+            <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{t("YOUR SERVER")}</div>
+            <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: C.accentText, lineHeight: 1.1 }}>{hud.youHp}</div>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {meter(hud.youHp / AW_BASE_HP, FIELD.youMeter)}
+            <div style={{ display: "flex", gap: 8, marginTop: 7, ...metaMono }}>
+              <span>{(hud.youN === 1 ? t("{n} BOT") : t("{n} BOTS")).replace("{n}", String(hud.youN))}</span>{sep}
+              <span>{t("DPS {n}").replace("{n}", String(hud.youDps))}</span>{sep}
+              <span>{t("INTEGRITY {n}%").replace("{n}", String(pct(hud.youHp)))}</span>
+            </div>
+          </div>
         </div>
 
-        {/* battlefield */}
-        <div style={{ position: "relative", width: "100%", maxWidth: AW_W, alignSelf: "center" }}>
-          <canvas ref={canvasRef} width={AW_W} height={AW_H} aria-label={t("Battlefield")}
-            style={{ width: "100%", height: "auto", display: "block", borderRadius: R.md, border: `1px solid ${C.edge}` }} />
+        <div style={{ width: 158, flexShrink: 0, background: C.surface, border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, padding: "10px 14px", textAlign: "center" }}>
+          <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{t("CAPITAL")}</div>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 6 }}>
+            <span style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, lineHeight: 1.15, color: C.text }}>{cap}</span>
+            <span style={{ fontFamily: MONO, fontSize: 11, color: C.accentText }}>+{Math.round(hud.rate)}/s</span>
+          </div>
+          <div aria-hidden="true" style={{ height: 4, borderRadius: 2, background: C.base, marginTop: 6, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${Math.min(100, (cap / AW_CAP_MAX) * 100)}%`, background: C.muted, transition: "width 140ms linear" }} />
+          </div>
+        </div>
+
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {meter(hud.cpuHp / AW_BASE_HP, FIELD.foeMeter)}
+            <div style={{ display: "flex", gap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
+              <span>{t("INTEGRITY {n}%").replace("{n}", String(pct(hud.cpuHp)))}</span>{sep}
+              <span>{t("DPS {n}").replace("{n}", String(hud.cpuDps))}</span>{sep}
+              <span>{(hud.cpuN === 1 ? t("{n} BOT") : t("{n} BOTS")).replace("{n}", String(hud.cpuN))}</span>
+            </div>
+          </div>
+          <div style={{ minWidth: 108 }}>
+            <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{t("ENEMY SERVER")}</div>
+            <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: C.down, lineHeight: 1.1 }}>{hud.cpuHp}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ---- field + rail ---- */}
+      <div className="v-awbody" style={{ display: "flex", alignItems: "stretch" }}>
+        <div style={{ flex: 1, minWidth: 0, padding: "18px 16px 18px 22px" }}>
+          <div style={{ position: "relative", border: `1px solid ${C.edge}`, borderRadius: R.lg, overflow: "hidden", background: C.base }}>
+            <canvas ref={canvasRef} aria-hidden="true"
+              style={{ width: "100%", height: "auto", display: "block", aspectRatio: `${AW_W} / ${AW_H}` }} />
+
+            {/* The sweep is a DOM layer rather than a canvas draw: it is pure
+                decoration, and a CSS animation is something
+                prefers-reduced-motion can switch off without the draw loop
+                needing to know it exists. */}
+            <div aria-hidden="true" className="v-fieldscan" style={{ position: "absolute", top: 0, left: 0, width: 180, height: "100%", background: "linear-gradient(90deg, transparent, rgba(76,195,138,0.05), transparent)", pointerEvents: "none" }} />
+
+            {/* Three lanes, as real buttons. A canvas cannot be tabbed to and
+                announces nothing, so the thing you are told to click is a named
+                control whether you reach it with a mouse or not. */}
+            <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateRows: `repeat(${AW_LANES}, 1fr)` }}>
+              {AW_LANE_ID.map((id, i) => (
+                <button key={id} onClick={() => placeIn(i)}
+                  onMouseEnter={() => setHoverLane(i)} onMouseLeave={() => setHoverLane(null)}
+                  onFocus={() => setHoverLane(i)} onBlur={() => setHoverLane(null)}
+                  disabled={!armed || !!over}
+                  aria-label={armed
+                    ? t("Deploy {bot} to lane {lane}").replace("{bot}", BOT_NAME[armed]).replace("{lane}", id)
+                    : t("Lane {lane} — pick a bot first").replace("{lane}", id)}
+                  style={{
+                    background: "transparent", border: "none", padding: 0,
+                    cursor: armed && !over ? "pointer" : "default",
+                    display: "flex", alignItems: "flex-start", justifyContent: "flex-start",
+                  }}>
+                  <span aria-hidden="true" style={{ ...metaMono, fontSize: 9.5, letterSpacing: "1.5px", color: FIELD.laneLabel, padding: "10px 0 0 12px" }}>
+                    {t("LANE {lane}").replace("{lane}", id)}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <span aria-hidden="true" style={{ position: "absolute", left: "50%", top: 12, transform: "translateX(-50%)", ...metaMono, fontSize: 9.5, letterSpacing: "1.5px", color: C.accentText, background: alpha(C.base, 0.85), padding: "3px 9px", borderRadius: 10, border: `1px solid ${C.edge}`, pointerEvents: "none" }}>
+              {t("MIDLINE")}
+            </span>
+            <span aria-hidden="true" style={{ position: "absolute", left: 22, bottom: 12, ...metaMono, fontSize: 9.5, letterSpacing: "1.5px", color: C.accentText, pointerEvents: "none" }}>
+              {t("YOU")} {hud.youHp}
+            </span>
+            <span aria-hidden="true" style={{ position: "absolute", right: 22, bottom: 12, ...metaMono, fontSize: 9.5, letterSpacing: "1.5px", color: C.down, pointerEvents: "none" }}>
+              {t("ENEMY")} {hud.cpuHp}
+            </span>
+
+            {!over && (
+              <div style={{ position: "absolute", left: "50%", bottom: 12, transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 8, background: alpha(C.base, 0.85), border: `1px solid ${C.edge}`, borderRadius: 20, padding: "6px 12px", color: C.muted, fontFamily: SANS, fontSize: 11.5, pointerEvents: "none", maxWidth: "calc(100% - 220px)" }}>
+                <span aria-hidden="true" className="v-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, flexShrink: 0 }} />
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {armed
+                    ? t("Now click a lane to send the {bot} in.").replace("{bot}", BOT_NAME[armed])
+                    : t("Pick a bot below, then click a lane to deploy")}
+                </span>
+              </div>
+            )}
+
+            {over && (
+              <div className="v-awover" style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: alpha("#07090d", 0.62), padding: 16 }}>
+                <div>
+                  <div style={{ ...metaMono, fontSize: 10.5, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+                    {t("ROUND 1 · {clock}").replace("{clock}", awClock(hud.clock))}
+                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 34, fontWeight: 700, letterSpacing: "-1px", marginTop: 10, color: over === "you" ? C.accentText : C.down, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>
+                    {over === "you" ? t("Market dominated") : t("Algorithm crashed")}
+                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 15, color: C.muted, marginTop: 8, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>
+                    {over === "you" ? t("Your bots took the enemy server.") : t("The enemy overran your server.")}
+                  </div>
+                  <div style={{ display: "flex", gap: 26, justifyContent: "center", marginTop: 22, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
+                    {[[t("BOTS SENT"), hud.sent], [t("DAMAGE DEALT"), hud.dealt], [t("CAPITAL LEFT"), cap]].map(([label, value]) => (
+                      <div key={label}>
+                        <div style={{ ...metaMono, fontSize: 9.5, letterSpacing: "1.5px" }}>{label}</div>
+                        <div style={{ fontFamily: MONO, fontSize: 20, fontWeight: 700, marginTop: 3, color: C.text }}>{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.4s both" }}>
+                    <button onClick={reset} className="vt-sheen"
+                      style={{ background: `linear-gradient(100deg, ${C.accent} 40%, #79dd94 50%, ${C.accent} 60%)`, color: C.textOnAccent, border: "none", fontFamily: SANS, fontWeight: 700, fontSize: 14, padding: "11px 24px", borderRadius: 9, cursor: "pointer" }}>
+                      {t("Rematch")}
+                    </button>
+                    {/* Not a second Rematch: it restarts AND puts you on the one
+                        control the round was lost on, focused and ready. */}
+                    <button className="v-gameout" onClick={() => { reset(); requestAnimationFrame(() => logicRef.current?.querySelector('[aria-checked="true"]')?.focus()); }}
+                      style={{ ...outlineBtn, color: C.text, fontSize: 14, padding: "11px 20px", borderRadius: 9 }}>
+                      {t("Change logic")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {over && (
-            <div className="v-awover" style={{ position: "absolute", inset: 0, background: alpha(C.base, 0.88), borderRadius: R.md, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 16, textAlign: "center" }}>
-              <div style={{ ...TYPE.display, color: over === "you" ? C.up : C.down }}>
-                {over === "you" ? t("Market dominated") : t("Algorithms crushed")}
-              </div>
-              <div style={{ fontFamily: SANS, fontSize: 13, color: C.muted }}>
-                {over === "you" ? t("Your bots took the enemy server.") : t("The enemy overran your server.")}
-              </div>
-              <button onClick={reset} style={button("primary", "md")}>{t("Rematch")}</button>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.edge}` }}>
+              <span style={{ width: 26, height: 26, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", color: over === "you" ? C.accentText : C.warn, flexShrink: 0 }}>
+                <DeskIcon name={over === "you" ? "rise" : "alert"} size={15} />
+              </span>
+              <span style={{ fontFamily: SANS, fontSize: 13, color: C.muted }}>{verdict}</span>
             </div>
           )}
         </div>
 
-        {/* deploy bar — three peers, so none of them rests green. The tile
-            turns accent on press, which is the moment green actually means
-            something here: "this is the one you just spent on". */}
-        <div>
-          <div style={{ ...TYPE.eyebrowSm, color: C.faint, marginBottom: 7 }}>{t("Deploy")}</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {Object.entries(AW_BOTS).map(([id, b]) => {
-              const afford = cap >= b.cost && !over;
-              const hit = flash && flash.type === id;
-              return (
-                // NOT disabled when you cannot afford it: a button that does
-                // nothing is indistinguishable from a broken one, so the
-                // refusal is a shake rather than silence. aria-disabled says
-                // the same thing to a screen reader while keeping it focusable.
-                <button key={id} onClick={() => deploy(id)} disabled={!!over} aria-disabled={!afford}
-                  className="v-verbcard"
-                  style={{
-                    flex: "1 1 170px", minWidth: 0, textAlign: "left",
-                    background: C.surface, border: `1px solid ${afford ? C.edgeStrong : C.edge}`, borderRadius: R.lg,
-                    padding: 11, cursor: over ? "default" : "pointer",
-                    opacity: over ? 0.5 : afford ? 1 : 0.55,
-                    transition: `opacity ${MOTION.base} ${MOTION.ease}, border-color ${MOTION.base} ${MOTION.ease}`,
-                  }}>
-                  {/* Keyed on the press so the animation replays on a repeat
-                      press. Keying the BUTTON would remount it and throw the
-                      keyboard user's focus back to the document. */}
-                  <span key={hit ? flash.id : "idle"} className={hit ? (flash.ok ? "v-spend" : "v-nope") : undefined}
-                    style={{ display: "flex", alignItems: "flex-start", gap: 10, width: "100%", minWidth: 0 }}>
-                    <span className="v-verbtile" style={{ flex: "0 0 auto", width: 32, height: 32, borderRadius: R.xs, display: "grid", placeItems: "center", background: C.surfaceRaised, color: C.muted }}>
-                      <AwBotMark shape={b.shape} />
-                    </span>
-                    <span style={{ minWidth: 0 }}>
-                      <span style={{ display: "flex", alignItems: "baseline", gap: 7 }}>
-                        <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 13, color: C.text }}>{BOT_NAME[id]}</span>
-                        <span style={{ ...TYPE.numSm, color: afford ? C.accentText : C.faint }}>{b.cost}</span>
-                      </span>
-                      <span style={{ display: "block", fontFamily: SANS, fontSize: 11.5, color: C.faint, lineHeight: 1.45, marginTop: 2 }}>{BOT_BLURB[id]}</span>
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
+        {/* ---- rail ---- */}
+        <div className="v-awrail" style={{ width: 286, flexShrink: 0, borderLeft: `1px solid ${C.edge}`, padding: "18px 22px 18px 18px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+            <div style={railLabel}>{t("BATTLE LOG")}</div>
+            <div style={{ ...railCard, padding: "11px 12px", fontFamily: MONO, fontSize: 11.5, lineHeight: 1.85 }}>
+              {hud.log.map(e => (
+                <div key={e.id} style={{ color: e.kind === "start" ? C.faint : C.muted }}>
+                  <span style={{ color: FIELD.quinary }}>{awClock(e.at)}</span>{" "}
+                  {e.kind === "start" ? t("round started")
+                    : e.kind === "won" ? t("enemy server down")
+                    : e.kind === "lost" ? t("your server down")
+                    : e.kind === "logic"
+                      ? <>{t("logic set")} <span style={{ color: C.text }}>{(STANCE_LABEL[e.type] || "").toLowerCase()}</span></>
+                      : <>
+                          {e.who === "you" ? t("you deployed") : t("enemy deployed")}{" "}
+                          <span style={{ color: e.who === "you" ? C.accentText : C.down }}>{BOT_NAME[e.type]}</span>
+                        </>}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* stance = live AI re-scripting. A set of three exclusive options is a
-            segmented control, which is the component this product already has
-            for exactly that; it was three outline buttons pretending to be one. */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ ...TYPE.eyebrowSm, color: C.faint, marginBottom: 7 }}>{t("Army logic")}</div>
-            <div role="radiogroup" aria-label={t("Army logic")} style={segmentTrack()}>
-              {AW_STANCES.map(s => (
-                <button key={s.id} role="radio" aria-checked={stance === s.id} onClick={() => setStance(s.id)} title={STANCE_HINT[s.id]}
-                  style={segmentItem(stance === s.id, "neutral")}>
-                  {STANCE_LABEL[s.id]}
+          <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) 0.08s both" }}>
+            <div style={railLabel}>{t("THREAT")}</div>
+            <div style={railCard}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontFamily: SANS, fontSize: 12.5, color: C.muted }}>
+                  {t("Lane {lane} pressure").replace("{lane}", threat.lane)}
+                </span>
+                <span style={{ fontFamily: MONO, fontSize: 12, color: threat.level === "high" ? C.down : threat.level === "watch" ? C.warn : C.faint }}>
+                  {THREAT_LEVEL[threat.level]}
+                </span>
+              </div>
+              <div aria-hidden="true" style={{ height: 5, borderRadius: 3, background: C.surface, marginTop: 9, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${threat.pct * 100}%`, background: `linear-gradient(90deg, ${C.warn}, ${C.down})`, transition: "width 200ms linear" }} />
+              </div>
+              <div style={{ fontFamily: SANS, fontSize: 11.5, color: C.faint, marginTop: 9, lineHeight: 1.45 }}>
+                {threat.type
+                  ? t("{enemy} is closing on your server. Deploy {counter} to answer it.")
+                      .replace("{enemy}", BOT_ONE_CAP[threat.type]).replace("{counter}", BOT_ONE[threat.counter])
+                  : t("Nothing incoming. Push a lane while it is quiet.")}
+              </div>
+            </div>
+          </div>
+
+          {/* Pinned to the bottom because it is the one control here you change
+              DURING a fight rather than read. */}
+          <div ref={logicRef} style={{ marginTop: "auto", animation: "vt-fadeup 0.5s var(--v-ease) 0.16s both" }}>
+            <div style={railLabel}>{t("ARMY LOGIC")}</div>
+            {/* Accent, not the neutral thumb. Everywhere else in this product a
+                green segment is reserved for a choice that changes what the
+                product IS; inside a fight this is that choice — it re-scripts
+                every bot you own, live. */}
+            <div role="radiogroup" aria-label={t("Army logic")}
+              style={{ display: "flex", gap: 4, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: 4, marginTop: 8 }}>
+              {AW_STANCES.map(id => (
+                <button key={id} role="radio" aria-checked={stance === id} onClick={() => pickStance(id)} title={STANCE_HINT[id]}
+                  style={{ ...segmentItem(stance === id, "accent", { pad: "8px 0" }), flex: 1, borderRadius: R.xs }}>
+                  {STANCE_LABEL[id]}
                 </button>
               ))}
             </div>
           </div>
-          <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-            <button onClick={() => setShowRules(v => !v)} aria-expanded={showRules} style={button("solid", "sm")}>{t("How to play")}</button>
-            <button onClick={reset} style={button("ghost", "sm")}>{t("Restart")}</button>
+        </div>
+      </div>
+
+      {/* ---- deploy ---- */}
+      <div style={{ padding: "4px 22px 22px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={railLabel}>{t("DEPLOY")}</span>
+          <span style={{ fontFamily: MONO, fontSize: 10, color: C.edgeStrong }}>
+            {t("{n} CAPITAL AVAILABLE").replace("{n}", String(cap))}
           </span>
         </div>
+        <div className="v-awdeploy" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 10 }}>
+          {AW_ORDER.map((id, i) => {
+            const b = AW_BOTS[id];
+            const afford = cap >= b.cost && !over;
+            const isArmed = armed === id;
+            // The one to reach for: affordable, and the counter to what is
+            // actually coming. Not a fixed favourite — the recommendation moves
+            // with the fight, which is the only way it is worth reading.
+            const pick = !over && afford && !armed && threat.counter === id;
+            const hit = flash && flash.type === id;
+            return (
+              // NOT disabled when unaffordable: a control that does nothing is
+              // indistinguishable from a broken one, so the refusal is a shake
+              // rather than silence. aria-disabled says the same to a screen
+              // reader while keeping it focusable.
+              <button key={id} onClick={() => setArmed(v => (v === id ? null : id))} disabled={!!over} aria-disabled={!afford} aria-pressed={isArmed}
+                className={`v-deploycard${pick ? " is-pick" : ""}`}
+                style={{
+                  position: "relative", textAlign: "left", minWidth: 0,
+                  background: C.surface,
+                  border: `1px solid ${isArmed || pick ? C.accent : C.edge}`,
+                  borderRadius: R.lg, padding: "14px 16px",
+                  cursor: over ? "default" : "pointer",
+                  opacity: over ? 0.5 : afford ? 1 : 0.55,
+                  animation: `vt-fadeup 0.5s var(--v-ease) ${(0.05 + i * 0.08).toFixed(2)}s both`,
+                }}>
+                {/* Keyed on the press so the animation replays on a repeat
+                    press. Keying the BUTTON would remount it and throw a
+                    keyboard user's focus back to the document. */}
+                <span key={hit ? flash.id : "idle"} className={hit ? (flash.ok ? "v-spend" : "v-nope") : undefined} style={{ display: "block" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                    <span className={pick ? "v-tilering" : undefined}
+                      style={{ width: 32, height: 32, background: C.surfaceRaised, borderRadius: 9, display: "grid", placeItems: "center", color: pick || isArmed ? C.accentText : C.muted, flexShrink: 0 }}>
+                      <AwBotMark shape={b.shape} size={16} />
+                    </span>
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: "block", fontFamily: SANS, fontWeight: 700, fontSize: 14.5, color: C.text }}>{BOT_NAME[id]}</span>
+                      <span style={{ display: "block", fontFamily: MONO, fontSize: 10, letterSpacing: "1px", color: C.faint }}>{BOT_TAG[id]}</span>
+                    </span>
+                    <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 14, fontWeight: 700, color: afford ? C.accentText : C.faint }}>{b.cost}</span>
+                  </span>
+                  <span style={{ display: "flex", gap: 14, marginTop: 12 }}>
+                    {awStats(id).map(([key, frac]) => (
+                      <span key={key} style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: "block", fontFamily: MONO, fontSize: 9.5, color: C.faint }}>{STAT_LABEL[key]}</span>
+                        <span aria-hidden="true" style={{ display: "block", height: 4, borderRadius: 2, background: C.base, marginTop: 4, overflow: "hidden" }}>
+                          <span style={{ display: "block", height: "100%", width: `${frac * 100}%`, borderRadius: 2, background: pick || isArmed ? C.accent : C.muted }} />
+                        </span>
+                      </span>
+                    ))}
+                  </span>
+                  <span style={{ display: "block", fontFamily: SANS, fontSize: 12.5, color: C.muted, marginTop: 11, lineHeight: 1.45 }}>{BOT_BLURB[id]}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-        {/* The paragraph that used to live permanently under the game, on
-            request instead — the same call the chess room makes. */}
         {showRules && (
-          <div style={{ background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: 12, fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: C.muted }}>
-            {t("Capital regenerates on its own — spend it to deploy bots that march and fight without you. Destroy the enemy server to win.")}
-            {" "}{t("Snipers melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Snipers.")}
+          <div style={{ background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: 12, marginTop: 12, fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: C.muted }}>
+            {t("Capital regenerates on its own. Pick a bot, then click a lane to send it in — it marches and fights without you. Destroy the enemy server to win.")}
+            {" "}{t("Hedge-Funds melt Index-Funds, Index-Funds soak Day-Traders, Day-Traders swarm Hedge-Funds.")}
             {" "}{t("Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.")}
           </div>
         )}
@@ -10494,8 +11234,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     // every other panel head in the product speaks. It was mono uppercase with
     // an emoji parsed out of the front of the title string by splitting on the
     // first space, which is an encoding, not an API.
-    const shell = (iconName, label, headerRight, body) => (
+    // `ownHeader` hands the whole bar to the game.
+    //
+    // The two arcade games' headers carry live state — a round clock, whose
+    // turn it is, the logic currently in force — and that state belongs to the
+    // game component. Lifting it up here to render in this bar would re-render
+    // the entire desk every time a clock ticked. So those two draw their own
+    // header in the same box, and get onBack/onClose to fill it with.
+    const shell = (iconName, label, headerRight, body, ownHeader) => (
       <div style={{ flexShrink: 0, minWidth: 0, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {!ownHeader && (
         <div style={{ ...panelHead({ pad: "10px 14px" }) }}>
           <span style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
             <span style={{ flexShrink: 0, color: C.muted, display: "grid", placeItems: "center" }}><DeskIcon name={iconName} size={17} /></span>
@@ -10506,6 +11254,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
             <button onClick={closeGame} className="v-gamectl" aria-label={t("Close games")} style={{ ...ctlBtn, padding: "7px 10px" }}>✕</button>
           </span>
         </div>
+        )}
         {body}
       </div>
     );
@@ -10542,8 +11291,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         <ChessGame sfx={chessSfx} onWin={(w) => triggerAnchor("cheer", { label: w === "w" ? "BULLS WIN" : "BEARS WIN" })} />);
     }
     if (gameMode === "algowars") {
-      return shell(gameMeta("algowars").icon, gameMeta("algowars").name, backBtn,
-        <AlgoWarsGame onWin={(w) => triggerAnchor(w === "you" ? "cheer" : "break", { label: w === "you" ? "MARKET DOMINATED" : "OUTGUNNED" })} onCheer={() => {}} />);
+      return shell(null, null, null,
+        <AlgoWarsGame
+          onWin={(w) => triggerAnchor(w === "you" ? "cheer" : "break", { label: w === "you" ? "MARKET DOMINATED" : "OUTGUNNED" })}
+          onCheer={() => {}}
+          onBack={() => { setGameMode("menu"); stopSpeak(); }}
+          onClose={closeGame}
+        />, true);
     }
 
     // ---- an active quiz game (school / bullbear / ticker) ----

@@ -715,6 +715,83 @@ button:not(:disabled):active { transform: scale(0.97); }
   .v-awroom { padding: 14px !important; }
 }
 
+/* ---------- game rooms ----------
+   Algorithm Wars and the chess room. Everything here is silenced by the
+   blanket prefers-reduced-motion rule near the top of this file, which is why
+   none of it may carry meaning on its own: the selected square is also washed
+   green, the legal squares are also dots, the recommended card is also
+   bordered. The motion says the same thing twice, louder. */
+
+/* A light band crossing the battlefield / falling down the board. Long, slow
+   and very faint — it is there to stop a static field reading as a screenshot,
+   not to be noticed. */
+@keyframes v-fieldscan { from { transform: translateX(-100%); } to { transform: translateX(1100px); } }
+@keyframes v-boardscan { from { transform: translateY(-100%); } to { transform: translateY(620px); } }
+.v-fieldscan { animation: v-fieldscan 6s linear infinite; }
+.v-boardscan { animation: v-boardscan 9s linear infinite; }
+
+/* The selected chess square. An inset ring rather than an outline so it does
+   not shift the piece, and breathing rather than static so the square you are
+   about to move FROM stays distinct from the squares you can move TO. */
+@keyframes v-selring {
+  0%, 100% { box-shadow: inset 0 0 0 2px rgba(70,167,88,0.9), inset 0 0 24px rgba(70,167,88,0.15); }
+  50%      { box-shadow: inset 0 0 0 2px rgba(70,167,88,0.45), inset 0 0 30px rgba(70,167,88,0.3); }
+}
+.v-selring { animation: v-selring 2.2s ease-in-out infinite; }
+
+/* Legal-move dots. Offset per dot at the call site so eight of them do not
+   beat as one block. */
+@keyframes v-movedot {
+  0%, 100% { transform: scale(0.82); opacity: 0.55; }
+  50%      { transform: scale(1); opacity: 0.95; }
+}
+.v-movedot { animation: v-movedot 1.9s ease-in-out infinite; }
+
+/* The recommended deploy card's tile. An expanding ring that fades, so it
+   reads as "this one" without adding a second green fill to a card that is
+   already bordered green. */
+@keyframes v-tilering {
+  0%   { box-shadow: 0 0 0 0 rgba(70,167,88,0.5); }
+  70%  { box-shadow: 0 0 0 12px rgba(70,167,88,0); }
+  100% { box-shadow: 0 0 0 0 rgba(70,167,88,0); }
+}
+.v-tilering { animation: v-tilering 2.8s ease-out infinite; }
+
+/* Hover for the two games' chrome. The outline buttons in their headers and
+   the deploy cards answer in accent — the same rule the anchor roster follows,
+   for the same reason: the hover should preview the thing it is about to do. */
+.v-gameout { transition: border-color var(--v-base-dur) var(--v-ease), color var(--v-base-dur) var(--v-ease); }
+.v-gameout:hover { border-color: var(--v-accent); color: var(--v-text); }
+.v-deploycard { transition: transform 0.22s var(--v-ease), border-color 0.22s var(--v-ease), box-shadow 0.22s var(--v-ease); }
+.v-deploycard:hover:not(:disabled) { transform: translateY(-3px); border-color: var(--v-accent); }
+.v-deploycard.is-pick:hover:not(:disabled) { box-shadow: 0 12px 28px rgba(70,167,88,0.16); }
+@media (prefers-reduced-motion: reduce) { .v-deploycard:hover:not(:disabled) { transform: none; } }
+
+/* The two arcade screens are drawn against a 1240px reference: a wide field
+   with a fixed 286–300px rail beside it. Below roughly a thousand pixels that
+   rail stops being a margin and starts eating the game — at 700px the field
+   was 124px wide, which is not a battlefield, it is a strip.
+
+   So under 1000px the rail unhooks and stacks beneath, taking a top border in
+   place of its left one, and the deploy row drops to a single column where
+   three cards would each be too narrow to hold a name and a cost on one line.
+   The field keeps its aspect ratio throughout — it is a canvas, and letting it
+   letterbox is what stops the units squashing. */
+@media (max-width: 1000px) {
+  .v-awbody, .v-chessbody { flex-direction: column; }
+  .v-awrail, .v-chessrail {
+    width: auto !important;
+    border-left: none !important;
+    border-top: 1px solid var(--v-edge);
+    padding: 18px 22px !important;
+  }
+  .v-awhud { flex-wrap: wrap; }
+}
+@media (max-width: 720px) {
+  .v-awdeploy { grid-template-columns: 1fr !important; }
+  .v-awhud > div { min-width: 0; }
+}
+
 /* ---------- marketing homepage ----------
    The handoff's measure is 1200px. Everything here is layout that has to
    respond, so it lives in CSS rather than inline. */

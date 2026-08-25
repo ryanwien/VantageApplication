@@ -80,6 +80,25 @@ export default function DeskIcon({ name, size = 18 }) {
           <path d="M18 14.2v4.3a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6h4.3" />
         </svg>
       );
+    // What went wrong, on a post-game card. A triangle rather than a circle:
+    // at 13px the two are told apart by silhouette long before the mark inside
+    // them is legible, and the triangle is the one that already means caution.
+    case "alert":
+      return (
+        <svg {...p}>
+          <path d="M12 3.8 21.2 19.6H2.8L12 3.8Z" />
+          <path d="M12 9.6v4.2M12 16.8h.01" />
+        </svg>
+      );
+    // Something unlocked or improved. The arrow leaves the box it grew out of,
+    // which is what separates it from the download mark pointing the other way.
+    case "rise":
+      return (
+        <svg {...p}>
+          <path d="M12 19.5V5.2" />
+          <path d="M6.2 11 12 5.2 17.8 11" />
+        </svg>
+      );
     // A globe: the ring, the equator, and ONE meridian drawn as an ellipse.
     // Two meridians is the conventional drawing and it is one too many here —
     // at 15px the three curves close up into a filled blob. The ellipse is

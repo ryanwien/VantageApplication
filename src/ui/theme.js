@@ -76,7 +76,7 @@ const alarm = {
   warningSoft: "rgba(221,154,60,0.12)",
 };
 // Chess board squares — named because the game reads them directly.
-const board = { lightSq: "#212934", darkSq: "#171d26" };
+const board = { lightSq: "#232c38", darkSq: "#161d27" };
 
 // ---------- the palette the app consumes ----------
 export const C = {
@@ -160,6 +160,34 @@ export const C = {
   moss: surf.inset,
   citrus: surf.inset,
   link: grow.light,
+};
+
+// ---------- the game field ----------
+//
+// Algorithm Wars' battlefield and the chess board share one vocabulary, and it
+// is not the product's. A lane divider, a midline dash and a board coordinate
+// are all a step or two below C.faint — quiet enough to sit under pieces
+// without ever being read as content — and the two-stop ramps are physical
+// objects (a server tower, an integrity meter) rather than surfaces.
+//
+// They live in their own group rather than widening C with a dozen keys that
+// mean nothing outside a game. Values come straight from the games handoff.
+export const FIELD = {
+  // Two rungs below C.faint (#5b6470). Board coordinates and empty trays take
+  // the first; a log timestamp, which sits beside text it must not compete
+  // with, takes the second.
+  quaternary: "#4a5462",
+  quinary: "#3d4553",
+  laneLine: "#131b26",
+  laneLabel: "#2c3542",
+  midline: "#2a3240",
+  grid: "#111a24",
+  // Meters read left-to-right, so they run dark → light: the bar brightens as
+  // it fills. Towers are lit from above and so run light → dark.
+  youMeter: ["#2a6c39", "#4fbc65"],
+  foeMeter: ["#8c3a3e", "#dd6a6e"],
+  youTower: ["#4fbc65", "#2a6c39"],
+  foeTower: ["#e07a7e", "#8c3a3e"],
 };
 
 // ---------- gradients ----------
