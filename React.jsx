@@ -12,6 +12,10 @@ import {
   chessGlyph, chessSquare, chessInit, legalMoves, chessApply, gameStatus, inCheck,
   chessAIMove, chessCount, chessSan, chessSuggest,
 } from "./src/chess/chess.js";
+import {
+  AW_W, AW_H, AW_LANES, AW_LANE_ID, AW_BOTS, AW_ORDER, AW_STANCES, AW_CAP_MAX, AW_BASE_HP,
+  awStats, awClock, awRate, awLog, awNewSim, awDeploy, awStep, awBlankHud, awReadHud,
+} from "./src/games/algowars.js";
 import { C, GRAD, FIELD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, alpha, button, panel, panelHead, panelNote, field as fieldRecipe, chip, segmentTrack, segmentItem, pill } from "./src/ui/theme.js";
 import { passwordCheck, PW_MIN } from "./src/auth/password.js";
 import Sparkline from "./src/ui/Sparkline.jsx";
@@ -556,7 +560,6 @@ const I18N = {
     "Now click a lane to send the {bot} in.": "Ahora haz clic en un carril para enviar al {bot}.",
     "OVER": "FIN",
     "Pick a bot below, then click a lane to deploy": "Elige un bot abajo y haz clic en un carril para desplegarlo",
-    "ROUND 1 · {clock}": "RONDA 1 · {clock}",
     "SPD": "VEL",
     "SWARM": "ENJAMBRE",
     "TANK": "TANQUE",
@@ -568,7 +571,6 @@ const I18N = {
     "enemy deployed": "el enemigo desplegó",
     "enemy server down": "servidor enemigo caído",
     "logic set": "lógica fijada",
-    "round 1 · {logic}": "ronda 1 · {logic}",
     "round started": "ronda iniciada",
     "you deployed": "desplegaste",
     "your server down": "tu servidor cayó",
@@ -803,6 +805,8 @@ const I18N = {
     "the answer": "la respuesta",
     "Call it inside {n} seconds for a speed bonus": "Decídelo en menos de {n} segundos para un bonus de rapidez",
     "{a} of {b} calls right.": "{a} de {b} aciertos.",
+    "ROUND {n} · {clock}": "RONDA {n} · {clock}",
+    "round {n} · {logic}": "ronda {n} · {logic}",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -1219,7 +1223,6 @@ const I18N = {
     "Now click a lane to send the {bot} in.": "Cliquez maintenant sur un couloir pour envoyer le {bot}.",
     "OVER": "FINI",
     "Pick a bot below, then click a lane to deploy": "Choisissez un bot en bas, puis cliquez sur un couloir pour le déployer",
-    "ROUND 1 · {clock}": "MANCHE 1 · {clock}",
     "SPD": "VIT",
     "SWARM": "ESSAIM",
     "TANK": "TANK",
@@ -1231,7 +1234,6 @@ const I18N = {
     "enemy deployed": "l'ennemi a déployé",
     "enemy server down": "serveur ennemi à terre",
     "logic set": "logique réglée",
-    "round 1 · {logic}": "manche 1 · {logic}",
     "round started": "manche lancée",
     "you deployed": "vous avez déployé",
     "your server down": "votre serveur est à terre",
@@ -1466,6 +1468,8 @@ const I18N = {
     "the answer": "la réponse",
     "Call it inside {n} seconds for a speed bonus": "Décidez en moins de {n} secondes pour un bonus de rapidité",
     "{a} of {b} calls right.": "{a} bons paris sur {b}.",
+    "ROUND {n} · {clock}": "MANCHE {n} · {clock}",
+    "round {n} · {logic}": "manche {n} · {logic}",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -1882,7 +1886,6 @@ const I18N = {
     "Now click a lane to send the {bot} in.": "Jetzt auf eine Bahn klicken, um den {bot} loszuschicken.",
     "OVER": "ENDE",
     "Pick a bot below, then click a lane to deploy": "Unten einen Bot wählen, dann auf eine Bahn klicken",
-    "ROUND 1 · {clock}": "RUNDE 1 · {clock}",
     "SPD": "GES",
     "SWARM": "SCHWARM",
     "TANK": "TANK",
@@ -1894,7 +1897,6 @@ const I18N = {
     "enemy deployed": "Gegner setzte ein",
     "enemy server down": "gegnerischer Server down",
     "logic set": "Logik gesetzt",
-    "round 1 · {logic}": "Runde 1 · {logic}",
     "round started": "Runde gestartet",
     "you deployed": "du hast eingesetzt",
     "your server down": "dein Server ist down",
@@ -2129,6 +2131,8 @@ const I18N = {
     "the answer": "die Antwort",
     "Call it inside {n} seconds for a speed bonus": "Entscheide dich in unter {n} Sekunden für einen Tempobonus",
     "{a} of {b} calls right.": "{a} von {b} richtig getippt.",
+    "ROUND {n} · {clock}": "RUNDE {n} · {clock}",
+    "round {n} · {logic}": "Runde {n} · {logic}",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -2544,7 +2548,6 @@ const I18N = {
     "Now click a lane to send the {bot} in.": "Agora clica numa faixa para enviar o {bot}.",
     "OVER": "FIM",
     "Pick a bot below, then click a lane to deploy": "Escolhe um bot abaixo e clica numa faixa para o implantar",
-    "ROUND 1 · {clock}": "RONDA 1 · {clock}",
     "SPD": "VEL",
     "SWARM": "ENXAME",
     "TANK": "TANQUE",
@@ -2556,7 +2559,6 @@ const I18N = {
     "enemy deployed": "o inimigo implantou",
     "enemy server down": "servidor inimigo em baixo",
     "logic set": "lógica definida",
-    "round 1 · {logic}": "ronda 1 · {logic}",
     "round started": "ronda iniciada",
     "you deployed": "implantaste",
     "your server down": "o teu servidor caiu",
@@ -2791,6 +2793,8 @@ const I18N = {
     "the answer": "a resposta",
     "Call it inside {n} seconds for a speed bonus": "Decide em menos de {n} segundos para um bónus de rapidez",
     "{a} of {b} calls right.": "{a} de {b} acertos.",
+    "ROUND {n} · {clock}": "RONDA {n} · {clock}",
+    "round {n} · {logic}": "ronda {n} · {logic}",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -3206,7 +3210,6 @@ const I18N = {
     "Now click a lane to send the {bot} in.": "Ora clicca su una corsia per mandare il {bot}.",
     "OVER": "FINE",
     "Pick a bot below, then click a lane to deploy": "Scegli un bot qui sotto, poi clicca su una corsia per schierarlo",
-    "ROUND 1 · {clock}": "ROUND 1 · {clock}",
     "SPD": "VEL",
     "SWARM": "SCIAME",
     "TANK": "TANK",
@@ -3218,7 +3221,6 @@ const I18N = {
     "enemy deployed": "il nemico ha schierato",
     "enemy server down": "server nemico abbattuto",
     "logic set": "logica impostata",
-    "round 1 · {logic}": "round 1 · {logic}",
     "round started": "round iniziato",
     "you deployed": "hai schierato",
     "your server down": "il tuo server è caduto",
@@ -3453,6 +3455,8 @@ const I18N = {
     "the answer": "la risposta",
     "Call it inside {n} seconds for a speed bonus": "Decidi entro {n} secondi per un bonus velocità",
     "{a} of {b} calls right.": "{a} scelte giuste su {b}.",
+    "ROUND {n} · {clock}": "ROUND {n} · {clock}",
+    "round {n} · {logic}": "round {n} · {logic}",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -7077,69 +7081,8 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
 //  laid over the field for the same reason: a canvas is not keyboard reachable,
 //  and "click a lane" has to work without a mouse.
 // ============================================================
-const AW_W = 900, AW_H = 372;
-const AW_LANES = 3;
-const AW_LANE_ID = ["A", "B", "C"];
-const awLaneY = (i) => (AW_H * (i + 0.5)) / AW_LANES;
-
-// A bot is told apart by SHAPE, not by hue.
-//
-// The three used to be a white circle, a cyan circle and an indigo circle —
-// two of those colours belonged to the previous palette, and all three sat on
-// top of a fill that already carries a meaning (green = yours, red = theirs).
-// So the battlefield asked the eye to read two colours per unit at 7px, and
-// the second one vanished on a colourblind screen entirely.
-//
-// Shape is free of all that: a swarm is round, a tank is a block, a burst unit
-// is a dart aimed at the other side. The same three marks label the deploy
-// cards, so the card teaches the battlefield.
-//
-// No names or blurbs in this table on purpose. Those are translated, and a
-// table field translated at the call site is a key the audit cannot see.
-const AW_BOTS = {
-  day:   { cost: 14, hp: 24, dmg: 6,  range: 26, speed: 48, rate: 0.55, r: 7,  shape: "circle" },
-  index: { cost: 28, hp: 92, dmg: 4,  range: 22, speed: 22, rate: 0.9,  r: 10, shape: "square" },
-  hedge: { cost: 24, hp: 12, dmg: 22, range: 96, speed: 32, rate: 1.5,  r: 7,  shape: "triangle" },
-};
-const AW_ORDER = ["day", "index", "hedge"];
-const AW_STANCES = ["aggressive", "balanced", "defensive"];
-const AW_CAP_MAX = 150, AW_BASE_HP = 200;
-
-// Rock-paper-scissors, written down once. The threat panel reads this rather
-// than restating it in prose, so the coaching can never drift from the sim.
-const AW_COUNTER = { hedge: "day", day: "index", index: "hedge" };
-
-// The DMG / HP / SPD triple on a deploy card, as a fraction of the best in
-// class. SUSTAINED damage (dmg ÷ cooldown), not damage per shot: a Hedge-Fund
-// hits nearly four times harder than a Day-Trader and fires a third as often,
-// and a bar showing only the first half of that sells a unit the sim does not
-// deliver. Computed off the same table the fight runs on, so a card cannot lie
-// about the thing it deploys.
-const AW_BEST = {
-  dmg: Math.max(...AW_ORDER.map(k => AW_BOTS[k].dmg / AW_BOTS[k].rate)),
-  hp:  Math.max(...AW_ORDER.map(k => AW_BOTS[k].hp)),
-  spd: Math.max(...AW_ORDER.map(k => AW_BOTS[k].speed)),
-};
-const awStats = (k) => {
-  const b = AW_BOTS[k];
-  return [["dmg", (b.dmg / b.rate) / AW_BEST.dmg], ["hp", b.hp / AW_BEST.hp], ["spd", b.speed / AW_BEST.spd]];
-};
-
-// mm:ss off the SIM clock, not wall time — a backgrounded tab must not age the
-// round while nothing is being simulated.
-const awClock = (s) => {
-  const n = Math.max(0, Math.floor(s));
-  return `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
-};
-
-// The log holds STRUCTURE, not sentences: {kind, who, type}. The rail turns it
-// into words at render, which is what lets it be translated and lets a unit
-// name keep its side's colour inside the line.
-function awLog(sim, kind, who, type) {
-  sim.logId += 1;
-  sim.log.unshift({ id: sim.logId, at: sim.t, kind, who, type });
-  if (sim.log.length > 20) sim.log.length = 20;
-}
+// Constants, the fight and every readout live in src/games/algowars.js. What
+// stays here is drawing — a canvas needs a canvas — and the SVG mark.
 
 // The DOM half of the shape vocabulary — the mark on a deploy card is the same
 // mark the unit wears on the field. currentColor, so the tile decides.
@@ -7160,181 +7103,6 @@ function awPath(ctx, shape, x, y, r, dir) {
     ctx.lineTo(x - dir * r * 0.85, y + r);
     ctx.closePath();
   } else ctx.arc(x, y, r, 0, Math.PI * 2);
-}
-
-// spend capital to spawn one bot of `type` for `side` in `lane`; false if unaffordable
-function awDeploy(sim, side, type, lane) {
-  const b = AW_BOTS[type], S = sim[side];
-  if (!sim || sim.over || S.cap < b.cost) return false;
-  S.cap -= b.cost;
-  // `born` drives the spawn pop — a unit that simply exists on one frame and
-  // not the previous one reads as a rendering glitch, not as an arrival.
-  sim.units.push({
-    side, type, hp: b.hp, maxHp: b.hp, born: sim.t, lane,
-    x: S.spawnX, y: awLaneY(lane) + (Math.random() * 2 - 1) * 14, cd: Math.random() * 0.3,
-  });
-  S.sent += 1;
-  awLog(sim, "deploy", side, type);
-  return true;
-}
-
-// enemy (CPU) AI: read the board to pick a stance, then periodically deploy a
-// counter-unit into whichever lane it holds least.
-function awBrain(sim, dt) {
-  const cpu = sim.cpu;
-  const us = sim.units;
-  const youN = us.filter(u => u.side === "you").length, cpuN = us.filter(u => u.side === "cpu").length;
-  const youPushing = us.some(u => u.side === "you" && u.x > AW_W * 0.6);
-  cpu.stance = youPushing ? "defensive" : cpuN > youN + 2 ? "aggressive" : "balanced";
-  cpu.nextDeploy -= dt;
-  if (cpu.nextDeploy > 0) return;
-  const yourHedges = us.filter(u => u.side === "you" && u.type === "hedge").length;
-  const yourTanks = us.filter(u => u.side === "you" && u.type === "index").length;
-  let type;
-  if (yourHedges >= 2 && cpu.cap >= AW_BOTS.index.cost) type = "index";      // tanks soak burst
-  else if (yourTanks >= 2 && cpu.cap >= AW_BOTS.hedge.cost) type = "hedge";  // burst melts tanks
-  else { const r = Math.random(); type = r < 0.5 ? "day" : r < 0.8 ? "index" : "hedge"; }
-  // Reinforce the lane it holds least. An enemy that picked lanes at random
-  // never built the pressure the threat panel exists to warn you about.
-  const mine = [0, 0, 0];
-  for (const u of us) if (u.side === "cpu") mine[u.lane] += 1;
-  let lane = 0;
-  for (let i = 1; i < AW_LANES; i++) if (mine[i] < mine[lane]) lane = i;
-  if (awDeploy(sim, "cpu", type, lane)) cpu.nextDeploy = 1.0 + Math.random() * 1.4;
-  else cpu.nextDeploy = 0.4;
-}
-
-// Where the pressure is, and what answers it.
-//
-// Weighted by how far a unit has come, not just by how many there are: two
-// fresh bots at the enemy's own wall are not the emergency that one Hedge-Fund
-// at your door is. The counter comes out of AW_COUNTER rather than a
-// hand-written sentence, so the advice cannot contradict the fight.
-function awThreat(sim) {
-  const span = Math.abs(sim.cpu.baseX - sim.you.baseX) || 1;
-  const load = [0, 0, 0];
-  const worst = [null, null, null];
-  for (const u of sim.units) {
-    if (u.side !== "cpu") continue;
-    const progress = Math.max(0, Math.min(1, (sim.cpu.baseX - u.x) / span));
-    const w = (u.hp / AW_BOTS[u.type].hp) * (0.35 + progress * 1.5);
-    load[u.lane] += w;
-    if (!worst[u.lane] || w > worst[u.lane].w) worst[u.lane] = { type: u.type, w };
-  }
-  let li = 0;
-  for (let i = 1; i < AW_LANES; i++) if (load[i] > load[li]) li = i;
-  const p = load[li];
-  return {
-    lane: AW_LANE_ID[li],
-    level: p < 0.5 ? "calm" : p < 1.3 ? "watch" : "high",
-    pct: Math.max(0.04, Math.min(1, p / 2.2)),
-    type: worst[li]?.type || null,
-    counter: worst[li] ? AW_COUNTER[worst[li].type] : null,
-  };
-}
-
-// advance the sim one frame: regen both sides' capital, run the CPU brain, then for every unit
-// acquire the nearest enemy and either fire (unit/server in range) or move per its stance; finally
-// clear dead units & expired tracers and decide a winner when a server's HP hits zero.
-function awStep(sim, dt, youStance) {
-  if (sim.over) return;
-  sim.t += dt;
-  sim.you.cap = Math.min(AW_CAP_MAX, sim.you.cap + dt * sim.you.rate);
-  sim.cpu.cap = Math.min(AW_CAP_MAX, sim.cpu.cap + dt * sim.cpu.rate);
-  awBrain(sim, dt);
-  // How long each lane has gone with none of yours in it. This is the single
-  // most common way this game is lost and it is invisible while it is
-  // happening, so it is measured here and read back on the end card.
-  const held = [false, false, false];
-  for (const u of sim.units) if (u.side === "you") held[u.lane] = true;
-  for (let i = 0; i < AW_LANES; i++) {
-    sim.open[i] = held[i] ? 0 : sim.open[i] + dt;
-    if (sim.open[i] > sim.openMax[i]) sim.openMax[i] = sim.open[i];
-  }
-
-  const aggro = 140;
-  for (const u of sim.units) {
-    const b = AW_BOTS[u.type];
-    const enemy = u.side === "you" ? "cpu" : "you";
-    const enemyBaseX = sim[enemy].baseX;
-    const stance = u.side === "you" ? youStance : sim.cpu.stance;
-    const advDir = u.side === "you" ? 1 : -1;
-    let tgt = null, td = Infinity;
-    for (const o of sim.units) { if (o.side === enemy) { const d = Math.hypot(o.x - u.x, o.y - u.y); if (d < td) { td = d; tgt = o; } } }
-    u.cd -= dt;
-    if (tgt && td <= b.range) { // attack enemy unit
-      if (u.cd <= 0) {
-        tgt.hp -= b.dmg; u.cd = b.rate; sim[u.side].dealt += b.dmg;
-        if (b.range > 60) sim.tracers.push({ x1: u.x, y1: u.y, x2: tgt.x, y2: tgt.y, life: 0.12 });
-      }
-      continue;
-    }
-    if (Math.abs(u.x - enemyBaseX) <= b.range) { // attack enemy server
-      if (u.cd <= 0) {
-        sim[enemy].baseHp -= b.dmg; u.cd = b.rate; sim[u.side].dealt += b.dmg;
-        if (b.range > 60) sim.tracers.push({ x1: u.x, y1: u.y, x2: enemyBaseX, y2: AW_H / 2, life: 0.12 });
-      }
-      continue;
-    }
-    let goalX = enemyBaseX, goalY = awLaneY(u.lane), chase = false;
-    if (stance === "balanced") { if (tgt && td <= aggro) { goalX = tgt.x; goalY = tgt.y; chase = true; } }
-    else if (stance === "defensive") {
-      const holdX = u.side === "you" ? AW_W * 0.44 : AW_W * 0.56;
-      if (tgt && td <= aggro) { goalX = tgt.x; goalY = tgt.y; chase = true; }
-      else if ((advDir > 0 && u.x < holdX) || (advDir < 0 && u.x > holdX)) goalX = holdX;
-      else goalX = u.x;
-    } // aggressive → goalX stays enemyBaseX
-    const dx = goalX - u.x, dy = goalY - u.y, dd = Math.hypot(dx, dy) || 1, sp = b.speed * dt;
-    u.x += (dx / dd) * sp;
-    // Off-lane only to chase. Otherwise a unit eases back to its lane's centre,
-    // which is what keeps a lane readable as a lane across a whole round.
-    u.y += chase ? (dy / dd) * sp : Math.max(-sp, Math.min(sp, dy * dt * 2.4));
-    u.y = Math.max(18, Math.min(AW_H - 18, u.y));
-  }
-  // A kill leaves a mark. Without it a unit you were watching is simply absent
-  // on the next frame and the fight reads as things blinking out.
-  for (const u of sim.units) if (u.hp <= 0) sim.puffs.push({ x: u.x, y: u.y, r: AW_BOTS[u.type].r, side: u.side, life: 0.34 });
-  sim.units = sim.units.filter(u => u.hp > 0);
-  for (const tr of sim.tracers) tr.life -= dt;
-  sim.tracers = sim.tracers.filter(tr => tr.life > 0);
-  for (const pf of sim.puffs) pf.life -= dt;
-  sim.puffs = sim.puffs.filter(pf => pf.life > 0);
-  if (sim.cpu.baseHp <= 0) { sim.over = "you"; awLog(sim, "won"); }
-  else if (sim.you.baseHp <= 0) { sim.over = "cpu"; awLog(sim, "lost"); }
-}
-
-// Everything the DOM needs, sampled ~8×/second. The loop runs at 60fps; setting
-// React state that often would re-render the desk on every frame for numbers
-// that cannot be read that fast anyway.
-function awBlankHud() {
-  return {
-    clock: 0, youHp: AW_BASE_HP, cpuHp: AW_BASE_HP, cap: 34, rate: 5.6,
-    youN: 0, cpuN: 0, youDps: 0, cpuDps: 0, sent: 0, dealt: 0, log: [],
-    threat: { lane: "A", level: "calm", pct: 0.04, type: null, counter: null },
-    openLane: "A", openSecs: 0,
-  };
-}
-function awReadHud(sim) {
-  const dps = (side) => Math.round(sim.units.filter(u => u.side === side)
-    .reduce((n, u) => n + AW_BOTS[u.type].dmg / AW_BOTS[u.type].rate, 0));
-  let li = 0;
-  for (let i = 1; i < AW_LANES; i++) if (sim.openMax[i] > sim.openMax[li]) li = i;
-  return {
-    clock: sim.t,
-    youHp: Math.max(0, Math.ceil(sim.you.baseHp)),
-    cpuHp: Math.max(0, Math.ceil(sim.cpu.baseHp)),
-    cap: Math.floor(sim.you.cap),
-    rate: sim.you.rate,
-    youN: sim.units.filter(u => u.side === "you").length,
-    cpuN: sim.units.filter(u => u.side === "cpu").length,
-    youDps: dps("you"), cpuDps: dps("cpu"),
-    sent: sim.you.sent, dealt: Math.round(sim.you.dealt),
-    // Sliced, not handed over: sim.log is mutated in place by the loop, and a
-    // state value that aliases it would change under React without a render.
-    log: sim.log.slice(0, 4),
-    threat: awThreat(sim),
-    openLane: AW_LANE_ID[li], openSecs: Math.round(sim.openMax[li]),
-  };
 }
 
 // One tower: a lit slab with a scanline texture and an outer glow, drawn off
@@ -7447,6 +7215,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
   const rafRef = useRef(0);
   const logicRef = useRef(null);
   const [stance, setStance] = useState("balanced");
+  const [round, setRound] = useState(1);
   const [over, setOver] = useState(null);
   const [showRules, setShowRules] = useState(false);
   // The bot you have picked but not yet placed. This is the whole two-step
@@ -7466,15 +7235,10 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
   const armedRef = useRef(armed); armedRef.current = armed;
   const hoverRef = useRef(hoverLane); hoverRef.current = hoverLane;
 
-  const newSim = () => ({
-    t: 0, lastHud: 0, over: null, tracers: [], puffs: [], units: [],
-    log: [], logId: 0, open: [0, 0, 0], openMax: [0, 0, 0],
-    you: { cap: 34, rate: 5.6, baseHp: AW_BASE_HP, baseX: 46, spawnX: 78, sent: 0, dealt: 0 },
-    cpu: { cap: 34, rate: 5.2, baseHp: AW_BASE_HP, baseX: AW_W - 46, spawnX: AW_W - 78, sent: 0, dealt: 0, stance: "balanced", nextDeploy: 2.2 },
-  });
+
 
   useEffect(() => {
-    if (!simRef.current) { simRef.current = newSim(); awLog(simRef.current, "start"); }
+    if (!simRef.current) { simRef.current = awNewSim(); awLog(simRef.current, "start"); }
     const cvs = canvasRef.current;
     const ctx = cvs.getContext("2d");
     // Backing store at device resolution. Without it the field is a 900px
@@ -7487,13 +7251,27 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
     const loop = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
       const sim = simRef.current;
-      if (!sim.over) {
+      if (sim.over) {
+        // Nothing moves once a server is down. The loop used to go on redrawing
+        // an identical frame sixty times a second and pushing an unchanging HUD
+        // into React eight times a second, for as long as the end card was on
+        // screen — which on a laptop is a fan running to animate nothing.
+        //
+        // Settling it also fixes what the end card was reading: BOTS SENT and
+        // DAMAGE DEALT came from a sample taken up to 120ms before the killing
+        // blow. Now they are read once, after it.
+        if (!sim.settled) {
+          sim.settled = true;
+          awDraw(ctx, sim, null);
+          setHud(awReadHud(sim));
+        }
+      } else {
         awStep(sim, dt, stanceRef.current);
         if (sim.over && !wonRef.current) { wonRef.current = true; setOver(sim.over); onWin?.(sim.over); if (sim.over === "you") onCheer?.(); }
+        awDraw(ctx, sim, armedRef.current == null ? null : (hoverRef.current ?? -1));
+        sim.lastHud += dt;
+        if (sim.lastHud > 0.12) { sim.lastHud = 0; setHud(awReadHud(sim)); }
       }
-      awDraw(ctx, sim, armedRef.current == null ? null : (hoverRef.current ?? -1));
-      sim.lastHud += dt;
-      if (sim.lastHud > 0.12) { sim.lastHud = 0; setHud(awReadHud(sim)); }
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
@@ -7502,8 +7280,12 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
 
   const reset = () => {
     wonRef.current = false;
-    simRef.current = newSim();
+    simRef.current = awNewSim();
     awLog(simRef.current, "start");
+    // A rematch is the next round, and saying so is the only way the number in
+    // the header is worth printing. It read "round 1" on the first fight and on
+    // the twentieth.
+    setRound(n => n + 1);
     setOver(null); setStance("balanced"); setFlash(null); setArmed(null); setHoverLane(null);
     setHud(awReadHud(simRef.current));
   };
@@ -7595,7 +7377,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
           {over ? t("OVER") : t("LIVE")} {awClock(hud.clock)}
         </span>
         <span style={{ ...metaMono, fontSize: 11.5 }}>
-          {t("round 1 · {logic}").replace("{logic}", STANCE_LABEL[stance].toLowerCase())}
+          {t("round {n} · {logic}").replace("{n}", String(round)).replace("{logic}", STANCE_LABEL[stance].toLowerCase())}
         </span>
         <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <button className="v-gameout" onClick={() => setShowRules(v => !v)} aria-expanded={showRules} style={outlineBtn}>{t("How to play")}</button>
@@ -7610,14 +7392,20 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
           three places, so "am I ahead" is a comparison of two positions rather
           than a reading of six numbers. */}
       <div className="v-awhud" style={{ display: "flex", alignItems: "center", gap: 20, padding: "15px 22px", borderBottom: `1px solid ${C.edge}` }}>
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+        {/* No minWidth: 0 on either half. They are what the HUD wraps BETWEEN,
+            and an item allowed to shrink to nothing never makes its line break —
+            it just collapses and lets its own contents hang out of it. */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ textAlign: "right", minWidth: 108 }}>
             <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{t("YOUR SERVER")}</div>
             <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: C.accentText, lineHeight: 1.1 }}>{hud.youHp}</div>
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             {meter(hud.youHp / AW_BASE_HP, FIELD.youMeter)}
-            <div style={{ display: "flex", gap: 8, marginTop: 7, ...metaMono }}>
+            {/* Three facts and two separators at 10.5px is about 200px of mono
+                that will not break on its own, and it was the thing pushing the
+                server count off the edge of a narrow panel. Let it wrap. */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, ...metaMono }}>
               <span>{(hud.youN === 1 ? t("{n} BOT") : t("{n} BOTS")).replace("{n}", String(hud.youN))}</span>{sep}
               <span>{t("DPS {n}").replace("{n}", String(hud.youDps))}</span>{sep}
               <span>{t("INTEGRITY {n}%").replace("{n}", String(pct(hud.youHp)))}</span>
@@ -7629,17 +7417,17 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
           <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{t("CAPITAL")}</div>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 6 }}>
             <span style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, lineHeight: 1.15, color: C.text }}>{cap}</span>
-            <span style={{ fontFamily: MONO, fontSize: 11, color: C.accentText }}>+{Math.round(hud.rate)}/s</span>
+            <span style={{ fontFamily: MONO, fontSize: 11, color: C.accentText }}>+{awRate(hud.rate)}/s</span>
           </div>
           <div aria-hidden="true" style={{ height: 4, borderRadius: 2, background: C.base, marginTop: 6, overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${Math.min(100, (cap / AW_CAP_MAX) * 100)}%`, background: C.muted, transition: "width 140ms linear" }} />
           </div>
         </div>
 
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             {meter(hud.cpuHp / AW_BASE_HP, FIELD.foeMeter)}
-            <div style={{ display: "flex", gap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
               <span>{t("INTEGRITY {n}%").replace("{n}", String(pct(hud.cpuHp)))}</span>{sep}
               <span>{t("DPS {n}").replace("{n}", String(hud.cpuDps))}</span>{sep}
               <span>{(hud.cpuN === 1 ? t("{n} BOT") : t("{n} BOTS")).replace("{n}", String(hud.cpuN))}</span>
@@ -7673,7 +7461,12 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
                 <button key={id} onClick={() => placeIn(i)}
                   onMouseEnter={() => setHoverLane(i)} onMouseLeave={() => setHoverLane(null)}
                   onFocus={() => setHoverLane(i)} onBlur={() => setHoverLane(null)}
-                  disabled={!armed || !!over}
+                  // aria-disabled, not disabled. The canvas is aria-hidden, so
+                  // these three buttons ARE the battlefield as far as a screen
+                  // reader is concerned — and disabling them whenever no bot was
+                  // armed, which is most of the round, left nothing there at all.
+                  // placeIn refuses the click either way.
+                  aria-disabled={!armed || !!over}
                   aria-label={armed
                     ? t("Deploy {bot} to lane {lane}").replace("{bot}", BOT_NAME[armed]).replace("{lane}", id)
                     : t("Lane {lane} — pick a bot first").replace("{lane}", id)}
@@ -7714,7 +7507,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
               <div className="v-awover" style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: alpha("#07090d", 0.62), padding: 16 }}>
                 <div>
                   <div style={{ ...metaMono, fontSize: 10.5, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
-                    {t("ROUND 1 · {clock}").replace("{clock}", awClock(hud.clock))}
+                    {t("ROUND {n} · {clock}").replace("{n}", String(round)).replace("{clock}", awClock(hud.clock))}
                   </div>
                   <div style={{ fontFamily: SANS, fontSize: 34, fontWeight: 700, letterSpacing: "-1px", marginTop: 10, color: over === "you" ? C.accentText : C.down, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>
                     {over === "you" ? t("Market dominated") : t("Algorithm crashed")}
@@ -7827,7 +7620,11 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
       <div style={{ padding: "4px 22px 22px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={railLabel}>{t("DEPLOY")}</span>
-          <span style={{ fontFamily: MONO, fontSize: 10, color: C.edgeStrong }}>
+          {/* C.faint, not C.edgeStrong. This is the number you are comparing the
+              three costs below it against, and at #262d38 on #0b0e13 it sat at
+              1.4:1 — measured, not estimated — which is not faint, it is
+              absent. Its own label was three times more legible than its value. */}
+          <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>
             {t("{n} CAPITAL AVAILABLE").replace("{n}", String(cap))}
           </span>
         </div>
