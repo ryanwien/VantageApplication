@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   chessInit, chessMoves, legalMoves, chessApply, inCheck, gameStatus, chessAIMove,
-  chessGlyph, chessSquare, chessAttacks, chessCount, chessCentre, chessSan, chessSuggest,
+  chessGlyph, chessSquare, chessAttacks, chessCount, chessSan, chessSuggest,
 } from "./chess.js";
 
 const emptyBoard = () => Array.from({ length: 8 }, () => Array(8).fill(null));
@@ -187,21 +187,6 @@ describe("board readouts", () => {
     b[4][4] = piece("w", "q");
     expect(chessCount(b).w).toEqual({ pieces: 2, material: 9 });
     expect(chessCount(b).b).toEqual({ pieces: 1, material: 0 });
-  });
-
-  it("scores the opening centre as untouched by either side", () => {
-    // The HUD says "dead even" and the coach says OPEN at move one. Both are
-    // read off this, so it has to actually be 0-0 — pawns standing NEXT to the
-    // centre are not pressure on it.
-    expect(chessCentre(chessInit())).toEqual({ w: 0, b: 0 });
-  });
-
-  it("scores a centre pawn as pressure", () => {
-    const b = chessInit();
-    const { next } = chessApply(b, { r: 6, c: 3 }, { r: 4, c: 3 });   // d2-d4
-    const cen = chessCentre(next);
-    expect(cen.w).toBeGreaterThan(0);
-    expect(cen.w).toBeGreaterThan(cen.b);
   });
 });
 

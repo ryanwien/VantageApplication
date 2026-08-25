@@ -134,21 +134,9 @@ export function chessCount(board) {
   return out;
 }
 
-// The four centre squares, and who is pressing on them. Occupying counts once,
-// and so does every piece aiming at it — which is why the opening position
-// scores 0-0 rather than 2-2: at move one nobody has a piece pointed at the
-// centre, they just have pawns standing next to it.
+// The four centre squares. chessSuggest and the house algo both reach for
+// them; the readout that scored them for the rail went with the coach.
 const CENTRE = [[4, 3], [3, 3], [4, 4], [3, 4]];   // d4 d5 e4 e5
-export function chessCentre(board) {
-  const out = { w: 0, b: 0 };
-  for (const [r, c] of CENTRE) {
-    const p = board[r][c];
-    if (p) out[p.s] += 1;
-    out.w += chessAttacks(board, r, c, "w");
-    out.b += chessAttacks(board, r, c, "b");
-  }
-  return out;
-}
 
 const SAN_LETTER = { k: "K", q: "Q", r: "R", b: "B", n: "N", p: "" };
 

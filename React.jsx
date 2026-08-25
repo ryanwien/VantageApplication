@@ -9,8 +9,8 @@ import { detectCatalogIntent, firstSearchHit, summarizeEntity, summarizeLineage,
 import { buildPnF, pnfTargets, visibleWindow, INTRADAY_BOX_PCT } from "./src/pnf/pnf.js";
 import { detectPattern } from "./src/pnf/patterns.js";
 import {
-  CHESS_VAL, chessGlyph, chessSquare, chessInit, legalMoves, chessApply, gameStatus, inCheck,
-  chessAIMove, chessAttacks, chessCount, chessCentre, chessSan, chessSuggest,
+  chessGlyph, chessSquare, chessInit, legalMoves, chessApply, gameStatus, inCheck,
+  chessAIMove, chessCount, chessSan, chessSuggest,
 } from "./src/chess/chess.js";
 import { C, GRAD, FIELD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, alpha, button, panel, panelHead, panelNote, field as fieldRecipe, chip, segmentTrack, segmentItem, pill } from "./src/ui/theme.js";
 import { passwordCheck, PW_MIN } from "./src/auth/password.js";
@@ -592,8 +592,6 @@ const I18N = {
     "Bulls edge ahead": "Los Toros sacan algo de ventaja",
     "Bulls hold": "Los Toros tienen",
     "CAPTURED": "CAPTURADAS",
-    "COACH": "ENTRENADOR",
-    "Centre control": "Control del centro",
     "Checkmate — Bears win": "Jaque mate: ganan los Osos",
     "Checkmate — Bulls win": "Jaque mate: ganan los Toros",
     "Flag — Bears win on time": "Caída de bandera: los Osos ganan por tiempo",
@@ -612,12 +610,10 @@ const I18N = {
     "Neither side could force it. Swap seats and go again.": "Ninguno de los dos pudo forzarla. Cambiad de sitio y otra vez.",
     "Next move": "Jugada siguiente",
     "No legal move left, and no check. That is a draw.": "No queda ninguna jugada legal y no hay jaque. Eso son tablas.",
-    "Nothing else matters until the check is answered.": "Nada más importa hasta responder al jaque.",
     "POSITION": "POSICIÓN",
     "Passive": "Pasivo",
     "Play again": "Jugar otra vez",
     "Previous move": "Jugada anterior",
-    "Pushing {push} claims the centre. Bears will likely answer {answer}.": "Avanzar a {push} reclama el centro. Los Osos responderán probablemente con {answer}.",
     "Review moves": "Repasar la partida",
     "Reviewing": "Repasando",
     "Ruthless": "Despiadado",
@@ -625,30 +621,23 @@ const I18N = {
     "Stalemate — nobody wins": "Rey ahogado: no gana nadie",
     "Stepping back through the game. The board is not live.": "Estás repasando la partida. El tablero no está en juego.",
     "Swap seats and play it back the other way.": "Cambiad de sitio y jugadla al revés.",
-    "THEIRS": "SUYO",
     "TIME LEFT": "TIEMPO RESTANTE",
     "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Toca una pieza para ver adónde puede ir y luego toca una casilla o una de las fichas del panel.",
     "That was Ruthless. There is nothing harder here.": "Eso era Despiadado. Aquí no hay nada más difícil.",
     "The Bears are yours to play. The house is sitting this one out.": "Los Osos son tuyos. La casa se queda fuera de esta partida.",
-    "The Bears own the centre. Challenge it before it settles.": "Los Osos dominan el centro. Discúteselo antes de que se asiente.",
     "The Bears ran out of clock.": "A los Osos se les acabó el tiempo.",
     "The Bears' king had nowhere to run.": "El rey de los Osos no tenía adónde huir.",
     "The Bulls' king had nowhere to run.": "El rey de los Toros no tenía adónde huir.",
-    "The centre is still open. Whoever claims it first sets the shape of the game.": "El centro sigue abierto. Quien lo reclame primero marca la forma de la partida.",
     "The game is over. Play again, or step back through it.": "La partida ha terminado. Juega otra vez o repásala hacia atrás.",
     "The house is choosing its move.": "La casa está eligiendo su jugada.",
-    "The position stopped here. Step back through it to see where it turned.": "La posición se detuvo aquí. Repásala hacia atrás para ver dónde giró.",
     "The starting position.": "La posición inicial.",
     "Two players, one screen: Bulls first, then Bears. Checkmate the other king to win, or win on the clock.": "Dos jugadores, una pantalla: primero los Toros, después los Osos. Da jaque mate al otro rey para ganar, o gana por tiempo.",
     "Who plays the Bears": "Quién juega con los Osos",
     "YOUR TURN": "TU TURNO",
-    "YOURS": "TUYO",
     "You are the Bulls, in green, and you move first. Checkmate the Bears' king to win — get checkmated, or run your clock to zero, and it is over.": "Eres los Toros, en verde, y mueves primero. Da jaque mate al rey de los Osos para ganar; si te lo dan a ti, o tu reloj llega a cero, se acabó.",
-    "You hold the middle. Bring a knight out behind it.": "Dominas el centro. Saca un caballo por detrás.",
     "You ran out of clock.": "Se te acabó el tiempo.",
     "You were well down on material before the mate. Trade only when you win the trade.": "Ibas muy por detrás en material antes del mate. Cambia solo cuando ganes el cambio.",
     "Your king had nowhere to run.": "Tu rey no tenía adónde huir.",
-    "Your {piece} on {sq} is hanging — the Bears can take it for free.": "Tu {piece} en {sq} está colgado: los Osos pueden capturarlo gratis.",
     "back to result": "volver al resultado",
     "back to the game": "volver a la partida",
     "dead even": "totalmente igualada",
@@ -674,6 +663,7 @@ const I18N = {
     "Compare with": "Comparar con",
     "Overlay another symbol — both plotted as % change": "Superpone otro símbolo — ambos trazados como variación en %",
     "Stop comparing": "Dejar de comparar",
+    // --- settings: the plain-language sidebar ---
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -1152,8 +1142,6 @@ const I18N = {
     "Bulls edge ahead": "Les Taureaux prennent un léger avantage",
     "Bulls hold": "Les Taureaux détiennent",
     "CAPTURED": "PRISES",
-    "COACH": "COACH",
-    "Centre control": "Contrôle du centre",
     "Checkmate — Bears win": "Échec et mat — les Ours gagnent",
     "Checkmate — Bulls win": "Échec et mat — les Taureaux gagnent",
     "Flag — Bears win on time": "Chute du drapeau — les Ours gagnent au temps",
@@ -1172,12 +1160,10 @@ const I18N = {
     "Neither side could force it. Swap seats and go again.": "Personne n'a pu conclure. Changez de place et rejouez.",
     "Next move": "Coup suivant",
     "No legal move left, and no check. That is a draw.": "Plus aucun coup légal, et pas d'échec. C'est une nulle.",
-    "Nothing else matters until the check is answered.": "Rien d'autre ne compte tant que l'échec n'est pas paré.",
     "POSITION": "POSITION",
     "Passive": "Passif",
     "Play again": "Rejouer",
     "Previous move": "Coup précédent",
-    "Pushing {push} claims the centre. Bears will likely answer {answer}.": "Pousser en {push} revendique le centre. Les Ours répondront sans doute {answer}.",
     "Review moves": "Revoir les coups",
     "Reviewing": "Relecture",
     "Ruthless": "Impitoyable",
@@ -1185,30 +1171,23 @@ const I18N = {
     "Stalemate — nobody wins": "Pat — personne ne gagne",
     "Stepping back through the game. The board is not live.": "Vous remontez la partie. L'échiquier n'est pas en jeu.",
     "Swap seats and play it back the other way.": "Changez de place et rejouez-la dans l'autre sens.",
-    "THEIRS": "À EUX",
     "TIME LEFT": "TEMPS RESTANT",
     "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Touchez une pièce pour voir où elle peut aller, puis touchez une case ou l'une des pastilles du panneau.",
     "That was Ruthless. There is nothing harder here.": "C'était Impitoyable. Il n'y a rien de plus dur ici.",
     "The Bears are yours to play. The house is sitting this one out.": "Les Ours sont à vous. La maison ne joue pas celle-ci.",
-    "The Bears own the centre. Challenge it before it settles.": "Les Ours tiennent le centre. Contestez-le avant qu'il ne se fige.",
     "The Bears ran out of clock.": "Les Ours n'avaient plus de temps.",
     "The Bears' king had nowhere to run.": "Le roi des Ours n'avait nulle part où fuir.",
     "The Bulls' king had nowhere to run.": "Le roi des Taureaux n'avait nulle part où fuir.",
-    "The centre is still open. Whoever claims it first sets the shape of the game.": "Le centre est encore libre. Qui s'en empare le premier donne sa forme à la partie.",
     "The game is over. Play again, or step back through it.": "La partie est finie. Rejouez, ou remontez-la coup par coup.",
     "The house is choosing its move.": "La maison choisit son coup.",
-    "The position stopped here. Step back through it to see where it turned.": "La position s'est arrêtée là. Remontez-la pour voir où elle a basculé.",
     "The starting position.": "La position de départ.",
     "Two players, one screen: Bulls first, then Bears. Checkmate the other king to win, or win on the clock.": "Deux joueurs, un écran : les Taureaux d'abord, puis les Ours. Matez le roi adverse pour gagner, ou gagnez au temps.",
     "Who plays the Bears": "Qui joue les Ours",
     "YOUR TURN": "À VOUS",
-    "YOURS": "À VOUS",
     "You are the Bulls, in green, and you move first. Checkmate the Bears' king to win — get checkmated, or run your clock to zero, and it is over.": "Vous êtes les Taureaux, en vert, et vous jouez en premier. Matez le roi des Ours pour gagner — si vous êtes maté, ou si votre pendule tombe à zéro, c'est fini.",
-    "You hold the middle. Bring a knight out behind it.": "Vous tenez le centre. Sortez un cavalier derrière.",
     "You ran out of clock.": "Vous n'avez plus de temps.",
     "You were well down on material before the mate. Trade only when you win the trade.": "Vous étiez largement en retard au matériel avant le mat. N'échangez que quand l'échange est à votre avantage.",
     "Your king had nowhere to run.": "Votre roi n'avait nulle part où fuir.",
-    "Your {piece} on {sq} is hanging — the Bears can take it for free.": "Votre {piece} en {sq} est en prise — les Ours peuvent le prendre gratuitement.",
     "back to result": "retour au résultat",
     "back to the game": "retour à la partie",
     "dead even": "parfaitement égal",
@@ -1234,6 +1213,7 @@ const I18N = {
     "Compare with": "Comparer avec",
     "Overlay another symbol — both plotted as % change": "Superposer un autre symbole — les deux tracés en variation %",
     "Stop comparing": "Arrêter la comparaison",
+    // --- settings: the plain-language sidebar ---
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -1712,8 +1692,6 @@ const I18N = {
     "Bulls edge ahead": "Die Bullen liegen knapp vorn",
     "Bulls hold": "Bullen halten",
     "CAPTURED": "GESCHLAGEN",
-    "COACH": "COACH",
-    "Centre control": "Zentrumskontrolle",
     "Checkmate — Bears win": "Schachmatt — die Bären gewinnen",
     "Checkmate — Bulls win": "Schachmatt — die Bullen gewinnen",
     "Flag — Bears win on time": "Zeit abgelaufen — die Bären gewinnen nach Zeit",
@@ -1732,12 +1710,10 @@ const I18N = {
     "Neither side could force it. Swap seats and go again.": "Keine Seite konnte es erzwingen. Plätze tauschen und noch mal.",
     "Next move": "Nächster Zug",
     "No legal move left, and no check. That is a draw.": "Kein legaler Zug mehr, und kein Schach. Das ist ein Remis.",
-    "Nothing else matters until the check is answered.": "Nichts anderes zählt, bis das Schach beantwortet ist.",
     "POSITION": "STELLUNG",
     "Passive": "Passiv",
     "Play again": "Nochmal spielen",
     "Previous move": "Vorheriger Zug",
-    "Pushing {push} claims the centre. Bears will likely answer {answer}.": "Der Vorstoß nach {push} beansprucht das Zentrum. Die Bären antworten wohl mit {answer}.",
     "Review moves": "Züge durchgehen",
     "Reviewing": "Durchsicht",
     "Ruthless": "Gnadenlos",
@@ -1745,30 +1721,23 @@ const I18N = {
     "Stalemate — nobody wins": "Patt — niemand gewinnt",
     "Stepping back through the game. The board is not live.": "Du gehst die Partie zurück. Das Brett ist nicht im Spiel.",
     "Swap seats and play it back the other way.": "Plätze tauschen und andersherum spielen.",
-    "THEIRS": "IHRES",
     "TIME LEFT": "RESTZEIT",
     "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Tippe eine Figur an, um zu sehen, wohin sie kann, und dann ein Feld oder einen der Chips in der Leiste.",
     "That was Ruthless. There is nothing harder here.": "Das war Gnadenlos. Härter wird es hier nicht.",
     "The Bears are yours to play. The house is sitting this one out.": "Die Bären gehören dir. Das Haus setzt diese Partie aus.",
-    "The Bears own the centre. Challenge it before it settles.": "Die Bären beherrschen das Zentrum. Fordere es heraus, bevor es sich festsetzt.",
     "The Bears ran out of clock.": "Den Bären ist die Zeit ausgegangen.",
     "The Bears' king had nowhere to run.": "Der König der Bären hatte kein Feld mehr.",
     "The Bulls' king had nowhere to run.": "Der König der Bullen hatte kein Feld mehr.",
-    "The centre is still open. Whoever claims it first sets the shape of the game.": "Das Zentrum ist noch offen. Wer es zuerst nimmt, gibt der Partie ihre Form.",
     "The game is over. Play again, or step back through it.": "Die Partie ist vorbei. Spiel noch mal, oder geh sie zurück durch.",
     "The house is choosing its move.": "Das Haus wählt seinen Zug.",
-    "The position stopped here. Step back through it to see where it turned.": "Hier endete die Stellung. Geh sie zurück durch, um zu sehen, wo sie kippte.",
     "The starting position.": "Die Ausgangsstellung.",
     "Two players, one screen: Bulls first, then Bears. Checkmate the other king to win, or win on the clock.": "Zwei Spieler, ein Bildschirm: erst die Bullen, dann die Bären. Setze den anderen König matt, oder gewinne nach Zeit.",
     "Who plays the Bears": "Wer die Bären spielt",
     "YOUR TURN": "DU BIST DRAN",
-    "YOURS": "DEINS",
     "You are the Bulls, in green, and you move first. Checkmate the Bears' king to win — get checkmated, or run your clock to zero, and it is over.": "Du bist die Bullen, in Grün, und du ziehst zuerst. Setze den König der Bären matt, um zu gewinnen — wirst du selbst mattgesetzt oder läuft deine Uhr ab, ist es vorbei.",
-    "You hold the middle. Bring a knight out behind it.": "Du hältst die Mitte. Bring einen Springer dahinter heraus.",
     "You ran out of clock.": "Deine Zeit ist abgelaufen.",
     "You were well down on material before the mate. Trade only when you win the trade.": "Vor dem Matt lagst du beim Material klar zurück. Tausche nur, wenn du den Tausch gewinnst.",
     "Your king had nowhere to run.": "Dein König hatte kein Feld mehr.",
-    "Your {piece} on {sq} is hanging — the Bears can take it for free.": "Dein/e {piece} auf {sq} steht en prise — die Bären können sie umsonst nehmen.",
     "back to result": "zurück zum Ergebnis",
     "back to the game": "zurück zur Partie",
     "dead even": "völlig ausgeglichen",
@@ -1794,6 +1763,7 @@ const I18N = {
     "Compare with": "Vergleichen mit",
     "Overlay another symbol — both plotted as % change": "Ein weiteres Symbol überlagern — beide als prozentuale Veränderung",
     "Stop comparing": "Vergleich beenden",
+    // --- settings: the plain-language sidebar ---
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -2271,8 +2241,6 @@ const I18N = {
     "Bulls edge ahead": "Os Touros ganham uma pequena vantagem",
     "Bulls hold": "Os Touros têm",
     "CAPTURED": "CAPTURADAS",
-    "COACH": "TREINADOR",
-    "Centre control": "Controlo do centro",
     "Checkmate — Bears win": "Xeque-mate: ganham os Ursos",
     "Checkmate — Bulls win": "Xeque-mate: ganham os Touros",
     "Flag — Bears win on time": "Bandeira caída: os Ursos ganham por tempo",
@@ -2291,12 +2259,10 @@ const I18N = {
     "Neither side could force it. Swap seats and go again.": "Nenhum dos lados conseguiu forçar. Troquem de lugar e joguem outra vez.",
     "Next move": "Lance seguinte",
     "No legal move left, and no check. That is a draw.": "Não resta nenhum lance legal e não há xeque. Isso é empate.",
-    "Nothing else matters until the check is answered.": "Nada mais importa até responderes ao xeque.",
     "POSITION": "POSIÇÃO",
     "Passive": "Passivo",
     "Play again": "Jogar outra vez",
     "Previous move": "Lance anterior",
-    "Pushing {push} claims the centre. Bears will likely answer {answer}.": "Avançar para {push} reclama o centro. Os Ursos deverão responder com {answer}.",
     "Review moves": "Rever os lances",
     "Reviewing": "A rever",
     "Ruthless": "Impiedoso",
@@ -2304,30 +2270,23 @@ const I18N = {
     "Stalemate — nobody wins": "Rei afogado: ninguém ganha",
     "Stepping back through the game. The board is not live.": "Estás a recuar na partida. O tabuleiro não está em jogo.",
     "Swap seats and play it back the other way.": "Troquem de lugar e joguem ao contrário.",
-    "THEIRS": "DELES",
     "TIME LEFT": "TEMPO RESTANTE",
     "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Toca numa peça para veres para onde pode ir e depois toca numa casa ou num dos chips do painel.",
     "That was Ruthless. There is nothing harder here.": "Isso era Impiedoso. Aqui não há nada mais difícil.",
     "The Bears are yours to play. The house is sitting this one out.": "Os Ursos são teus. A casa fica de fora desta.",
-    "The Bears own the centre. Challenge it before it settles.": "Os Ursos dominam o centro. Contesta-o antes que assente.",
     "The Bears ran out of clock.": "Aos Ursos acabou-se o tempo.",
     "The Bears' king had nowhere to run.": "O rei dos Ursos não tinha para onde fugir.",
     "The Bulls' king had nowhere to run.": "O rei dos Touros não tinha para onde fugir.",
-    "The centre is still open. Whoever claims it first sets the shape of the game.": "O centro ainda está aberto. Quem o reclamar primeiro dá a forma à partida.",
     "The game is over. Play again, or step back through it.": "A partida terminou. Joga outra vez ou percorre-a para trás.",
     "The house is choosing its move.": "A casa está a escolher o lance.",
-    "The position stopped here. Step back through it to see where it turned.": "A posição parou aqui. Percorre-a para trás para veres onde virou.",
     "The starting position.": "A posição inicial.",
     "Two players, one screen: Bulls first, then Bears. Checkmate the other king to win, or win on the clock.": "Dois jogadores, um ecrã: primeiro os Touros, depois os Ursos. Dá xeque-mate ao outro rei para ganhar, ou ganha por tempo.",
     "Who plays the Bears": "Quem joga com os Ursos",
     "YOUR TURN": "É A TUA VEZ",
-    "YOURS": "TEU",
     "You are the Bulls, in green, and you move first. Checkmate the Bears' king to win — get checkmated, or run your clock to zero, and it is over.": "És os Touros, em verde, e jogas primeiro. Dá xeque-mate ao rei dos Ursos para ganhar; se to derem a ti, ou o teu relógio chegar a zero, acabou.",
-    "You hold the middle. Bring a knight out behind it.": "Dominas o centro. Traz um cavalo para trás dele.",
     "You ran out of clock.": "Acabou-se-te o tempo.",
     "You were well down on material before the mate. Trade only when you win the trade.": "Estavas muito atrás em material antes do mate. Troca só quando ganhas a troca.",
     "Your king had nowhere to run.": "O teu rei não tinha para onde fugir.",
-    "Your {piece} on {sq} is hanging — the Bears can take it for free.": "O teu {piece} em {sq} está pendurado: os Ursos podem capturá-lo de graça.",
     "back to result": "voltar ao resultado",
     "back to the game": "voltar à partida",
     "dead even": "totalmente equilibrada",
@@ -2353,6 +2312,7 @@ const I18N = {
     "Compare with": "Comparar com",
     "Overlay another symbol — both plotted as % change": "Sobrepõe outro símbolo — ambos traçados como variação em %",
     "Stop comparing": "Parar de comparar",
+    // --- settings: the plain-language sidebar ---
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -2830,8 +2790,6 @@ const I18N = {
     "Bulls edge ahead": "I Tori prendono un piccolo vantaggio",
     "Bulls hold": "I Tori hanno",
     "CAPTURED": "CATTURATI",
-    "COACH": "ALLENATORE",
-    "Centre control": "Controllo del centro",
     "Checkmate — Bears win": "Scacco matto — vincono gli Orsi",
     "Checkmate — Bulls win": "Scacco matto — vincono i Tori",
     "Flag — Bears win on time": "Bandierina — gli Orsi vincono a tempo",
@@ -2850,12 +2808,10 @@ const I18N = {
     "Neither side could force it. Swap seats and go again.": "Nessuno dei due è riuscito a forzarla. Cambiate posto e si riparte.",
     "Next move": "Mossa successiva",
     "No legal move left, and no check. That is a draw.": "Non resta alcuna mossa legale e non c'è scacco. È patta.",
-    "Nothing else matters until the check is answered.": "Niente altro conta finché non rispondi allo scacco.",
     "POSITION": "POSIZIONE",
     "Passive": "Passivo",
     "Play again": "Gioca ancora",
     "Previous move": "Mossa precedente",
-    "Pushing {push} claims the centre. Bears will likely answer {answer}.": "Spingere in {push} rivendica il centro. Gli Orsi risponderanno probabilmente {answer}.",
     "Review moves": "Rivedi le mosse",
     "Reviewing": "In revisione",
     "Ruthless": "Spietato",
@@ -2863,30 +2819,23 @@ const I18N = {
     "Stalemate — nobody wins": "Stallo — non vince nessuno",
     "Stepping back through the game. The board is not live.": "Stai tornando indietro nella partita. La scacchiera non è in gioco.",
     "Swap seats and play it back the other way.": "Cambiate posto e rigiocatela al contrario.",
-    "THEIRS": "LORO",
     "TIME LEFT": "TEMPO RIMASTO",
     "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Tocca un pezzo per vedere dove può andare, poi tocca una casa o uno dei chip nella barra.",
     "That was Ruthless. There is nothing harder here.": "Quello era Spietato. Qui non c'è niente di più difficile.",
     "The Bears are yours to play. The house is sitting this one out.": "Gli Orsi sono tuoi. Il banco resta fuori da questa.",
-    "The Bears own the centre. Challenge it before it settles.": "Gli Orsi controllano il centro. Contendiglielo prima che si consolidi.",
     "The Bears ran out of clock.": "Agli Orsi è finito il tempo.",
     "The Bears' king had nowhere to run.": "Il re degli Orsi non aveva dove scappare.",
     "The Bulls' king had nowhere to run.": "Il re dei Tori non aveva dove scappare.",
-    "The centre is still open. Whoever claims it first sets the shape of the game.": "Il centro è ancora aperto. Chi lo prende per primo dà forma alla partita.",
     "The game is over. Play again, or step back through it.": "La partita è finita. Gioca ancora, oppure ripercorrila a ritroso.",
     "The house is choosing its move.": "Il banco sta scegliendo la mossa.",
-    "The position stopped here. Step back through it to see where it turned.": "La posizione si è fermata qui. Ripercorrila a ritroso per vedere dove ha girato.",
     "The starting position.": "La posizione di partenza.",
     "Two players, one screen: Bulls first, then Bears. Checkmate the other king to win, or win on the clock.": "Due giocatori, uno schermo: prima i Tori, poi gli Orsi. Dai scacco matto all'altro re per vincere, o vinci a tempo.",
     "Who plays the Bears": "Chi gioca gli Orsi",
     "YOUR TURN": "TOCCA A TE",
-    "YOURS": "TUO",
     "You are the Bulls, in green, and you move first. Checkmate the Bears' king to win — get checkmated, or run your clock to zero, and it is over.": "Sei i Tori, in verde, e muovi per primo. Dai scacco matto al re degli Orsi per vincere — se lo subisci tu, o il tuo orologio arriva a zero, è finita.",
-    "You hold the middle. Bring a knight out behind it.": "Controlli il centro. Fai uscire un cavallo dietro.",
     "You ran out of clock.": "Ti è finito il tempo.",
     "You were well down on material before the mate. Trade only when you win the trade.": "Eri molto sotto di materiale prima del matto. Cambia solo quando il cambio è tuo.",
     "Your king had nowhere to run.": "Il tuo re non aveva dove scappare.",
-    "Your {piece} on {sq} is hanging — the Bears can take it for free.": "Il tuo {piece} in {sq} è in presa: gli Orsi possono prenderlo gratis.",
     "back to result": "torna al risultato",
     "back to the game": "torna alla partita",
     "dead even": "perfettamente pari",
@@ -2912,6 +2861,7 @@ const I18N = {
     "Compare with": "Confronta con",
     "Overlay another symbol — both plotted as % change": "Sovrappone un altro simbolo — entrambi tracciati come variazione %",
     "Stop comparing": "Interrompi il confronto",
+    // --- settings: the plain-language sidebar ---
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -3726,10 +3676,6 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
   // tanh rather than a linear clamp: the difference between level and a pawn up
   // is worth seeing, and the difference between eight up and nine up is not.
   const evalFrac = 0.5 + 0.5 * Math.tanh(edge / 6);
-  const centre = useMemo(() => chessCentre(shown), [shown]);
-  const cenTotal = centre.w + centre.b;
-  const cenFrac = cenTotal === 0 ? 0.5 : centre.w / cenTotal;
-  const cenState = Math.abs(centre.w - centre.b) <= 1 ? "open" : centre.w > centre.b ? "yours" : "theirs";
   const checkNow = live && inCheck(board, turn);
   const checkedKing = useMemo(() => {
     if (!checkNow) return null;
@@ -3739,22 +3685,6 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
     }
     return null;
   }, [checkNow, board, turn]);
-  // The most valuable thing of yours that the Bears can take for nothing. Only
-  // a knight or better — a coach that shouts about every loose pawn is one you
-  // stop reading.
-  const hanging = useMemo(() => {
-    if (!live || turn !== "w") return null;
-    let worst = null;
-    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
-      const p = board[r][c];
-      if (!p || p.s !== "w" || p.t === "k" || CHESS_VAL[p.t] < 3) continue;
-      if (chessAttacks(board, r, c, "b") && !chessAttacks(board, r, c, "w")) {
-        if (!worst || CHESS_VAL[p.t] > CHESS_VAL[worst.t]) worst = { r, c, t: p.t };
-      }
-    }
-    return worst;
-  }, [board, turn, live]);
-
   const moveNo = Math.floor(moves.length / 2) + 1;
   const pairs = [];
   for (let i = 0; i < moves.length; i += 2) pairs.push([moves[i], moves[i + 1]]);
@@ -3808,37 +3738,6 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
     : !yours ? t("The house is choosing its move.")
     : sel ? selLine
     : t("Tap a piece to see where it can go.");
-
-  // The coach speaks about the position, not about the interface, and it never
-  // names a move that is not on the board: the centre line only appears when
-  // that push is actually legal from here.
-  const centrePush = useMemo(() => {
-    if (!live || turn !== "w" || cenState !== "open") return null;
-    for (const [r, c] of [[4, 3], [4, 4]]) {               // d4, e4
-      const from = { r: 6, c };
-      const p = board[from.r][from.c];
-      if (p && p.s === "w" && p.t === "p" && legalMoves(board, from.r, from.c).some(m => m.r === r && m.c === c)) {
-        return { push: chessSquare(r, c), answer: chessSquare(3, c) };
-      }
-    }
-    return null;
-  }, [board, turn, live, cenState]);
-
-  const coachLine = end
-    ? t("The position stopped here. Step back through it to see where it turned.")
-    : checkNow && yours ? t("Nothing else matters until the check is answered.")
-    : hanging
-      ? t("Your {piece} on {sq} is hanging — the Bears can take it for free.")
-          .replace("{piece}", pieceWord(hanging.t)).replace("{sq}", chessSquare(hanging.r, hanging.c))
-      : centrePush
-        ? t("Pushing {push} claims the centre. Bears will likely answer {answer}.")
-            .replace("{push}", centrePush.push).replace("{answer}", centrePush.answer)
-        : cenState === "yours" ? t("You hold the middle. Bring a knight out behind it.")
-        : cenState === "theirs" ? t("The Bears own the centre. Challenge it before it settles.")
-        : t("The centre is still open. Whoever claims it first sets the shape of the game.");
-
-  const CEN_LABEL = { open: t("OPEN"), yours: t("YOURS"), theirs: t("THEIRS") };
-  const cenColor = cenState === "open" ? C.warn : cenState === "yours" ? C.accentText : C.down;
 
   // ---- the end card ----
   const won = end && (end.winner === "w");
@@ -4248,7 +4147,12 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
 
           <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) 0.08s both" }}>
             <div style={railLabel}>{t("MOVE LOG")}</div>
-            <div ref={logRef} style={{ ...railCard, padding: "11px 12px", fontFamily: MONO, fontSize: 11.5, lineHeight: 1.9, maxHeight: 168, overflowY: "auto" }}>
+            {/* 300 rather than 168: the coach card used to sit under this one,
+                and with it gone the log is what has somewhere to grow. It is a
+                cap, not a height — the box is still sized by its contents, so a
+                fresh game shows two lines and a long one fills the rail rather
+                than scrolling inside a third of it. */}
+            <div ref={logRef} style={{ ...railCard, padding: "11px 12px", fontFamily: MONO, fontSize: 11.5, lineHeight: 1.9, maxHeight: 300, overflowY: "auto" }}>
               {pairs.map(([w, b], i) => (
                 <div key={i} style={{ display: "flex", gap: 12 }}>
                   <span style={{ color: FIELD.quinary, width: 16, flexShrink: 0 }}>{i + 1}.</span>
@@ -4286,23 +4190,9 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
             </div>
           </div>
 
-          <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) 0.24s both" }}>
-            <div style={railLabel}>{t("COACH")}</div>
-            <div style={railCard}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                <span style={{ fontFamily: SANS, fontSize: 12.5, color: C.muted }}>{t("Centre control")}</span>
-                <span style={{ fontFamily: MONO, fontSize: 12, color: cenColor }}>{CEN_LABEL[cenState]}</span>
-              </div>
-              <div aria-hidden="true" style={{ height: 5, borderRadius: 3, background: C.surface, marginTop: 9, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${cenFrac * 100}%`, transition: "width 260ms var(--v-ease)", background: cenState === "theirs" ? C.down : `linear-gradient(90deg, ${C.warn}, ${C.accent})` }} />
-              </div>
-              <div style={{ fontFamily: SANS, fontSize: 11.5, color: C.faint, marginTop: 9, lineHeight: 1.45 }}>{coachLine}</div>
-            </div>
-          </div>
-
           {/* Pinned to the bottom because it is the one control here you change
               between games rather than read during one. */}
-          <div style={{ marginTop: "auto", animation: "vt-fadeup 0.5s var(--v-ease) 0.32s both" }}>
+          <div style={{ marginTop: "auto", animation: "vt-fadeup 0.5s var(--v-ease) 0.24s both" }}>
             <div style={railLabel}>{t("HOUSE ALGO")}</div>
             {house ? (
               // Accent, not the neutral thumb: everywhere else in this product a
