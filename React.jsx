@@ -5955,9 +5955,21 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         arm(cx - 34, deskY - 18, lx, ly);
         arm(cx + 34, deskY - 18, rxh, ryh);
         hand(lx, ly); hand(rxh, ryh);
-        // The mug only gets out of the way while the right hand is actually
-        // coming up for one, instead of being shoved aside for the whole answer.
-        drawMug(mugRest.x - (g && g.side === 1 ? 12 * gAmt : 0), mugRest.y);
+        // The mug does not move. It is a china cup on a desk, and it was
+        // sliding up to 12px left whenever the right hand came up for a beat —
+        // an object shifting itself out of the way of a hand that was never
+        // going to reach it. An earlier pass narrowed WHEN it slid, from the
+        // whole answer down to the individual gesture, which made it rarer and
+        // therefore odder: a cup that twitches once a sentence.
+        //
+        // It was avoiding a collision that cannot happen. The hand rises far
+        // faster than it travels sideways — 26px up against 7px right per unit
+        // of gAmt — so by the time it is wide enough to reach the mug it is
+        // long past it in height. The hand's right edge is cx+26+7·gAmt+6 and
+        // the mug's left edge is cx+38, which needs gAmt > 0.86 to overlap; at
+        // gAmt 0.86 the hand's underside sits at deskY−22, nine pixels clear of
+        // the mug's rim at deskY−13, and it only climbs from there.
+        drawMug(mugRest.x, mugRest.y);
       } else {
         // both hands resting on the desk
         arm(cx - 34, deskY - 18, cx - 26, deskY - 6);
