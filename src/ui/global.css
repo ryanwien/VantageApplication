@@ -988,3 +988,12 @@ button:not(:disabled):active { transform: scale(0.97); }
 @media (max-width: 480px) {
   .v-setstatus { display: none !important; }
 }
+
+/* ---------- compare chip ----------
+   The chart toolbar's Compare control was the one native widget in a row of
+   hand-built pills; it draws its own chevron now, and gained an ✕ to leave the
+   comparison with. The ✕ needs to answer the pointer — it is the only control
+   in that row that removes something, and a remove with no hover state reads
+   as decoration. */
+.v-cmpclear { transition: color var(--v-fast) var(--v-ease); }
+.v-cmpclear:hover { color: var(--v-text); }

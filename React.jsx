@@ -670,6 +670,10 @@ const I18N = {
     "{p} selected — {a} is its only move.": "{p} seleccionado: {a} es su única jugada.",
     "{p} selected — {n} squares are open.": "{p} seleccionado: hay {n} casillas libres.",
     "— game just started": "— la partida acaba de empezar",
+    // --- settings: the plain-language sidebar ---
+    "Compare with": "Comparar con",
+    "Overlay another symbol — both plotted as % change": "Superpone otro símbolo — ambos trazados como variación en %",
+    "Stop comparing": "Dejar de comparar",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -1226,6 +1230,10 @@ const I18N = {
     "{p} selected — {a} is its only move.": "{p} sélectionné — {a} est son seul coup.",
     "{p} selected — {n} squares are open.": "{p} sélectionné — {n} cases sont libres.",
     "— game just started": "— la partie vient de commencer",
+    // --- settings: the plain-language sidebar ---
+    "Compare with": "Comparer avec",
+    "Overlay another symbol — both plotted as % change": "Superposer un autre symbole — les deux tracés en variation %",
+    "Stop comparing": "Arrêter la comparaison",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -1782,6 +1790,10 @@ const I18N = {
     "{p} selected — {a} is its only move.": "{p} ausgewählt — {a} ist der einzige Zug.",
     "{p} selected — {n} squares are open.": "{p} ausgewählt — {n} Felder sind frei.",
     "— game just started": "— die Partie hat gerade begonnen",
+    // --- settings: the plain-language sidebar ---
+    "Compare with": "Vergleichen mit",
+    "Overlay another symbol — both plotted as % change": "Ein weiteres Symbol überlagern — beide als prozentuale Veränderung",
+    "Stop comparing": "Vergleich beenden",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -2337,6 +2349,10 @@ const I18N = {
     "{p} selected — {a} is its only move.": "{p} selecionado: {a} é o seu único lance.",
     "{p} selected — {n} squares are open.": "{p} selecionado: há {n} casas livres.",
     "— game just started": "— a partida acabou de começar",
+    // --- settings: the plain-language sidebar ---
+    "Compare with": "Comparar com",
+    "Overlay another symbol — both plotted as % change": "Sobrepõe outro símbolo — ambos traçados como variação em %",
+    "Stop comparing": "Parar de comparar",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -2892,6 +2908,10 @@ const I18N = {
     "{p} selected — {a} is its only move.": "{p} selezionato: {a} è la sua unica mossa.",
     "{p} selected — {n} squares are open.": "{p} selezionato: {n} case sono libere.",
     "— game just started": "— la partita è appena iniziata",
+    // --- settings: the plain-language sidebar ---
+    "Compare with": "Confronta con",
+    "Overlay another symbol — both plotted as % change": "Sovrappone un altro simbolo — entrambi tracciati come variazione %",
+    "Stop comparing": "Interrompi il confronto",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -13410,12 +13430,47 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                     {label}
                   </button>
                 ))}
-                <select value={chartVs || ""} onChange={e => setChartVs(e.target.value || null)} aria-label="Compare with"
-                  title="Overlay another symbol — both plotted as % change"
-                  style={{ ...pill(!!chartVs, { tone: "neutral", pad: "5px 10px" }), fontSize: 12.5, color: chartVs ? "#C08BFF" : C.muted }}>
-                  <option value="" style={{ background: C.surface, color: C.text }}>{t("Compare")}</option>
-                  {watchlist.filter(x => x !== selected).map(x => <option key={x} value={x} style={{ background: C.surface, color: C.text }}>vs {x}</option>)}
-                </select>
+                {/* Compare was the one native widget in a row of hand-built
+                    pills — the browser drew its own arrow, in its own colour,
+                    at its own size, inside our chip. It is a styled control
+                    now: appearance off, our chevron, and the purple it wears
+                    when it is on is the purple of the line it puts on the
+                    chart.
+
+                    It also gains a way OUT. The only way to stop comparing was
+                    to reopen the menu and choose the option labelled
+                    "Compare", which is a strange word for "off". So the empty
+                    option is the placeholder it always was — shown only while
+                    nothing is picked — and the ✕ is how you leave. */}
+                <div style={{ ...pill(!!chartVs, { tone: "neutral", pad: 0 }), gap: 0, fontSize: 12.5 }}>
+                  <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                    <select value={chartVs || ""} onChange={e => setChartVs(e.target.value || null)} aria-label={t("Compare with")}
+                      title={t("Overlay another symbol — both plotted as % change")}
+                      style={{ appearance: "none", WebkitAppearance: "none", background: "transparent", border: "none", borderRadius: 20,
+                        fontFamily: SANS, fontSize: 12.5, cursor: "pointer", padding: "5px 25px 5px 12px",
+                        color: chartVs ? "#C08BFF" : C.muted }}>
+                    {/* A placeholder only exists while there is nothing to place.
+                        chartVs leads the list so a symbol dropped from the
+                        watchlist mid-comparison still names itself here, rather
+                        than letting the chip claim a symbol the chart is not
+                        drawing. */}
+                    {!chartVs && <option value="" style={{ background: C.surface, color: C.text }}>{t("Compare")}</option>}
+                    {[...new Set([...(chartVs ? [chartVs] : []), ...watchlist.filter(x => x !== selected)])]
+                      .map(x => <option key={x} value={x} style={{ background: C.surface, color: C.text }}>vs {x}</option>)}
+                    </select>
+                    <svg width="9" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"
+                      style={{ position: "absolute", right: 10, pointerEvents: "none" }}>
+                      <path d="M1 1l4 4 4-4" stroke={chartVs ? "#C08BFF" : C.faint} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                  {chartVs && (
+                    <button onClick={() => setChartVs(null)} className="v-tap v-cmpclear" aria-label={t("Stop comparing")} title={t("Stop comparing")}
+                      style={{ alignSelf: "stretch", background: "transparent", border: "none", borderLeft: `1px solid ${C.edge}`,
+                        color: C.muted, fontFamily: SANS, fontSize: 11, lineHeight: 1, padding: "5px 11px", cursor: "pointer" }}>
+                      ✕
+                    </button>
+                  )}
+                </div>
               </>)}
               {/* The one accent on this screen. It is a link, not a box: the
                   chart is already here, and this opens a bigger one. */}
