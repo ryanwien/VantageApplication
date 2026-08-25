@@ -21,10 +21,11 @@ import { api, ApiError, tokenStore } from "./src/api/client.js";
 import { AuthProvider, useAuth } from "./src/api/auth-context.jsx";
 import AppShell from "./src/ui/AppShell.jsx";
 import ChatAssistant from "./src/ui/ChatAssistant.jsx";
-import NewsDesk, { sourceColor, toneOf } from "./src/ui/NewsDesk.jsx";
+import NewsDesk from "./src/ui/NewsDesk.jsx";
 import VideoFrame, { ytId } from "./src/ui/VideoFrame.jsx";
 import VideoDesk from "./src/ui/VideoDesk.jsx";
 import { ytDurationSec, parseChapters, chapterMentions, relAge } from "./src/video/video.js";
+import { newestFirst, sourceOf } from "./src/news/news.js";
 import Waveform from "./src/ui/Waveform.jsx";
 import VantageMark from "./src/ui/VantageMark.jsx";
 import DeskIcon from "./src/ui/DeskIcon.jsx";
@@ -8469,6 +8470,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const audioCtxRef = useRef(null);   // shared AudioContext
   const analyserRef = useRef(null);   // {node, buf} — read by DeskAnchor for real lip sync
   const speechMouthRef = useRef(null); // {t0, chars} — set on each browser-TTS word boundary, read by DeskAnchor for lip sync
+  // {id, frac, elapsedMs, totalMs} — how far through the current read the desk
+  // is. A REF and not state, for the same reason analyserRef is one: this
+  // moves several times a second, and the News desk's on-air block polls it at
+  // 4Hz so a ticking clock re-renders that block instead of the dashboard.
+  //
+  // `frac` means two different real things depending on who is talking. On the
+  // studio voice it is the audio playhead. On browser speech synthesis there
+  // is no playhead and no duration, so it is charIndex over the script's
+  // length — how far through the WORDS the synth has read, which is a fact of
+  // the same kind. `totalMs` is null on browser TTS because a total is the one
+  // thing that engine genuinely cannot tell us.
+  const speechProgressRef = useRef(null);
   const streamRef = useRef({ id: null, spokenLen: 0, outstanding: 0, done: false }); // sentence-streamed narration
   // pulse the mouth on each spoken word (SpeechSynthesis fires 'boundary' as it reaches each word)
   const onWordBoundary = (ev) => {
@@ -8538,11 +8551,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       audioRef.current = null;
     }
     if (analyserRef.current) analyserRef.current = null;
+    // Clearing the utterance here is what makes it a completion token. An
+    // utterance's onend fires both when it finishes and when cancel() kills it,
+    // and Chrome is not consistent about which of onend/onerror a cancel
+    // produces — so "did this read finish?" is answered by whether the
+    // utterance is still the one we are holding, which a stop always clears.
+    utterRef.current = null;
+    speechProgressRef.current = null;
     streamRef.current = { id: null, spokenLen: 0, outstanding: 0, done: false };
     setSpeakingId(null);
   }, []);
 
-  const speakEleven = useCallback(async (id, text) => {
+  const speakEleven = useCallback(async (id, text, onDone) => {
     if (!canUseStudioVoice || !elevenVoiceId) { setCmdMsg(t("Pick a studio voice in settings")); return; }
     try {
       setSpeakingId(id);
@@ -8574,8 +8594,29 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       } catch { /* analyser optional — audio still plays via element if routing fails */ }
 
       audio.playbackRate = speechRate;
-      audio.onended = () => { URL.revokeObjectURL(url); analyserRef.current = null; setSpeakingId(cur => (cur === id ? null : cur)); };
-      audio.onerror = () => { analyserRef.current = null; setSpeakingId(cur => (cur === id ? null : cur)); };
+      // The studio voice is a real audio element, so both halves of the clock
+      // are real here — a playhead and a duration, neither of them estimated.
+      audio.ontimeupdate = () => {
+        const total = Number.isFinite(audio.duration) ? audio.duration : 0;
+        speechProgressRef.current = {
+          id,
+          frac: total > 0 ? audio.currentTime / total : 0,
+          elapsedMs: audio.currentTime * 1000,
+          totalMs: total > 0 ? total * 1000 : null,
+        };
+      };
+      audio.onended = () => {
+        URL.revokeObjectURL(url); analyserRef.current = null;
+        const finished = audioRef.current === audio;   // a stop clears this first
+        const total = Number.isFinite(audio.duration) ? audio.duration : 0;
+        speechProgressRef.current = finished
+          ? { id, frac: 1, elapsedMs: total * 1000, totalMs: total > 0 ? total * 1000 : null }
+          : null;
+        audioRef.current = null;
+        setSpeakingId(cur => (cur === id ? null : cur));
+        if (finished) onDone?.();
+      };
+      audio.onerror = () => { analyserRef.current = null; speechProgressRef.current = null; setSpeakingId(cur => (cur === id ? null : cur)); };
       await audio.play();
     } catch (e) {
       setElevenErr(humanizeError(e));
@@ -8585,20 +8626,50 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     }
   }, [elevenVoiceId, speechRate]);
 
-  const speak = useCallback((id, text) => {
+  // `onDone` fires when a read reaches its end on its own — never when it is
+  // stopped, replaced or errors. That distinction is the whole reason the News
+  // desk can advance a bulletin without a timer guessing when to.
+  const speak = useCallback((id, text, onDone) => {
     if (!text?.trim()) return;
     stopSpeak();
-    if (voiceEngine === "elevenlabs" && planAllows("elevenlabs")) { speakEleven(id, text); return; } // else fall through to free browser TTS
+    if (voiceEngine === "elevenlabs" && planAllows("elevenlabs")) { speakEleven(id, text, onDone); return; } // else fall through to free browser TTS
     if (!window.speechSynthesis) { setCmdMsg("This browser doesn't support speech synthesis"); return; }
     const u = new SpeechSynthesisUtterance(text);
     u.lang = TTS_LANG[lang] || "en-US"; // speak in the chosen language
     const v = (lang !== "en" ? voices.find(x => (x.lang || "").toLowerCase().startsWith(lang)) : null) || voices.find(x => x.name === voiceName);
     if (v) u.voice = v; // prefer a voice matching the language, else the chosen/default voice
     u.rate = speechRate; u.pitch = 1.0;
-    u.onboundary = onWordBoundary;
-    u.onend = () => { speechMouthRef.current = null; setSpeakingId(cur => (cur === id ? null : cur)); };
-    u.onerror = (ev) => {
+    // Timed from onstart rather than from here: speak() defers by 60ms and the
+    // synth may queue behind whatever it was already saying, so a clock started
+    // now would be counting silence.
+    const chars = Math.max(1, text.length);
+    let t0 = null;
+    speechProgressRef.current = { id, frac: 0, elapsedMs: 0, totalMs: null };
+    u.onstart = () => { t0 = performance.now(); };
+    u.onboundary = (ev) => {
+      onWordBoundary(ev);
+      if (typeof ev.charIndex !== "number") return;
+      speechProgressRef.current = {
+        id,
+        frac: Math.min(1, ev.charIndex / chars),
+        elapsedMs: t0 == null ? 0 : performance.now() - t0,
+        totalMs: null,   // browser speech synthesis does not know, so we do not print one
+      };
+    };
+    u.onend = () => {
       speechMouthRef.current = null;
+      const finished = utterRef.current === u;   // a stop or a replacement clears this first
+      // A read that ran to the end leaves its bar full rather than snapping
+      // back to zero. The News desk keeps the card up afterwards, and an empty
+      // progress bar under a story the desk just finished is a lie about it.
+      speechProgressRef.current = finished
+        ? { id, frac: 1, elapsedMs: t0 == null ? 0 : performance.now() - t0, totalMs: null }
+        : null;
+      setSpeakingId(cur => (cur === id ? null : cur));
+      if (finished) { utterRef.current = null; onDone?.(); }
+    };
+    u.onerror = (ev) => {
+      speechMouthRef.current = null; speechProgressRef.current = null;
       if (ev.error !== "canceled" && ev.error !== "interrupted") setCmdMsg(`Speech error: ${ev.error || "unknown"} — try a different voice in settings`);
       setSpeakingId(cur => (cur === id ? null : cur));
     };
@@ -9584,6 +9655,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const [newsBusy, setNewsBusy] = useState(false);
   const [newsErr, setNewsErr] = useState("");
   const [newsFor, setNewsFor] = useState("");
+  // When the wire last landed, and which of the three paths it came in on.
+  // The footer prints both: "refreshed 4 minutes ago" is a fact the panel
+  // could never state before, and naming the path is the only place the desk
+  // admits that a model wrote these headlines out of memory.
+  const [newsAt, setNewsAt] = useState(null);
+  const [newsSrc, setNewsSrc] = useState("");
+  // The bulletin, as a queue. `airIndex` is a position in the ORDERED wire, so
+  // "story 3 of 8" counts the same list the panel shows; `airAuto` is the
+  // difference between "Read all on air" (which walks the queue on its own)
+  // and one story read from its card (which stops, and offers Next).
+  const [airIndex, setAirIndex] = useState(null);
+  const [airAuto, setAirAuto] = useState(false);
+  // The desk's plain-language translation, keyed by headline so re-reading a
+  // story it already explained costs nothing. Bounded by the wire.
+  const [meansByTitle, setMeansByTitle] = useState({});
+  const meansAsked = useRef(new Set());   // which headlines have been sent, so none goes twice
 
   const [exportMsg, setExportMsg] = useState("");
   const [writtenReport, setWrittenReport] = useState("");
@@ -11080,7 +11167,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     const clean = text.replace(/```json|```/g, "").trim();
     const a = clean.indexOf("{"), z = clean.lastIndexOf("}");
     if (a < 0 || z < 0) throw new Error("No results returned — try again");
-    return JSON.parse(clean.slice(a, z + 1));
+    // Real URLs off a live search, but no publish times: the tool gives the
+    // model pages, not datelines. The cards on this path carry no age.
+    return { ...JSON.parse(clean.slice(a, z + 1)), _src: "claude · web search" };
   }, [selected, getClaudeBaseUrl, getAnthropicHeaders]);
 
   // Fallback: any other model (OpenRouter/OpenAI/Gemini/local) from its own knowledge — no web access,
@@ -11100,7 +11189,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     const nq = (q) => encodeURIComponent(`${selected} ${q || ""}`.trim());
     parsed.news = (parsed.news || []).slice(0, 4).map(n => ({ title: n.title, source: n.source || "search", url: `https://www.google.com/search?q=${nq(n.title)}` }));
     parsed.videos = (parsed.videos || []).slice(0, 3).map(v => ({ title: v.title, channel: v.channel || "YouTube", url: `https://www.youtube.com/results?search_query=${nq(v.title)}` }));
-    parsed._via = m.label; // flag: sourced from model knowledge, not live web
+    // Sourced from model knowledge, not live web — and now said out loud in
+    // the panel's footer rather than only flagged in a field nobody read.
+    parsed._src = `${m.label} · from memory`;
     return parsed;
   }, [selected]);
 
@@ -11115,7 +11206,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
       try {
         const j = await api.news(selected, { timeout: 6000 });
-        if (j?.news?.length) parsed = { news: j.news, videos: [] };
+        // The only path that carries a publish time per story, which is why
+        // it is also the only one whose cards show an age and whose header
+        // can name a window.
+        if (j?.news?.length) parsed = { news: j.news, videos: [], _src: "finnhub · company-news" };
       } catch { /* backend offline or unconfigured — normal, fall through */ }
 
 
@@ -11143,42 +11237,125 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         try { const vids = await searchYouTube(`${selected} stock`, 3); if (vids.length) parsed.videos = vids; } catch { /* keep model list */ }
       }
       setNews(parsed); setNewsFor(selected);
+      setNewsAt(Date.now()); setNewsSrc(parsed._src || "");
+      // A new wire invalidates the bulletin that was running on the old one:
+      // "story 3 of 8" would otherwise keep counting a list that no longer
+      // exists. The translations go with it, since they were about those
+      // headlines.
+      stopSpeak(); setAirIndex(null); setAirAuto(false);
+      setMeansByTitle({}); meansAsked.current = new Set();
     } catch (e) {
       setNewsErr(humanizeError(e));
     } finally {
       setNewsBusy(false);
     }
-  }, [selected, canSearchVideos, searchYouTube, anthropicApiKey, aiModels, meetStatus, newsViaClaude, newsViaModel]);
+  }, [selected, canSearchVideos, searchYouTube, anthropicApiKey, aiModels, meetStatus, newsViaClaude, newsViaModel, stopSpeak]);
 
   // always hand the browser a valid, openable URL — fall back to a Google search if a model omitted/mangled one
   const newsHref = (n) => (n?.url && /^https?:\/\//.test(n.url)) ? n.url : `https://www.google.com/search?q=${encodeURIComponent(`${newsFor || selected} ${n?.title || ""}`.trim())}`;
 
-  // Read the loaded headlines on air, in the voice of the current anchor. Lifted
-  // out of the news panel's JSX so NewsDesk can stay presentational and simply
-  // call back when the "Read on air" button is pressed.
-  const broadcastNews = useCallback(() => {
-    const stories = news?.news || [];
-    if (!stories.length) return;
-    const script = `This is ${anchorName} with the ${newsFor} brief. ` +
-      stories.map((n, i) => `Story ${i + 1}, from ${n.source}: ${n.title}.`).join(" ") +
-      " That's the tape. Back to you.";
-    speak("broadcast", script);
-  }, [news, newsFor, anchorName, speak]);
+  // The wire, in the order the panel shows it. Sorted HERE rather than inside
+  // the panel because the index of a story is the whole contract between the
+  // two: "story 3 of 8" and speak("story:3") have to be counting the same
+  // list, and they can only be sure of that if one side owns the order.
+  const orderedNews = useMemo(() => newestFirst(news?.news || []), [news]);
 
-  // One story on air, without sitting through the whole bulletin.
-  // Keyed by title (stable under news filtering) so the UI can show WHICH
-  // story is on air; pressing the same story again stops the read.
-  const readStory = (n) => {
+  // The price the news is moving, sitting next to the news. Absent rather than
+  // dashed out when the desk has no quote for the symbol — a LAST card with no
+  // last in it is furniture.
+  const newsLast = useMemo(() => {
+    const r = getRow(newsFor || selected);
+    return r?.price != null ? { price: r.price, chgPct: r.chgPct } : null;
+  }, [getRow, newsFor, selected]);
+
+  // WHAT IT MEANS. The desk translating the jargon out of one headline —
+  // never a verdict on it, which is why the prompt forbids advice and price
+  // targets outright and the panel prints the result in C.textBody, the colour
+  // this system reserves for the desk's own words about somebody else's.
+  //
+  // Runs once per headline and is cached by title, so walking a bulletin and
+  // then walking back through it costs one call per story, not two.
+  const explainStory = useCallback(async (n) => {
     if (!n?.title) return;
-    const sid = `story:${n.title}`;
-    if (speakingId === sid) { stopSpeak(); return; }
-    speak(sid, `${anchorName} here with one from ${n.source || "the wire"}: ${n.title}.`);
-  };
+    // The guard is a ref and not the state object, because two reads of the
+    // same story can start in the same tick and setState's updater does not
+    // run in time to stop the second one. A ref is written now.
+    if (meansAsked.current.has(n.title)) return;
+    meansAsked.current.add(n.title);
+    // No model, no panel. The reference shows WHAT IT MEANS as content rather
+    // than as an optional extra, and an empty box under that heading would be
+    // the desk promising a translation it cannot produce.
+    const m = usableAiModels()[0];
+    if (!m) return;
+    setMeansByTitle(p => ({ ...p, [n.title]: { status: "running" } }));
+    const t0 = performance.now();
+    try {
+      const ask = m.kind === "ollama" ? askOllama : m.kind === "gemini" ? askGemini : m.kind === "claude" ? askClaude : askOpenAICompat;
+      let acc = "";
+      await ask(m, `A market headline reads: "${n.title}".${n.summary ? ` The wire's own summary: "${n.summary}"` : ""}\n\nIn one or two short sentences, explain what the JARGON in it actually means to someone who does not work in markets — the mechanics of the thing described, not whether it is good or bad. No advice, no price targets, no prediction. Respond with ONLY minified JSON: {"text":""}.`, undefined, (tok) => { acc += tok; });
+      const clean = acc.replace(/```json|```/g, "").trim();
+      const a = clean.indexOf("{"), z = clean.lastIndexOf("}");
+      if (a < 0 || z < 0) throw new Error("The model returned nothing usable");
+      const text = String(JSON.parse(clean.slice(a, z + 1)).text || "").trim();
+      if (!text) throw new Error("The model returned nothing usable");
+      setMeansByTitle(p => ({ ...p, [n.title]: { status: "done", text, model: m.label, ms: Math.round(performance.now() - t0) } }));
+    } catch (e) {
+      setMeansByTitle(p => ({ ...p, [n.title]: { status: "error", text: humanizeError(e) } }));
+    }
+  }, [usableAiModels]);
+
+  // One story on air. `auto` is the difference between the bulletin and a
+  // single card: the bulletin hands itself on when the read finishes, a single
+  // story stops and leaves Next story → for you to press.
+  //
+  // The advance goes through a ref because a useCallback cannot name itself.
+  const readAtRef = useRef(null);
+  const readStoryAt = useCallback((i, auto = false) => {
+    const list = orderedNews;
+    const n = list[i];
+    if (!n) return;
+    setAirIndex(i);
+    setAirAuto(auto);
+    explainStory(n);
+    const opener = auto && i === 0 ? `This is ${anchorName} with the ${newsFor || selected} brief. ` : "";
+    const closer = auto && i === list.length - 1 ? " That's the tape. Back to you." : "";
+    speak(
+      `story:${i}`,
+      `${opener}Story ${i + 1} of ${list.length}, from ${sourceOf(n)}: ${n.title}.${closer}`,
+      // Only ever called when the read reached its own end — a stop or an
+      // interruption does not advance the bulletin.
+      () => { if (auto && i + 1 < list.length) readAtRef.current?.(i + 1, true); else setAirAuto(false); },
+    );
+  }, [orderedNews, explainStory, anchorName, newsFor, selected, speak]);
+  useEffect(() => { readAtRef.current = readStoryAt; }, [readStoryAt]);
+
+  // The card's own button: reading it, or stopping it if it is the one talking.
+  const readStory = useCallback((n, i) => {
+    if (airIndex === i && speakingId === `story:${i}`) { stopSpeak(); setAirIndex(null); setAirAuto(false); return; }
+    readStoryAt(i, false);
+  }, [airIndex, speakingId, stopSpeak, readStoryAt]);
+
+  // "Read all on air" — the bulletin, one story at a time rather than as a
+  // single unbroken utterance. That change is what lets the panel say which
+  // story is on air, translate the one you are hearing, and let you skip.
+  const broadcastNews = useCallback(() => {
+    if (!orderedNews.length) return;
+    if (airAuto) { stopSpeak(); setAirIndex(null); setAirAuto(false); return; }
+    readStoryAt(0, true);
+  }, [orderedNews, airAuto, stopSpeak, readStoryAt]);
+
+  const nextStory = useCallback(() => {
+    if (airIndex == null || airIndex + 1 >= orderedNews.length) return;
+    readStoryAt(airIndex + 1, airAuto);
+  }, [airIndex, airAuto, orderedNews, readStoryAt]);
+
+  const stopAir = useCallback(() => { stopSpeak(); setAirIndex(null); setAirAuto(false); }, [stopSpeak]);
+
   // Hand one headline to the AI. Goes through askDesk so it lands in the chat
   // thread as a normal turn — streamed answer, read-aloud, retry, all included.
   const askStory = (n) => {
     if (!n?.title) return;
-    askDesk(`From ${n.source || "the wire"}: "${n.title}" — what does this headline mean for ${newsFor || selected}?`);
+    askDesk(`From ${sourceOf(n)}: "${n.title}" — what does this headline mean for ${newsFor || selected}?`);
   };
 
   // ---- desk video concierge: find coverage, open the theater, brief on air ----
@@ -12454,20 +12631,29 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   const newsPanel = panels.news && (news?.news?.length > 0 || news?.videos?.length > 0 || newsBusy || newsErr) && (
     <div key="news" id="sec-news" style={{ minWidth: 0 }}>
       <NewsDesk
-        items={news?.news || []}
+        items={orderedNews}
         videos={news?.videos || []}
         subject={selected}
         loadedFor={newsFor}
         busy={newsBusy}
         error={newsErr}
         stale={!!news && newsFor !== selected}
+        provenance={newsSrc}
+        fetchedAt={newsAt}
+        last={newsLast}
         onLoad={fetchNews}
         onBroadcast={broadcastNews}
         onPlayVideo={noteVideoPlayed}
         onReadStory={readStory}
-        readingTitle={typeof speakingId === "string" && speakingId.startsWith("story:") ? speakingId.slice(6) : null}
+        onStopAir={stopAir}
+        airIndex={airIndex}
+        airSpeaking={airIndex != null && speakingId === `story:${airIndex}`}
+        airMeans={airIndex != null ? (meansByTitle[orderedNews[airIndex]?.title] || null) : null}
+        progressRef={speechProgressRef}
+        onNextStory={airIndex != null && airIndex + 1 < orderedNews.length ? nextStory : null}
         onAskStory={askStory}
         hrefFor={newsHref}
+        onClose={() => { stopAir(); setPanels(p => ({ ...p, news: false })); }}
         compact
       />
     </div>

@@ -790,10 +790,28 @@ const server = http.createServer(async (req, res) => {
       if (!r.ok) return send(res, 502, { error: `Finnhub HTTP ${r.status}` });
       const arr = await r.json();
       const seen = new Set();
+      // `datetime` and `summary` are in every Finnhub row and were being
+      // dropped here, which is why the panel could never say how old a story
+      // was. Both are forwarded now: the timestamp is the card's age and the
+      // list's sort key, and the summary is the extra sentence the category
+      // scan reads when the headline alone does not settle it.
+      //
+      // The summary is capped rather than sent whole. It exists to be scanned,
+      // not printed, and some wires put three paragraphs in it.
+      //
+      // 24 rather than 8. The panel shows the first six and offers the rest —
+      // "Show 5 more" cannot be an honest button over a list the server
+      // already truncated to exactly what is on screen.
       const news = (Array.isArray(arr) ? arr : [])
         .filter(n => n.headline && n.url && !seen.has(n.headline) && seen.add(n.headline))
-        .slice(0, 8)
-        .map(n => ({ title: n.headline, source: n.source || "wire", url: n.url }));
+        .slice(0, 24)
+        .map(n => ({
+          title: n.headline,
+          source: n.source || "wire",
+          url: n.url,
+          datetime: Number.isFinite(n.datetime) && n.datetime > 0 ? n.datetime : null,
+          summary: String(n.summary || "").slice(0, 400) || null,
+        }));
       return send(res, 200, { symbol, news });
     }
 

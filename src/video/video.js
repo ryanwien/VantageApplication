@@ -16,6 +16,12 @@
 //  video. A plausible one is not.
 // ============================================================
 
+// Two of the readouts this module used to define are not about video at all —
+// seconds into 4:02, and a timestamp into "2 days ago". They live in
+// src/lib/time.js now, because the News desk needs the same two. Re-exported
+// here so every existing caller keeps importing them from where they were.
+export { clock, relAge } from "../lib/time.js";
+
 // ---- duration ----
 // YouTube returns ISO 8601 durations ("PT18M24S", "PT1H2M3S", "P1DT2H").
 export function ytDurationSec(iso) {
@@ -23,15 +29,6 @@ export function ytDurationSec(iso) {
   if (!m || !m.slice(1).some(Boolean)) return 0;
   const [, d, h, mi, s] = m;
   return (+d || 0) * 86400 + (+h || 0) * 3600 + (+mi || 0) * 60 + (+s || 0);
-}
-
-// mm:ss under an hour, h:mm:ss over it — the same shape YouTube prints, so a
-// timestamp copied off the video matches a timestamp shown here.
-export function clock(sec) {
-  const n = Math.max(0, Math.floor(sec || 0));
-  const h = Math.floor(n / 3600), m = Math.floor((n % 3600) / 60), s = n % 60;
-  const pad = (x) => String(x).padStart(2, "0");
-  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
 }
 
 // A timestamp as written in a description: 0:00, 12:07, 1:02:03.
@@ -117,21 +114,6 @@ export function chapterMentions(chapters, known = []) {
 }
 
 // ---- small readouts ----
-const AGES = [
-  [31536000, "year"], [2592000, "month"], [604800, "week"],
-  [86400, "day"], [3600, "hour"], [60, "minute"],
-];
-export function relAge(iso, now = Date.now()) {
-  const then = Date.parse(iso);
-  if (!Number.isFinite(then)) return "";
-  const secs = Math.max(0, Math.floor((now - then) / 1000));
-  for (const [size, unit] of AGES) {
-    const n = Math.floor(secs / size);
-    if (n >= 1) return `${n} ${unit}${n === 1 ? "" : "s"} ago`;
-  }
-  return "just now";
-}
-
 // YouTube's own rounding, because the number sits next to a YouTube video and
 // disagreeing with the source by a decimal place is a small way of looking
 // wrong: one decimal below ten of a unit (1.2K), whole numbers above it (41K).

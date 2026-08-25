@@ -1019,3 +1019,24 @@ button:not(:disabled):active { transform: scale(0.97); }
 .v-onair { transition: background var(--v-base-dur) var(--v-ease); }
 .v-onair:not(:disabled):hover { background: rgba(70, 167, 88, 0.18) !important; }
 .v-onair:disabled { cursor: default; }
+
+/* ---------- news desk ----------
+   The handoff's `scan`: a soft light band drifting across the story list, 10s
+   linear infinite. The reference animates a 220px element across a fixed
+   1180px panel; this panel is a chat attachment whose width is whatever the
+   column gives it, so the band is a background gradient sized in PERCENT and
+   moved by background-position. Same effect, no hard-coded panel width — and
+   the blanket prefers-reduced-motion rule above stops it. */
+@keyframes vt-scan { from { background-position: -35% 0; } to { background-position: 135% 0; } }
+.vt-scan {
+  background-image: linear-gradient(90deg, transparent, rgba(76, 195, 138, 0.03), transparent);
+  background-size: 30% 100%;
+  background-repeat: no-repeat;
+  animation: vt-scan 10s linear infinite;
+}
+
+/* "cards lift 3-4px and their border goes to #46a758". .v-lift already owns
+   the lift and takes the border to edge-strong, which is the product's
+   ordinary card hover; a story card is a thing you are meant to act on, so it
+   goes the rest of the way to the accent. */
+.v-storycard:hover { border-color: var(--v-accent) !important; }
