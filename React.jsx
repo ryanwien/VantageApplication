@@ -12494,12 +12494,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     // Games: "play a game", "games" → the menu; "teach me / tutorial / how do stocks work" → straight to Stock School
     if (/\b(games?|play (a )?game|arcade|game room)\b/i.test(q)) {
       openGames();
-      deskReply("🎮 Game room is open — pick a game and I'll host it from the desk.");
+      deskReply("Game room is open — pick a game and I'll host it from the desk.");
       return;
     }
     if (/\b(stock school|teach me|tutorial|how (do|does) stocks?|learn (how|to invest|stocks|the basics))\b/i.test(q)) {
       setGameOn(true); startMode("school");
-      deskReply("🎓 Starting Stock School. I'll walk you through the basics on the desk — ask me anything mid-lesson.");
+      deskReply("Starting Stock School. I'll walk you through the basics on the desk — ask me anything mid-lesson.");
       return; // desk-handled — the anchor takes over teaching
     }
 
@@ -12523,7 +12523,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const aliased = aliasFromText(q);
       const chartSym = dollar ? resolveSym(dollar[1]) : aliased || (caps ? resolveSym(caps) : selected);
       openChart(chartSym);
-      deskReply(`📈 Opened the full ${chartSym} chart.`);
+      deskReply(`Opened the full ${chartSym} chart.`);
       return; // desk-handled
     }
 
@@ -12559,8 +12559,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     if (/\b(my )?(portfolio|positions|holdings)\b/i.test(q) || /how('?s| is| are) my (portfolio|positions|holdings|investments)\b/i.test(q)) {
       briefPortfolio();
       deskReply(positions.length
-        ? `💼 Your portfolio is on the desk — ${positions.length} position${positions.length === 1 ? "" : "s"}, ${portTotals.pnl >= 0 ? "up" : "down"} ${fmt(Math.abs(portTotals.pnl))} (${portTotals.pnlPct >= 0 ? "+" : ""}${portTotals.pnlPct.toFixed(2)}%).`
-        : "💼 Your portfolio is empty — add a symbol, share count and cost below and I'll track it from then on.");
+        ? `Your portfolio is on the desk — ${positions.length} position${positions.length === 1 ? "" : "s"}, ${portTotals.pnl >= 0 ? "up" : "down"} ${fmt(Math.abs(portTotals.pnl))} (${portTotals.pnlPct >= 0 ? "+" : ""}${portTotals.pnlPct.toFixed(2)}%).`
+        : "Your portfolio is empty — add a symbol, share count and cost below and I'll track it from then on.");
       return; // desk-handled
     }
 
@@ -12574,7 +12574,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       || /what('?s| is| do i have)\b[^?]*\b(calendar|schedule|agenda|coming up|going on today|planned)\b/i.test(q)
       || /\bdo i have (any )?(events?|meetings?|plans|appointments?)\b/i.test(q)) {
       openCalendar();
-      deskReply("▦ Your calendar is open on the desk — I've read out what's coming up.");
+      deskReply("Your calendar is open on the desk — I've read out what's coming up.");
       return; // desk-handled
     }
 
@@ -12585,9 +12585,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       else if (cat.popular) browsePopular(cat.kind);
       else browseCatalog(cat.svc, cat.kind);
       deskReply(
-        cat.archive ? `🎞 Searching the public-domain archive for "${cat.query}" — results appear on the desk.`
-        : cat.popular ? `🍿 Pulling this week's trending ${cat.kind === "tv" ? "shows" : "movies"}.`
-        : `🍿 Browsing ${cat.svc?.name || "the catalog"} — ${cat.kind === "tv" ? "shows" : "movies"} on the desk.`);
+        cat.archive ? `Searching the public-domain archive for "${cat.query}" — results appear on the desk.`
+        : cat.popular ? `Pulling this week's trending ${cat.kind === "tv" ? "shows" : "movies"}.`
+        : `Browsing ${cat.svc?.name || "the catalog"} — ${cat.kind === "tv" ? "shows" : "movies"} on the desk.`);
       return; // desk-handled
     }
 
