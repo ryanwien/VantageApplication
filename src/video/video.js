@@ -113,6 +113,23 @@ export function chapterMentions(chapters, known = []) {
   return [...seen.values()];
 }
 
+// ---- the summary ----
+// One row per line the model wrote, carrying a timestamp ONLY where a real one
+// exists to carry.
+//
+// The model is never asked for a number — it cannot watch the video — so the
+// numbers are the chapters' own, out of the description. When a video has no
+// chapter list there is no number, and the honest row is a sentence with
+// nothing beside it. It used to be the line's index: three sentences about an
+// eighteen-minute video stamped 0:00, 0:01 and 0:02, each one a live link that
+// seeked to the first three seconds. An array index wearing a colon is not a
+// moment in a video.
+export function summaryRows(chapters = [], lines = []) {
+  const text = (Array.isArray(lines) ? lines : []).map(s => String(s ?? "").trim()).filter(Boolean);
+  if (!Array.isArray(chapters) || !chapters.length) return text.map(t => ({ start: null, text: t }));
+  return chapters.slice(0, text.length).map((c, i) => ({ start: c.start, text: text[i] }));
+}
+
 // ---- small readouts ----
 // YouTube's own rounding, because the number sits next to a YouTube video and
 // disagreeing with the source by a decimal place is a small way of looking

@@ -28,7 +28,7 @@ import ChatAssistant from "./src/ui/ChatAssistant.jsx";
 import NewsDesk from "./src/ui/NewsDesk.jsx";
 import VideoFrame, { ytId } from "./src/ui/VideoFrame.jsx";
 import VideoDesk from "./src/ui/VideoDesk.jsx";
-import { ytDurationSec, parseChapters, chapterMentions, relAge } from "./src/video/video.js";
+import { ytDurationSec, parseChapters, chapterMentions, relAge, summaryRows } from "./src/video/video.js";
 import { newestFirst, sourceOf } from "./src/news/news.js";
 import { clock } from "./src/lib/time.js";
 import useSpeechProgress from "./src/ui/useSpeechProgress.js";
@@ -11834,8 +11834,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // The desk reads the video. The model writes ONE sentence per chapter and is
   // never asked for a timestamp — the timestamps are the chapters' own, out of
   // the description, so a row can always be clicked and always lands where it
-  // says it will. A video with no chapter list cannot be summarised this way,
-  // and the button says so rather than inventing a structure for it.
+  // says it will.
+  //
+  // A video with no chapter list still gets summarised, from its title and
+  // channel, and those rows carry no timestamp at all — see summaryRows. There
+  // is nothing real to point at, and the previous version pointed at the line's
+  // index instead.
   const summarizeVideo = useCallback(async () => {
     const v = videoDesk?.video;
     if (!v) return;
@@ -11860,9 +11864,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       // Zip against the chapters we HAVE. A model that returns too few lines
       // costs us rows; one that returns too many cannot add timestamps we did
       // not give it.
-      const rows = chapters.length
-        ? chapters.slice(0, lines.length).map((c, i) => ({ start: c.start, text: lines[i] }))
-        : lines.map((text, i) => ({ start: i, text }));
+      const rows = summaryRows(chapters, lines);
       setVideoSummary({ status: "done", rows, checks: videoChecks(v), model: m.label, ms: Math.round(performance.now() - t0) });
       speak("videodesk", rows.map(r => r.text).join(" "));
     } catch (e) {
@@ -13376,6 +13378,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         mentions={videoMentions}
         queue={videoDesk.queue}
         summary={videoSummary}
+        speaking={speakingId === "videodesk"}
+        progressRef={speechProgressRef}
+        speechKey="videodesk"
+        onStopRead={stopSpeak}
         onSeekTicker={(m) => loadSymbolOnDesk(m.ticker)}
         onPickQueue={pickQueuedVideo}
         onSummarize={summarizeVideo}

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   ytDurationSec, clock, tsToSec, parseChapters, chapterSpans, chapterAt,
-  tickersIn, chapterMentions, relAge, compactCount, monogram,
+  tickersIn, chapterMentions, relAge, compactCount, monogram, summaryRows,
 } from "./video.js";
 
 describe("duration", () => {
@@ -125,6 +125,39 @@ describe("tickers", () => {
 
   it("returns nothing for a video that names nothing", () => {
     expect(chapterMentions([{ start: 0, label: "Setup" }], ["NVDA"])).toEqual([]);
+  });
+});
+
+describe("summaryRows", () => {
+  const CH = [{ start: 0, label: "Setup" }, { start: 134, label: "Core" }, { start: 578, label: "Software" }];
+
+  it("zips the model's sentences onto the chapters' own timestamps", () => {
+    expect(summaryRows(CH, ["a", "b", "c"])).toEqual([
+      { start: 0, text: "a" }, { start: 134, text: "b" }, { start: 578, text: "c" },
+    ]);
+  });
+
+  it("gives a chapterless video NO timestamps at all", () => {
+    // This is the whole point. The rows used to carry the line's INDEX as a
+    // start, so three sentences about an eighteen-minute video were stamped
+    // 0:00 / 0:01 / 0:02 and each was a link that seeked there.
+    const rows = summaryRows([], ["a", "b", "c"]);
+    expect(rows).toHaveLength(3);
+    for (const r of rows) expect(r.start).toBe(null);
+  });
+
+  it("never invents a chapter to hang a line on", () => {
+    expect(summaryRows(CH, ["a", "b", "c", "d", "e"])).toHaveLength(3);
+  });
+  it("loses a row rather than a timestamp when the model is short", () => {
+    expect(summaryRows(CH, ["a"])).toEqual([{ start: 0, text: "a" }]);
+  });
+  it("drops blank lines instead of printing an empty row", () => {
+    expect(summaryRows(CH, ["a", "  ", "c"])).toEqual([{ start: 0, text: "a" }, { start: 134, text: "c" }]);
+  });
+  it("survives junk", () => {
+    expect(summaryRows(null, null)).toEqual([]);
+    expect(summaryRows(CH, [null, undefined])).toEqual([]);
   });
 });
 

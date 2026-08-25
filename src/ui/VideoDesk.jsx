@@ -33,10 +33,11 @@
 //  file never has to decide what is true about a video.
 // ============================================================
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { C, MONO, SANS, TYPE, R } from "./theme.js";
 import VideoFrame, { ytThumb } from "./VideoFrame.jsx";
 import Waveform from "./Waveform.jsx";
+import useSpeechProgress from "./useSpeechProgress.js";
 import { clock, chapterSpans, chapterAt, relAge, compactCount, monogram } from "../video/video.js";
 
 const railLabel = { ...TYPE.eyebrowSm, color: C.faint, letterSpacing: "1.5px" };
@@ -126,6 +127,13 @@ export default function VideoDesk({
   mentions = [],         // [{ ticker, start, price, chgPct, held }]
   queue = [],            // [{ id, title, durationSec }]
   summary = null,        // { status: "running" | "done", rows, checks, model, ms }
+  // Whether the desk is reading THIS summary aloud right now, and the ref it
+  // publishes its position into. Both come from the caller: speech belongs to
+  // the desk, not to a panel, and this file only reports it.
+  speaking = false,
+  progressRef = null,
+  speechKey = "videodesk",
+  onStopRead,
   onSeekTicker,
   onPickQueue,
   onSummarize,
@@ -135,6 +143,12 @@ export default function VideoDesk({
   // null = the poster. A number = the second the embed is mounted at, which is
   // both the seek and the "you are here" the chapter strip reads.
   const [at, setAt] = useState(null);
+  // A new video starts at its own beginning. This is a position in the video it
+  // was chosen for, and carrying it across meant that promoting a clip out of
+  // UP NEXT opened it at 9:38 — a moment nobody had picked, in a video that
+  // might not even run that long. The chapter strip then marked whichever
+  // chapter of the NEW video contained that second, as though you had chosen it.
+  useEffect(() => { setAt(null); }, [video.id]);
   const held = mentions.filter(m => m.held).length;
   const running = summary?.status === "running";
 
@@ -168,7 +182,9 @@ export default function VideoDesk({
       <div className="v-videobody" style={{ display: "flex", alignItems: "stretch" }}>
         <div style={{ flex: 1, minWidth: 0, padding: "18px 16px 20px 22px" }}>
           {at == null
-            ? <Poster video={video} durationSec={durationSec} onPlay={() => setAt(0)} />
+            // Keyed on the id so a thumbnail that failed to load for one video
+            // does not leave the next one posterless.
+            ? <Poster key={video.id} video={video} durationSec={durationSec} onPlay={() => setAt(0)} />
             : (
               <div style={{ borderRadius: R.lg, overflow: "hidden", border: `1px solid ${C.edge}`, boxShadow: FRAME_SHADOW }}>
                 {/* keyed on the second: remounting the frame IS the seek */}
@@ -279,7 +295,9 @@ export default function VideoDesk({
       </div>
 
       {summary?.status === "done" && (
-        <VideoSummary video={video} summary={summary} onSeek={setAt} onLoad={onLoadMentions} />
+        <VideoSummary video={video} summary={summary} durationSec={durationSec}
+          speaking={speaking} progressRef={progressRef} speechKey={speechKey}
+          onSeek={setAt} onLoad={onLoadMentions} onStopRead={onStopRead} />
       )}
       {/* A refusal has to be visible. Without this the button simply comes back
           to life and the desk looks like it decided not to bother. */}
@@ -296,20 +314,68 @@ export default function VideoDesk({
 // Every timestamp here is a CHAPTER timestamp — a real one, out of the
 // description. The model writes the sentence beside it; it never supplies the
 // number, because it cannot watch the video to find one.
-function VideoSummary({ video, summary, onSeek, onLoad }) {
+// The on-air strip the reference draws above the digest: a waveform, the fact
+// that this is being read aloud, how much video it is reading about, and how
+// far in it is.
+//
+// It is mounted ONLY while the desk is actually speaking. A waveform bouncing
+// over silence teaches you to stop believing it, and "Just read" would be a
+// claim about a read that never happened on a browser with no voice installed.
+//
+// The reference puts the model's latency here as well as in the footer. One
+// number in two places is one place too many, so the right-hand readout is the
+// one thing the footer does not already say: how far through the read you are.
+function SummaryOnAir({ durationSec, progressRef, speechKey, onStop }) {
+  const { elapsedSec, totalSec } = useSpeechProgress(progressRef, speechKey);
   return (
-    <div style={{ borderTop: `1px solid ${C.edge}`, padding: "18px 22px 20px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, flexWrap: "wrap" }}>
+      <Waveform height={15} width={3} gap={2.5} />
+      <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: C.live }}>On air</span>
+      {durationSec > 0 && (
+        <span style={{ fontFamily: SANS, fontSize: 12, color: C.faint }}>summarizing {clock(durationSec)} of video</span>
+      )}
+      <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 12 }}>
+        {/* Browser speech synthesis cannot say how long it will talk for, so
+            there is an elapsed reading and no denominator. The studio voice is
+            a real audio element and has both. */}
+        <span style={{ fontFamily: MONO, fontSize: 11.5, color: C.faint }}>
+          {clock(elapsedSec)}{totalSec ? ` / ${clock(totalSec)}` : ""}
+        </span>
+        {onStop && (
+          <button onClick={onStop} className="v-clearx" aria-label="Stop reading this summary"
+            style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 14, cursor: "pointer", padding: 2 }}>&#10005;</button>
+        )}
+      </span>
+    </div>
+  );
+}
+
+function VideoSummary({ video, summary, durationSec, speaking, progressRef, speechKey, onSeek, onLoad, onStopRead }) {
+  return (
+    <div style={{ borderTop: `1px solid ${C.edge}` }}>
+      {speaking && (
+        <SummaryOnAir durationSec={durationSec} progressRef={progressRef} speechKey={speechKey} onStop={onStopRead} />
+      )}
+      <div style={{ padding: "18px 22px 20px" }}>
       <div style={{ fontFamily: SANS, fontSize: 16, fontWeight: 700, lineHeight: 1.4 }}>{video.title}</div>
       <div style={{ color: C.faint, fontFamily: SANS, fontSize: 12.5, marginTop: 4 }}>{video.channel} &#183; YouTube</div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
-        {summary.rows.map(r => (
-          <button key={r.start} onClick={() => onSeek(r.start)}
-            style={{ display: "flex", gap: 12, width: "100%", textAlign: "left", background: "transparent", border: "none", padding: 0, cursor: "pointer" }}>
-            <span style={{ color: C.accentText, fontFamily: MONO, fontSize: 11, width: 42, flexShrink: 0, paddingTop: 2 }}>{clock(r.start)}</span>
-            <span style={{ color: C.textBody, fontFamily: SANS, fontSize: 14, lineHeight: 1.55 }}>{r.text}</span>
-          </button>
-        ))}
+        {summary.rows.map((r, i) => {
+          const line = <span style={{ color: C.textBody, fontFamily: SANS, fontSize: 14, lineHeight: 1.55 }}>{r.text}</span>;
+          // A row is only a link when there is a real second to send you to.
+          // Without chapters there is no timestamp, so the row is a sentence —
+          // not a button that looks like it goes somewhere and lands on 0:02.
+          return r.start == null ? (
+            <div key={i} style={{ display: "flex", gap: 12 }}>{line}</div>
+          ) : (
+            <button key={i} onClick={() => onSeek(r.start)}
+              style={{ display: "flex", gap: 12, width: "100%", textAlign: "left", background: "transparent", border: "none", padding: 0, cursor: "pointer" }}>
+              <span style={{ color: C.accentText, fontFamily: MONO, fontSize: 11, width: 42, flexShrink: 0, paddingTop: 2 }}>{clock(r.start)}</span>
+              {line}
+            </button>
+          );
+        })}
       </div>
 
       {summary.checks && (
@@ -333,6 +399,7 @@ function VideoSummary({ video, summary, onSeek, onLoad }) {
             Load these on the desk
           </button>
         )}
+        </div>
       </div>
     </div>
   );
