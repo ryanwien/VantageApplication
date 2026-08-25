@@ -991,9 +991,18 @@ button:not(:disabled):active { transform: scale(0.97); }
 @media (max-width: 620px) {
   .v-homewrap, .v-homenav { padding-left: 16px; padding-right: 16px; }
   .v-homenav { gap: 18px; }
-  /* Product / Data / Pricing all scroll to sections that are a thumb-flick
-     away at this width. The wordmark and Sign in are the two that earn the row. */
-  .v-homenav-links { display: none !important; }
+  /* This hid all three, on the grounds that Product / Data / Pricing "all
+     scroll to sections that are a thumb-flick away at this width". Two of them
+     do. Pricing does not: measured on a 375 by 812 phone, #home-plans starts
+     1578px down a 3089px page, which is 1.94 screens of scrolling on the one
+     page whose stated job in the handoff is to convert to a trial, with no
+     link left to shorten it.
+
+     Product and Data are the two that go, and they lose nothing between them,
+     because they are the same link — both scroll to #home-features, since the
+     app has no data section to point at. Pricing stays because it is the only
+     one of the three that goes anywhere else. */
+  .v-navfeat { display: none !important; }
   .v-herotitle { font-size: 44px; letter-spacing: -0.034em; }
   /* Overhanging the card's corner needs a corner to overhang. At this width
      the card is nearly the viewport, so the chip tucks inside it instead. */
@@ -1194,6 +1203,26 @@ button:not(:disabled):active { transform: scale(0.97); }
   content: ""; position: absolute;
   left: 50%; top: 50%; transform: translate(-50%, -50%);
   width: 30px; height: 32px;
+}
+
+/* ---------- a bare text link that has to be tappable ----------
+   Nav and footer links: no border, no fill, just words, so their box is the
+   line box and nothing else. "Sign in" measures 42.9 by 21 — wide enough, less
+   than half tall enough — and on a phone it is the only way an existing
+   customer gets in, on a page whose nav does not stick and whose footer is
+   3089px down.
+
+   This one grows ONLY vertically, and that is what makes it safe without a
+   measurement per site: left/right 0 pins the target to the text's own width,
+   so it cannot reach a neighbour however close the row packs them. Height is
+   the handoff's own number — "Touch targets: minimum 44px" is in its token
+   list, alongside the colours. 44 on a 21px line reaches 11.5px above and
+   below, which stays inside the nav's 20px padding and the footer's 22. */
+.v-taprow { position: relative; }
+.v-taprow::after {
+  content: ""; position: absolute;
+  left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  height: 44px;
 }
 
 /* ---------- video desk ----------

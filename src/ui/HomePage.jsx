@@ -160,7 +160,18 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
     background: "transparent", border: "none", padding: 0, cursor: "pointer",
     fontFamily: SANS, fontSize: 14, color: C.muted,
   };
-  const jump = (id) => () => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // scrollIntoView's `behavior: "smooth"` does NOT consult prefers-reduced-motion
+  // — the browser honours that setting for the CSS scroll-behavior property and
+  // not for this argument, so it has to be asked here. It matters most on the
+  // link this file just gave back to phones: Pricing is a 1578px ride, and
+  // animating that for somebody who has asked the OS for no animation is the
+  // longest possible way to ignore them.
+  const jump = (id) => () => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+  };
 
   const featureTitles = [t("One command bar"), t("Answers with receipts"), t("Alerts, on air")];
   const featureBodies = [
@@ -179,12 +190,18 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
           <VantageMark size={26} />
           <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 17, letterSpacing: "-0.015em" }}>Vantage</span>
         </span>
+        {/* Product and Data are the same link. Both scroll to #home-features —
+            there is no separate data section to point at — so on a phone,
+            where only one of the three can earn the row, they are the two that
+            go. Pricing is the one that goes somewhere else, and it is the one
+            worth keeping: see .v-homenav-links in global.css for the distance
+            it saves. */}
         <span className="v-homenav-links" style={{ display: "flex", gap: 26 }}>
-          <button style={navLink} onClick={jump("home-features")}>{t("Product")}</button>
-          <button style={navLink} onClick={jump("home-features")}>{t("Data")}</button>
-          <button style={navLink} onClick={jump("home-plans")}>{t("Pricing")}</button>
+          <button className="v-navfeat v-taprow" style={navLink} onClick={jump("home-features")}>{t("Product")}</button>
+          <button className="v-navfeat v-taprow" style={navLink} onClick={jump("home-features")}>{t("Data")}</button>
+          <button className="v-taprow" style={navLink} onClick={jump("home-plans")}>{t("Pricing")}</button>
         </span>
-        <button onClick={onSignIn} style={{ ...navLink, marginLeft: "auto", color: C.text }}>{t("Sign in")}</button>
+        <button onClick={onSignIn} className="v-taprow" style={{ ...navLink, marginLeft: "auto", color: C.text }}>{t("Sign in")}</button>
       </nav>
 
       <Tape />
@@ -311,7 +328,7 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
           <span style={{ fontFamily: SANS, fontSize: 13, color: C.faint }}>
             {t("Vantage — an AI market desk. Not investment advice.")}
           </span>
-          <button onClick={onSignIn} style={{ ...navLink, marginLeft: "auto", color: C.muted }}>{t("Sign in")}</button>
+          <button onClick={onSignIn} className="v-taprow" style={{ ...navLink, marginLeft: "auto", color: C.muted }}>{t("Sign in")}</button>
         </footer>
       </div>
     </div>
