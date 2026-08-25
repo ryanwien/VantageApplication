@@ -28,6 +28,17 @@ import { ytDurationSec, parseChapters, chapterMentions, relAge } from "./src/vid
 import { newestFirst, sourceOf } from "./src/news/news.js";
 import MoviesDesk from "./src/ui/MoviesDesk.jsx";
 import { shape as shapeTitle, genreMap } from "./src/movies/movies.js";
+// Overheat's rules and, more to the point, its arithmetic. `settle` and
+// `record` are aliased because both names are already taken inside this file
+// by a local and by an English word, and a module-scope import quietly shadowed
+// by a `const` two thousand lines down is a bug nobody finds by reading.
+import {
+  deck as ohDeck, handValue as ohValue, isNatural as ohNatural, overheated as ohOverheated,
+  marketPlays, settle as settlePosition, capitalFrom, netPnl, drawdown, riskPct, riskBand,
+  winRate, record as tapeRecord, adviceKey, sizeOptions, clampSize, canDouble, isWiped,
+  money, tapeLine, LIMIT as OH_LIMIT, START_CAPITAL as OH_START, MIN_POSITION as OH_MIN,
+  COOL_OPTIONS,
+} from "./src/games/overheat.js";
 import Waveform from "./src/ui/Waveform.jsx";
 import VantageMark from "./src/ui/VantageMark.jsx";
 import DeskIcon from "./src/ui/DeskIcon.jsx";
@@ -62,7 +73,7 @@ import HomePage from "./src/ui/HomePage.jsx";
                       actions (sip/papers), scheduled cues (bell/eat/break via onCue), busy
                       poses (work/present), lip-sync, blinks, per-character headgear & env art.
      • VideoFrame / ArchiveFrame — in-desk players (YouTube embed / Internet Archive embed).
-     • BlackjackGame / ChessGame / AlgoWarsGame — self-contained games (own state & loops).
+     • OverheatGame / ChessGame / AlgoWarsGame — self-contained games (own state & loops).
      • AppCalendar  — native month calendar; events persist in localStorage; merges read-only
                       market events (earnings) passed via the `extra` prop.
 
@@ -428,45 +439,25 @@ const I18N = {
     "Army logic": "Lógica del ejército",
     "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "La lógica del ejército cambia lo que hacen todos tus bots, en directo. El enemigo adapta la suya, así que adapta la tuya.",
     "Balanced": "Equilibrada",
-    "Bankroll": "Fondos",
-    "Bet": "Apuesta",
-    "Blackjack — pays 3 to 2": "Blackjack: paga 3 a 2",
-    "Bust at {n} — you lose": "Te pasas con {n}: pierdes",
-    "Buy back in": "Recargar fichas",
     "Capital": "Capital",
     "Day-Trader": "Day-trader",
-    "Deal": "Repartir",
-    "Dealer": "Crupier",
-    "Dealer busts at {n} — you win": "El crupier se pasa con {n}: ganas",
     "Deploy": "Desplegar",
-    "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Acércate más a 21 que el crupier sin pasarte. Las figuras valen 10; el as vale 11 salvo que te haga pasarte, y entonces vale 1.",
-    "Hand settled": "Mano resuelta",
     "Hit": "Pedir",
     "Index-Fund": "Fondo indexado",
-    "Lower the bet": "Bajar la apuesta",
     "Market dominated": "Mercado dominado",
-    "New hand": "Nueva mano",
-    "Place your bet": "Haz tu apuesta",
-    "Push at {n} — your bet comes back": "Empate a {n}: recuperas tu apuesta",
-    "Raise the bet": "Subir la apuesta",
     "Rematch": "Revancha",
     "Restart": "Reiniciar",
     "Stand": "Plantarse",
-    "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "El crupier pide hasta 17 y se planta. Un 21 con dos cartas es blackjack y paga 3 a 2.",
     "The enemy overran your server.": "El enemigo arrasó tu servidor.",
     "You": "Tú",
-    "You lose, {a} against {b}": "Pierdes, {a} contra {b}",
-    "You win, {a} against {b}": "Ganas, {a} contra {b}",
     "Your bots took the enemy server.": "Tus bots tomaron el servidor enemigo.",
     "engage nearest, then advance": "ataca al más cercano y luego avanza",
     "fast, cheap, fragile — swarm and rush": "rápido, barato y frágil: enjambre y avalancha",
-    "hand {n} · dealer stands on 17": "mano {n} · el crupier se planta en 17",
     "hold your line, counter-punch": "mantén la línea y contraataca",
     "long range, high burst — melts tanks, dies fast": "largo alcance y mucho daño: funde tanques, muere rápido",
     "push the enemy server": "avanza hacia el servidor enemigo",
     "tanky, slow — soaks damage, holds the line": "resistente y lento: absorbe daño y aguanta la línea",
     // --- settings: the plain-language sidebar ---
-    "21 against the dealer, with a chip bankroll.": "21 contra el crupier, con fondos en fichas.",
     "A trading-floor RTS: script bot armies in real time.": "Un RTS de parqué: programa ejércitos de bots en tiempo real.",
     "Algorithm Wars": "Guerra de algoritmos",
     "Bull or Bear": "Alcista o bajista",
@@ -477,7 +468,6 @@ const I18N = {
     "Eight short lessons on stocks, prices and P&L.": "Ocho lecciones breves sobre acciones, precios y resultados.",
     "Game room": "Sala de juegos",
     "I'll spotlight each part of the screen, step by step.": "Iré señalando cada parte de la pantalla, paso a paso.",
-    "Market Blackjack": "Blackjack del mercado",
     "Match companies to their tickers.": "Relaciona cada empresa con su símbolo.",
     "No AI key set up yet.": "Todavía no hay clave de IA.",
     "No account needed": "No hace falta cuenta",
@@ -671,6 +661,78 @@ const I18N = {
     "Overlay another symbol — both plotted as % change": "Superpone otro símbolo — ambos trazados como variación en %",
     "Stop comparing": "Dejar de comparar",
     // --- settings: the plain-language sidebar ---
+    // --- settings: the plain-language sidebar ---
+    "Overheat": "Sobrecalentamiento",
+    "Twenty-one, told as a market. Buy past the limit and you overheat.": "Veintiuno, contado como un mercado. Compra pasado el límite y te sobrecalientas.",
+    "SIZING THE POSITION": "DIMENSIONANDO LA POSICIÓN",
+    "POSITION OPEN": "POSICIÓN ABIERTA",
+    "POSITION CLOSED": "POSICIÓN CERRADA",
+    "session {n} · market cools at {c}": "sesión {n} · el mercado se enfría en {c}",
+    "Reset capital": "Reiniciar el capital",
+    "Get your book closer to 21 than the market without going past it. Face cards are 10; an ace is 11 unless that would overheat you, then it is 1.": "Acerca tu cartera a 21 más que el mercado sin pasarte. Las figuras valen 10; el as vale 11 salvo que te sobrecaliente, y entonces vale 1.",
+    "The market takes cards until it reaches the number it cools at, then stops. Overheat and the position closes before the market plays at all.": "El mercado pide cartas hasta llegar al número en el que se enfría, y ahí se planta. Si te sobrecalientas, la posición se cierra antes de que el mercado juegue siquiera.",
+    "START {m}": "INICIO {m}",
+    "DRAWDOWN {n}%": "CAÍDA {n}%",
+    "UP {n}%": "SUBIDA {n}%",
+    "{n} SESSIONS": "{n} SESIONES",
+    "NET P&L": "P&L NETO",
+    "{a} up · {b} down": "{a} a favor · {b} en contra",
+    "THE MARKET": "EL MERCADO",
+    "OVERHEATED": "SOBRECALENTADO",
+    "COOLED": "ENFRIADO",
+    "PRINT {n}": "MARCA {n}",
+    "LIMIT {n}": "LÍMITE {n}",
+    "OVER LIMIT": "PASADO DEL LÍMITE",
+    "cools at {n}": "se enfría en {n}",
+    "+{n} past its cool-off": "+{n} por encima de su enfriamiento",
+    "YOUR BOOK": "TU CARTERA",
+    "HELD": "MANTENIDO",
+    "BOUGHT": "COMPRADO",
+    "exposure {m}": "exposición {m}",
+    "You overheated at {n} — the position closes": "Te sobrecalentaste en {n}: la posición se cierra",
+    "Twenty-one on two cards — pays three to two": "Veintiuno con dos cartas: paga tres a dos",
+    "Market overheated at {n} — your book pays": "El mercado se sobrecalentó en {n}: tu cartera cobra",
+    "Your book at {a} takes it from the market at {b}": "Tu cartera con {a} se la lleva ante el mercado con {b}",
+    "The market at {b} takes it from your book at {a}": "El mercado con {b} se la lleva ante tu cartera con {a}",
+    "Level at {n} — your capital comes back": "Empate en {n}: tu capital vuelve",
+    "Buy": "Comprar",
+    "Hold": "Mantener",
+    "Double down": "Doblar",
+    "Open position": "Abrir posición",
+    "Open next position": "Abrir la próxima posición",
+    "NEXT POSITION SIZE": "TAMAÑO DE LA PRÓXIMA POSICIÓN",
+    "Lower the position": "Reducir la posición",
+    "Raise the position": "Aumentar la posición",
+    "max": "máx",
+    "{n}% of capital at risk": "{n}% del capital en riesgo",
+    "SESSION TAPE": "CINTA DE LA SESIÓN",
+    "No positions yet.": "Aún no hay posiciones.",
+    "TAKEAWAY": "CONCLUSIÓN",
+    "Risk per position": "Riesgo por posición",
+    "LOW": "BAJO",
+    "MODERATE": "MODERADO",
+    "EXTREME": "EXTREMO",
+    "Size the position first. Everything else follows from how much you put on one hand.": "Primero dimensiona la posición. Todo lo demás depende de cuánto pones en una mano.",
+    "You bought past the limit. The market only had to survive to take it.": "Compraste pasado el límite. Al mercado le bastó con sobrevivir para llevársela.",
+    "One position is carrying a lot of the capital. Sizing down protects the drawdown.": "Una sola posición carga con mucho capital. Reducir el tamaño protege la caída.",
+    "More positions have gone against you than for you. The market cools before you do.": "Más posiciones han ido en tu contra que a favor. El mercado se enfría antes que tú.",
+    "The size is sensible. Holding low only pays when the market overheats — that is the trade.": "El tamaño es razonable. Mantener bajo solo paga cuando el mercado se sobrecalienta: ese es el trato.",
+    "MARKET RULES": "REGLAS DEL MERCADO",
+    "Cools at {n}": "Enfría en {n}",
+    "Capital wiped": "Capital agotado",
+    "You bought past the limit at {n}.": "Compraste pasado el límite en {n}.",
+    "The market took the last of it.": "El mercado se llevó lo que quedaba.",
+    "POSITIONS": "POSICIONES",
+    "WIN RATE": "TASA DE ACIERTO",
+    "NET": "NETO",
+    "Refund capital": "Reponer el capital",
+    "Review the tape": "Revisar la cinta",
+    "You doubled down on {a} of {b} positions. The tape says size down.": "Doblaste en {a} de {b} posiciones. La cinta dice que reduzcas el tamaño.",
+    // --- settings: the plain-language sidebar ---
+    "{n} SESSION": "{n} SESIÓN",
+    "{n} level": "{n} en tablas",
+    // --- settings: the plain-language sidebar ---
+    "MARKET COOLED AT {c}": "EL MERCADO SE ENFRIABA EN {c}",
   },
   fr: {
     "DataHub has no dataset matching \"{term}\".": "DataHub n'a aucun jeu de données correspondant à \"{term}\".",
@@ -978,45 +1040,25 @@ const I18N = {
     "Army logic": "Logique de l'armée",
     "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "La logique de l'armée change ce que font tous vos bots, en direct. L'ennemi adapte la sienne — adaptez la vôtre.",
     "Balanced": "Équilibrée",
-    "Bankroll": "Cagnotte",
-    "Bet": "Mise",
-    "Blackjack — pays 3 to 2": "Blackjack — paie 3 contre 2",
-    "Bust at {n} — you lose": "Vous sautez à {n} — perdu",
-    "Buy back in": "Recharger les jetons",
     "Capital": "Capital",
     "Day-Trader": "Day-trader",
-    "Deal": "Distribuer",
-    "Dealer": "Croupier",
-    "Dealer busts at {n} — you win": "Le croupier saute à {n} — gagné",
     "Deploy": "Déployer",
-    "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Approchez-vous de 21 plus que le croupier sans dépasser. Les figures valent 10 ; l'as vaut 11, sauf s'il vous fait sauter, auquel cas il vaut 1.",
-    "Hand settled": "Main réglée",
     "Hit": "Tirer",
     "Index-Fund": "Fonds indiciel",
-    "Lower the bet": "Baisser la mise",
     "Market dominated": "Marché dominé",
-    "New hand": "Nouvelle main",
-    "Place your bet": "Faites vos jeux",
-    "Push at {n} — your bet comes back": "Égalité à {n} — votre mise revient",
-    "Raise the bet": "Augmenter la mise",
     "Rematch": "Revanche",
     "Restart": "Recommencer",
     "Stand": "Rester",
-    "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "Le croupier tire jusqu'à 17 puis reste. Un 21 en deux cartes est un blackjack et paie 3 contre 2.",
     "The enemy overran your server.": "L'ennemi a submergé votre serveur.",
     "You": "Vous",
-    "You lose, {a} against {b}": "Perdu, {a} contre {b}",
-    "You win, {a} against {b}": "Gagné, {a} contre {b}",
     "Your bots took the enemy server.": "Vos bots ont pris le serveur ennemi.",
     "engage nearest, then advance": "engager le plus proche, puis avancer",
     "fast, cheap, fragile — swarm and rush": "rapide, bon marché, fragile — en essaim, à la charge",
-    "hand {n} · dealer stands on 17": "main {n} · le croupier reste à 17",
     "hold your line, counter-punch": "tenir la ligne, contre-attaquer",
     "long range, high burst — melts tanks, dies fast": "longue portée, gros dégâts — fond les tanks, meurt vite",
     "push the enemy server": "foncer sur le serveur ennemi",
     "tanky, slow — soaks damage, holds the line": "résistant, lent — encaisse et tient la ligne",
     // --- settings: the plain-language sidebar ---
-    "21 against the dealer, with a chip bankroll.": "21 contre le croupier, avec une cagnotte de jetons.",
     "A trading-floor RTS: script bot armies in real time.": "Un RTS de salle des marchés : programmez des armées de bots en temps réel.",
     "Algorithm Wars": "Guerre des algorithmes",
     "Bull or Bear": "Haussier ou baissier",
@@ -1027,7 +1069,6 @@ const I18N = {
     "Eight short lessons on stocks, prices and P&L.": "Huit courtes leçons sur les actions, les cours et le résultat.",
     "Game room": "Salle de jeux",
     "I'll spotlight each part of the screen, step by step.": "Je mettrai en lumière chaque partie de l'écran, étape par étape.",
-    "Market Blackjack": "Blackjack du marché",
     "Match companies to their tickers.": "Reliez chaque société à son symbole.",
     "No AI key set up yet.": "Aucune clé IA pour l'instant.",
     "No account needed": "Aucun compte requis",
@@ -1221,6 +1262,78 @@ const I18N = {
     "Overlay another symbol — both plotted as % change": "Superposer un autre symbole — les deux tracés en variation %",
     "Stop comparing": "Arrêter la comparaison",
     // --- settings: the plain-language sidebar ---
+    // --- settings: the plain-language sidebar ---
+    "Overheat": "Surchauffe",
+    "Twenty-one, told as a market. Buy past the limit and you overheat.": "Vingt et un, raconté comme un marché. Achetez au-delà de la limite et vous surchauffez.",
+    "SIZING THE POSITION": "DIMENSIONNEMENT DE LA POSITION",
+    "POSITION OPEN": "POSITION OUVERTE",
+    "POSITION CLOSED": "POSITION CLÔTURÉE",
+    "session {n} · market cools at {c}": "session {n} · le marché refroidit à {c}",
+    "Reset capital": "Réinitialiser le capital",
+    "Get your book closer to 21 than the market without going past it. Face cards are 10; an ace is 11 unless that would overheat you, then it is 1.": "Rapprochez votre portefeuille de 21 plus que le marché sans le dépasser. Les figures valent 10 ; l'as vaut 11, sauf s'il vous fait surchauffer, auquel cas il vaut 1.",
+    "The market takes cards until it reaches the number it cools at, then stops. Overheat and the position closes before the market plays at all.": "Le marché tire des cartes jusqu'à atteindre le nombre où il refroidit, puis s'arrête. Si vous surchauffez, la position se clôture avant même que le marché ne joue.",
+    "START {m}": "DÉPART {m}",
+    "DRAWDOWN {n}%": "REPLI {n}%",
+    "UP {n}%": "HAUSSE {n}%",
+    "{n} SESSIONS": "{n} SESSIONS",
+    "NET P&L": "P&L NET",
+    "{a} up · {b} down": "{a} gagnées · {b} perdues",
+    "THE MARKET": "LE MARCHÉ",
+    "OVERHEATED": "EN SURCHAUFFE",
+    "COOLED": "REFROIDI",
+    "PRINT {n}": "COTE {n}",
+    "LIMIT {n}": "LIMITE {n}",
+    "OVER LIMIT": "AU-DESSUS DE LA LIMITE",
+    "cools at {n}": "refroidit à {n}",
+    "+{n} past its cool-off": "+{n} au-dessus de son refroidissement",
+    "YOUR BOOK": "VOTRE PORTEFEUILLE",
+    "HELD": "CONSERVÉ",
+    "BOUGHT": "ACHETÉ",
+    "exposure {m}": "exposition {m}",
+    "You overheated at {n} — the position closes": "Vous avez surchauffé à {n} — la position se clôture",
+    "Twenty-one on two cards — pays three to two": "Vingt et un en deux cartes — paie trois contre deux",
+    "Market overheated at {n} — your book pays": "Le marché a surchauffé à {n} — votre portefeuille encaisse",
+    "Your book at {a} takes it from the market at {b}": "Votre portefeuille à {a} l'emporte sur le marché à {b}",
+    "The market at {b} takes it from your book at {a}": "Le marché à {b} l'emporte sur votre portefeuille à {a}",
+    "Level at {n} — your capital comes back": "À égalité à {n} — votre capital revient",
+    "Buy": "Acheter",
+    "Hold": "Conserver",
+    "Double down": "Doubler",
+    "Open position": "Ouvrir la position",
+    "Open next position": "Ouvrir la position suivante",
+    "NEXT POSITION SIZE": "TAILLE DE LA PROCHAINE POSITION",
+    "Lower the position": "Réduire la position",
+    "Raise the position": "Augmenter la position",
+    "max": "max",
+    "{n}% of capital at risk": "{n}% du capital exposé",
+    "SESSION TAPE": "BANDE DE LA SESSION",
+    "No positions yet.": "Aucune position pour l'instant.",
+    "TAKEAWAY": "À RETENIR",
+    "Risk per position": "Risque par position",
+    "LOW": "FAIBLE",
+    "MODERATE": "MODÉRÉ",
+    "EXTREME": "EXTRÊME",
+    "Size the position first. Everything else follows from how much you put on one hand.": "Dimensionnez d'abord la position. Tout le reste découle de ce que vous engagez sur un coup.",
+    "You bought past the limit. The market only had to survive to take it.": "Vous avez acheté au-delà de la limite. Le marché n'avait qu'à survivre pour l'emporter.",
+    "One position is carrying a lot of the capital. Sizing down protects the drawdown.": "Une seule position porte une grande part du capital. Réduire la taille protège le repli.",
+    "More positions have gone against you than for you. The market cools before you do.": "Plus de positions ont joué contre vous que pour vous. Le marché refroidit avant vous.",
+    "The size is sensible. Holding low only pays when the market overheats — that is the trade.": "La taille est raisonnable. Conserver bas ne paie que si le marché surchauffe — c'est là le pari.",
+    "MARKET RULES": "RÈGLES DU MARCHÉ",
+    "Cools at {n}": "Refroidit à {n}",
+    "Capital wiped": "Capital anéanti",
+    "You bought past the limit at {n}.": "Vous avez acheté au-delà de la limite à {n}.",
+    "The market took the last of it.": "Le marché a pris le reste.",
+    "POSITIONS": "POSITIONS",
+    "WIN RATE": "TAUX DE RÉUSSITE",
+    "NET": "NET",
+    "Refund capital": "Recréditer le capital",
+    "Review the tape": "Revoir la bande",
+    "You doubled down on {a} of {b} positions. The tape says size down.": "Vous avez doublé sur {a} positions sur {b}. La bande dit de réduire la taille.",
+    // --- settings: the plain-language sidebar ---
+    "{n} SESSION": "{n} SESSION",
+    "{n} level": "{n} à égalité",
+    // --- settings: the plain-language sidebar ---
+    "MARKET COOLED AT {c}": "LE MARCHÉ REFROIDISSAIT À {c}",
   },
   de: {
     "DataHub has no dataset matching \"{term}\".": "DataHub hat keinen Datensatz, der zu \"{term}\" passt.",
@@ -1528,45 +1641,25 @@ const I18N = {
     "Army logic": "Armee-Logik",
     "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "Die Armee-Logik ändert live, was jeder deiner Bots tut. Der Gegner passt seine an — also passe deine an.",
     "Balanced": "Ausgewogen",
-    "Bankroll": "Guthaben",
-    "Bet": "Einsatz",
-    "Blackjack — pays 3 to 2": "Blackjack — zahlt 3 zu 2",
-    "Bust at {n} — you lose": "Überkauft mit {n} — verloren",
-    "Buy back in": "Chips nachkaufen",
     "Capital": "Kapital",
     "Day-Trader": "Daytrader",
-    "Deal": "Geben",
-    "Dealer": "Geber",
-    "Dealer busts at {n} — you win": "Geber überkauft mit {n} — gewonnen",
     "Deploy": "Ausspielen",
-    "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Komm näher an 21 als der Geber, ohne zu überkaufen. Bildkarten zählen 10; ein Ass zählt 11, außer das würde dich überkaufen — dann 1.",
-    "Hand settled": "Hand abgerechnet",
     "Hit": "Karte",
     "Index-Fund": "Indexfonds",
-    "Lower the bet": "Einsatz senken",
     "Market dominated": "Markt beherrscht",
-    "New hand": "Neue Hand",
-    "Place your bet": "Setz deinen Einsatz",
-    "Push at {n} — your bet comes back": "Unentschieden bei {n} — Einsatz zurück",
-    "Raise the bet": "Einsatz erhöhen",
     "Rematch": "Revanche",
     "Restart": "Neu starten",
     "Stand": "Halten",
-    "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "Der Geber zieht bis 17 und hält dann. Ein 21 aus zwei Karten ist ein Blackjack und zahlt 3 zu 2.",
     "The enemy overran your server.": "Der Gegner hat deinen Server überrannt.",
     "You": "Du",
-    "You lose, {a} against {b}": "Verloren, {a} gegen {b}",
-    "You win, {a} against {b}": "Gewonnen, {a} gegen {b}",
     "Your bots took the enemy server.": "Deine Bots haben den gegnerischen Server genommen.",
     "engage nearest, then advance": "nächsten Gegner binden, dann vorrücken",
     "fast, cheap, fragile — swarm and rush": "schnell, billig, zerbrechlich — im Schwarm überrennen",
-    "hand {n} · dealer stands on 17": "Hand {n} · Geber hält bei 17",
     "hold your line, counter-punch": "Linie halten, kontern",
     "long range, high burst — melts tanks, dies fast": "große Reichweite, hoher Schaden — schmilzt Tanks, stirbt schnell",
     "push the enemy server": "auf den gegnerischen Server vorstoßen",
     "tanky, slow — soaks damage, holds the line": "zäh, langsam — steckt Schaden weg, hält die Linie",
     // --- settings: the plain-language sidebar ---
-    "21 against the dealer, with a chip bankroll.": "21 gegen den Geber, mit einem Chip-Guthaben.",
     "A trading-floor RTS: script bot armies in real time.": "Ein Trading-Floor-RTS: Bot-Armeen in Echtzeit programmieren.",
     "Algorithm Wars": "Algorithmen-Krieg",
     "Bull or Bear": "Bulle oder Bär",
@@ -1577,7 +1670,6 @@ const I18N = {
     "Eight short lessons on stocks, prices and P&L.": "Acht kurze Lektionen zu Aktien, Kursen und Ergebnis.",
     "Game room": "Spieleraum",
     "I'll spotlight each part of the screen, step by step.": "Ich hebe jeden Teil des Bildschirms hervor, Schritt für Schritt.",
-    "Market Blackjack": "Markt-Blackjack",
     "Match companies to their tickers.": "Ordne jedem Unternehmen sein Kürzel zu.",
     "No AI key set up yet.": "Noch kein KI-Schlüssel eingerichtet.",
     "No account needed": "Kein Konto nötig",
@@ -1771,6 +1863,78 @@ const I18N = {
     "Overlay another symbol — both plotted as % change": "Ein weiteres Symbol überlagern — beide als prozentuale Veränderung",
     "Stop comparing": "Vergleich beenden",
     // --- settings: the plain-language sidebar ---
+    // --- settings: the plain-language sidebar ---
+    "Overheat": "Überhitzung",
+    "Twenty-one, told as a market. Buy past the limit and you overheat.": "Einundzwanzig, erzählt als Markt. Kauf über das Limit hinaus und du überhitzt.",
+    "SIZING THE POSITION": "POSITION WIRD BEMESSEN",
+    "POSITION OPEN": "POSITION OFFEN",
+    "POSITION CLOSED": "POSITION GESCHLOSSEN",
+    "session {n} · market cools at {c}": "Sitzung {n} · Markt kühlt bei {c}",
+    "Reset capital": "Kapital zurücksetzen",
+    "Get your book closer to 21 than the market without going past it. Face cards are 10; an ace is 11 unless that would overheat you, then it is 1.": "Bring dein Buch näher an 21 als der Markt, ohne darüber zu gehen. Bildkarten zählen 10; ein Ass zählt 11, außer das würde dich überhitzen — dann 1.",
+    "The market takes cards until it reaches the number it cools at, then stops. Overheat and the position closes before the market plays at all.": "Der Markt zieht Karten, bis er die Zahl erreicht, bei der er abkühlt, und hält dann. Überhitzt du, schließt die Position, bevor der Markt überhaupt spielt.",
+    "START {m}": "START {m}",
+    "DRAWDOWN {n}%": "RÜCKGANG {n}%",
+    "UP {n}%": "PLUS {n}%",
+    "{n} SESSIONS": "{n} SITZUNGEN",
+    "NET P&L": "NETTO-P&L",
+    "{a} up · {b} down": "{a} gewonnen · {b} verloren",
+    "THE MARKET": "DER MARKT",
+    "OVERHEATED": "ÜBERHITZT",
+    "COOLED": "ABGEKÜHLT",
+    "PRINT {n}": "STAND {n}",
+    "LIMIT {n}": "LIMIT {n}",
+    "OVER LIMIT": "ÜBER DEM LIMIT",
+    "cools at {n}": "kühlt bei {n}",
+    "+{n} past its cool-off": "+{n} über seiner Abkühlung",
+    "YOUR BOOK": "DEIN BUCH",
+    "HELD": "GEHALTEN",
+    "BOUGHT": "GEKAUFT",
+    "exposure {m}": "Exponierung {m}",
+    "You overheated at {n} — the position closes": "Du hast bei {n} überhitzt — die Position schließt",
+    "Twenty-one on two cards — pays three to two": "Einundzwanzig mit zwei Karten — zahlt drei zu zwei",
+    "Market overheated at {n} — your book pays": "Der Markt überhitzte bei {n} — dein Buch zahlt sich aus",
+    "Your book at {a} takes it from the market at {b}": "Dein Buch mit {a} nimmt sie dem Markt mit {b} ab",
+    "The market at {b} takes it from your book at {a}": "Der Markt mit {b} nimmt sie deinem Buch mit {a} ab",
+    "Level at {n} — your capital comes back": "Gleichstand bei {n} — dein Kapital kommt zurück",
+    "Buy": "Kaufen",
+    "Hold": "Halten",
+    "Double down": "Verdoppeln",
+    "Open position": "Position eröffnen",
+    "Open next position": "Nächste Position eröffnen",
+    "NEXT POSITION SIZE": "GRÖSSE DER NÄCHSTEN POSITION",
+    "Lower the position": "Position verkleinern",
+    "Raise the position": "Position vergrößern",
+    "max": "max",
+    "{n}% of capital at risk": "{n}% des Kapitals im Risiko",
+    "SESSION TAPE": "SITZUNGSBAND",
+    "No positions yet.": "Noch keine Positionen.",
+    "TAKEAWAY": "FAZIT",
+    "Risk per position": "Risiko je Position",
+    "LOW": "NIEDRIG",
+    "MODERATE": "MITTEL",
+    "EXTREME": "EXTREM",
+    "Size the position first. Everything else follows from how much you put on one hand.": "Bemiss zuerst die Position. Alles andere folgt daraus, wie viel du auf eine Hand setzt.",
+    "You bought past the limit. The market only had to survive to take it.": "Du hast über das Limit hinaus gekauft. Der Markt musste nur überleben, um sie zu nehmen.",
+    "One position is carrying a lot of the capital. Sizing down protects the drawdown.": "Eine Position trägt viel vom Kapital. Kleiner zu setzen schützt den Rückgang.",
+    "More positions have gone against you than for you. The market cools before you do.": "Mehr Positionen liefen gegen dich als für dich. Der Markt kühlt früher ab als du.",
+    "The size is sensible. Holding low only pays when the market overheats — that is the trade.": "Die Größe ist vernünftig. Niedrig zu halten zahlt sich nur aus, wenn der Markt überhitzt — das ist der Handel.",
+    "MARKET RULES": "MARKTREGELN",
+    "Cools at {n}": "Kühlt bei {n}",
+    "Capital wiped": "Kapital ausgelöscht",
+    "You bought past the limit at {n}.": "Du hast bei {n} über das Limit hinaus gekauft.",
+    "The market took the last of it.": "Der Markt hat den Rest geholt.",
+    "POSITIONS": "POSITIONEN",
+    "WIN RATE": "TREFFERQUOTE",
+    "NET": "NETTO",
+    "Refund capital": "Kapital erstatten",
+    "Review the tape": "Das Band durchsehen",
+    "You doubled down on {a} of {b} positions. The tape says size down.": "Du hast bei {a} von {b} Positionen verdoppelt. Das Band sagt: kleiner setzen.",
+    // --- settings: the plain-language sidebar ---
+    "{n} SESSION": "{n} SITZUNG",
+    "{n} level": "{n} unentschieden",
+    // --- settings: the plain-language sidebar ---
+    "MARKET COOLED AT {c}": "MARKT KÜHLTE BEI {c}",
   },
   pt: {
     "DataHub has no dataset matching \"{term}\".": "O DataHub não tem nenhum conjunto de dados correspondente a \"{term}\".",
@@ -2077,45 +2241,25 @@ const I18N = {
     "Army logic": "Lógica do exército",
     "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "A lógica do exército muda o que todos os teus bots fazem, ao vivo. O inimigo adapta a dele — adapta a tua.",
     "Balanced": "Equilibrada",
-    "Bankroll": "Fundos",
-    "Bet": "Aposta",
-    "Blackjack — pays 3 to 2": "Blackjack — paga 3 para 2",
-    "Bust at {n} — you lose": "Rebentaste com {n} — perdes",
-    "Buy back in": "Recarregar fichas",
     "Capital": "Capital",
     "Day-Trader": "Day-trader",
-    "Deal": "Distribuir",
-    "Dealer": "Crupiê",
-    "Dealer busts at {n} — you win": "O crupiê rebenta com {n} — ganhas",
     "Deploy": "Destacar",
-    "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Chega mais perto de 21 do que o crupiê sem passar. As figuras valem 10; o ás vale 11, a não ser que te faça rebentar, e então vale 1.",
-    "Hand settled": "Mão resolvida",
     "Hit": "Pedir",
     "Index-Fund": "Fundo de índice",
-    "Lower the bet": "Baixar a aposta",
     "Market dominated": "Mercado dominado",
-    "New hand": "Nova mão",
-    "Place your bet": "Faz a tua aposta",
-    "Push at {n} — your bet comes back": "Empate em {n} — recuperas a aposta",
-    "Raise the bet": "Aumentar a aposta",
     "Rematch": "Desforra",
     "Restart": "Reiniciar",
     "Stand": "Parar",
-    "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "O crupiê pede até 17 e para. Um 21 com duas cartas é blackjack e paga 3 para 2.",
     "The enemy overran your server.": "O inimigo arrasou o teu servidor.",
     "You": "Tu",
-    "You lose, {a} against {b}": "Perdes, {a} contra {b}",
-    "You win, {a} against {b}": "Ganhas, {a} contra {b}",
     "Your bots took the enemy server.": "Os teus bots tomaram o servidor inimigo.",
     "engage nearest, then advance": "ataca o mais próximo e depois avança",
     "fast, cheap, fragile — swarm and rush": "rápido, barato e frágil — enxame e investida",
-    "hand {n} · dealer stands on 17": "mão {n} · o crupiê para nos 17",
     "hold your line, counter-punch": "segura a linha e contra-ataca",
     "long range, high burst — melts tanks, dies fast": "longo alcance e muito dano — derrete tanques, morre depressa",
     "push the enemy server": "avança para o servidor inimigo",
     "tanky, slow — soaks damage, holds the line": "resistente e lento — absorve dano e segura a linha",
     // --- settings: the plain-language sidebar ---
-    "21 against the dealer, with a chip bankroll.": "21 contra o crupiê, com fundos em fichas.",
     "A trading-floor RTS: script bot armies in real time.": "Um RTS de pregão: programa exércitos de bots em tempo real.",
     "Algorithm Wars": "Guerra de algoritmos",
     "Bull or Bear": "Alta ou baixa",
@@ -2126,7 +2270,6 @@ const I18N = {
     "Eight short lessons on stocks, prices and P&L.": "Oito lições curtas sobre ações, preços e resultado.",
     "Game room": "Sala de jogos",
     "I'll spotlight each part of the screen, step by step.": "Vou destacar cada parte do ecrã, passo a passo.",
-    "Market Blackjack": "Blackjack do mercado",
     "Match companies to their tickers.": "Liga cada empresa ao seu símbolo.",
     "No AI key set up yet.": "Ainda não há chave de IA.",
     "No account needed": "Não é preciso conta",
@@ -2320,6 +2463,78 @@ const I18N = {
     "Overlay another symbol — both plotted as % change": "Sobrepõe outro símbolo — ambos traçados como variação em %",
     "Stop comparing": "Parar de comparar",
     // --- settings: the plain-language sidebar ---
+    // --- settings: the plain-language sidebar ---
+    "Overheat": "Sobreaquecimento",
+    "Twenty-one, told as a market. Buy past the limit and you overheat.": "Vinte e um, contado como um mercado. Compra além do limite e sobreaqueces.",
+    "SIZING THE POSITION": "A DIMENSIONAR A POSIÇÃO",
+    "POSITION OPEN": "POSIÇÃO ABERTA",
+    "POSITION CLOSED": "POSIÇÃO FECHADA",
+    "session {n} · market cools at {c}": "sessão {n} · o mercado arrefece nos {c}",
+    "Reset capital": "Reiniciar o capital",
+    "Get your book closer to 21 than the market without going past it. Face cards are 10; an ace is 11 unless that would overheat you, then it is 1.": "Aproxima a tua carteira de 21 mais do que o mercado sem passar. As figuras valem 10; o ás vale 11, a não ser que te sobreaqueça, e então vale 1.",
+    "The market takes cards until it reaches the number it cools at, then stops. Overheat and the position closes before the market plays at all.": "O mercado pede cartas até chegar ao número em que arrefece, e aí para. Se sobreaqueceres, a posição fecha antes de o mercado sequer jogar.",
+    "START {m}": "INÍCIO {m}",
+    "DRAWDOWN {n}%": "QUEDA {n}%",
+    "UP {n}%": "SUBIDA {n}%",
+    "{n} SESSIONS": "{n} SESSÕES",
+    "NET P&L": "P&L LÍQUIDO",
+    "{a} up · {b} down": "{a} a favor · {b} contra",
+    "THE MARKET": "O MERCADO",
+    "OVERHEATED": "SOBREAQUECIDO",
+    "COOLED": "ARREFECIDO",
+    "PRINT {n}": "MARCA {n}",
+    "LIMIT {n}": "LIMITE {n}",
+    "OVER LIMIT": "ACIMA DO LIMITE",
+    "cools at {n}": "arrefece nos {n}",
+    "+{n} past its cool-off": "+{n} acima do seu arrefecimento",
+    "YOUR BOOK": "A TUA CARTEIRA",
+    "HELD": "MANTIDO",
+    "BOUGHT": "COMPRADO",
+    "exposure {m}": "exposição {m}",
+    "You overheated at {n} — the position closes": "Sobreaqueceste nos {n} — a posição fecha",
+    "Twenty-one on two cards — pays three to two": "Vinte e um com duas cartas — paga três para dois",
+    "Market overheated at {n} — your book pays": "O mercado sobreaqueceu nos {n} — a tua carteira recebe",
+    "Your book at {a} takes it from the market at {b}": "A tua carteira com {a} leva-a ao mercado com {b}",
+    "The market at {b} takes it from your book at {a}": "O mercado com {b} leva-a à tua carteira com {a}",
+    "Level at {n} — your capital comes back": "Empate nos {n} — o teu capital volta",
+    "Buy": "Comprar",
+    "Hold": "Manter",
+    "Double down": "Dobrar",
+    "Open position": "Abrir posição",
+    "Open next position": "Abrir a próxima posição",
+    "NEXT POSITION SIZE": "TAMANHO DA PRÓXIMA POSIÇÃO",
+    "Lower the position": "Reduzir a posição",
+    "Raise the position": "Aumentar a posição",
+    "max": "máx",
+    "{n}% of capital at risk": "{n}% do capital em risco",
+    "SESSION TAPE": "FITA DA SESSÃO",
+    "No positions yet.": "Ainda não há posições.",
+    "TAKEAWAY": "CONCLUSÃO",
+    "Risk per position": "Risco por posição",
+    "LOW": "BAIXO",
+    "MODERATE": "MODERADO",
+    "EXTREME": "EXTREMO",
+    "Size the position first. Everything else follows from how much you put on one hand.": "Dimensiona primeiro a posição. Tudo o resto depende de quanto pões numa mão.",
+    "You bought past the limit. The market only had to survive to take it.": "Compraste além do limite. Ao mercado bastou sobreviver para a levar.",
+    "One position is carrying a lot of the capital. Sizing down protects the drawdown.": "Uma só posição carrega muito capital. Reduzir o tamanho protege a queda.",
+    "More positions have gone against you than for you. The market cools before you do.": "Mais posições foram contra ti do que a teu favor. O mercado arrefece antes de ti.",
+    "The size is sensible. Holding low only pays when the market overheats — that is the trade.": "O tamanho é sensato. Manter baixo só paga quando o mercado sobreaquece — é esse o negócio.",
+    "MARKET RULES": "REGRAS DO MERCADO",
+    "Cools at {n}": "Arrefece nos {n}",
+    "Capital wiped": "Capital esgotado",
+    "You bought past the limit at {n}.": "Compraste além do limite nos {n}.",
+    "The market took the last of it.": "O mercado levou o que restava.",
+    "POSITIONS": "POSIÇÕES",
+    "WIN RATE": "TAXA DE ACERTO",
+    "NET": "LÍQUIDO",
+    "Refund capital": "Repor o capital",
+    "Review the tape": "Rever a fita",
+    "You doubled down on {a} of {b} positions. The tape says size down.": "Dobraste em {a} de {b} posições. A fita diz para reduzires o tamanho.",
+    // --- settings: the plain-language sidebar ---
+    "{n} SESSION": "{n} SESSÃO",
+    "{n} level": "{n} empatadas",
+    // --- settings: the plain-language sidebar ---
+    "MARKET COOLED AT {c}": "O MERCADO ARREFECIA NOS {c}",
   },
   it: {
     "DataHub has no dataset matching \"{term}\".": "DataHub non ha alcun set di dati corrispondente a \"{term}\".",
@@ -2626,45 +2841,25 @@ const I18N = {
     "Army logic": "Logica dell'esercito",
     "Army logic changes what every one of your bots does, live. The enemy adapts its own — so adapt yours.": "La logica dell'esercito cambia dal vivo ciò che fa ogni tuo bot. Il nemico adatta la sua — adatta la tua.",
     "Balanced": "Equilibrata",
-    "Bankroll": "Fondi",
-    "Bet": "Puntata",
-    "Blackjack — pays 3 to 2": "Blackjack — paga 3 a 2",
-    "Bust at {n} — you lose": "Sballi a {n} — hai perso",
-    "Buy back in": "Ricompra fiches",
     "Capital": "Capitale",
     "Day-Trader": "Day-trader",
-    "Deal": "Distribuisci",
-    "Dealer": "Banco",
-    "Dealer busts at {n} — you win": "Il banco sballa a {n} — hai vinto",
     "Deploy": "Schiera",
-    "Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.": "Avvicinati a 21 più del banco senza sballare. Le figure valgono 10; l'asso vale 11, a meno che non ti faccia sballare, e allora vale 1.",
-    "Hand settled": "Mano conclusa",
     "Hit": "Carta",
     "Index-Fund": "Fondo indicizzato",
-    "Lower the bet": "Riduci la puntata",
     "Market dominated": "Mercato dominato",
-    "New hand": "Nuova mano",
-    "Place your bet": "Fai la tua puntata",
-    "Push at {n} — your bet comes back": "Pareggio a {n} — la puntata torna",
-    "Raise the bet": "Aumenta la puntata",
     "Rematch": "Rivincita",
     "Restart": "Ricomincia",
     "Stand": "Stare",
-    "The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.": "Il banco chiede fino a 17 e poi sta. Un 21 con due carte è blackjack e paga 3 a 2.",
     "The enemy overran your server.": "Il nemico ha travolto il tuo server.",
     "You": "Tu",
-    "You lose, {a} against {b}": "Hai perso, {a} contro {b}",
-    "You win, {a} against {b}": "Hai vinto, {a} contro {b}",
     "Your bots took the enemy server.": "I tuoi bot hanno preso il server nemico.",
     "engage nearest, then advance": "ingaggia il più vicino, poi avanza",
     "fast, cheap, fragile — swarm and rush": "veloce, economico, fragile — sciame e carica",
-    "hand {n} · dealer stands on 17": "mano {n} · il banco sta a 17",
     "hold your line, counter-punch": "tieni la linea e contrattacca",
     "long range, high burst — melts tanks, dies fast": "lunga gittata, danno alto — scioglie i tank, muore in fretta",
     "push the enemy server": "punta al server nemico",
     "tanky, slow — soaks damage, holds the line": "resistente, lento — assorbe danni e tiene la linea",
     // --- settings: the plain-language sidebar ---
-    "21 against the dealer, with a chip bankroll.": "21 contro il banco, con fondi in fiches.",
     "A trading-floor RTS: script bot armies in real time.": "Un RTS da sala mercati: programma eserciti di bot in tempo reale.",
     "Algorithm Wars": "Guerra degli algoritmi",
     "Bull or Bear": "Toro o orso",
@@ -2675,7 +2870,6 @@ const I18N = {
     "Eight short lessons on stocks, prices and P&L.": "Otto brevi lezioni su azioni, prezzi e risultato.",
     "Game room": "Sala giochi",
     "I'll spotlight each part of the screen, step by step.": "Metterò in evidenza ogni parte dello schermo, passo dopo passo.",
-    "Market Blackjack": "Blackjack di mercato",
     "Match companies to their tickers.": "Collega ogni società al suo simbolo.",
     "No AI key set up yet.": "Nessuna chiave IA configurata.",
     "No account needed": "Non serve un account",
@@ -2869,6 +3063,78 @@ const I18N = {
     "Overlay another symbol — both plotted as % change": "Sovrappone un altro simbolo — entrambi tracciati come variazione %",
     "Stop comparing": "Interrompi il confronto",
     // --- settings: the plain-language sidebar ---
+    // --- settings: the plain-language sidebar ---
+    "Overheat": "Surriscaldamento",
+    "Twenty-one, told as a market. Buy past the limit and you overheat.": "Ventuno, raccontato come un mercato. Compra oltre il limite e ti surriscaldi.",
+    "SIZING THE POSITION": "DIMENSIONAMENTO POSIZIONE",
+    "POSITION OPEN": "POSIZIONE APERTA",
+    "POSITION CLOSED": "POSIZIONE CHIUSA",
+    "session {n} · market cools at {c}": "sessione {n} · il mercato si raffredda a {c}",
+    "Reset capital": "Reimposta il capitale",
+    "Get your book closer to 21 than the market without going past it. Face cards are 10; an ace is 11 unless that would overheat you, then it is 1.": "Avvicina il tuo book a 21 più del mercato senza superarlo. Le figure valgono 10; l'asso vale 11, a meno che non ti surriscaldi, e allora vale 1.",
+    "The market takes cards until it reaches the number it cools at, then stops. Overheat and the position closes before the market plays at all.": "Il mercato prende carte finché non raggiunge il numero a cui si raffredda, poi si ferma. Se ti surriscaldi, la posizione chiude prima che il mercato giochi.",
+    "START {m}": "INIZIO {m}",
+    "DRAWDOWN {n}%": "CALO {n}%",
+    "UP {n}%": "RIALZO {n}%",
+    "{n} SESSIONS": "{n} SESSIONI",
+    "NET P&L": "P&L NETTO",
+    "{a} up · {b} down": "{a} vinte · {b} perse",
+    "THE MARKET": "IL MERCATO",
+    "OVERHEATED": "SURRISCALDATO",
+    "COOLED": "RAFFREDDATO",
+    "PRINT {n}": "QUOTA {n}",
+    "LIMIT {n}": "LIMITE {n}",
+    "OVER LIMIT": "OLTRE IL LIMITE",
+    "cools at {n}": "si raffredda a {n}",
+    "+{n} past its cool-off": "+{n} oltre il suo raffreddamento",
+    "YOUR BOOK": "IL TUO BOOK",
+    "HELD": "MANTENUTO",
+    "BOUGHT": "COMPRATO",
+    "exposure {m}": "esposizione {m}",
+    "You overheated at {n} — the position closes": "Ti sei surriscaldato a {n} — la posizione chiude",
+    "Twenty-one on two cards — pays three to two": "Ventuno con due carte — paga tre a due",
+    "Market overheated at {n} — your book pays": "Il mercato si è surriscaldato a {n} — il tuo book incassa",
+    "Your book at {a} takes it from the market at {b}": "Il tuo book a {a} la spunta sul mercato a {b}",
+    "The market at {b} takes it from your book at {a}": "Il mercato a {b} la spunta sul tuo book a {a}",
+    "Level at {n} — your capital comes back": "Pari a {n} — il tuo capitale torna indietro",
+    "Buy": "Compra",
+    "Hold": "Mantieni",
+    "Double down": "Raddoppia",
+    "Open position": "Apri posizione",
+    "Open next position": "Apri la prossima posizione",
+    "NEXT POSITION SIZE": "DIMENSIONE PROSSIMA POSIZIONE",
+    "Lower the position": "Riduci la posizione",
+    "Raise the position": "Aumenta la posizione",
+    "max": "max",
+    "{n}% of capital at risk": "{n}% del capitale a rischio",
+    "SESSION TAPE": "NASTRO DELLA SESSIONE",
+    "No positions yet.": "Ancora nessuna posizione.",
+    "TAKEAWAY": "IN SINTESI",
+    "Risk per position": "Rischio per posizione",
+    "LOW": "BASSO",
+    "MODERATE": "MODERATO",
+    "EXTREME": "ESTREMO",
+    "Size the position first. Everything else follows from how much you put on one hand.": "Prima dimensiona la posizione. Tutto il resto discende da quanto metti su una mano.",
+    "You bought past the limit. The market only had to survive to take it.": "Hai comprato oltre il limite. Al mercato è bastato sopravvivere per prendersela.",
+    "One position is carrying a lot of the capital. Sizing down protects the drawdown.": "Una sola posizione porta gran parte del capitale. Ridurre la misura protegge il calo.",
+    "More positions have gone against you than for you. The market cools before you do.": "Più posizioni ti sono andate contro che a favore. Il mercato si raffredda prima di te.",
+    "The size is sensible. Holding low only pays when the market overheats — that is the trade.": "La misura è sensata. Mantenere basso paga solo quando il mercato si surriscalda: è questo lo scambio.",
+    "MARKET RULES": "REGOLE DEL MERCATO",
+    "Cools at {n}": "Si raffredda a {n}",
+    "Capital wiped": "Capitale azzerato",
+    "You bought past the limit at {n}.": "Hai comprato oltre il limite a {n}.",
+    "The market took the last of it.": "Il mercato si è preso il resto.",
+    "POSITIONS": "POSIZIONI",
+    "WIN RATE": "TASSO DI VITTORIA",
+    "NET": "NETTO",
+    "Refund capital": "Ripristina il capitale",
+    "Review the tape": "Rivedi il nastro",
+    "You doubled down on {a} of {b} positions. The tape says size down.": "Hai raddoppiato su {a} posizioni su {b}. Il nastro dice di ridurre la misura.",
+    // --- settings: the plain-language sidebar ---
+    "{n} SESSION": "{n} SESSIONE",
+    "{n} level": "{n} pari",
+    // --- settings: the plain-language sidebar ---
+    "MARKET COOLED AT {c}": "IL MERCATO SI RAFFREDDAVA A {c}",
   },
 };
 const loadLang = () => { try { const l = localStorage.getItem("vantage-lang"); return LANGS.some(x => x.code === l) ? l : "en"; } catch { return "en"; } };
@@ -3494,19 +3760,7 @@ const TICKER_ROUNDS = [
   { company: "Netflix", options: ["NFX", "NFLX", "NTFL"], answer: 1 },
 ];
 
-// ---- Blackjack helpers ----
-const BJ_SUITS = ["♠", "♥", "♦", "♣"], BJ_RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
-function bjDeck() {
-  const d = [];
-  for (const s of BJ_SUITS) for (const r of BJ_RANKS) d.push({ r, s });
-  return d.sort(() => Math.random() - 0.5);
-}
-function bjValue(cards) {
-  let sum = 0, aces = 0;
-  for (const c of cards) { sum += c.r === "A" ? 11 : ["J", "Q", "K"].includes(c.r) ? 10 : +c.r; if (c.r === "A") aces++; }
-  while (sum > 21 && aces > 0) { sum -= 10; aces--; } // an ace can count as 1 instead of 11
-  return sum;
-}
+
 
 // ============================================================
 //  BULLS VS BEARS CHESS — the match room.
@@ -5963,221 +6217,554 @@ function ArchiveFrame({ id, title }) {
   );
 }
 // ============================================================
-//  Market Blackjack — 21 against the dealer, with a chip bankroll.
+//  OVERHEAT — twenty-one, told as a market.
 //
-//  Its OWN component so its hooks are stable (an inline IIFE with useState
-//  would break the rules of hooks).
+//  Built to the games handoff, which renamed this screen out of the casino:
+//  the dealer is THE MARKET, your hand is YOUR BOOK, the bankroll is CAPITAL,
+//  a bet is a POSITION, winning is P&L, and busting is overheating past the
+//  limit. That is not a coat of paint — the point of the rename is that the
+//  market's stand threshold became a SETTING, so the same book is a good
+//  position against one house rule and a bad one against another, and the
+//  screen has a tape and a takeaway to say which.
 //
-//  ON THE REDESIGN
-//  This screen predates the type system and set EVERYTHING in mono — its
-//  buttons, its result line, its labels — which is the exact flatness the
-//  redesign exists to undo. Sans carries the words now. Mono carries what mono
-//  is for here: money, hand totals and the hand counter.
+//  THE ONE HARD RULE, AND WHAT IT COST
+//  The handoff: "every number must reconcile. The tape must sum to the
+//  drawdown, the drawdown must match capital against starting capital, and the
+//  risk percentage is derived from position size over current capital."
 //
-//  Layout follows the chess room, because they are the same kind of screen: a
-//  status strip across the top, the play area on the left, and a rail on the
-//  right holding the things you do between moves. Learning one teaches the
-//  other.
+//  The only way to guarantee that is to refuse to keep capital at all. There
+//  is no `capital` state in this component. There is a starting number and a
+//  tape of closed positions; capital is their sum, the drawdown is capital
+//  against the start, the win rate and the record read the same tape, and the
+//  risk percentage is a division. Four readouts, one number, no way to drift.
+//
+//  Rules live in src/games/overheat.js — hand values, the market's draw, the
+//  settlement and every derived figure — so they can be tested against the
+//  handoff's own worked example without rendering anything.
 //
 //  THE CARD FACES ARE NOT UI
-//  A playing card is a printed object — white stock, black pips, red hearts
-//  and diamonds. Those four values are named below and deliberately do NOT
-//  track the palette, so a future retheme sweep does not "fix" them into the
-//  app's greys and leave the player holding slate-coloured cards.
+//  A playing card is a printed object: white stock, black pips, red hearts and
+//  diamonds. These values are the handoff's and deliberately do NOT track the
+//  palette, so a future retheme sweep cannot "fix" them into the app's greys
+//  and leave the player holding slate-coloured cards.
 // ============================================================
-const BJ_FACE = { paper: "#EDEFF4", edge: "#C7CEDB", ink: "#141821", suit: "#C0392B" };
+const OH_FACE = { paper: "linear-gradient(160deg, #f4f6f8, #dfe4ea)", ink: "#16191c", suit: "#c22f38" };
+const OH_FELT = "radial-gradient(130% 100% at 50% 40%, #0e1a14, #080b0d)";
 
-function BlackjackGame({ onCheer, onWin }) {
+function OverheatGame({ onCheer, onWin, onBack, onClose }) {
   const { t } = useI18n();
-  const [bankroll, setBankroll] = useState(500);
-  const [bet, setBet] = useState(50);
-  const [deck, setDeck] = useState([]);
-  const [player, setPlayer] = useState([]);
-  const [dealer, setDealer] = useState([]);
-  const [phase, setPhase] = useState("bet");   // bet | player | done
-  const [result, setResult] = useState(null);  // { kind:'win'|'lose'|'push', text }
-  const [hands, setHands] = useState(1);
+  // ---- the state. Note what is NOT here: capital. ----
+  const [tape, setTape] = useState([]);          // closed positions, oldest first
+  const [size, setSize] = useState(50);          // what the NEXT position will stake
+  const [staked, setStaked] = useState(0);       // what the OPEN position actually staked
+  const [coolAt, setCoolAt] = useState(17);
+  const [shoe, setShoe] = useState(() => ohDeck());
+  const [book, setBook] = useState([]);
+  const [market, setMarket] = useState([]);
+  const [phase, setPhase] = useState("betting"); // betting | open | closed
+  const [result, setResult] = useState(null);
+  const [doubled, setDoubled] = useState(false);
   const [showRules, setShowRules] = useState(false);
-  // The payout, shown as it happens. A bankroll that simply becomes a different
-  // number tells you the hand ended but not what it was worth — so the delta
-  // floats off the total for a beat. `id` increments rather than holding a
-  // timestamp so that re-winning the same amount still replays the animation.
-  const [delta, setDelta] = useState(null);    // { n, id }
+  const [reviewing, setReviewing] = useState(false);
+  const [delta, setDelta] = useState(null);      // the payout, shown as it lands
 
-  const deal = () => {
-    if (bet <= 0 || bet > bankroll) return;
-    const d = bjDeck();
-    const p = [d.pop(), d.pop()], dl = [d.pop(), d.pop()];
-    setDeck(d); setPlayer(p); setDealer(dl); setResult(null); setDelta(null);
-    if (bjValue(p) === 21) resolve(p, dl, d); // natural blackjack resolves immediately
-    else setPhase("player");
+  // ---- everything below is read off the tape ----
+  const capital = capitalFrom(OH_START, tape);
+  const dd = drawdown(OH_START, capital);
+  const net = netPnl(tape);
+  const rec = tapeRecord(tape);
+  const risk = riskPct(size, capital);
+  const band = riskBand(risk);
+  const wiped = isWiped(capital) && phase !== "open" && !reviewing;
+  const session = phase === "closed" ? tape.length : tape.length + 1;
+
+  const bookValue = ohValue(book);
+  // The hole card stays down until the position closes, so the market's total
+  // while you are still deciding is what you can actually SEE — printing the
+  // real one would be handing you the answer.
+  const marketShown = phase === "open" ? market.slice(0, 1) : market;
+  const marketValue = ohValue(marketShown);
+  const marketHot = phase === "closed" && marketValue > OH_LIMIT;
+
+  // ---- actions ----
+  const draw = (n, from) => {
+    const s = from.slice(), out = [];
+    for (let i = 0; i < n; i++) {
+      if (!s.length) s.push(...ohDeck());
+      out.push(s.pop());
+    }
+    return [out, s];
   };
-  const hit = () => {
-    const d = deck.slice(), p = [...player, d.pop()];
-    setDeck(d); setPlayer(p);
-    if (bjValue(p) > 21) resolve(p, dealer, d); // bust
+
+  const close = (bk, mk, sh, stake, wasDoubled) => {
+    // The market only plays if your book survived. Buying past the limit ends
+    // the position before it ever takes a card, which is the whole reason that
+    // mistake is the expensive one.
+    const played = ohOverheated(bk) ? { cards: mk, rest: sh } : marketPlays(mk, sh, coolAt);
+    const r = settlePosition({ book: bk, market: played.cards, size: stake, coolAt });
+    setMarket(played.cards); setShoe(played.rest);
+    setPhase("closed"); setResult(r);
+    setTape(tp => [...tp, { ...r, cards: bk.length, doubled: wasDoubled }]);
+    setDelta(prev => ({ n: r.amount, id: (prev?.id || 0) + 1 }));
+    if (r.kind === "win") { onCheer?.(); if (r.reason === "natural") onWin?.(); }
   };
-  const stand = () => resolve(player, dealer, deck);
 
-  // dealer draws to 17, then settle the hand and pay out
-  const resolve = (p, dlInit, dk) => {
-    const d = dk.slice(), dl = dlInit.slice(), pV = bjValue(p);
-    if (pV <= 21) while (bjValue(dl) < 17) dl.push(d.pop()); // dealer only plays if the player didn't bust
-    const dV = bjValue(dl), pBJ = p.length === 2 && pV === 21, dBJ = dl.length === 2 && dV === 21;
-    let kind, text, amount;
-    if (pV > 21) { kind = "lose"; text = t("Bust at {n} — you lose").replace("{n}", String(pV)); amount = -bet; }
-    else if (pBJ && !dBJ) { kind = "win"; text = t("Blackjack — pays 3 to 2"); amount = Math.round(bet * 1.5); }
-    else if (dV > 21) { kind = "win"; text = t("Dealer busts at {n} — you win").replace("{n}", String(dV)); amount = bet; }
-    else if (pV > dV) { kind = "win"; text = t("You win, {a} against {b}").replace("{a}", String(pV)).replace("{b}", String(dV)); amount = bet; }
-    else if (pV < dV) { kind = "lose"; text = t("You lose, {a} against {b}").replace("{a}", String(pV)).replace("{b}", String(dV)); amount = -bet; }
-    else { kind = "push"; text = t("Push at {n} — your bet comes back").replace("{n}", String(pV)); amount = 0; }
-    setDeck(d); setDealer(dl); setPhase("done"); setResult({ kind, text });
-    setBankroll(b => b + amount);
-    setDelta(prev => ({ n: amount, id: (prev?.id || 0) + 1 }));
-    if (kind === "win") { onCheer?.(); if (pBJ) onWin?.(); }
+  const openPosition = () => {
+    const stake = clampSize(size, capital);
+    if (!stake) return;
+    const [cards, rest] = draw(4, shoe.length < 12 ? ohDeck() : shoe);
+    const bk = [cards[0], cards[2]], mk = [cards[1], cards[3]];
+    setBook(bk); setMarket(mk); setShoe(rest); setStaked(stake);
+    setResult(null); setDelta(null); setDoubled(false); setSize(stake);
+    // Twenty-one on two cards settles where it stands.
+    if (ohNatural(bk)) close(bk, mk, rest, stake, false);
+    else setPhase("open");
   };
-  const newHand = () => { setPhase("bet"); setPlayer([]); setDealer([]); setResult(null); setDelta(null); setHands(n => n + 1); };
 
-  const hideHole = phase === "player";                 // dealer's 2nd card stays down until the player stands
-  const broke = bankroll < 10;                         // 10 is the minimum bet, so this really is out
+  const buy = () => {
+    const [cards, rest] = draw(1, shoe);
+    const bk = [...book, cards[0]];
+    setBook(bk); setShoe(rest);
+    if (ohOverheated(bk)) close(bk, market, rest, staked, doubled);
+  };
 
-  // ---- the table ----
-  const card = (c, key, hidden, delay = 0, flip = false) => (
-    <div key={key} className={flip ? "v-flip" : "v-deal"}
+  // Twice the position, exactly one more card, then the position is held.
+  const doubleDown = () => {
+    const stake = staked * 2;
+    const [cards, rest] = draw(1, shoe);
+    const bk = [...book, cards[0]];
+    setBook(bk); setShoe(rest); setStaked(stake); setDoubled(true);
+    close(bk, market, rest, stake, true);
+  };
+
+  const hold = () => close(book, market, shoe, staked, doubled);
+
+  const nextPosition = () => {
+    setPhase("betting"); setBook([]); setMarket([]); setResult(null);
+    setDelta(null); setDoubled(false); setReviewing(false);
+    setSize(s => clampSize(s, capital) || OH_MIN);
+  };
+
+  const resetCapital = () => {
+    setTape([]); setPhase("betting"); setBook([]); setMarket([]); setResult(null);
+    setDelta(null); setDoubled(false); setReviewing(false); setSize(50); setShoe(ohDeck());
+  };
+
+  // ---- the words. Every one is a literal so the i18n audit can see it. ----
+  const RESULT_TEXT = {
+    "book-overheat": t("You overheated at {n} — the position closes"),
+    natural: t("Twenty-one on two cards — pays three to two"),
+    "market-overheat": t("Market overheated at {n} — your book pays"),
+    higher: t("Your book at {a} takes it from the market at {b}"),
+    lower: t("The market at {b} takes it from your book at {a}"),
+    tie: t("Level at {n} — your capital comes back"),
+  };
+  const resultLine = (r) => (RESULT_TEXT[r.reason] || "")
+    .replace("{n}", String(r.reason === "market-overheat" ? r.market : r.book))
+    .replace("{a}", String(r.book)).replace("{b}", String(r.market));
+
+  const BAND_TEXT = { low: t("LOW"), moderate: t("MODERATE"), high: t("HIGH"), extreme: t("EXTREME") };
+  const BAND_FILL = { low: C.up, moderate: C.accent, high: C.warn, extreme: C.down };
+  const BAND_WIDTH = { low: 18, moderate: 42, high: 68, extreme: 92 };
+
+  const ADVICE_TEXT = {
+    start: t("Size the position first. Everything else follows from how much you put on one hand."),
+    "past-limit": t("You bought past the limit. The market only had to survive to take it."),
+    "size-down": t("One position is carrying a lot of the capital. Sizing down protects the drawdown."),
+    losing: t("More positions have gone against you than for you. The market cools before you do."),
+    steady: t("The size is sensible. Holding low only pays when the market overheats — that is the trade."),
+  };
+  const advice = ADVICE_TEXT[adviceKey({ tape, risk, last: result })];
+
+  const STATUS = {
+    betting: { text: t("SIZING THE POSITION"), tone: C.faint, live: false },
+    open: { text: t("POSITION OPEN"), tone: C.accentText, live: true },
+    closed: { text: t("POSITION CLOSED"), tone: result?.kind === "win" ? C.up : result?.kind === "lose" ? C.down : C.muted, live: false },
+  }[phase];
+
+  // ---- small pieces ----
+  const label = { fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", color: C.faint };
+  const meta = { fontFamily: MONO, fontSize: 10.5, color: C.faint };
+  const sep = <span aria-hidden="true" style={{ color: C.edgeStrong }}>|</span>;
+  const headBtn = { background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, color: C.muted, fontFamily: SANS, fontSize: 13, padding: "6px 12px", cursor: "pointer" };
+
+  const card = (c, i, hidden) => (
+    <div key={`${i}-${c?.r}${c?.s}${hidden ? "-back" : ""}`} className="v-deal"
       style={{
-        animationDelay: `${delay}ms`, width: 46, height: 64, borderRadius: R.sm, flexShrink: 0,
-        border: `1px solid ${hidden ? C.edgeStrong : BJ_FACE.edge}`,
-        background: hidden ? C.surfaceRaised : BJ_FACE.paper,
-        color: hidden ? C.faint : (c.s === "♥" || c.s === "♦" ? BJ_FACE.suit : BJ_FACE.ink),
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2,
-        fontFamily: MONO, fontWeight: 700,
+        animationDelay: `${i * 80}ms`, width: 76, height: 104, borderRadius: 9, flexShrink: 0,
+        background: hidden ? C.surfaceRaised : OH_FACE.paper,
+        border: hidden ? `1px solid ${C.edgeStrong}` : "none",
+        boxShadow: hidden ? "none" : "0 6px 16px rgba(0,0,0,0.5)",
+        padding: "9px 10px", boxSizing: "border-box",
       }}>
       {hidden
-        // A hatched back, not a star glyph: face-down has to read as the same
-        // object seen from the other side, and a star reads as a badge.
-        ? <span aria-hidden="true" style={{ width: "70%", height: "70%", borderRadius: 4, background: `repeating-linear-gradient(45deg, ${C.edgeStrong} 0 3px, transparent 3px 6px)` }} />
-        : <><span style={{ fontSize: 15, lineHeight: 1 }}>{c.r}</span><span style={{ fontSize: 17, lineHeight: 1 }}>{c.s}</span></>}
+        // A hatched back, not a glyph: face-down has to read as the same object
+        // seen from the other side, and a star reads as a badge.
+        ? <span aria-hidden="true" style={{ display: "block", width: "100%", height: "100%", borderRadius: 5, background: `repeating-linear-gradient(45deg, ${C.edgeStrong} 0 3px, transparent 3px 6px)` }} />
+        : (<>
+          <div style={{ fontFamily: MONO, fontWeight: 700, fontSize: 20, color: c.s === "♥" || c.s === "♦" ? OH_FACE.suit : OH_FACE.ink }}>{c.r}</div>
+          <div style={{ fontSize: 16, marginTop: 2, color: c.s === "♥" || c.s === "♦" ? OH_FACE.suit : OH_FACE.ink }}>{c.s}</div>
+        </>)}
     </div>
   );
-  // An empty seat is drawn, not left blank — otherwise the table before the
+  // An empty seat is drawn, not left blank — otherwise the felt before the
   // first deal is an unexplained gap rather than a table waiting for cards.
-  const slot = (k) => <div key={k} aria-hidden="true" style={{ width: 46, height: 64, borderRadius: R.sm, border: `1px dashed ${C.edge}`, flexShrink: 0 }} />;
-  const zone = (label, cards, value, tone) => (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 8 }}>
-        <span style={{ ...TYPE.eyebrowSm, color: C.faint }}>{label}</span>
-        {value != null && <span style={chip(tone)}>{value}</span>}
-      </div>
-      <div style={{ display: "flex", gap: 7, minHeight: 64 }}>{cards.length ? cards : [slot("a"), slot("b")]}</div>
-    </div>
+  const slot = (k) => <div key={k} aria-hidden="true" style={{ width: 76, height: 104, borderRadius: 9, border: `1px dashed ${C.edge}`, flexShrink: 0 }} />;
+
+  const valueChip = (n, hot) => (
+    <span style={{
+      fontFamily: MONO, fontSize: 13, fontWeight: 700, borderRadius: R.xs, padding: "3px 10px",
+      color: hot ? C.down : C.accentText,
+      background: hot ? "#1b1215" : "#101d15",
+      border: `1px solid ${hot ? "#3a2226" : "#234a2f"}`,
+    }}>{n}</span>
   );
 
-  // ---- the rail ----
-  const railLabel = { ...TYPE.eyebrowSm, color: C.faint };
-  const railCard = { background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: 14 };
-  const stepBtn = (label, on, off) => (
-    <button onClick={on} disabled={off} aria-label={label === "+" ? t("Raise the bet") : t("Lower the bet")} className="v-tap"
-      style={{ ...button("ghost", "sm", { disabled: off }), width: 38, height: 34, padding: 0, fontSize: 15, fontWeight: 600 }}>{label}</button>
+  const railBox = { background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: 12 };
+  const stepBtn = (glyph, onClick, off, aria) => (
+    <button onClick={onClick} disabled={off} aria-label={aria} className="v-tap"
+      style={{ width: 36, height: 36, borderRadius: 9, background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, color: off ? C.edgeStrong : C.muted, fontFamily: SANS, fontSize: 17, lineHeight: 1, cursor: off ? "not-allowed" : "pointer", display: "grid", placeItems: "center" }}>{glyph}</button>
   );
-
-  const statusDot = phase === "done"
-    ? (result?.kind === "win" ? C.up : result?.kind === "lose" ? C.down : C.warn)
-    : phase === "player" ? C.accentText : C.faint;
-  const statusLine = phase === "bet" ? t("Place your bet") : phase === "player" ? t("Your move") : t("Hand settled");
+  const actionBtn = (text, onClick, off, flex = 1) => (
+    <button onClick={onClick} disabled={off} className={off ? undefined : "v-outline"}
+      style={{ flex, textAlign: "center", background: C.surfaceRaised, border: `1px solid ${C.edge}`, borderRadius: 9, padding: 12, fontFamily: SANS, fontSize: 13.5, color: off ? FIELD.quaternary : C.text, cursor: off ? "not-allowed" : "pointer" }}>{text}</button>
+  );
 
   return (
-    <div style={{ fontFamily: SANS }}>
-      {/* The house rule and where you are in the session. Both belong on the
-          game, not in the games shell's header — that bar cannot see this
-          component's state. */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "12px 20px", borderBottom: `1px solid ${C.edge}` }}>
-        <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>
-          {t("hand {n} · dealer stands on 17").replace("{n}", String(hands))}
+    <div style={{ fontFamily: SANS, background: C.base, color: C.text }}>
+      {/* ---- header ---- */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceAlt, flexWrap: "wrap" }}>
+        <span aria-hidden="true" style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", fontFamily: MONO, fontWeight: 700, fontSize: 12, flexShrink: 0 }}>21</span>
+        <span style={{ fontWeight: 700, fontSize: 14.5 }}>{t("Overheat")}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 7, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5, color: STATUS.tone }}>
+          <span aria-hidden="true" className={STATUS.live ? "v-pulse" : undefined} style={{ width: 6, height: 6, borderRadius: "50%", background: STATUS.tone }} />
+          {STATUS.text}
         </span>
-        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-          <span aria-hidden="true" className={phase === "player" ? "v-pulse" : undefined}
-            style={{ width: 8, height: 8, borderRadius: "50%", background: statusDot, flex: "0 0 auto" }} />
-          <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 13.5, color: C.text }}>{statusLine}</span>
+        <span style={{ ...meta, fontSize: 11.5 }}>
+          {t("session {n} · market cools at {c}").replace("{n}", String(session)).replace("{c}", String(coolAt))}
+        </span>
+        <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          {onBack && <button onClick={onBack} className="v-gamectl" style={headBtn}>← {t("games")}</button>}
+          <button onClick={() => setShowRules(v => !v)} aria-expanded={showRules} className="v-outline" style={headBtn}>{t("How to play")}</button>
+          <button onClick={resetCapital} className="v-outline" style={headBtn}>{t("Reset capital")}</button>
+          {onClose && (
+            <button onClick={onClose} className="v-clearx" aria-label={t("Close games")}
+              style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 14, cursor: "pointer", padding: 2 }}>&#10005;</button>
+          )}
         </span>
       </div>
 
-      <div className="v-bjroom" style={{ display: "flex", gap: 24, alignItems: "flex-start", padding: 20, flexWrap: "wrap" }}>
-        {/* ---- table ---- */}
-        <div style={{ flex: "1 1 300px", minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
-          {zone(t("Dealer"),
-            dealer.map((c, i) => card(c, `d${i}${hideHole && i === 1 ? "-back" : ""}`, hideHole && i === 1, i * 90, i === 1 && !hideHole)),
-            phase !== "bet" && !hideHole ? bjValue(dealer) : null, "neutral")}
-
-          <div style={{ height: 1, background: C.edge }} />
-
-          {zone(t("You"),
-            player.map((c, i) => card(c, `p${i}`, false, i * 90)),
-            player.length ? bjValue(player) : null,
-            bjValue(player) > 21 ? "down" : bjValue(player) === 21 ? "up" : "neutral")}
-
-          {result && (
-            <div role="status" className="v-settle" style={{
-              padding: "11px 14px", borderRadius: R.md,
-              background: result.kind === "win" ? C.upSoft : result.kind === "lose" ? C.downSoft : C.surfaceRaised,
-              border: `1px solid ${result.kind === "win" ? alpha(C.up, 0.34) : result.kind === "lose" ? C.downEdge : C.edge}`,
-              color: result.kind === "win" ? C.up : result.kind === "lose" ? C.down : C.text,
-              fontFamily: SANS, fontWeight: 600, fontSize: 13.5,
-            }}>{result.text}</div>
-          )}
+      {showRules && (
+        <div style={{ padding: "12px 22px", borderBottom: `1px solid ${C.edge}`, fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: C.muted }}>
+          {t("Get your book closer to 21 than the market without going past it. Face cards are 10; an ace is 11 unless that would overheat you, then it is 1.")}
+          {" "}
+          {t("The market takes cards until it reaches the number it cools at, then stops. Overheat and the position closes before the market plays at all.")}
         </div>
+      )}
 
-        {/* ---- rail ---- */}
-        <div style={{ flex: "1 1 210px", minWidth: 0, maxWidth: 280, display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={railCard}>
-            <div style={railLabel}>{t("Bankroll")}</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 9, marginTop: 6 }}>
-              <span style={{ ...TYPE.numLg, fontSize: 28, color: broke ? C.down : C.text }}>${bankroll}</span>
-              {delta && delta.n !== 0 && (
-                <span key={delta.id} className="v-chipfly" style={{ ...TYPE.numSm, fontWeight: 700, color: delta.n > 0 ? C.up : C.down }}>
-                  {delta.n > 0 ? `+$${delta.n}` : `−$${Math.abs(delta.n)}`}
-                </span>
-              )}
+      {wiped ? (
+        /* ---- wipeout ---- */
+        <div>
+          <div style={{ position: "relative", minHeight: 340, background: "radial-gradient(120% 100% at 50% 45%, #14090b, #07090d)", overflow: "hidden" }}>
+            <div aria-hidden="true" style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(#171b22 1px, transparent 1px), linear-gradient(90deg, #171b22 1px, transparent 1px)", backgroundSize: "46px 46px", opacity: 0.4 }} />
+            <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: "44%", transform: "translate(-50%, -50%)", fontFamily: MONO, fontSize: 96, fontWeight: 700, color: "rgba(221,106,110,0.12)" }}>$0</div>
+            <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: "rgba(7,9,13,0.6)", padding: 20 }}>
+              <div>
+                {/* The reference prints "SESSION 7 · 12 POSITIONS" because a
+                    session there holds several positions. Here one position is
+                    one session, so that line would be the same number twice —
+                    and the count is already a stat below. This says the thing
+                    the screen does not otherwise: which house rule the whole
+                    run was played against. */}
+                <div style={{ ...label, fontSize: 10.5, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+                  {t("MARKET COOLED AT {c}").replace("{c}", String(coolAt))}
+                </div>
+                <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.03em", color: C.down, marginTop: 10, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>{t("Capital wiped")}</div>
+                <div style={{ color: C.muted, fontSize: 15, marginTop: 8, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>
+                  {result?.reason === "book-overheat"
+                    ? t("You bought past the limit at {n}.").replace("{n}", String(result.book))
+                    : t("The market took the last of it.")}
+                </div>
+                <div style={{ display: "flex", gap: 26, justifyContent: "center", marginTop: 22, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
+                  {[
+                    [t("POSITIONS"), String(tape.length), C.text],
+                    [t("WIN RATE"), `${winRate(tape)}%`, C.text],
+                    [t("NET"), money(net), net < 0 ? C.down : C.up],
+                  ].map(([k, v, colour]) => (
+                    <div key={k}>
+                      <div style={{ ...label, fontSize: 9.5 }}>{k}</div>
+                      <div style={{ fontFamily: MONO, fontSize: 20, fontWeight: 700, marginTop: 3, color: colour }}>{v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.4s both" }}>
+                  <button onClick={resetCapital} className="vt-sheen"
+                    style={{ background: GRAD.sheen, color: C.textOnAccent, fontFamily: SANS, fontWeight: 700, fontSize: 14, padding: "11px 24px", borderRadius: 9, border: "none", cursor: "pointer" }}>
+                    {t("Refund capital")}
+                  </button>
+                  <button onClick={() => setReviewing(true)} className="v-outline"
+                    style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, color: C.text, fontFamily: SANS, fontSize: 14, padding: "11px 20px", borderRadius: 9, cursor: "pointer" }}>
+                    {t("Review the tape")}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-
-          <div>
-            <div style={railLabel}>{t("Bet")}</div>
-            {/* Locked once the cards are out — you cannot raise a bet you are
-                already playing, and a stepper that silently ignores you is
-                worse than one that says it is closed. */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-              {stepBtn("−", () => setBet(b => Math.max(10, b - 10)), phase !== "bet" || bet <= 10)}
-              <span style={{ ...TYPE.num, flex: 1, textAlign: "center", color: phase === "bet" ? C.text : C.muted }}>${bet}</span>
-              {stepBtn("+", () => setBet(b => Math.min(bankroll, b + 10)), phase !== "bet" || bet >= bankroll)}
-            </div>
+          <div style={{ padding: "16px 20px", borderTop: `1px solid ${C.edge}`, display: "flex", alignItems: "center", gap: 10 }}>
+            <span aria-hidden="true" style={{ width: 26, height: 26, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", color: C.warn, fontSize: 13, flexShrink: 0 }}>!</span>
+            {/* Counted off the tape, so it can only say what actually happened. */}
+            <span style={{ color: C.muted, fontSize: 13, lineHeight: 1.5 }}>
+              {tape.filter(e => e.doubled).length > 0
+                ? t("You doubled down on {a} of {b} positions. The tape says size down.")
+                  .replace("{a}", String(tape.filter(e => e.doubled).length)).replace("{b}", String(tape.length))
+                : advice}
+            </span>
           </div>
-
-          {/* One primary action per phase — the redesign's accent rule. Stand
-              is the alternative to Hit, not a second headline. */}
-          <div style={{ display: "flex", gap: 8 }}>
-            {phase === "bet" && (broke
-              ? <button onClick={() => setBankroll(500)} style={{ ...button("primary", "md", { full: true }) }}>{t("Buy back in")}</button>
-              : <button onClick={deal} style={{ ...button("primary", "md", { full: true }) }}>{t("Deal")}</button>)}
-            {phase === "player" && (<>
-              <button onClick={hit} style={{ ...button("primary", "md"), flex: 1 }}>{t("Hit")}</button>
-              <button onClick={stand} style={{ ...button("ghost", "md"), flex: 1 }}>{t("Stand")}</button>
-            </>)}
-            {phase === "done" && (broke
-              ? <button onClick={() => setBankroll(500)} style={{ ...button("primary", "md", { full: true }) }}>{t("Buy back in")}</button>
-              : <button onClick={newHand} style={{ ...button("primary", "md", { full: true }) }}>{t("New hand")}</button>)}
-          </div>
-
-          <button onClick={() => setShowRules(v => !v)} aria-expanded={showRules}
-            style={{ ...button("solid", "md", { full: true }) }}>{t("How to play")}</button>
-
-          {showRules && (
-            <div style={{ ...railCard, fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: C.muted, padding: 12 }}>
-              {t("Get closer to 21 than the dealer without going over. Face cards are 10; an ace is 11 unless that would bust you, then it is 1.")}
-              {" "}{t("The dealer draws to 17 and stands. A two-card 21 is a blackjack and pays 3 to 2.")}
-            </div>
-          )}
         </div>
-      </div>
+      ) : (
+        <>
+          {/* ---- HUD ---- */}
+          <div className="v-ohhud" style={{ display: "flex", alignItems: "center", gap: 20, padding: "15px 22px", borderBottom: `1px solid ${C.edge}`, flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 240px", display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+              <div style={{ textAlign: "right", minWidth: 104 }}>
+                <div style={label}>{t("CAPITAL")}</div>
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "flex-end", gap: 8 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: capital > 0 ? C.up : C.down, lineHeight: 1.1 }}>{money(capital)}</span>
+                  {delta && delta.n !== 0 && (
+                    <span key={delta.id} className="v-chipfly" style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: delta.n > 0 ? C.up : C.down }}>
+                      {money(delta.n, { sign: true })}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ height: 9, borderRadius: 5, background: C.surface, border: `1px solid ${C.edge}`, overflow: "hidden", position: "relative" }}>
+                  <div style={{ width: `${Math.max(0, Math.min(100, (capital / OH_START) * 100))}%`, height: "100%", background: `linear-gradient(90deg, ${FIELD.youMeter[0]}, ${FIELD.youMeter[1]})` }} />
+                  <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(90deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 11px)" }} />
+                </div>
+                <div style={{ display: "flex", gap: 8, marginTop: 7, ...meta, flexWrap: "wrap" }}>
+                  <span>{t("START {m}").replace("{m}", money(OH_START))}</span>{sep}
+                  <span style={{ color: dd.direction === "down" ? C.down : dd.direction === "up" ? C.up : C.faint }}>
+                    {dd.direction === "up"
+                      ? t("UP {n}%").replace("{n}", String(dd.pct))
+                      : t("DRAWDOWN {n}%").replace("{n}", String(dd.pct))}
+                  </span>{sep}
+                  <span>{(tape.length === 1 ? t("{n} SESSION") : t("{n} SESSIONS")).replace("{n}", String(tape.length))}</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ width: 168, flexShrink: 0, background: C.surface, border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, padding: "10px 14px", textAlign: "center" }}>
+              <div style={label}>{t("NET P&L")}</div>
+              <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: net < 0 ? C.down : net > 0 ? C.up : C.text, lineHeight: 1.15 }}>{money(net, { sign: true })}</div>
+              {/* The split bar is the RECORD, not the money: green is the share
+                  of positions that went your way, which is what the line under
+                  it counts. */}
+              <div aria-hidden="true" style={{ position: "relative", height: 5, borderRadius: 3, background: tape.length ? C.down : C.edge, marginTop: 6, overflow: "hidden" }}>
+                <div style={{ width: `${tape.length ? (rec.up / tape.length) * 100 : 0}%`, height: "100%", background: C.accent }} />
+                <div style={{ position: "absolute", left: "50%", top: -2, bottom: -2, width: 1, background: C.base }} />
+              </div>
+              {/* The level positions are named only when there are any — but
+                  they ARE named, because without them this line silently fails
+                  to add up to the session count two readouts to the left, and
+                  a screen whose numbers do not reconcile is the one thing this
+                  game's handoff asks it not to be. */}
+              <div style={{ color: C.faint, fontSize: 10.5, marginTop: 5 }}>
+                {t("{a} up · {b} down").replace("{a}", String(rec.up)).replace("{b}", String(rec.down))}
+                {rec.flat > 0 ? ` · ${t("{n} level").replace("{n}", String(rec.flat))}` : ""}
+              </div>
+            </div>
+
+            <div style={{ flex: "1 1 240px", display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ height: 9, borderRadius: 5, background: C.surface, border: `1px solid ${C.edge}`, overflow: "hidden", position: "relative" }}>
+                  <div style={{ width: `${Math.min(100, (marketValue / OH_LIMIT) * 100)}%`, height: "100%", background: `linear-gradient(90deg, ${FIELD.foeMeter[0]}, ${FIELD.foeMeter[1]})` }} />
+                  <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(90deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 11px)" }} />
+                </div>
+                <div style={{ display: "flex", gap: 8, marginTop: 7, justifyContent: "flex-end", ...meta, flexWrap: "wrap" }}>
+                  <span style={{ color: marketHot ? C.down : C.faint }}>
+                    {marketHot ? t("OVERHEATED") : phase === "closed" ? t("COOLED") : t("OPEN")}
+                  </span>{sep}
+                  <span>{t("PRINT {n}").replace("{n}", String(marketValue))}</span>{sep}
+                  <span>{t("LIMIT {n}").replace("{n}", String(OH_LIMIT))}</span>
+                </div>
+              </div>
+              <div style={{ minWidth: 104 }}>
+                <div style={label}>{t("THE MARKET")}</div>
+                <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: marketHot ? C.down : C.text, lineHeight: 1.1 }}>{marketValue}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* ---- felt + rail ---- */}
+          <div className="v-ohbody" style={{ display: "flex", alignItems: "stretch" }}>
+            <div style={{ flex: 1, minWidth: 0, padding: "18px 16px 20px 22px" }}>
+              <div className="vt-scan" style={{ position: "relative", border: `1px solid ${C.edge}`, borderRadius: R.lg, background: OH_FELT, padding: "18px 20px 20px", overflow: "hidden" }}>
+                <div aria-hidden="true" style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(#111a20 1px, transparent 1px), linear-gradient(90deg, #111a20 1px, transparent 1px)", backgroundSize: "46px 46px", opacity: 0.5 }} />
+
+                <div style={{ position: "relative" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                    <span style={{ ...label, letterSpacing: "2px" }}>{t("THE MARKET")}</span>
+                    {marketShown.length > 0 && valueChip(marketValue, marketHot)}
+                    {phase === "closed" && (
+                      <span style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "1px", color: marketHot ? C.down : C.accentText }}>
+                        {marketHot ? t("OVER LIMIT") : t("COOLED")}
+                      </span>
+                    )}
+                    <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 10.5, color: FIELD.quinary }}>
+                      {t("cools at {n}").replace("{n}", String(coolAt))}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 11, flexWrap: "wrap", minHeight: 104 }}>
+                    {market.length
+                      ? market.map((c, i) => card(c, i, phase === "open" && i === 1))
+                      : [slot("m1"), slot("m2")]}
+                    {marketHot && (
+                      <span style={{ alignSelf: "center", marginLeft: 6, display: "flex", alignItems: "center", background: "rgba(11,14,19,0.7)", border: "1px solid #3a2226", borderRadius: 20, padding: "6px 12px", fontFamily: MONO, fontSize: 11, color: C.down }}>
+                        {t("+{n} past its cool-off").replace("{n}", String(marketValue - coolAt))}
+                      </span>
+                    )}
+                  </div>
+
+                  <div aria-hidden="true" style={{ height: 1, background: "#17202a", margin: "18px 0" }} />
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                    <span style={{ ...label, letterSpacing: "2px" }}>{t("YOUR BOOK")}</span>
+                    {book.length > 0 && valueChip(bookValue, bookValue > OH_LIMIT)}
+                    {book.length > 0 && (
+                      <span style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "1px", color: bookValue > OH_LIMIT ? C.down : C.accentText }}>
+                        {bookValue > OH_LIMIT ? t("OVER LIMIT") : book.length === 2 ? t("HELD") : t("BOUGHT")}
+                      </span>
+                    )}
+                    <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 10.5, color: FIELD.quinary }}>
+                      {t("exposure {m}").replace("{m}", money(phase === "betting" ? clampSize(size, capital) : staked))}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 11, flexWrap: "wrap", minHeight: 104 }}>
+                    {book.length ? book.map((c, i) => card(c, i + 2, false)) : [slot("b1"), slot("b2")]}
+                  </div>
+
+                  {result && (
+                    <div role="status" style={{
+                      display: "flex", alignItems: "center", gap: 12, marginTop: 18, flexWrap: "wrap",
+                      background: result.kind === "win" ? "rgba(70,167,88,0.09)" : result.kind === "lose" ? "rgba(221,106,110,0.09)" : C.surfaceAlt,
+                      border: `1px solid ${result.kind === "win" ? "#234a2f" : result.kind === "lose" ? "#3a2226" : C.edge}`,
+                      borderRadius: 11, padding: "13px 16px",
+                      animation: "vt-fadeup 0.5s var(--v-ease) 0.4s both",
+                    }}>
+                      <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: R.xs, display: "grid", placeItems: "center", fontSize: 13, flexShrink: 0, background: result.kind === "win" ? "#14261b" : result.kind === "lose" ? "#261416" : C.surfaceRaised, color: result.kind === "win" ? C.up : result.kind === "lose" ? C.down : C.muted }}>
+                        {result.kind === "win" ? "↑" : result.kind === "lose" ? "↓" : "="}
+                      </span>
+                      <span style={{ fontWeight: 700, fontSize: 14.5, color: result.kind === "win" ? C.up : result.kind === "lose" ? C.down : C.text }}>{resultLine(result)}</span>
+                      <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 14, fontWeight: 700, color: result.amount > 0 ? C.up : result.amount < 0 ? C.down : C.muted }}>
+                        {money(result.amount, { sign: true })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ---- actions ---- */}
+              <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+                {actionBtn(t("Buy"), buy, phase !== "open")}
+                {actionBtn(t("Hold"), hold, phase !== "open")}
+                {actionBtn(t("Double down"), doubleDown, phase !== "open" || !canDouble({ book, size: staked, capital }))}
+                {/* Reviewing the tape after a wipeout leaves you on a table you
+                    cannot open a position on, and the way back was only on the
+                    overlay you just dismissed. With no capital this button IS
+                    the way back, rather than a dead primary action sitting
+                    where the live one belongs. */}
+                <button
+                  onClick={isWiped(capital) ? resetCapital : phase === "closed" ? nextPosition : openPosition}
+                  disabled={phase === "open"}
+                  className={phase === "open" ? undefined : "vt-sheen"}
+                  style={{
+                    flex: 2, minWidth: 160, textAlign: "center", borderRadius: 9, padding: 12, border: "none",
+                    fontFamily: SANS, fontSize: 13.5, fontWeight: 700,
+                    background: phase === "open" ? C.surfaceRaised : GRAD.sheen,
+                    color: phase === "open" ? FIELD.quaternary : C.textOnAccent,
+                    cursor: phase === "open" ? "not-allowed" : "pointer",
+                  }}>
+                  {isWiped(capital) ? t("Refund capital") : phase === "closed" ? t("Open next position") : t("Open position")}
+                </button>
+              </div>
+            </div>
+
+            {/* ---- rail ---- */}
+            <div className="v-ohrail" style={{ width: 300, flexShrink: 0, borderLeft: `1px solid ${C.edge}`, padding: "18px 22px 20px 18px", display: "flex", flexDirection: "column", gap: 15 }}>
+              <div style={{ ...railBox, background: C.surface, border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, padding: "13px 14px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+                <div style={label}>{t("NEXT POSITION SIZE")}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+                  {stepBtn("−", () => setSize(s => clampSize(s - OH_MIN, capital)), phase === "open" || size <= OH_MIN, t("Lower the position"))}
+                  <span style={{ flex: 1, textAlign: "center", fontFamily: MONO, fontSize: 22, fontWeight: 700, color: phase === "open" ? C.muted : C.text }}>{money(size)}</span>
+                  {stepBtn("+", () => setSize(s => clampSize(s + OH_MIN, capital)), phase === "open" || size >= capital, t("Raise the position"))}
+                </div>
+                <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+                  {sizeOptions(capital).map((v, i, arr) => (
+                    <button key={v} onClick={() => setSize(clampSize(v, capital))} disabled={phase === "open"} className="v-outline"
+                      style={{ flex: 1, minWidth: 52, textAlign: "center", background: "transparent", border: `1px solid ${size === v ? C.accent : C.edgeStrong}`, borderRadius: R.xs, padding: "6px 0", fontFamily: MONO, fontSize: 11, color: size === v ? C.accentText : C.muted, cursor: phase === "open" ? "not-allowed" : "pointer" }}>
+                      {i === arr.length - 1 && v === capital && v > 100 ? t("max") : money(v)}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ color: C.faint, fontSize: 11.5, marginTop: 9 }}>
+                  {t("{n}% of capital at risk").replace("{n}", String(risk))}
+                </div>
+              </div>
+
+              <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) 0.08s both" }}>
+                <div style={label}>{t("SESSION TAPE")}</div>
+                <div style={{ ...railBox, marginTop: 8, fontFamily: MONO, fontSize: 11.5, lineHeight: 1.95, maxHeight: 132, overflowY: "auto" }}>
+                  {tape.length === 0
+                    ? <span style={{ color: FIELD.quinary }}>{t("No positions yet.")}</span>
+                    : [...tape].reverse().map((e, i) => (
+                      <div key={tape.length - i} style={{ display: "flex", gap: 10 }}>
+                        <span style={{ color: FIELD.quinary, width: 16, flexShrink: 0 }}>{tape.length - i}</span>
+                        <span style={{ color: C.muted, flex: 1, minWidth: 0 }}>{tapeLine(e)}</span>
+                        <span style={{ color: e.amount > 0 ? C.up : e.amount < 0 ? C.down : C.muted }}>{money(e.amount, { sign: true })}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) 0.16s both" }}>
+                <div style={label}>{t("TAKEAWAY")}</div>
+                <div style={{ ...railBox, marginTop: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                    <span style={{ fontSize: 12.5, color: C.muted }}>{t("Risk per position")}</span>
+                    <span style={{ fontFamily: MONO, fontSize: 12, color: BAND_FILL[band] }}>{BAND_TEXT[band]}</span>
+                  </div>
+                  <div aria-hidden="true" style={{ height: 5, borderRadius: 3, background: C.surface, marginTop: 9, overflow: "hidden" }}>
+                    <div style={{ width: `${BAND_WIDTH[band]}%`, height: "100%", background: `linear-gradient(90deg, ${C.warn}, ${BAND_FILL[band]})` }} />
+                  </div>
+                  <div style={{ color: C.faint, fontSize: 11.5, marginTop: 9, lineHeight: 1.45 }}>{advice}</div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: "auto", animation: "vt-fadeup 0.5s var(--v-ease) 0.24s both" }}>
+                <div style={label}>{t("MARKET RULES")}</div>
+                {/* Locked while a position is open: the market's stand rule is
+                    the one thing you may not change after seeing your cards. */}
+                <div style={{ display: "flex", gap: 4, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: 4, marginTop: 8 }}>
+                  {COOL_OPTIONS.map(v => (
+                    <button key={v} onClick={() => setCoolAt(v)} disabled={phase === "open"} aria-pressed={coolAt === v} className="v-coolseg"
+                      style={{
+                        flex: 1, textAlign: "center", borderRadius: R.xs, padding: "8px 0", border: "none",
+                        fontFamily: SANS, fontSize: 12.5, whiteSpace: "nowrap",
+                        fontWeight: coolAt === v ? 700 : 400,
+                        background: coolAt === v ? C.accent : "transparent",
+                        color: coolAt === v ? C.textOnAccent : phase === "open" ? FIELD.quaternary : C.muted,
+                        cursor: phase === "open" ? "not-allowed" : "pointer",
+                      }}>
+                      {t("Cools at {n}").replace("{n}", String(v))}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -12326,9 +12913,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     const ctlBtn = { background: C.surfaceRaised, border: `1px solid ${C.edge}`, color: C.text, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, lineHeight: 1, padding: "7px 11px", cursor: "pointer" };
     // ONE LIST, ONE NAME PER GAME.
     // The menu card and the header of the game it opens used to be written
-    // twice and disagree — "Market Blackjack" on the card, "MARKET BLACKJACK"
-    // on the header; "Bulls vs Bears Chess" against "BULLS vs BEARS". Both now
-    // read from here, so a rename is one edit and the two can never drift.
+    // twice and disagree — "Bulls vs Bears Chess" on one and "BULLS vs BEARS"
+    // on the header. Both read from here now, so a rename is one edit and the
+    // two can never drift. Overheat, which arrived as a rename of the card
+    // game, is the reason that matters rather than a tidiness point.
     //
     // The icons are DeskIcon marks rather than emoji, for the reasons that
     // component's header sets out — chiefly that an emoji is a different
@@ -12337,7 +12925,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       { id: "school",   icon: "school",   name: t("Stock School"),         desc: t("Eight short lessons on stocks, prices and P&L.") },
       { id: "bullbear", icon: "bullbear", name: t("Bull or Bear"),         desc: t("Read a headline, call it up or down.") },
       { id: "ticker",   icon: "ticker",   name: t("Ticker Match"),         desc: t("Match companies to their tickers.") },
-      { id: "cards",    icon: "cards",    name: t("Market Blackjack"),     desc: t("21 against the dealer, with a chip bankroll.") },
+      { id: "cards",    icon: "cards",    name: t("Overheat"),             desc: t("Twenty-one, told as a market. Buy past the limit and you overheat.") },
       { id: "chess",    icon: "chess",    name: t("Bulls vs Bears Chess"), desc: t("Two-player chess: Bulls against Bears.") },
       { id: "algowars", icon: "algowars", name: t("Algorithm Wars"),       desc: t("A trading-floor RTS: script bot armies in real time.") },
     ];
@@ -12395,8 +12983,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     // ---- board/card games render their own self-contained components ----
     const backBtn = <button onClick={() => { setGameMode("menu"); stopSpeak(); }} className="v-gamectl" style={ctlBtn}>← {t("games")}</button>;
     if (gameMode === "cards") {
-      return shell(gameMeta("cards").icon, gameMeta("cards").name, backBtn,
-        <BlackjackGame onCheer={() => triggerAnchor("cheer", { label: "WINNER" })} onWin={() => triggerAnchor("cheer", { label: "BLACKJACK" })} />);
+      // Its own header, like the other two full-size games: this one carries a
+      // status pill, the session line and its own reset, none of which the
+      // shell's bar can see.
+      return shell(null, null, null,
+        <OverheatGame
+          onCheer={() => triggerAnchor("cheer", { label: "POSITION PAID" })}
+          onWin={() => triggerAnchor("cheer", { label: "TWENTY-ONE" })}
+          onBack={() => { setGameMode("menu"); stopSpeak(); }}
+          onClose={closeGame}
+        />, true);
     }
     if (gameMode === "chess") {
       return shell(null, null, null,

@@ -387,17 +387,17 @@ a:hover { text-decoration: underline; }
   border-radius: var(--v-r-sm);
 }
 
-/* ---------- blackjack table ----------
-   Cards arrive rather than appear. The motion is the system's own — 200-260ms
-   on the standard curve, no bounce, no spring: a dealer's hand is quick and
-   mechanical. Staggering by index is what makes two cards read as "dealt one
-   after the other" instead of "two divs turned on".
+/* ---------- Overheat's felt ----------
+   Cards arrive rather than appear. Staggering by index is what makes two cards
+   read as "dealt one after the other" instead of "two divs turned on".
    Both keyframes are silenced by the prefers-reduced-motion block below. */
 @keyframes v-deal {
-  from { opacity: 0; transform: translate(14px, -22px) rotate(6deg) scale(0.92); }
+  from { opacity: 0; transform: translateY(-16px) rotate(-5deg); }
   to   { opacity: 1; transform: none; }
 }
-.v-deal { animation: v-deal 260ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+/* 0.4s ease-out, staggered 80ms at the call site — the games handoff's `deal`,
+   to the value. The previous 260ms was quicker than a hand actually moves. */
+.v-deal { animation: v-deal 0.4s ease-out both; }
 
 /* The hole card turning over is a flip, not a swap — the one moment in the
    hand where something is revealed, so it gets its own gesture. */
@@ -415,7 +415,7 @@ a:hover { text-decoration: underline; }
 }
 .v-settle { animation: v-settle 200ms cubic-bezier(0.4, 0, 0.2, 1) both; }
 
-/* The payout, leaving the bankroll. A total that simply becomes a different
+/* The payout, landing on the capital. A total that simply becomes a different
    number says the hand ended but not what it was worth, and the one moment a
    player actually cares about is the moment the chips move. It rises and fades
    rather than lingering, because it is an event, not a field. */
@@ -427,12 +427,30 @@ a:hover { text-decoration: underline; }
 }
 .v-chipfly { animation: v-chipfly 1500ms cubic-bezier(0.4, 0, 0.2, 1) both; }
 
-/* The table and the chip rail sit side by side while there is room for both.
-   Below that the rail wraps under the table, and the bet stepper and actions
-   go full width rather than staying in a 210px column with nothing beside it. */
-@media (max-width: 620px) {
-  .v-bjroom { padding: 14px !important; gap: 16px !important; }
+/* Overheat's felt and its rail sit side by side while there is room for both.
+   Below that the rail goes under the felt with a top border instead of a left
+   one — the same break the other full-width panels take, at the same width, so
+   the whole product reflows on one line rather than six. */
+@media (max-width: 1000px) {
+  .v-ohbody { flex-direction: column; }
+  .v-ohrail {
+    width: auto !important;
+    border-left: none !important;
+    border-top: 1px solid var(--v-edge);
+    padding: 18px 22px !important;
+  }
 }
+@media (max-width: 620px) {
+  .v-ohbody > div:first-child { padding: 14px !important; }
+  .v-ohrail { padding: 14px !important; }
+  .v-ohhud { padding: 12px 14px !important; gap: 14px !important; }
+}
+
+/* The market's stand rule. A segment fills rather than outlines on hover,
+   because it sits in a track — a border appearing inside a track reads as a
+   second track. The handoff asks for exactly this. */
+.v-coolseg { transition: background var(--v-base-dur) var(--v-ease), color var(--v-base-dur) var(--v-ease); }
+.v-coolseg:not(:disabled):not([aria-pressed="true"]):hover { background: var(--v-surface-raised); color: var(--v-text); }
 
 /* ---------- accessibility ----------
    Respect the OS setting. Anything decorative stops; nothing becomes unusable. */
