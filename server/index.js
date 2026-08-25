@@ -370,9 +370,27 @@ async function listGoogleEvents(email, max = 10) {
 // ⚠ The plan is confirmed by the front-end from that redirect (and persisted via /api/auth/plan),
 // which is client-trusted — a user could self-grant a plan. Fine for test mode (paid plans are
 // simulated per the app's terms); harden with a Stripe webhook before taking real money.
+// How many of the seven days this account has left. The front end counts down
+// from the same stamp, so Stripe has to be told the REMAINDER — a flat
+// TRIAL_DAYS here would hand somebody who signed up on Monday and added a card
+// on Thursday a fresh week, and the "3 days left" they were looking at when
+// they clicked would have been wrong the moment they clicked it.
+//
+// An account with no createdAt predates the stamp: it was made while Explorer
+// was free. The front end draws no countdown for those, so there is no number
+// to keep in step with, and they get the whole trial. That is a gift rather
+// than a claim, which is the safe direction to be wrong in.
+function trialDaysLeft(email) {
+  const start = USERS[email]?.createdAt;
+  if (!Number.isFinite(start)) return TRIAL_DAYS;
+  const left = Math.ceil((start + TRIAL_DAYS * 86400000 - Date.now()) / 86400000);
+  return Math.min(TRIAL_DAYS, Math.max(0, left));
+}
+
 async function stripeCheckout(email, plan) {
   const price = STRIPE.prices[plan];
   if (!price) throw new Error(`no Stripe price configured for "${plan}"`);
+  const daysLeft = trialDaysLeft(email);
   const params = new URLSearchParams({
     mode: "subscription",
     "line_items[0][price]": price,
@@ -386,7 +404,12 @@ async function stripeCheckout(email, plan) {
     // door promises no charge until day 8; this is the parameter that keeps
     // that promise. Without it Stripe bills immediately and the countdown
     // becomes decoration on top of a charge that already happened.
-    "subscription_data[trial_period_days]": String(TRIAL_DAYS),
+    //
+    // Omitted entirely once the days are gone. Stripe's minimum is one day, so
+    // there is no way to say "the trial is over" in this field — and passing 1
+    // to keep the shape would give a lapsed account another free day. No field
+    // means the first invoice is due now, which is what an expired trial means.
+    ...(daysLeft > 0 ? { "subscription_data[trial_period_days]": String(daysLeft) } : {}),
     "subscription_data[metadata][plan]": plan,
     "subscription_data[metadata][email]": email || "",
     ...(email ? { customer_email: email } : {}),
