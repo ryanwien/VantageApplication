@@ -411,6 +411,30 @@ function rateLimit(key, limit, windowMs) {
   if (RATE_BUCKETS.size > 5000) for (const k of RATE_BUCKETS.keys()) if (!k.endsWith(`:${slot}`)) RATE_BUCKETS.delete(k);
   return { ok: hits <= limit, hits, limit, resetMs: (slot + 1) * windowMs - now };
 }
+// videos.list for a batch of ids: 1 quota unit total, whatever the batch size.
+// Returns the four fields the Video desk cannot work without, and {} on any
+// failure — a desk with no chapter strip is a worse desk, but a desk that 502s
+// because an enrichment call timed out is no desk at all.
+async function ytDetails(ids) {
+  if (!ids.length || !YOUTUBE_KEY) return {};
+  const api = new URL("https://www.googleapis.com/youtube/v3/videos");
+  api.search = new URLSearchParams({ part: "snippet,contentDetails,statistics", id: ids.join(","), key: YOUTUBE_KEY });
+  let r;
+  try { r = await fetch(api, { signal: AbortSignal.timeout(8000) }); } catch { return {}; }
+  if (!r.ok) return {};
+  let data;
+  try { data = await r.json(); } catch { return {}; }
+  const out = {};
+  for (const it of data.items || []) {
+    out[it.id] = {
+      description: it.snippet?.description || "",
+      publishedAt: it.snippet?.publishedAt || null,
+      duration: it.contentDetails?.duration || null,
+      views: Number(it.statistics?.viewCount) || null,
+    };
+  }
+  return out;
+}
 const clientIp = (req) =>
   (TRUST_PROXY ? String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() : "") ||
   req.socket?.remoteAddress || "unknown";
@@ -850,6 +874,25 @@ const server = http.createServer(async (req, res) => {
     // ---- YOUTUBE (server-held Data API key) ----
     // Search costs 100 quota units against a 10k/day project budget, so this is
     // rate-limited per IP even though the endpoint itself is read-only.
+    //
+    // videos.list costs ONE unit, which is why every search hit is enriched
+    // with it unconditionally rather than on demand. The Video desk needs a
+    // duration, a description (chapters and mentioned tickers are parsed out of
+    // it — the Data API has no field for either) and a publish date; fetching
+    // those separately would cost the client a round trip and the project 1/100
+    // of what it already spent.
+    if (p === "/api/youtube/lookup" && req.method === "GET") {
+      if (!YOUTUBE_KEY) return send(res, 503, { error: "Video search is not configured on this server (set YOUTUBE_API_KEY)." });
+      // A hundred times cheaper than search, so a hundred times the allowance.
+      const rl = rateLimit(`ytl:${clientIp(req)}`, ANON_YT_PER_HOUR * 100, 3600000);
+      if (!rl.ok) return send(res, 429,
+        { error: `Rate limit reached (${rl.limit} per hour).`, retryInSec: Math.ceil(rl.resetMs / 1000) },
+        { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
+      const ids = String(url.searchParams.get("id") || "").split(",").map(s => s.trim()).filter(s => /^[\w-]{6,20}$/.test(s)).slice(0, 20);
+      if (!ids.length) return send(res, 400, { error: "Pass ?id=videoId[,videoId…]." });
+      return send(res, 200, { videos: Object.entries(await ytDetails(ids)).map(([id, d]) => ({ id, ...d })) });
+    }
+
     if (p === "/api/youtube/search" && req.method === "GET") {
       if (!YOUTUBE_KEY) return send(res, 503, { error: "Video search is not configured on this server (set YOUTUBE_API_KEY)." });
       const rl = rateLimit(`yt:${clientIp(req)}`, ANON_YT_PER_HOUR, 3600000);
@@ -883,6 +926,11 @@ const server = http.createServer(async (req, res) => {
         channel: it.snippet?.channelTitle || "YouTube",
         url: `https://www.youtube.com/watch?v=${it.id.videoId}`,
       }));
+      // Enrichment is best-effort by design: ytDetails swallows its own errors
+      // and returns {}, so a lookup that fails costs the caller a chapter strip,
+      // not the search results it already paid 100 units for.
+      const details = await ytDetails(videos.map(v => v.id));
+      for (const v of videos) Object.assign(v, details[v.id] || {});
       return send(res, 200, { q, videos });
     }
 

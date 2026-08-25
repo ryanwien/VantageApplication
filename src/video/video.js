@@ -1,0 +1,158 @@
+// ============================================================
+//  video.js — what the desk can actually know about a YouTube video.
+//
+//  THE CONSTRAINT THIS MODULE EXISTS FOR
+//  The Video desk shows a duration, a chapter strip, the tickers a video
+//  mentions and when it mentions them. None of that comes free: the YouTube
+//  Data API gives a description, an ISO duration, a view count and a publish
+//  date, and NOTHING ELSE. There is no chapter field and no transcript
+//  endpoint. Everything richer than those four values is derived here, from
+//  the description, by rules — never guessed, and never asked of a model that
+//  cannot watch the video.
+//
+//  So every function here fails EMPTY rather than approximately. A video with
+//  no chapter list gets no chapter strip; a description that names no known
+//  symbol gets no ticker rail. An empty rail is a true statement about a
+//  video. A plausible one is not.
+// ============================================================
+
+// ---- duration ----
+// YouTube returns ISO 8601 durations ("PT18M24S", "PT1H2M3S", "P1DT2H").
+export function ytDurationSec(iso) {
+  const m = /^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(String(iso || "").trim());
+  if (!m || !m.slice(1).some(Boolean)) return 0;
+  const [, d, h, mi, s] = m;
+  return (+d || 0) * 86400 + (+h || 0) * 3600 + (+mi || 0) * 60 + (+s || 0);
+}
+
+// mm:ss under an hour, h:mm:ss over it — the same shape YouTube prints, so a
+// timestamp copied off the video matches a timestamp shown here.
+export function clock(sec) {
+  const n = Math.max(0, Math.floor(sec || 0));
+  const h = Math.floor(n / 3600), m = Math.floor((n % 3600) / 60), s = n % 60;
+  const pad = (x) => String(x).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+}
+
+// A timestamp as written in a description: 0:00, 12:07, 1:02:03.
+const TS = /^\s*\(?\[?(\d{1,2}:\d{2}(?::\d{2})?)\)?\]?\s*[-–—:.|)]*\s*(.*\S)?\s*$/;
+
+export function tsToSec(ts) {
+  const parts = String(ts).split(":").map(Number);
+  if (parts.some(n => !Number.isFinite(n))) return null;
+  return parts.length === 3
+    ? parts[0] * 3600 + parts[1] * 60 + parts[2]
+    : parts[0] * 60 + parts[1];
+}
+
+// ---- chapters ----
+// YouTube's own conditions for turning a description into chapters, applied as
+// written: the list must start at 0:00, must have at least three entries, and
+// the times must ascend. Loosening any of them turns "recorded 0:00 on a
+// Sunday" into a chapter strip, which is worse than no strip at all.
+export function parseChapters(description, durationSec = 0) {
+  const out = [];
+  for (const line of String(description || "").split(/\r?\n/)) {
+    const m = TS.exec(line);
+    if (!m) continue;
+    const start = tsToSec(m[1]);
+    const label = (m[2] || "").trim();
+    if (start == null || !label) continue;
+    out.push({ start, label });
+  }
+  if (out.length < 3) return [];
+  if (out[0].start !== 0) return [];
+  for (let i = 1; i < out.length; i++) if (out[i].start <= out[i - 1].start) return [];
+  if (durationSec && out[out.length - 1].start >= durationSec) return [];
+  return out;
+}
+
+// The strip's segments are proportional to how long each chapter actually
+// runs. Equal segments would say every chapter is the same size, which is the
+// one thing the strip is there to disprove — an 18-minute video is skimmable
+// precisely because its parts are uneven.
+export function chapterSpans(chapters, durationSec) {
+  if (!chapters.length) return [];
+  return chapters.map((c, i) => {
+    const end = i + 1 < chapters.length ? chapters[i + 1].start : Math.max(durationSec, c.start + 1);
+    return { ...c, end, weight: Math.max(1, end - c.start) };
+  });
+}
+
+export function chapterAt(chapters, sec) {
+  let found = -1;
+  for (let i = 0; i < chapters.length; i++) if (chapters[i].start <= sec) found = i;
+  return found;
+}
+
+// ---- tickers ----
+// Two rules, and no third one. A $CASHTAG is explicit — nobody writes $NVDA
+// about anything but the stock. A bare uppercase word only counts when the
+// desk ALREADY knows the symbol, because the alternative is a rail that
+// confidently lists CEO, ETF, USA and AI as tickers.
+const CASHTAG = /\$([A-Z]{1,5})\b/g;
+const BARE = /\b([A-Z]{1,5})\b/g;
+
+export function tickersIn(text, known = []) {
+  const set = new Set(known.map(s => String(s).toUpperCase()));
+  const found = [];
+  const push = (s) => { if (!found.includes(s)) found.push(s); };
+  const str = String(text || "");
+  for (const m of str.matchAll(CASHTAG)) push(m[1]);
+  for (const m of str.matchAll(BARE)) if (set.has(m[1])) push(m[1]);
+  return found;
+}
+
+// One row per ticker, at the FIRST moment the description puts it — the rail's
+// promise is "tap to jump to where he says this", so a later mention would
+// land you past the part you came for.
+export function chapterMentions(chapters, known = []) {
+  const seen = new Map();
+  for (const c of chapters) {
+    for (const sym of tickersIn(c.label, known)) {
+      if (!seen.has(sym)) seen.set(sym, { ticker: sym, start: c.start, label: c.label });
+    }
+  }
+  return [...seen.values()];
+}
+
+// ---- small readouts ----
+const AGES = [
+  [31536000, "year"], [2592000, "month"], [604800, "week"],
+  [86400, "day"], [3600, "hour"], [60, "minute"],
+];
+export function relAge(iso, now = Date.now()) {
+  const then = Date.parse(iso);
+  if (!Number.isFinite(then)) return "";
+  const secs = Math.max(0, Math.floor((now - then) / 1000));
+  for (const [size, unit] of AGES) {
+    const n = Math.floor(secs / size);
+    if (n >= 1) return `${n} ${unit}${n === 1 ? "" : "s"} ago`;
+  }
+  return "just now";
+}
+
+// YouTube's own rounding, because the number sits next to a YouTube video and
+// disagreeing with the source by a decimal place is a small way of looking
+// wrong: one decimal below ten of a unit (1.2K), whole numbers above it (41K).
+// The thresholds are set where the ROUNDED value would tip over, so nothing
+// ever prints "1000K".
+export function compactCount(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v < 0) return "";
+  const unit = (val, suffix) =>
+    (val < 10 ? String(Math.round(val * 10) / 10) : String(Math.round(val))) + suffix;
+  if (v < 999.5) return String(Math.round(v));
+  if (v < 999_500) return unit(v / 1e3, "K");
+  if (v < 999_500_000) return unit(v / 1e6, "M");
+  return unit(v / 1e9, "B");
+}
+
+// Initials for the creator tile. Two letters at most: "Mark Roussin, CPA" is
+// MR, not MRC — the suffix is a credential, not a name.
+export function monogram(name) {
+  const words = String(name || "").replace(/[,.]/g, " ").split(/\s+/).filter(Boolean);
+  if (!words.length) return "?";
+  const letters = words.filter(w => /^[A-Za-z]/.test(w)).slice(0, 2).map(w => w[0].toUpperCase());
+  return letters.join("") || "?";
+}

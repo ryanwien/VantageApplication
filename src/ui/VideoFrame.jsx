@@ -33,10 +33,16 @@ export const ytThumbIsReal = (img) => img && img.naturalWidth > 120;
 // autoStart: the caller has already taken a click for this video (the news
 // panel's rows are the play button), so a second play button inside the frame
 // would be a click that does nothing but repeat itself.
-export default function VideoFrame({ id, title, autoStart = false }) {
+//
+// start: the second the embed opens at. There is no seek API here on purpose —
+// controlling a running player means loading YouTube's IFrame API script from
+// youtube.com, which would undo the reason every embed in this product points
+// at youtube-nocookie.com. Remounting the frame with a new start IS the seek,
+// and it is the caller's job to change the React key when it wants one.
+export default function VideoFrame({ id, title, autoStart = false, start = 0 }) {
   const [playing, setPlaying] = useState(!!autoStart);
   const [thumbBad, setThumbBad] = useState(false);
-  const watch = ytWatch(id);
+  const watch = start > 0 ? `${ytWatch(id)}&t=${Math.floor(start)}s` : ytWatch(id);
   const ytLink = (label, pos) => (
     <a href={watch} target="_blank" rel="noopener noreferrer"
       style={{ position: "absolute", ...pos, zIndex: 2, background: "rgba(0,0,0,0.78)", color: "#fff", fontFamily: MONO, fontSize: 12, padding: "3px 8px", borderRadius: R.sm, textDecoration: "none" }}>
@@ -47,7 +53,7 @@ export default function VideoFrame({ id, title, autoStart = false }) {
     return (
       <div style={{ position: "relative", width: "100%", paddingTop: "56.25%", background: "#000" }}>
         <iframe
-          src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&modestbranding=1&rel=0`}
+          src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&modestbranding=1&rel=0${start > 0 ? `&start=${Math.floor(start)}` : ""}`}
           title={title}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
           allowFullScreen

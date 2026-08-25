@@ -23,6 +23,9 @@ import AppShell from "./src/ui/AppShell.jsx";
 import ChatAssistant from "./src/ui/ChatAssistant.jsx";
 import NewsDesk, { sourceColor, toneOf } from "./src/ui/NewsDesk.jsx";
 import VideoFrame, { ytId } from "./src/ui/VideoFrame.jsx";
+import VideoDesk from "./src/ui/VideoDesk.jsx";
+import { ytDurationSec, parseChapters, chapterMentions, relAge } from "./src/video/video.js";
+import Waveform from "./src/ui/Waveform.jsx";
 import VantageMark from "./src/ui/VantageMark.jsx";
 import DeskIcon from "./src/ui/DeskIcon.jsx";
 import HomePage from "./src/ui/HomePage.jsx";
@@ -5910,11 +5913,7 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
               marketing page. A dot says "something is on". Bars say sound is
               coming out, which is the thing that is actually happening. */}
           {talking ? (
-            <span className="vt-bars" aria-hidden="true" style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 10 }}>
-              {[55, 100, 45, 80].map((h, i) => (
-                <span key={i} style={{ width: 2, height: `${h}%`, background: C.accentText, borderRadius: 1 }} />
-              ))}
-            </span>
+            <Waveform height={10} width={2} gap={2} color={C.accentText} />
           ) : (
             <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: C.faint }} />
           )}
@@ -8408,6 +8407,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // sees it, so there is nothing to paste and nothing to leak.
   const serverAiReady = () => !!meetStatus?.ai?.configured;
   const aiReady = () => planAllows("ai") && (serverAiReady() || aiModels.some(m => m.enabled && ((m.kind === "ollama" || /localhost|127.0.0.1/.test(m.baseUrl || "")) || (m.kind === "claude" ? !!anthropicApiKey.trim() : !!(m.apiKey || "").trim()))));
+  // Which models the desk can actually call right now, in order: enabled,
+  // allowed by the plan, and holding a key — the user's, the server's, or none
+  // at all because it is running on localhost. Written once because "can we ask
+  // a model" was being answered in more than one place, and two answers to that
+  // question is how a feature ends up refusing on a key it never needed.
+  const usableAiModels = useCallback(() => {
+    if (!planAllows("ai")) return [];
+    const isLocal = (m) => m.kind === "ollama" || /localhost|127\.0\.0\.1/.test(m.baseUrl || "");
+    // OpenRouter and Gemini can be keyed by the server, so "enabled" is all they need.
+    const serverKeyed = (m) => (m.id === "openrouter" && !!meetStatus?.ai?.configured) || (m.id === "gemini" && !!meetStatus?.gemini?.configured);
+    return aiModels.filter(m => m.enabled && (isLocal(m) || serverKeyed(m)
+      || (m.kind === "claude" ? !!anthropicApiKey.trim() : (m.needsKey ? !!(m.apiKey && m.apiKey.trim()) : true))));
+  }, [aiModels, anthropicApiKey, meetStatus, planAllows]);
   const [missionsDone, setMissionsDone] = useState(() => {
     try { return new Set(JSON.parse(window.localStorage.getItem("tape-missions") || "[]")); } catch { return new Set(); }
   });
@@ -10397,10 +10409,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // Claude composes a full analyst write-up (web-search grounded) that gets embedded in every export
   const generateWrittenReport = useCallback(async () => {
     // write via the enabled models in order (OpenRouter is primary) — cascades on error, like the desk.
-    const isLocal = (m) => m.kind === "ollama" || /localhost|127\.0\.0\.1/.test(m.baseUrl || "");
-    // OpenRouter and Gemini are keyed by the server, so "enabled" is all they need here.
-    const serverKeyed = (m) => (m.id === "openrouter" && !!meetStatus?.ai?.configured) || (m.id === "gemini" && !!meetStatus?.gemini?.configured);
-    const usable = !planAllows("ai") ? [] : aiModels.filter(m => m.enabled && (isLocal(m) || serverKeyed(m) || (m.kind === "claude" ? !!anthropicApiKey.trim() : (m.needsKey ? !!(m.apiKey && m.apiKey.trim()) : true))));
+    const usable = usableAiModels();
     if (!usable.length) { setExportMsg("✗ Enable a model with a key (OpenRouter, Claude…) or a local model to write a report"); return null; }
     setReportBusy(true);
     const ctx = JSON.stringify(buildMarketContext());
@@ -10788,6 +10797,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
 
   // ---- in-app video theater ----
   const [player, setPlayer] = useState(null); // {id, title, channel, url, brief?} | {archive, title, channel}
+  // The Video desk. Chapters are parsed once, when the video opens, because
+  // they only change when the video does. Prices are NOT stored here — the
+  // ticker rail looks them up at render, so it can never show a quote older
+  // than the one the watchlist beside it is showing.
+  const [videoDesk, setVideoDesk] = useState(null);   // { topic, video, queue }
+  const [videoSummary, setVideoSummary] = useState(null); // { status, rows, checks, model, ms }
   // the player docks at the TOP of the desk; opening one from deep in a catalog grid
   // would otherwise land off-screen, so bring it into view when it (re)opens
   const playerRef = useRef(null);
@@ -10914,6 +10929,124 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // The news panel plays its own videos, in the row you clicked, so it does not
   // want a second frame docked at the top of the desk — only the bookkeeping.
   const noteVideoPlayed = () => completeMission("watch");
+
+  // ---- the Video desk ----
+  //
+  // Which symbols the desk is willing to recognise in a video description.
+  // Deliberately not "any word in capitals": a bare uppercase token only counts
+  // as a ticker when the desk already knows it, so a rail cannot fill up with
+  // CEO, ETF, AI and USA. Cashtags ($NVDA) are taken regardless — see
+  // src/video/video.js.
+  const knownSymbols = useMemo(
+    () => [...new Set([...UNIVERSE.map(u => u.sym), ...watchlist, ...positions.map(p => p.sym)])],
+    [watchlist, positions],
+  );
+  const heldSymbols = useMemo(() => new Set(positions.map(p => p.sym)), [positions]);
+
+  const openVideoDesk = useCallback((topic, videos) => {
+    if (!videos?.length) return;
+    // Chapters come off the description, so they are computed for every video
+    // in the queue up front — promoting one out of UP NEXT must not have to
+    // re-derive anything, or the panel would flicker through a chapterless
+    // state on every switch.
+    const shape = (v) => {
+      const durationSec = ytDurationSec(v.duration);
+      return { ...v, durationSec, chapters: parseChapters(v.description, durationSec) };
+    };
+    const [first, ...rest] = videos.map(shape);
+    setVideoSummary(null);
+    setVideoDesk({ topic, video: first, queue: rest });
+    completeMission("watch");
+  }, [completeMission]);
+
+  // Every ticker the CURRENT video names, priced from the same source the rest
+  // of the desk is priced from.
+  const videoMentions = useMemo(() => {
+    const v = videoDesk?.video;
+    if (!v) return [];
+    return chapterMentions(v.chapters || [], knownSymbols).map(m => {
+      const row = getRow(m.ticker);
+      return {
+        ...m,
+        price: row?.price != null ? fmt(row.price) : null,
+        chgPct: row?.chgPct ?? null,
+        held: heldSymbols.has(m.ticker),
+      };
+    });
+  }, [videoDesk, knownSymbols, getRow, heldSymbols]);
+
+  const loadSymbolOnDesk = useCallback((sym) => {
+    setSelected(sym);
+    setWatchlist(w => (w.includes(sym) ? w : [...w, sym]));
+  }, []);
+
+  // Promote one out of UP NEXT: the video you were on goes back into the queue
+  // rather than disappearing, because "up next" is a queue and not a shelf.
+  const pickQueuedVideo = useCallback((q) => {
+    setVideoSummary(null);
+    setVideoDesk(d => (!d ? d : {
+      ...d,
+      video: q,
+      queue: [d.video, ...d.queue.filter(x => x.id !== q.id)],
+    }));
+  }, []);
+
+  // WHAT THE DESK CHECKED. Computed here, never asked of the model: how old the
+  // video is, and how the biggest thing it names has moved. The reference says
+  // "NVDA has fallen 3.06% SINCE IT WAS PUBLISHED" — this desk holds one
+  // session of history, not a week of it, so it says what it can measure and
+  // not what would sound better.
+  const videoChecks = useCallback((v) => {
+    const parts = [];
+    const age = relAge(v.publishedAt);
+    if (age) parts.push(`Published ${age}. Any prices quoted in it are from then.`);
+    const moved = videoMentions
+      .filter(x => x.chgPct != null)
+      .sort((a, b) => Math.abs(b.chgPct) - Math.abs(a.chgPct))[0];
+    if (moved) parts.push(`${moved.ticker} is ${moved.chgPct >= 0 ? "up" : "down"} ${Math.abs(moved.chgPct).toFixed(2)}% today.`);
+    return parts.join(" ");
+  }, [videoMentions]);
+
+  // The desk reads the video. The model writes ONE sentence per chapter and is
+  // never asked for a timestamp — the timestamps are the chapters' own, out of
+  // the description, so a row can always be clicked and always lands where it
+  // says it will. A video with no chapter list cannot be summarised this way,
+  // and the button says so rather than inventing a structure for it.
+  const summarizeVideo = useCallback(async () => {
+    const v = videoDesk?.video;
+    if (!v) return;
+    const chapters = v.chapters || [];
+    const m = usableAiModels()[0];
+    if (!m) { setVideoSummary({ status: "error", text: "Enable a model with a key (OpenRouter, Claude…) or a local model to have the desk read a video." }); return; }
+    const t0 = performance.now();
+    setVideoSummary({ status: "running" });
+    try {
+      const list = chapters.map((c, i) => `${i + 1}. ${c.label}`).join("\n");
+      const prompt = chapters.length
+        ? `A YouTube video titled "${v.title}" by ${v.channel} has these chapters:\n${list}\n\nWrite ONE sentence for each chapter, in that order, saying what an investor would take from it. Your own words, plain text, no timestamps, no numbering. Respond with ONLY minified JSON: {"lines":["","",...]} with exactly ${chapters.length} entries.`
+        : `Summarise what a YouTube video titled "${v.title}" by ${v.channel} is likely to cover, in three short sentences an investor would care about. Do not invent specific prices or claims. Respond with ONLY minified JSON: {"lines":["","",""]}.`;
+      let acc = "";
+      const ask = m.kind === "ollama" ? askOllama : m.kind === "gemini" ? askGemini : m.kind === "claude" ? askClaude : askOpenAICompat;
+      await ask(m, prompt, undefined, (tok) => { acc += tok; });
+      const clean = acc.replace(/```json|```/g, "").trim();
+      const a = clean.indexOf("{"), z = clean.lastIndexOf("}");
+      if (a < 0 || z < 0) throw new Error("The model returned nothing usable");
+      const lines = (JSON.parse(clean.slice(a, z + 1)).lines || []).map(s => String(s).trim()).filter(Boolean);
+      if (!lines.length) throw new Error("The model returned nothing usable");
+      // Zip against the chapters we HAVE. A model that returns too few lines
+      // costs us rows; one that returns too many cannot add timestamps we did
+      // not give it.
+      const rows = chapters.length
+        ? chapters.slice(0, lines.length).map((c, i) => ({ start: c.start, text: lines[i] }))
+        : lines.map((text, i) => ({ start: i, text }));
+      setVideoSummary({ status: "done", rows, checks: videoChecks(v), model: m.label, ms: Math.round(performance.now() - t0) });
+      speak("videodesk", rows.map(r => r.text).join(" "));
+    } catch (e) {
+      setVideoSummary({ status: "error", text: humanizeError(e) });
+    }
+  }, [videoDesk, speak, usableAiModels, videoChecks]);
+
+
 
   // ---- YouTube Data API: real, embeddable search results (no hallucinated IDs) ----
   const searchYouTube = useCallback(async (query, max = 3) => {
@@ -11056,10 +11189,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       if (canSearchVideos) {
         const videos = await searchYouTube(topic, 3);
         if (videos.length === 0) throw new Error(`No YouTube videos found for ${topic} — try different wording`);
-        setResp("nav", { status: "done", nav: true, links: [], videos, text: `Video coverage of ${topic}:` });
+        // These came from the Data API, so they carry a duration, a publish
+        // date and a description — everything the Video desk is built on. The
+        // first one opens; the rest become UP NEXT.
         const first = videos[0];
-        setPlayer({ id: first.id, ...first }); // real embeddable id — plays inline
-        fetchVideoBrief(first);                 // Claude writes the desk brief when an Anthropic key is set
+        setResp("nav", { status: "done", nav: true, links: [], videos: [], text: `Video coverage of ${topic} — on the desk below.` });
+        openVideoDesk(topic, videos);
         speak("nav", `Pulling up ${first.title} from ${first.channel}.`);
         return;
       }
@@ -11084,12 +11219,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       const a = clean.indexOf("{"), z = clean.lastIndexOf("}");
       const videos = JSON.parse(clean.slice(a, z + 1)).videos || [];
       if (videos.length === 0) throw new Error(`No video coverage found for ${topic} — try different wording`);
-      setResp("nav", { status: "done", nav: true, links: [], videos, text: `Video coverage of ${topic}:` });
       const first = videos[0];
       const id = ytId(first.url);
       const valid = id ? await probeYtId(id) : false;
-      // only embed a video that actually exists; otherwise open the card with a working "Watch on YouTube" link
-      setPlayer(valid ? { id, ...first } : { id: null, ...first, brief: first.brief || "This exact video couldn't be embedded — use “Watch on YouTube” below to find it." });
+      if (valid) {
+        // A model suggested this one, so there is no duration, no publish date
+        // and no description behind it. The Video desk opens anyway and simply
+        // has less to show — no duration chip, no chapter strip, and a ticker
+        // rail that says why it is empty. That is the whole point of deriving
+        // every readout instead of storing it.
+        setResp("nav", { status: "done", nav: true, links: [], videos: [], text: `Video coverage of ${topic} — on the desk below.` });
+        openVideoDesk(topic, [{ ...first, id }]);
+      } else {
+        // Nothing to embed: keep the card, which carries a working outbound link.
+        setResp("nav", { status: "done", nav: true, links: [], videos, text: `Video coverage of ${topic}:` });
+        setPlayer({ id: null, ...first, brief: first.brief || "This exact video couldn't be embedded — use “Watch on YouTube” below to find it." });
+      }
       speak("nav", `Pulling up ${first.title} from ${first.channel}. ${first.brief || ""}`);
     } catch (e) {
       setResp("nav", { status: "error", nav: true, links: [], videos: [], text: humanizeError(e) });
@@ -12198,7 +12343,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   })();
   // Does the desk have a result showing? Gates the "on the desk" verb cards,
   // which exist to fill the space when it does not.
-  const deskHasResult = !!aiResponses.nav || deskCalendar || deskPortfolio
+  const deskHasResult = !!aiResponses.nav || deskCalendar || deskPortfolio || !!videoDesk
     || !!(news && (news.news?.length > 0 || news.videos?.length > 0)) || newsBusy || !!newsErr || !!writtenReport;
 
   // ---- the navigator's answer, as a chat attachment ----
@@ -12345,6 +12490,27 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     </DeskCard>
   );
 
+  // ---- a video, opened on the desk ----
+  const videoDeskPanel = videoDesk && (
+    <div key="videodesk" id="sec-videodesk" style={{ minWidth: 0 }}>
+      <VideoDesk
+        topic={videoDesk.topic}
+        video={videoDesk.video}
+        durationSec={videoDesk.video.durationSec}
+        chapters={videoDesk.video.chapters}
+        hasDescription={videoDesk.video.description != null}
+        mentions={videoMentions}
+        queue={videoDesk.queue}
+        summary={videoSummary}
+        onSeekTicker={(m) => loadSymbolOnDesk(m.ticker)}
+        onPickQueue={pickQueuedVideo}
+        onSummarize={summarizeVideo}
+        onLoadMentions={videoMentions.length ? () => videoMentions.forEach(m => loadSymbolOnDesk(m.ticker)) : null}
+        onClose={() => { setVideoDesk(null); setVideoSummary(null); stopSpeak(); }}
+      />
+    </div>
+  );
+
   // What rides at the tail of the transcript.
   //
   // Everything the desk produces is the answer to something that was asked, so
@@ -12353,7 +12519,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // and the spoken reply in one column, the thing the question actually produced
   // in another. Order is the order they arrive in.
   const deskPanels = [
-    navPanel, calendarPanel, portfolioPanel, newsPanel, reportPanel,
+    navPanel, videoDeskPanel, calendarPanel, portfolioPanel, newsPanel, reportPanel,
     // These two were already attachments; they carry no key of their own.
     gamePanel && <React.Fragment key="game">{gamePanel}</React.Fragment>,
     catalogPanel && <React.Fragment key="catalog">{catalogPanel}</React.Fragment>,

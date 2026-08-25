@@ -52,6 +52,11 @@ const line = {
 // white against these near-blacks glares, and the reference never uses it.
 const ink = {
   primary: "#e6e8eb",  // headings, body
+  // Read-aloud body copy, and only that: the desk's own summaries of somebody
+  // else's words — a video digest, a story translated out of its jargon. It
+  // sits one step under primary so a paragraph the desk WROTE is visibly not
+  // the headline it is about, without dropping to the grey of supporting copy.
+  body: "#cfd4da",
   secondary: "#9aa3ae", // supporting copy
   tertiary: "#5b6470",  // metadata, labels, placeholders
 };
@@ -153,6 +158,7 @@ export const C = {
 
   // --- text ---
   textStrong: ink.primary,
+  textBody: ink.body,          // read-aloud copy the desk wrote about someone else's words
   textMuted: ink.secondary,
   textFaint: ink.tertiary,
   // Near-black on the green fill (6.3:1). #e6e8eb here would be 3.1:1 — below

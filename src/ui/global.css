@@ -790,8 +790,8 @@ button:not(:disabled):active { transform: scale(0.97); }
    The field keeps its aspect ratio throughout — it is a canvas, and letting it
    letterbox is what stops the units squashing. */
 @media (max-width: 1000px) {
-  .v-awbody, .v-chessbody { flex-direction: column; }
-  .v-awrail, .v-chessrail {
+  .v-awbody, .v-chessbody, .v-videobody { flex-direction: column; }
+  .v-awrail, .v-chessrail, .v-videorail {
     width: auto !important;
     border-left: none !important;
     border-top: 1px solid var(--v-edge);
@@ -996,3 +996,26 @@ button:not(:disabled):active { transform: scale(0.97); }
    than as the control that takes the thing away. */
 .v-clearx { transition: color var(--v-fast) var(--v-ease); }
 .v-clearx:hover { color: var(--v-text); }
+
+/* ---------- video desk ----------
+   Everything a pointer can act on in this panel answers it the same way the
+   rest of the product does: the border goes to the accent. The handoff asks
+   for it by name ("outline buttons lighten their border to #46a758"), and it
+   is here rather than inline because a hover cannot be written in a style
+   attribute — which is the reason these controls had no hover state at all in
+   the reference's own markup. */
+.v-chapseg, .v-outline, .v-upnext > span:first-child {
+  transition: border-color var(--v-base-dur) var(--v-ease), color var(--v-base-dur) var(--v-ease);
+}
+.v-chapseg:hover, .v-outline:hover, .v-upnext:hover > span:first-child { border-color: var(--v-accent); }
+
+/* The up-next row's target is the whole row, so the title has to acknowledge a
+   pointer the thumbnail border alone would not sell. */
+.v-upnext { transition: opacity var(--v-base-dur) var(--v-ease); }
+.v-upnext:hover { opacity: 0.82; }
+
+/* "Summarize on air" is the panel's one primary action and already carries the
+   accent, so it brightens rather than changing colour. */
+.v-onair { transition: background var(--v-base-dur) var(--v-ease); }
+.v-onair:not(:disabled):hover { background: rgba(70, 167, 88, 0.18) !important; }
+.v-onair:disabled { cursor: default; }

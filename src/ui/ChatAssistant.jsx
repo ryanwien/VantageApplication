@@ -28,6 +28,7 @@
 import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from "react";
 import { C, MONO, SANS, TYPE, R, SP, SHADOW, MOTION, button } from "./theme.js";
 import RichText from "./RichText.jsx";
+import Waveform from "./Waveform.jsx";
 import VantageMark from "./VantageMark.jsx";
 
 // Green text, not a filled chip. Three bordered pills under every answer turned
@@ -62,11 +63,7 @@ function MsgAction({ label, onClick, active, title }) {
 function OnAir({ who }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-      <span className="vt-bars" aria-hidden="true" style={{ display: "flex", alignItems: "flex-end", gap: 2.5, height: 16 }}>
-        {[60, 100, 45, 80].map((h, i) => (
-          <span key={i} style={{ width: 3, height: `${h}%`, background: C.accent, borderRadius: 2 }} />
-        ))}
-      </span>
+      <Waveform height={16} width={3} gap={2.5} />
       <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: C.accentText }}>On air</span>
       <span style={{ fontFamily: SANS, fontSize: 12, color: C.faint }}>
         {who ? `${who} is reading this answer` : "Reading this answer"}
