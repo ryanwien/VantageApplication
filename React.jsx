@@ -5117,6 +5117,52 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
       ctx.strokeStyle = "#232C3D"; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(0, deskY); ctx.lineTo(W, deskY); ctx.stroke();
 
+      // ---- teaching easel ----
+      //
+      // This used to be drawn with the ARMS, which is what put a lit screen on
+      // top of the anchor: its bottom-left corner sliced through the right
+      // shoulder and its left edge ran into the hair. Depth was the actual
+      // fault, not position — a studio monitor stands BEHIND the presenter, so
+      // it belongs here, before the body, where the shoulder, the hair and a
+      // stetson brim all occlude it for free.
+      //
+      // It is also 46 wide rather than 50 and clears the collar rather than
+      // crossing it, because the room is tight and measured: the head is 34
+      // wide, long hair reaches cx+38 and a cowboy brim cx+52, so on a 190px
+      // canvas the one free column is x 133-179 — between the hair and the
+      // frame, below the hats and above the shoulder line.
+      //
+      // Drawing it here also unhooks it from the arm pose, so the board stops
+      // blinking out of existence every time the anchor reaches for the mug.
+      const boardX = 156, boardW = 46, boardH = 34, boardTop = deskY - 112;
+      const boardB = boardTop + boardH;
+      if ((busy === "present" || busy === "teach") && s.busyAmt > 0.01) {
+        const ba = s.busyAmt;
+        const bw = boardW * ba, bh = boardH * ba, bl = boardX - bw / 2, bb = boardTop + bh;
+        ctx.save();
+        ctx.globalAlpha = ba;
+        // stand + foot. The screen sits higher than it used to, so the post is
+        // 72px long — at 2px and floating six above the surface it read as a
+        // wire, not a stand. It lands on the desk now, the way the mug does.
+        ctx.strokeStyle = "#2A3240"; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(boardX, bb); ctx.lineTo(boardX, deskY - 1); ctx.stroke();
+        ctx.fillStyle = "#2A3240";
+        ctx.beginPath(); ctx.ellipse(boardX, deskY - 1, 9, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+        // screen
+        ctx.fillStyle = "#0A0E16"; ctx.fillRect(bl, boardTop, bw, bh);
+        ctx.strokeStyle = C.amber; ctx.lineWidth = 1.4; ctx.strokeRect(bl, boardTop, bw, bh);
+        // little bar chart + rising arrow, slides on screen as it presents
+        const step = Math.floor(t / 1400);
+        for (let i = 0; i < 5; i++) {
+          const bhh = (5 + ((i * 7 + step * 3) % 18)) * ba;   // 23 max inside a 34-tall screen
+          ctx.fillStyle = i % 2 ? C.up : C.amber;
+          ctx.fillRect(bl + 5 + i * (bw - 12) / 5, bb - 5 - bhh, (bw - 16) / 6, bhh);
+        }
+        ctx.strokeStyle = C.up; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(bl + 5, bb - 8); ctx.lineTo(bl + bw - 5, boardTop + 8); ctx.stroke();
+        ctx.restore();
+      }
+
       // ---- body ----
       // Wrapped in the weight shift rather than adding `lean` to twenty
       // coordinates. The arms are drawn after this and stay put: at 1.4px on
@@ -5376,29 +5422,21 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
         hand(cx - 20, py + 12); hand(cx + 20, py + 12);
         drawMug(mugRest.x, mugRest.y);
       } else if (busy === "present" || busy === "teach") {
-        // presenting a deck (or teaching Stock School): a screen rises, the anchor points and sweeps at it
-        const ba = s.busyAmt;
-        const bw = 50 * ba, bh = 40 * ba, boardX = 152, boardTop = deskY - 98;
-        ctx.save();
-        ctx.globalAlpha = ba;
-        // stand
-        ctx.strokeStyle = "#2A3240"; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(boardX, boardTop + bh); ctx.lineTo(boardX, deskY - 6); ctx.stroke();
-        // screen
-        ctx.fillStyle = "#0A0E16"; ctx.fillRect(boardX - bw / 2, boardTop, bw, bh);
-        ctx.strokeStyle = C.amber; ctx.lineWidth = 1.4; ctx.strokeRect(boardX - bw / 2, boardTop, bw, bh);
-        // little bar chart + rising arrow, slides on screen as it presents
-        const step = Math.floor(t / 1400);
-        for (let i = 0; i < 5; i++) {
-          const bhh = (6 + ((i * 7 + step * 3) % 22)) * ba;
-          ctx.fillStyle = i % 2 ? C.up : C.amber;
-          ctx.fillRect(boardX - bw / 2 + 5 + i * (bw - 12) / 5, boardTop + bh - 5 - bhh, (bw - 16) / 6, bhh);
-        }
-        ctx.strokeStyle = C.up; ctx.lineWidth = 1.6;
-        ctx.beginPath(); ctx.moveTo(boardX - bw / 2 + 5, boardTop + bh - 8); ctx.lineTo(boardX + bw / 2 - 5, boardTop + 8); ctx.stroke();
-        ctx.restore();
-        // pointing arm sweeps toward the screen
-        const px = boardX - bw / 2 - 6 + Math.sin(t / 320) * 3, py2 = boardTop + bh / 2 + Math.cos(t / 320) * 4;
+        // presenting a deck (or teaching Stock School). The easel itself is
+        // drawn back with the desk; only the arm belongs in front of it.
+        //
+        // The hand traces the BOTTOM edge of the board, not its middle. Reaching
+        // for the middle put it at cheek height, where the head is drawn over it
+        // — a pointing arm that ends in nothing. It also tracks the board's full
+        // size rather than its eased one, so the hand holds still and the screen
+        // grows into it instead of the arm swinging in from the corner.
+        const px = boardX - 10 + Math.sin(t / 320) * 6, py2 = boardB + 7 + Math.cos(t / 320) * 2;
+        // The sleeve and the jacket are the same flat colour, so an arm raised
+        // across the chest disappears into it and leaves the hand floating in
+        // mid-air. A darker stroke underneath separates the two — the same job
+        // the highlight seams do on the shoulders.
+        ctx.strokeStyle = "rgba(0,0,0,0.38)"; ctx.lineWidth = 14; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(cx + 30, deskY - 16); ctx.lineTo(px, py2); ctx.stroke();
         arm(cx + 30, deskY - 16, px, py2);
         hand(px, py2, 5.5);
         arm(cx - 34, deskY - 18, cx - 26, deskY - 6); hand(cx - 26, deskY - 6);
