@@ -749,7 +749,12 @@ button:not(:disabled):active { transform: scale(0.97); }
    and very faint — it is there to stop a static field reading as a screenshot,
    not to be noticed. */
 @keyframes v-fieldscan { from { transform: translateX(-100%); } to { transform: translateX(1100px); } }
-@keyframes v-boardscan { from { transform: translateY(-100%); } to { transform: translateY(620px); } }
+/* Travelled against the board rather than a fixed 620px. The reference's board
+   is one size and could hard-code the distance; ours sizes itself from its
+   container, and at the 22px square a phone gets, a sweep aimed at 620px is off
+   the bottom for most of its nine seconds. Eight squares plus the file-letter
+   row is exactly the board, at every size it takes. */
+@keyframes v-boardscan { from { transform: translateY(-100%); } to { transform: translateY(calc(var(--sq, 58px) * 8 + 20px)); } }
 .v-fieldscan { animation: v-fieldscan 6s linear infinite; }
 .v-boardscan { animation: v-boardscan 9s linear infinite; }
 
@@ -820,12 +825,25 @@ button:not(:disabled):active { transform: scale(0.97); }
     border-top: 1px solid var(--v-edge);
     padding: 18px 22px !important;
   }
-  .v-awhud { flex-wrap: wrap; }
 }
 @media (max-width: 720px) {
   .v-awdeploy { grid-template-columns: 1fr !important; }
-  .v-awhud > div { min-width: 0; }
 }
+
+/* The HUD wraps by CONTENT, not at a breakpoint — the same argument the board
+   makes below, and for the same reason. Its three parts need roughly 780px
+   before they start overlapping, and the viewport is a poor proxy for that: on
+   a 1180px desktop the panel is 770px, so every breakpoint said "plenty of
+   room" while the Bears' clock hung off the right edge. Allowing the wrap
+   unconditionally costs nothing at 1240px, where all three still fit on one
+   line, and is simply correct at every width below it.
+
+   There is deliberately no `min-width: 0` here. That was the rule that broke it:
+   a flex item told it may shrink to nothing does exactly that, and the two side
+   halves collapsed to eight pixels with a clock hanging out of each. Left to
+   their automatic minimum they stop at the width of their own content, which is
+   the width at which the line is supposed to break. */
+.v-awhud { flex-wrap: wrap; }
 
 /* ---------- marketing homepage ----------
    The handoff's measure is 1200px. Everything here is layout that has to
@@ -938,7 +956,7 @@ button:not(:disabled):active { transform: scale(0.97); }
    survive the same treatment, and any single hover colour would flatten one of
    them into another. */
 .v-chesssq { transition: filter var(--v-fast) var(--v-ease); }
-.v-chesssq:not(:disabled):hover { filter: brightness(1.22); }
+.v-chesssq:not([aria-disabled="true"]):hover { filter: brightness(1.22); }
 
 /* The move chips in the turn card, and the two arrows on the review scrubber.
    Same accent-on-hover contract as the games' outline buttons. */

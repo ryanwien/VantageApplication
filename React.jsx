@@ -624,7 +624,6 @@ const I18N = {
     "Ruthless": "Despiadado",
     "Ruthless is one segment along. The house stops trading pieces evenly.": "Despiadado está un segmento más allá. Ahí la casa deja de cambiar piezas de igual a igual.",
     "Stalemate — nobody wins": "Rey ahogado: no gana nadie",
-    "Stepping back through the game. The board is not live.": "Estás repasando la partida. El tablero no está en juego.",
     "Swap seats and play it back the other way.": "Cambiad de sitio y jugadla al revés.",
     "TIME LEFT": "TIEMPO RESTANTE",
     "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Toca una pieza para ver adónde puede ir y luego toca una casilla o una de las fichas del panel.",
@@ -644,7 +643,6 @@ const I18N = {
     "You were well down on material before the mate. Trade only when you win the trade.": "Ibas muy por detrás en material antes del mate. Cambia solo cuando ganes el cambio.",
     "Your king had nowhere to run.": "Tu rey no tenía adónde huir.",
     "back to result": "volver al resultado",
-    "back to the game": "volver a la partida",
     "dead even": "totalmente igualada",
     "deselect": "deseleccionar",
     "first player": "jugador uno",
@@ -1289,7 +1287,6 @@ const I18N = {
     "Ruthless": "Impitoyable",
     "Ruthless is one segment along. The house stops trading pieces evenly.": "Impitoyable est juste à côté. Là, la maison cesse d'échanger les pièces à parts égales.",
     "Stalemate — nobody wins": "Pat — personne ne gagne",
-    "Stepping back through the game. The board is not live.": "Vous remontez la partie. L'échiquier n'est pas en jeu.",
     "Swap seats and play it back the other way.": "Changez de place et rejouez-la dans l'autre sens.",
     "TIME LEFT": "TEMPS RESTANT",
     "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Touchez une pièce pour voir où elle peut aller, puis touchez une case ou l'une des pastilles du panneau.",
@@ -1309,7 +1306,6 @@ const I18N = {
     "You were well down on material before the mate. Trade only when you win the trade.": "Vous étiez largement en retard au matériel avant le mat. N'échangez que quand l'échange est à votre avantage.",
     "Your king had nowhere to run.": "Votre roi n'avait nulle part où fuir.",
     "back to result": "retour au résultat",
-    "back to the game": "retour à la partie",
     "dead even": "parfaitement égal",
     "deselect": "désélectionner",
     "first player": "joueur un",
@@ -1954,7 +1950,6 @@ const I18N = {
     "Ruthless": "Gnadenlos",
     "Ruthless is one segment along. The house stops trading pieces evenly.": "Gnadenlos ist ein Segment weiter. Dort tauscht das Haus nicht mehr auf Augenhöhe.",
     "Stalemate — nobody wins": "Patt — niemand gewinnt",
-    "Stepping back through the game. The board is not live.": "Du gehst die Partie zurück. Das Brett ist nicht im Spiel.",
     "Swap seats and play it back the other way.": "Plätze tauschen und andersherum spielen.",
     "TIME LEFT": "RESTZEIT",
     "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Tippe eine Figur an, um zu sehen, wohin sie kann, und dann ein Feld oder einen der Chips in der Leiste.",
@@ -1974,7 +1969,6 @@ const I18N = {
     "You were well down on material before the mate. Trade only when you win the trade.": "Vor dem Matt lagst du beim Material klar zurück. Tausche nur, wenn du den Tausch gewinnst.",
     "Your king had nowhere to run.": "Dein König hatte kein Feld mehr.",
     "back to result": "zurück zum Ergebnis",
-    "back to the game": "zurück zur Partie",
     "dead even": "völlig ausgeglichen",
     "deselect": "Auswahl aufheben",
     "first player": "Spieler eins",
@@ -2618,7 +2612,6 @@ const I18N = {
     "Ruthless": "Impiedoso",
     "Ruthless is one segment along. The house stops trading pieces evenly.": "Impiedoso está um segmento adiante. Aí a casa deixa de trocar peças de igual para igual.",
     "Stalemate — nobody wins": "Rei afogado: ninguém ganha",
-    "Stepping back through the game. The board is not live.": "Estás a recuar na partida. O tabuleiro não está em jogo.",
     "Swap seats and play it back the other way.": "Troquem de lugar e joguem ao contrário.",
     "TIME LEFT": "TEMPO RESTANTE",
     "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Toca numa peça para veres para onde pode ir e depois toca numa casa ou num dos chips do painel.",
@@ -2638,7 +2631,6 @@ const I18N = {
     "You were well down on material before the mate. Trade only when you win the trade.": "Estavas muito atrás em material antes do mate. Troca só quando ganhas a troca.",
     "Your king had nowhere to run.": "O teu rei não tinha para onde fugir.",
     "back to result": "voltar ao resultado",
-    "back to the game": "voltar à partida",
     "dead even": "totalmente equilibrada",
     "deselect": "desselecionar",
     "first player": "jogador um",
@@ -3282,7 +3274,6 @@ const I18N = {
     "Ruthless": "Spietato",
     "Ruthless is one segment along. The house stops trading pieces evenly.": "Spietato è un segmento più in là. Lì il banco smette di scambiare pezzi alla pari.",
     "Stalemate — nobody wins": "Stallo — non vince nessuno",
-    "Stepping back through the game. The board is not live.": "Stai tornando indietro nella partita. La scacchiera non è in gioco.",
     "Swap seats and play it back the other way.": "Cambiate posto e rigiocatela al contrario.",
     "TIME LEFT": "TEMPO RIMASTO",
     "Tap a piece to see where it can go, then tap a square or one of the chips in the rail.": "Tocca un pezzo per vedere dove può andare, poi tocca una casa o uno dei chip nella barra.",
@@ -3302,7 +3293,6 @@ const I18N = {
     "You were well down on material before the mate. Trade only when you win the trade.": "Eri molto sotto di materiale prima del matto. Cambia solo quando il cambio è tuo.",
     "Your king had nowhere to run.": "Il tuo re non aveva dove scappare.",
     "back to result": "torna al risultato",
-    "back to the game": "torna alla partita",
     "dead even": "perfettamente pari",
     "deselect": "deseleziona",
     "first player": "giocatore uno",
@@ -4080,7 +4070,10 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
     clearTimeout(animTimer.current); setAnim(null);
   };
 
-  const finish = (winner, by) => { setEnd({ winner, by }); onWin?.(winner); };
+  // `house` goes with the winner because the anchor's reaction depends on it:
+  // in a two-player game the Bears winning is somebody at this keyboard winning,
+  // and there is nobody to commiserate with.
+  const finish = (winner, by) => { setEnd({ winner, by }); onWin?.(winner, house); };
 
   // Commit a move — from the player or from the house — then end the game or
   // pass the turn. Endings are real chess: checkmate wins, stalemate draws.
@@ -4184,7 +4177,13 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
     return out;
   }, [moves, review]);
   const edge = counts.w.material - counts.b.material;      // in pawns, Bulls' point of view
+  // Two spellings of one number, and they are not a slip. The POSITION card is
+  // an evaluation bar, and a decimal is the convention that says so — every
+  // engine on earth writes a clean pawn as "+1.0". The end card's MATERIAL is a
+  // final count of pawns, where a ".0" that is always ".0" promises a precision
+  // a whole-piece tally does not have. The reference prints both, exactly here.
   const evalText = edge === 0 ? "0.0" : `${edge > 0 ? "+" : "−"}${Math.abs(edge).toFixed(1)}`;
+  const edgeText = edge === 0 ? "0" : `${edge > 0 ? "+" : "−"}${Math.abs(edge)}`;
   // tanh rather than a linear clamp: the difference between level and a pawn up
   // is worth seeing, and the difference between eight up and nine up is not.
   const evalFrac = 0.5 + 0.5 * Math.tanh(edge / 6);
@@ -4197,9 +4196,20 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
     }
     return null;
   }, [checkNow, board, turn]);
-  const moveNo = Math.floor(moves.length / 2) + 1;
+  // Moves, not half-moves — and the same count everywhere, because a header
+  // reading "move 3" beside an end card reading "MOVE 4" over a log that plainly
+  // shows two is three numbers for one fact and no way to tell which is the
+  // game's. While it is live the header names the move ABOUT to be played;
+  // once it is over there is no such move, so it names the last one there was.
+  const movesPlayed = Math.ceil(moves.length / 2);
+  const moveNo = end ? Math.max(1, movesPlayed) : Math.floor(moves.length / 2) + 1;
   const pairs = [];
   for (let i = 0; i < moves.length; i += 2) pairs.push([moves[i], moves[i + 1]]);
+  // The move that has not happened yet. It carries the suggestion when there is
+  // one, so the log's last row is a question rather than a placeholder — and the
+  // square it names is the same one the board's bright dot and the rail's green
+  // chip are already pointing at.
+  const pending = live ? (sel && suggest ? `${chessSan(board, sel, suggest)} ?` : "?") : null;
 
   // ---- copy ----
   // Every lookup below is spelled out as literal t() calls rather than
@@ -4242,9 +4252,9 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
   // The turn card's sentence. It describes what is true of the board right now,
   // and nothing else — which is why the selected-piece line lists the squares
   // the rail's chips are about to offer.
-  const turnLine = review !== null
-    ? t("Stepping back through the game. The board is not live.")
-    : end ? t("The game is over. Play again, or step back through it.")
+  // No branch for review here: the scrubber REPLACES this card, so a line
+  // written for it is a line that cannot be reached.
+  const turnLine = end ? t("The game is over. Play again, or step back through it.")
     : checkNow && yours ? t("Your king is in check — you have to answer it.")
     : checkNow ? t("The Bears' king is in check.")
     : !yours ? t("The house is choosing its move.")
@@ -4358,19 +4368,31 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
       {/* ---- HUD strip ---- */}
       {/* Mirrored on purpose. Both sides carry the same three facts in the same
           three places, so "am I ahead" is a comparison of two positions rather
-          than a reading of six numbers. */}
+          than a reading of six numbers.
+          Each half is about ONE army: what it still has, what that is worth,
+          and what it has LOST. Not what it has taken — that number belongs to
+          the other half of the strip, where it is already printed as a piece
+          count, and reading it here left the row unable to add up: "16 PIECES
+          … 1 TAKEN" is seventeen pieces. Who is HOLDING what is the trays'
+          question, and the trays are a few inches away and say so. */}
       <div className="v-awhud" style={{ display: "flex", alignItems: "center", gap: 20, padding: "15px 22px", borderBottom: `1px solid ${C.edge}` }}>
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+        {/* No minWidth: 0 on either half. They are what the HUD wraps BETWEEN,
+            and an item allowed to shrink to nothing never makes its line break —
+            it just collapses and lets its own contents hang out of it. */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ textAlign: "right", minWidth: 96 }}>
             <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{house ? t("BULLS · YOU") : t("BULLS")}</div>
             <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: C.accentText, lineHeight: 1.1 }}>{chessClock(clock.w)}</div>
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             {meter(counts.w.material / 39, FIELD.youMeter)}
-            <div style={{ display: "flex", gap: 8, marginTop: 7, ...metaMono }}>
+            {/* Three facts and two separators at 10.5px is about 200px of mono
+                that will not break on its own, and it was the thing pushing the
+                clock off the edge of a narrow panel. Let it wrap. */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, ...metaMono }}>
               <span>{t("{n} PIECES").replace("{n}", String(counts.w.pieces))}</span>{sep}
               <span>{t("MATERIAL {n}").replace("{n}", String(counts.w.material))}</span>{sep}
-              <span>{t("{n} TAKEN").replace("{n}", String(held.w.length))}</span>
+              <span>{t("{n} TAKEN").replace("{n}", String(held.b.length))}</span>
             </div>
           </div>
         </div>
@@ -4387,11 +4409,11 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
           <div style={{ fontFamily: SANS, fontSize: 10.5, color: C.faint, marginTop: 5 }}>{evalNote}</div>
         </div>
 
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             {meter(counts.b.material / 39, FIELD.foeMeter)}
-            <div style={{ display: "flex", gap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
-              <span>{t("{n} TAKEN").replace("{n}", String(held.b.length))}</span>{sep}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
+              <span>{t("{n} TAKEN").replace("{n}", String(held.w.length))}</span>{sep}
               <span>{t("MATERIAL {n}").replace("{n}", String(counts.b.material))}</span>{sep}
               <span>{t("{n} PIECES").replace("{n}", String(counts.b.pieces))}</span>
             </div>
@@ -4457,7 +4479,14 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
                       const inDanger = checkedKing && checkedKing.r === r && checkedKing.c === c;
                       const inFlight = anim && anim.to.r === r && anim.to.c === c;
                       return (
-                        <button key={`${r}-${c}`} onClick={() => clickSquare(r, c)} disabled={!canAct}
+                        // aria-disabled, not disabled. A disabled button leaves
+                        // the tab order, and for two thirds of this game — the
+                        // house's turn, and every second of Review moves — that
+                        // took all 64 squares with it. A board you cannot reach
+                        // is a board you cannot read, so "Review moves" was a
+                        // feature no keyboard or screen-reader user had. The
+                        // click is refused by clickSquare either way.
+                        <button key={`${r}-${c}`} onClick={() => clickSquare(r, c)} aria-disabled={!canAct}
                           className={`v-chesssq${isSel ? " v-selring" : ""}`}
                           aria-label={`${chessSquare(r, c)}${p ? ` — ${p.s === "w" ? t("Bulls") : t("Bears")} ${pieceWord(p.t)}` : ""}`}
                           style={{
@@ -4539,7 +4568,7 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
                 }}>{chessGlyph(won ? "w" : "b", "k")}</span>
                 <div style={{ position: "relative" }}>
                   <div style={{ ...metaMono, fontSize: 10.5, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
-                    {t("MOVE {n} · {clock}").replace("{n}", String(moves.length)).replace("{clock}", chessClock(end.winner === "b" ? clock.b : clock.w))}
+                    {t("MOVE {n} · {clock}").replace("{n}", String(movesPlayed)).replace("{clock}", chessClock(end.winner === "b" ? clock.b : clock.w))}
                   </div>
                   <div style={{ fontFamily: SANS, fontSize: 34, fontWeight: 700, letterSpacing: "-1px", marginTop: 10, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both", color: end.winner === "draw" ? C.warn : won ? C.accentText : C.down }}>
                     {headline}
@@ -4547,8 +4576,8 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
                   <div style={{ fontFamily: SANS, fontSize: 15, color: C.muted, marginTop: 8, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>{subline}</div>
                   <div style={{ display: "flex", gap: 26, justifyContent: "center", marginTop: 22, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
                     {[
-                      [t("MOVES"), String(moves.length), C.text],
-                      [t("MATERIAL"), evalText, edge > 0 ? C.accentText : edge < 0 ? C.down : C.text],
+                      [t("MOVES"), String(movesPlayed), C.text],
+                      [t("MATERIAL"), edgeText, edge > 0 ? C.accentText : edge < 0 ? C.down : C.text],
                       // The winner's clock, because the headline is about them.
                       [t("TIME LEFT"), chessClock(end.winner === "b" ? clock.b : clock.w), C.text],
                     ].map(([label, value, color]) => (
@@ -4616,7 +4645,9 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
                   style={{ background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: R.xs, padding: "5px 12px", fontFamily: MONO, fontSize: 11.5, color: C.muted, cursor: "pointer" }}>›</button>
                 <button onClick={() => setReview(null)}
                   style={{ marginLeft: "auto", background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 11.5, cursor: "pointer", padding: 0 }}>
-                  {end ? t("back to result") : t("back to the game")}
+                  {/* Always the result: review is only reachable from the end
+                      card, so there is no live game to go back to. */}
+                  {t("back to result")}
                 </button>
               </div>
             </div>
@@ -4665,23 +4696,26 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
                 fresh game shows two lines and a long one fills the rail rather
                 than scrolling inside a third of it. */}
             <div ref={logRef} style={{ ...railCard, padding: "11px 12px", fontFamily: MONO, fontSize: 11.5, lineHeight: 1.9, maxHeight: 300, overflowY: "auto" }}>
-              {pairs.map(([w, b], i) => (
-                <div key={i} style={{ display: "flex", gap: 12 }}>
-                  <span style={{ color: FIELD.quinary, width: 16, flexShrink: 0 }}>{i + 1}.</span>
-                  <span style={{ color: C.bullPiece, minWidth: 54 }}>{w.san}</span>
-                  <span style={{ color: C.bearPiece }}>{b ? b.san : ""}</span>
-                </div>
-              ))}
-              {/* The move that has not happened yet. It carries the suggestion
-                  when there is one, so the row is a question rather than a
-                  placeholder — and the suggestion is the same square the board
-                  and the chips are already pointing at. */}
-              {live && (
+              {pairs.map(([w, b], i) => {
+                // A half-move that has not happened yet belongs in ITS OWN
+                // row's black column, not in a second row wearing the same
+                // number. The log used to print "2. dxe5" and then "2. … ?"
+                // underneath it, which is a log you cannot count moves in.
+                const awaiting = pending && turn === "b" && !b && i === pairs.length - 1;
+                return (
+                  <div key={i} style={{ display: "flex", gap: 12 }}>
+                    <span style={{ color: FIELD.quinary, width: 16, flexShrink: 0 }}>{i + 1}.</span>
+                    <span style={{ color: C.bullPiece, minWidth: 54 }}>{w.san}</span>
+                    <span style={{ color: awaiting ? FIELD.quaternary : C.bearPiece, opacity: awaiting ? 0.6 : 1 }}>
+                      {awaiting ? pending : b ? b.san : ""}
+                    </span>
+                  </div>
+                );
+              })}
+              {pending && turn === "w" && (
                 <div style={{ display: "flex", gap: 12, opacity: 0.6 }}>
                   <span style={{ color: FIELD.quinary, width: 16, flexShrink: 0 }}>{moveNo}.</span>
-                  <span style={{ color: FIELD.quaternary }}>
-                    {turn === "b" ? "… " : ""}{sel && suggest ? `${chessSan(board, sel, suggest)} ?` : "?"}
-                  </span>
+                  <span style={{ color: FIELD.quaternary }}>{pending}</span>
                 </div>
               )}
               {moves.length === 0 && <div style={{ color: FIELD.quinary }}>{t("— game just started")}</div>}
@@ -13270,10 +13304,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         />, true);
     }
     if (gameMode === "chess") {
+      // "break" is the settling two-note chime, "cheer" the rising arpeggio. A
+      // stalemate is not a win for anyone, and a Bears win in a two-player game
+      // is a win for whoever was playing them.
       return shell(null, null, null,
         <ChessGame
           sfx={chessSfx}
-          onWin={(w) => triggerAnchor(w === "b" ? "break" : "cheer", {
+          onWin={(w, vsHouse) => triggerAnchor(w === "draw" || (vsHouse && w === "b") ? "break" : "cheer", {
             label: w === "draw" ? "STALEMATE" : w === "w" ? "BULLS WIN" : "BEARS WIN",
           })}
           onCheer={() => {}}
