@@ -1086,10 +1086,30 @@ button:not(:disabled):active { transform: scale(0.97); }
    Six across, as the reference draws it. The step-downs are 3 and 2 rather
    than whatever fits, because 6, 3 and 2 all divide the six titles exactly —
    an auto-fill grid at five columns would leave one poster stranded on a row
-   of its own, which looks like a bug in a list whose header says "top 6". */
+   of its own, which looks like a bug in a list whose header says "top 6".
+
+   Against the SHELF, not the viewport — the same correction the chess board
+   above and the Algorithm Wars HUD below both needed, and for the same reason:
+   this panel is a chat attachment, so its width has almost nothing to do with
+   the window's. On a 1300px desktop the desk hands it about 640px, every
+   viewport query said "plenty of room for six", and six columns of a 640px
+   shelf is an 89px poster — narrow enough that the ★ rating pill in the top
+   right OVERLAPPED the #1 rank badge in the top left by nine pixels. Measured,
+   at a width the product actually renders at.
+
+   The breakpoints are the poster's, not the panel's: a column holds while a
+   poster can stay wide enough for those two badges to sit side by side, which
+   is about 100px and comfortable by 120. 820px of shelf is six at 127; 430px
+   is three at 136; 210px is two at 99, and below that it is one — measured, not
+   guessed, and 1 divides six exactly the way 6, 3 and 2 do. That last step
+   matters: the narrowest this panel is ever drawn is the 259px a phone gives
+   it, which lands two posters at 100px with three pixels between the badges.
+   There is no margin left there, so the floor is stated rather than trusted. */
+.v-movieshelf { container-type: inline-size; }
 .v-moviegrid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
-@media (max-width: 1100px) { .v-moviegrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 560px)  { .v-moviegrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 820px) { .v-moviegrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@container (max-width: 430px) { .v-moviegrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 210px) { .v-moviegrid { grid-template-columns: minmax(0, 1fr); } }
 
 /* "posters lift 4px with a green border on hover" — the handoff's own words,
    and 4px rather than .v-lift's 2px because a 2:3 poster is a big target and

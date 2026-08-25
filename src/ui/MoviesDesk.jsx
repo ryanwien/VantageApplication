@@ -34,7 +34,7 @@
 //  src/movies/movies.js, so this file never decides what is true about a film.
 // ============================================================
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { C, MONO, SANS, TYPE, R, segmentTrack, segmentItem } from "./theme.js";
 import DeskIcon from "./DeskIcon.jsx";
 import Waveform from "./Waveform.jsx";
@@ -49,6 +49,35 @@ const outlineBtn = {
   padding: "7px 13px", fontFamily: SANS, fontSize: 12.5, color: C.muted, cursor: "pointer",
 };
 
+// ---------- the artwork ----------
+// A poster, or the honest absence of one. Having a URL and having a picture are
+// two different facts, and this used to test only the first: a poster that
+// failed to load left the <img> sitting in the box at its natural size of
+// nothing, so the card was a blank rectangle with a rank badge and a rating
+// floating on it, and the NO POSTER tile written for exactly this case could
+// never appear. It matters most on the free-films shelf, where the art comes
+// from archive.org/services/img/{id} — an endpoint that genuinely has nothing
+// for a good number of identifiers.
+//
+// The reset is keyed on the url because a shelf re-renders in place: the sixth
+// card of one search becomes the sixth card of the next, and a failure carried
+// across would blank a poster that loads perfectly well.
+function Poster({ url }) {
+  const [bad, setBad] = useState(false);
+  useEffect(() => { setBad(false); }, [url]);
+  if (!url || bad) {
+    return (
+      <span style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", color: C.faint, fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", padding: 8, textAlign: "center" }}>
+        NO POSTER
+      </span>
+    );
+  }
+  return (
+    <img src={url} alt="" loading="lazy" onError={() => setBad(true)}
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+  );
+}
+
 // ---------- one poster ----------
 function TitleCard({ item, rank, index, open, onOpen, archive }) {
   const rating = ratingText(item.rating);
@@ -62,9 +91,7 @@ function TitleCard({ item, rank, index, open, onOpen, archive }) {
           borderRadius: R.md, overflow: "hidden", cursor: "pointer",
           border: `1px solid ${open ? C.accent : C.edge}`, background: C.surface,
         }}>
-        {item.poster
-          ? <img src={item.poster} alt="" loading="lazy" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-          : <span style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", color: C.faint, fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", padding: 8, textAlign: "center" }}>NO POSTER</span>}
+        <Poster url={item.poster} />
         {/* Both overlays are inert. The handoff learned this the hard way on
             its own drop slots: anything sitting on top of the target eats the
             click where the artwork most invites one. */}
@@ -99,9 +126,13 @@ function Summary({ item, heading, rank, speaking, details, onTrailer, onWatchOn,
   return (
     <div style={{ borderTop: `1px solid ${C.edge}`, padding: "20px 22px" }}>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        {/* Gated on there being a path at all — beside a paragraph, a poster is
+            decoration, and an empty frame is worse than no frame. Once there IS
+            one the same rule as the grid applies: a url that does not resolve
+            says so rather than leaving a blank rectangle. */}
         {item.poster && (
           <div style={{ width: 128, flex: "0 0 auto", position: "relative", borderRadius: R.md, overflow: "hidden", border: `1px solid ${C.edge}`, aspectRatio: "2 / 3" }}>
-            <img src={item.poster} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            <Poster url={item.poster} />
           </div>
         )}
         <div style={{ flex: "1 1 260px", minWidth: 0 }}>
@@ -203,8 +234,19 @@ export default function MoviesDesk({
       {catalog.loading ? (
         <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "18px 22px" }}>
           <span className="v-pulse" aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, flexShrink: 0 }} />
+          {/* "Pulling Netflix — movies on the desk", the reference's line, works
+              because Netflix is a brand and "movies" says what we are taking
+              from it. The other two lists are named for what they ARE, and the
+              template turned that into "Pulling Free films — films on the desk"
+              and "Pulling Trending — movies on the desk". A panel that cannot
+              say one sentence about itself is not going to be believed about
+              the ratings. Three lists, three sentences. */}
           <span style={{ fontFamily: SANS, fontSize: 14, color: C.muted }}>
-            Pulling {name} — {archive ? "films" : catalog.kind === "tv" ? "shows" : "movies"} on the desk.
+            {catalog.service
+              ? `Pulling ${name} — ${catalog.kind === "tv" ? "shows" : "movies"} on the desk.`
+              : archive
+                ? "Pulling free films onto the desk."
+                : `Pulling this week's trending ${catalog.kind === "tv" ? "shows" : "movies"} onto the desk.`}
           </span>
         </div>
       ) : catalog.error ? (
@@ -213,16 +255,21 @@ export default function MoviesDesk({
         <div style={{ padding: "18px 22px", fontFamily: SANS, fontSize: 13.5, color: C.faint }}>Nothing came back. Try another search.</div>
       ) : (
         <>
-          <div className="v-moviegrid" style={{ padding: "18px 22px 20px" }}>
-            {items.map((it, i) => (
-              <TitleCard key={it.archiveId || it.id || i} item={it} index={i}
-                // A rank on the archive list would be a chart position invented
-                // out of a keyword search's result order.
-                rank={archive ? null : i + 1}
-                open={pickIndex === i}
-                archive={archive}
-                onOpen={() => onOpen?.(it, i)} />
-            ))}
+          {/* The shelf is the query container; the grid inside it is what the
+              query sizes. Two elements because an element cannot ask its own
+              size — the same split as .v-chessboard / .v-chessgrid. */}
+          <div className="v-movieshelf" style={{ padding: "18px 22px 20px" }}>
+            <div className="v-moviegrid">
+              {items.map((it, i) => (
+                <TitleCard key={it.archiveId || it.id || i} item={it} index={i}
+                  // A rank on the archive list would be a chart position invented
+                  // out of a keyword search's result order.
+                  rank={archive ? null : i + 1}
+                  open={pickIndex === i}
+                  archive={archive}
+                  onOpen={() => onOpen?.(it, i)} />
+              ))}
+            </div>
           </div>
 
           {pick && !archive && (
