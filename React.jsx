@@ -8570,8 +8570,18 @@ function DeskCard({ icon, title, note, actions, onClose, closeLabel, padded = tr
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
           {actions}
+          {/* v-tap AND v-clearx, because they answer different pointers.
+              v-tap relaxes this to 44x44 on a coarse pointer and nothing at
+              all otherwise, which left the glyph at 15 by 18 on every mouse
+              and trackpad — under the 24x24 floor, which is not a touch rule.
+              It also misses a touchscreen laptop, which reports a fine pointer
+              while a mouse is plugged in and still gets poked with a finger.
+              v-clearx adds the always-on 30x44 pseudo-target the panel closes
+              already use, and the hover colour that comes with it: this ✕ had
+              none, so the one control that dismisses a card gave no sign it
+              was a control. */}
           {onClose && (
-            <button onClick={onClose} aria-label={closeLabel || "Close"} className="v-tap"
+            <button onClick={onClose} aria-label={closeLabel || "Close"} className="v-tap v-clearx"
               style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 14, lineHeight: 1, padding: 2 }}>✕</button>
           )}
         </span>
