@@ -11699,11 +11699,27 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   // headline takes when you hand it over. It names the six it was given, so
   // the answer is about what is on the screen rather than about films in
   // general.
-  const askDeskToPick = useCallback(() => {
+  //
+  // NOT a useCallback, and that is the fix for a crash rather than a style
+  // choice. It was `useCallback(fn, [catalog, askDesk])`, and askDesk is a
+  // plain const declared six hundred lines further down this component — so
+  // naming it in a dependency array, which React evaluates during render,
+  // read it inside its temporal dead zone and threw
+  // "Cannot access 'askDesk' before initialization" every single render.
+  // MarketDashboard rendered white for anyone signed in; the marketing page
+  // and the auth gate are separate components, which is why the front door
+  // looked fine.
+  //
+  // Memoising a caller of askDesk could not have worked anyway: askDesk is
+  // rebuilt on every render, so the dependency it was keyed on changed on
+  // every render. The memo was buying nothing and costing the dashboard. The
+  // one consumer passes this straight down as a prop and does not key an
+  // effect on its identity.
+  const askDeskToPick = () => {
     const list = (catalog?.items || []).map(i => `${i.title}${i.year ? ` (${i.year})` : ""}`).filter(Boolean).join("; ");
     if (!list) return;
     askDesk(`Pick one of these for me tonight and say why in two short sentences: ${list}.`);
-  }, [catalog, askDesk]);
+  };
   const fetchVideoBrief = useCallback(async (v) => {
     try {
       if (!anthropicApiKey.trim()) return;
