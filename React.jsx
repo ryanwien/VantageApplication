@@ -329,6 +329,9 @@ const I18N = {
     "Panels": "Paneles",
     "Pause": "Pausar",
     "Paused": "En pausa",
+    "Resume": "Reanudar",
+    "PAUSED": "EN PAUSA",
+    "Nothing moves — your bots, the enemy's and the capital all hold.": "Nada se mueve: tus bots, los del enemigo y el capital, todo en espera.",
     "Pick your anchor": "Elige tu presentador",
     "Preview voice": "Escuchar la voz",
     "Price triggers": "Disparadores de precio",
@@ -1037,6 +1040,9 @@ const I18N = {
     "Panels": "Panneaux",
     "Pause": "Mettre en pause",
     "Paused": "En pause",
+    "Resume": "Reprendre",
+    "PAUSED": "EN PAUSE",
+    "Nothing moves — your bots, the enemy's and the capital all hold.": "Rien ne bouge — vos bots, ceux de l'ennemi et le capital, tout attend.",
     "Pick your anchor": "Choisissez votre présentateur",
     "Preview voice": "Écouter la voix",
     "Price triggers": "Déclencheurs de prix",
@@ -1745,6 +1751,9 @@ const I18N = {
     "Panels": "Panels",
     "Pause": "Pausieren",
     "Paused": "Pausiert",
+    "Resume": "Fortsetzen",
+    "PAUSED": "PAUSIERT",
+    "Nothing moves — your bots, the enemy's and the capital all hold.": "Nichts bewegt sich — deine Bots, die des Gegners und das Kapital halten still.",
     "Pick your anchor": "Moderation wählen",
     "Preview voice": "Stimme anhören",
     "Price triggers": "Kursauslöser",
@@ -2452,6 +2461,9 @@ const I18N = {
     "Panels": "Painéis",
     "Pause": "Pausar",
     "Paused": "Em pausa",
+    "Resume": "Retomar",
+    "PAUSED": "EM PAUSA",
+    "Nothing moves — your bots, the enemy's and the capital all hold.": "Nada se mexe — os teus bots, os do inimigo e o capital, tudo parado.",
     "Pick your anchor": "Escolhe o teu apresentador",
     "Preview voice": "Ouvir a voz",
     "Price triggers": "Gatilhos de preço",
@@ -3159,6 +3171,9 @@ const I18N = {
     "Panels": "Pannelli",
     "Pause": "Metti in pausa",
     "Paused": "In pausa",
+    "Resume": "Riprendi",
+    "PAUSED": "IN PAUSA",
+    "Nothing moves — your bots, the enemy's and the capital all hold.": "Niente si muove — i tuoi bot, quelli del nemico e il capitale, tutto fermo.",
     "Pick your anchor": "Scegli il tuo conduttore",
     "Preview voice": "Ascolta la voce",
     "Price triggers": "Trigger di prezzo",
@@ -7512,6 +7527,12 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
   const [round, setRound] = useState(1);
   const [over, setOver] = useState(null);
   const [showRules, setShowRules] = useState(false);
+  const [paused, setPaused] = useState(false);
+  // Whether the current pause was opened BY the rules button, so closing the
+  // rules can hand the fight back — but never resumes a pause the player
+  // asked for themselves.
+  const rulesPausedRef = useRef(false);
+  const resumeRef = useRef(null);
   // The bot you have picked but not yet placed. This is the whole two-step
   // loop: a card arms the field, a lane fires it.
   const [armed, setArmed] = useState(null);
@@ -7528,6 +7549,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
   const stanceRef = useRef(stance); stanceRef.current = stance;
   const armedRef = useRef(armed); armedRef.current = armed;
   const hoverRef = useRef(hoverLane); hoverRef.current = hoverLane;
+  const pausedRef = useRef(paused); pausedRef.current = paused;
 
 
 
@@ -7559,6 +7581,11 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
           awDraw(ctx, sim, null);
           setHud(awReadHud(sim));
         }
+      } else if (pausedRef.current) {
+        // Frozen mid-fight: no step, no draw, no HUD push — the canvas keeps
+        // its last frame and the pill its last clock reading. `last` was
+        // brought up to date above, so resuming feeds the sim one frame's dt
+        // rather than the whole intermission.
       } else {
         awStep(sim, dt, stanceRef.current);
         if (sim.over && !wonRef.current) { wonRef.current = true; setOver(sim.over); onWin?.(sim.over); if (sim.over === "you") onCheer?.(); }
@@ -7581,6 +7608,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
     // the twentieth.
     setRound(n => n + 1);
     setOver(null); setStance("balanced"); setFlash(null); setArmed(null); setHoverLane(null);
+    setPaused(false); rulesPausedRef.current = false;
     setHud(awReadHud(simRef.current));
   };
   const pickStance = (id) => {
@@ -7588,10 +7616,29 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
     if (simRef.current && !simRef.current.over) awLog(simRef.current, "logic", "you", id);
   };
   const placeIn = (lane) => {
-    if (!armed || over) return;
+    if (!armed || over || paused) return;
     const ok = awDeploy(simRef.current, "you", armed, lane);
     setFlash(prev => ({ type: armed, ok, id: (prev?.id || 0) + 1 }));
     if (ok) setArmed(null);
+  };
+  // Opening the rules mid-fight pauses it: three sentences take longer to
+  // read than the enemy takes to cross a lane, and a tutorial that costs you
+  // the round teaches the wrong lesson. Closing them resumes only a pause
+  // THEY opened.
+  const toggleRules = () => {
+    const next = !showRules;
+    setShowRules(next);
+    if (next && !over && !paused) { rulesPausedRef.current = true; setPaused(true); }
+    else if (!next && rulesPausedRef.current) { rulesPausedRef.current = false; setPaused(false); }
+  };
+  const togglePause = () => {
+    if (over) return;
+    rulesPausedRef.current = false;
+    const next = !paused;
+    setPaused(next);
+    // Hand focus to the one action the frozen screen offers, the way the end
+    // card hands it to Change logic.
+    if (next) requestAnimationFrame(() => resumeRef.current?.focus());
   };
 
   const cap = hud.cap;
@@ -7666,9 +7713,9 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
         </span>
         <span style={{ fontWeight: 700, fontSize: 14.5, color: C.text }}>{t("Algorithm Wars")}</span>
         <span style={{ display: "flex", alignItems: "center", gap: 7, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5, color: C.muted, whiteSpace: "nowrap" }}>
-          <span aria-hidden="true" className={over ? undefined : "v-pulse"}
-            style={{ width: 6, height: 6, borderRadius: "50%", background: over ? C.faint : C.accent }} />
-          {over ? t("OVER") : t("LIVE")} {awClock(hud.clock)}
+          <span aria-hidden="true" className={over || paused ? undefined : "v-pulse"}
+            style={{ width: 6, height: 6, borderRadius: "50%", background: over ? C.faint : paused ? C.warn : C.accent }} />
+          {over ? t("OVER") : paused ? t("PAUSED") : t("LIVE")} {awClock(hud.clock)}
         </span>
         <span style={{ ...metaMono, fontSize: 11.5 }}>
           {t("round {n} · {logic}").replace("{n}", String(round)).replace("{logic}", STANCE_LABEL[stance].toLowerCase())}
@@ -7679,7 +7726,8 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
             the screen, on the screen you most need it. Overheat's header
             already wrapped; these two never did. */}
         <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <button className="v-gameout" onClick={() => setShowRules(v => !v)} aria-expanded={showRules} style={outlineBtn}>{t("How to play")}</button>
+          {!over && <button className="v-gameout" onClick={togglePause} aria-pressed={paused} style={outlineBtn}>{paused ? t("Resume") : t("Pause")}</button>}
+          <button className="v-gameout" onClick={toggleRules} aria-expanded={showRules} style={outlineBtn}>{t("How to play")}</button>
           <button className="v-gameout" onClick={reset} style={outlineBtn}>{t("Restart")}</button>
           {onBack && <button className="v-gameout" onClick={onBack} style={outlineBtn}>← {t("games")}</button>}
           {/* v-clearx, like every other bare ✕ in this product. Without it this
@@ -7806,6 +7854,27 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
               </div>
             )}
 
+            {paused && !over && (
+              <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: alpha("#07090d", 0.62), padding: 16 }}>
+                <div>
+                  <div style={{ ...metaMono, fontSize: 10.5, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+                    {t("ROUND {n} · {clock}").replace("{n}", String(round)).replace("{clock}", awClock(hud.clock))}
+                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 34, fontWeight: 700, letterSpacing: "-1px", marginTop: 10, color: C.text, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>
+                    {t("Paused")}
+                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 15, color: C.muted, marginTop: 8, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>
+                    {t("Nothing moves — your bots, the enemy's and the capital all hold.")}
+                  </div>
+                  <div style={{ marginTop: 24, animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
+                    <button ref={resumeRef} onClick={togglePause} className="vt-sheen"
+                      style={{ background: `linear-gradient(100deg, ${C.accent} 40%, #79dd94 50%, ${C.accent} 60%)`, color: C.textOnAccent, border: "none", fontFamily: SANS, fontWeight: 700, fontSize: 14, padding: "11px 24px", borderRadius: 9, cursor: "pointer" }}>
+                      {t("Resume")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             {over && (
               <div className="v-awover" style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: alpha("#07090d", 0.62), padding: 16 }}>
                 <div>
