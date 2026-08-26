@@ -921,6 +921,50 @@ button:not(:disabled):active { transform: scale(0.97); }
     border-top: 1px solid var(--v-edge);
     padding: 18px 22px !important;
   }
+  /* The centre card is a fixed 158 in a strip that has already wrapped, which
+     leaves it moored to the left of a 243px column with 85px of nothing beside
+     it. Below 740 the strip's content box is under the ~780 its three parts
+     need, so it has wrapped by here in every case. */
+  .v-hudcentre { width: 100% !important; }
+}
+
+/* Once that rail unhooks, Algorithm Wars stops being playable — and it is the
+   only one of the six where that is a sentence about the game rather than
+   about the layout. Measured at 375: the battlefield ended at y=584 and the
+   three cards you deploy from it began at y=971, with 338px of stacked rail in
+   between. Bots march while you scroll, so the one screen you cannot see at
+   once is the two halves of every decision.
+
+   The deck moves up under the field. .v-awbody is a layout box and nothing
+   else — no background, no border — so dissolving it makes the field and the
+   rail siblings of the deck, and one "order" on the rail is the whole reflow.
+   .v-awmain has to give up "flex: 1" on the way past: flex-basis 0 in a column
+   is a field with no height at all.
+
+   Inside the rail the same argument runs again. BATTLE LOG is history and sits
+   at the top because on a desk the whole rail is in view at once; stacked on a
+   phone it is a growing list between you and THREAT, which is the one readout
+   that tells you which lane is about to break. So the two live cards come
+   first and the log goes under them. */
+@container (max-width: 740px) {
+  /* !important because the display is inline on the element — the same reason
+     every other override in this file carries one. */
+  .v-awbody { display: contents !important; }
+  .v-awmain { flex: none !important; }
+  .v-awrail { order: 1; }
+  .v-awlog { order: 1; }
+}
+
+/* The last of it is a real concession rather than a reflow, and it is the
+   blurb that pays. At a 287px panel the deck is one column, and a card
+   carrying three lines of description is 148px tall — three of those plus the
+   label is 469, which puts the third card off the screen again however the
+   boxes are ordered. Name, tag, cost and the three stat bars stay, so every
+   number a choice turns on is still on the card; what goes is the sentence
+   that says it in words. The rules panel still carries the counter rule, and
+   it is one tap from the same header. */
+@container (max-width: 460px) {
+  .v-botblurb { display: none !important; }
 }
 
 /* The Video desk takes the same break against the PANEL, at its own number. It
@@ -985,6 +1029,15 @@ button:not(:disabled):active { transform: scale(0.97); }
    their automatic minimum they stop at the width of their own content, which is
    the width at which the line is supposed to break. */
 .v-awhud { flex-wrap: wrap; }
+
+/* Overheat, Stock School and Ticker Match all tighten their strip's gutter at
+   540; .v-awhud — which chess and Algorithm Wars share — never did, and on a
+   phone it was still holding a desk's 15/22 padding and a 20px gap around
+   three stacked blocks. Same numbers as the other three, so the six reflow on
+   one line. */
+@container (max-width: 540px) {
+  .v-awhud { padding: 12px 14px !important; gap: 14px !important; }
+}
 
 /* ---------- marketing homepage ----------
    The handoff's measure is 1200px. Everything here is layout that has to
@@ -1330,6 +1383,7 @@ button:not(:disabled):active { transform: scale(0.97); }
    Nothing outside the six game screens moves. */
 @media (pointer: coarse) {
   .v-gamepanel .v-gameout,
+  .v-gamepanel .vt-sheen,
   .v-gamepanel .v-gamedanger,
   .v-gamepanel .v-gamectl,
   .v-gamepanel .v-outline,
@@ -1338,6 +1392,15 @@ button:not(:disabled):active { transform: scale(0.97); }
   .v-gamepanel [role="radio"] {
     min-height: 44px;
   }
+  /* The rail's move chips are not a convenience on a phone, they are the
+     input. The board's own squares are 27px there and the derivation above
+     says they cannot be more, so tapping a chip is how a move gets made — and
+     a chip has to clear the floor in both axes, which the min-height these
+     other families take does not do. Measured before: "e4" was 36 by 29. The
+     row they sit in already wraps, so eight targets become two lines rather
+     than one crowded one. The same class carries the review scrubber's two
+     arrows, which were the same size and the same problem. */
+  .v-gamepanel .v-movechip { min-width: 44px; min-height: 44px; }
 }
 
 /* Two families this rule deliberately does NOT reach, because neither is a

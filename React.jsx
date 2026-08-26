@@ -4900,7 +4900,7 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
           </div>
         </div>
 
-        <div style={{ width: 158, flexShrink: 0, background: C.surface, border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, padding: "10px 14px", textAlign: "center" }}>
+        <div className="v-hudcentre" style={{ width: 158, flexShrink: 0, background: C.surface, border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, padding: "10px 14px", textAlign: "center" }}>
           <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{t("POSITION")}</div>
           <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.25, color: C.text }}>{evalText}</div>
           {/* One bar read from both ends: the green share is the Bulls' share of
@@ -5105,7 +5105,7 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
                       </button>
                     ))}
                   </div>
-                  <button onClick={() => setPromo(null)}
+                  <button onClick={() => setPromo(null)} className="v-taprow"
                     style={{ marginTop: 14, background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 12, cursor: "pointer", padding: "6px 8px", animation: "vt-fadeup 0.6s var(--v-ease) 0.4s both" }}>
                     {t("cancel the move")}
                   </button>
@@ -5238,7 +5238,7 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
                   style={{ background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: R.xs, padding: "5px 12px", fontFamily: MONO, fontSize: 11.5, color: C.muted, cursor: "pointer" }}>‹</button>
                 <button className="v-movechip" onClick={() => setReview(i => Math.min(hist.length - 1, i + 1))} disabled={review >= hist.length - 1} aria-label={t("Next move")}
                   style={{ background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: R.xs, padding: "5px 12px", fontFamily: MONO, fontSize: 11.5, color: C.muted, cursor: "pointer" }}>›</button>
-                <button onClick={() => setReview(null)}
+                <button onClick={() => setReview(null)} className="v-taprow"
                   style={{ marginLeft: "auto", background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 11.5, cursor: "pointer", padding: 0 }}>
                   {/* Always the result: review is only reachable from the end
                       card, so there is no live game to go back to. */}
@@ -5274,7 +5274,7 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
                       </button>
                     );
                   })}
-                  <button onClick={() => setSel(null)}
+                  <button onClick={() => setSel(null)} className="v-taprow"
                     style={{ marginLeft: "auto", background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 11.5, cursor: "pointer", padding: 0 }}>
                     {t("deselect")}
                   </button>
@@ -8107,7 +8107,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
           </div>
         </div>
 
-        <div style={{ width: 158, flexShrink: 0, background: C.surface, border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, padding: "10px 14px", textAlign: "center" }}>
+        <div className="v-hudcentre" style={{ width: 158, flexShrink: 0, background: C.surface, border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, padding: "10px 14px", textAlign: "center" }}>
           <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{t("CAPITAL")}</div>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 6 }}>
             <span style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, lineHeight: 1.15, color: C.text }}>{cap}</span>
@@ -8136,7 +8136,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
 
       {/* ---- field + rail ---- */}
       <div className="v-awbody" style={{ display: "flex", alignItems: "stretch" }}>
-        <div style={{ flex: 1, minWidth: 0, padding: "18px 16px 18px 22px" }}>
+        <div className="v-awmain" style={{ flex: 1, minWidth: 0, padding: "18px 16px 18px 22px" }}>
           <div style={{ position: "relative", border: `1px solid ${C.edge}`, borderRadius: R.lg, overflow: "hidden", background: C.base }}>
             <canvas ref={canvasRef} aria-hidden="true"
               style={{ width: "100%", height: "auto", display: "block", aspectRatio: `${AW_W} / ${AW_H}` }} />
@@ -8267,7 +8267,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
 
         {/* ---- rail ---- */}
         <div className="v-awrail" style={{ width: 286, flexShrink: 0, borderLeft: `1px solid ${C.edge}`, padding: "18px 22px 18px 18px", display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+          <div className="v-awlog" style={{ animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
             <div style={railLabel}>{t("BATTLE LOG")}</div>
             <div style={{ ...railCard, padding: "11px 12px", fontFamily: MONO, fontSize: 11.5, lineHeight: 1.85 }}>
               {hud.log.map(e => (
@@ -8287,7 +8287,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
             </div>
           </div>
 
-          <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) 0.08s both" }}>
+          <div className="v-awthreat" style={{ animation: "vt-fadeup 0.5s var(--v-ease) 0.08s both" }}>
             <div style={railLabel}>{t("THREAT")}</div>
             <div style={railCard}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
@@ -8332,7 +8332,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
       </div>
 
       {/* ---- deploy ---- */}
-      <div style={{ padding: "4px 22px 22px" }}>
+      <div className="v-awdeck" style={{ padding: "4px 22px 22px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={railLabel}>{t("DEPLOY")}</span>
           {/* C.faint, not C.edgeStrong. This is the number you are comparing the
@@ -8396,7 +8396,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
                       </span>
                     ))}
                   </span>
-                  <span style={{ display: "block", fontFamily: SANS, fontSize: 12.5, color: C.muted, marginTop: 11, lineHeight: 1.45 }}>{BOT_BLURB[id]}</span>
+                  <span className="v-botblurb" style={{ display: "block", fontFamily: SANS, fontSize: 12.5, color: C.muted, marginTop: 11, lineHeight: 1.45 }}>{BOT_BLURB[id]}</span>
                 </span>
               </button>
             );

@@ -59,7 +59,7 @@ function Narration({ progressRef, speaking, playingLine, idleLine, label, onTogg
   return (
     <div style={{ background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.md, marginTop: 9, padding: 12 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-        <button onClick={onToggle} aria-label={label} title={label} className="v-gamectl"
+        <button onClick={onToggle} aria-label={label} title={label} className="v-gamectl v-tap"
           style={{ width: 26, height: 26, borderRadius: R.xs, background: C.surfaceRaised, border: "none", color: speaking ? C.accentText : C.muted, fontSize: 11, lineHeight: 1, cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0 }}>
           {speaking ? "▮▮" : "▶"}
         </button>
