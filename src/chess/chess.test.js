@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   chessInit, chessMoves, legalMoves, chessApply, inCheck, gameStatus, chessAIMove,
   chessGlyph, chessSquare, chessAttacks, chessCount, chessSan, chessSuggest,
+  PROMO_TYPES, isPromotion,
 } from "./chess.js";
 
 const emptyBoard = () => Array.from({ length: 8 }, () => Array(8).fill(null));
@@ -224,6 +225,86 @@ describe("move notation", () => {
     fb[4][4] = piece("w", "k"); fb[0][7] = piece("b", "k");
     fb[7][0] = piece("w", "r"); fb[5][0] = piece("w", "r");
     expect(chessSan(fb, { r: 7, c: 0 }, { r: 6, c: 0 })).toBe("R1a2");
+  });
+});
+
+// ---- the one move that asks the mover a question ----
+describe("promotion", () => {
+  // b7, one square from home, with somewhere legal to go.
+  const promoBoard = () => {
+    const b = emptyBoard();
+    b[4][4] = piece("w", "k"); b[0][7] = piece("b", "k");
+    b[1][1] = piece("w", "p");
+    return b;
+  };
+
+  it("knows which move is the one", () => {
+    const b = promoBoard();
+    expect(isPromotion(b, { r: 1, c: 1 }, { r: 0, c: 1 })).toBe(true);
+    // A pawn one rank short is not promoting, whatever it is about to do.
+    b[2][2] = piece("w", "p");
+    expect(isPromotion(b, { r: 2, c: 2 }, { r: 1, c: 2 })).toBe(false);
+    // Nor is a rook that happens to land on the back rank.
+    b[3][3] = piece("w", "r");
+    expect(isPromotion(b, { r: 3, c: 3 }, { r: 0, c: 3 })).toBe(false);
+    expect(isPromotion(b, { r: 5, c: 5 }, { r: 0, c: 5 })).toBe(false);  // and neither is nothing
+  });
+
+  it("puts the piece that was asked for on the board", () => {
+    for (const t of PROMO_TYPES) {
+      const { next } = chessApply(promoBoard(), { r: 1, c: 1 }, { r: 0, c: 1 }, t);
+      expect(next[0][1]).toEqual({ s: "w", t });
+    }
+  });
+
+  it("queens when nobody asks for anything usable", () => {
+    // The default is what every internal caller relies on — legality, the house
+    // and the coach all call chessApply without an opinion — and a king or a
+    // second pawn is not a promotion anyone is allowed to pick.
+    for (const bad of [undefined, "k", "p", "zzz", null, 7]) {
+      const { next } = chessApply(promoBoard(), { r: 1, c: 1 }, { r: 0, c: 1 }, bad);
+      expect(next[0][1]).toEqual({ s: "w", t: "q" });
+    }
+  });
+
+  it("writes the piece it actually promoted to", () => {
+    const b = promoBoard();
+    expect(chessSan(b, { r: 1, c: 1 }, { r: 0, c: 1 }, "n")).toBe("b8=N");
+    expect(chessSan(b, { r: 1, c: 1 }, { r: 0, c: 1 }, "r")).toBe("b8=R");
+    expect(chessSan(b, { r: 1, c: 1 }, { r: 0, c: 1 })).toBe("b8=Q");
+    // and on a capture, where the file comes first
+    b[0][0] = piece("b", "r");
+    expect(chessSan(b, { r: 1, c: 1 }, { r: 0, c: 0 }, "b")).toBe("bxa8=B");
+  });
+
+  it("the choice decides what the position is", () => {
+    // The whole reason the question is worth asking: a knight is the only one of
+    // the four a queen cannot imitate. On b8 it attacks d7 and the queen does not.
+    const b = emptyBoard();
+    b[7][4] = piece("w", "k"); b[1][3] = piece("b", "k");
+    b[1][1] = piece("w", "p");
+    const knight = chessApply(b, { r: 1, c: 1 }, { r: 0, c: 1 }, "n").next;
+    const queen = chessApply(b, { r: 1, c: 1 }, { r: 0, c: 1 }, "q").next;
+    expect(inCheck(knight, "b")).toBe(true);
+    expect(inCheck(queen, "b")).toBe(false);
+    expect(gameStatus(knight, "b")).toBe("check");
+    expect(gameStatus(queen, "b")).toBe("playing");
+  });
+
+  it("is legal for all four choices or for none, which is why legalMoves may queen", () => {
+    // b7 is pinned to e4 by a bishop on a8. Taking the bishop is legal — it ends
+    // the pin by removing the pinner; pushing to b8 steps off the diagonal and
+    // hangs the king.
+    const b = emptyBoard();
+    b[4][4] = piece("w", "k"); b[0][7] = piece("b", "k");
+    b[1][1] = piece("w", "p"); b[0][0] = piece("b", "b");
+    expect(legalMoves(b, 1, 1)).toEqual([{ r: 0, c: 0 }]);
+    // And the reason one answer covers four: the promoted piece lands on the same
+    // square whichever piece it is, so it blocks and exposes exactly the same
+    // lines. It cannot attack its own king either way.
+    const from = { r: 1, c: 1 };
+    expect(PROMO_TYPES.every(t => !inCheck(chessApply(b, from, { r: 0, c: 0 }, t).next, "w"))).toBe(true);
+    expect(PROMO_TYPES.every(t => inCheck(chessApply(b, from, { r: 0, c: 1 }, t).next, "w"))).toBe(true);
   });
 });
 

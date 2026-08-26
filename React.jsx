@@ -10,7 +10,7 @@ import { buildPnF, pnfTargets, visibleWindow, INTRADAY_BOX_PCT } from "./src/pnf
 import { detectPattern } from "./src/pnf/patterns.js";
 import {
   chessGlyph, chessSquare, chessInit, legalMoves, chessApply, gameStatus, inCheck,
-  chessAIMove, chessCount, chessSan, chessSuggest,
+  chessAIMove, chessCount, chessSan, chessSuggest, isPromotion, PROMO_TYPES, CHESS_VAL,
 } from "./src/chess/chess.js";
 import {
   AW_W, AW_H, AW_LANES, AW_LANE_ID, AW_BOTS, AW_ORDER, AW_STANCES, AW_CAP_MAX, AW_BASE_HP,
@@ -383,7 +383,6 @@ const I18N = {
     "How to play": "Cómo se juega",
     "Moves": "Jugadas",
     "New game": "Partida nueva",
-    "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "Los peones coronan dama automáticamente. Reglas informales: sin enroque ni captura al paso.",
     "Tap a piece to see where it can go.": "Toca una pieza para ver adónde puede ir.",
     "The Bears' king is in check.": "El rey de los Osos está en jaque.",
     "Your king is in check — you have to answer it.": "Tu rey está en jaque: tienes que responder.",
@@ -619,7 +618,6 @@ const I18N = {
     "MOVES": "JUGADAS",
     "Neither side could force it. Swap seats and go again.": "Ninguno de los dos pudo forzarla. Cambiad de sitio y otra vez.",
     "Next move": "Jugada siguiente",
-    "No legal move left, and no check. That is a draw.": "No queda ninguna jugada legal y no hay jaque. Eso son tablas.",
     "POSITION": "POSICIÓN",
     "Passive": "Pasivo",
     "Play again": "Jugar otra vez",
@@ -636,6 +634,34 @@ const I18N = {
     "The Bears are yours to play. The house is sitting this one out.": "Los Osos son tuyos. La casa se queda fuera de esta partida.",
     "The Bears ran out of clock.": "A los Osos se les acabó el tiempo.",
     "The Bears' king had nowhere to run.": "El rey de los Osos no tenía adónde huir.",
+    "A pawn reaching the last rank promotes, and you pick the piece. Casual rules — no castling, no en passant.": "Un peón que llega a la última fila corona, y la pieza la eliges tú. Reglas informales: sin enroque ni captura al paso.",
+    "Choose a promotion": "Elige una coronación",
+    "Do the {s} resign?": "¿Abandonan los {s}?",
+    "It can become anything but a king. A knight is the only one of the four a queen cannot imitate.": "Puede convertirse en cualquier pieza menos en rey. El caballo es la única de las cuatro que una dama no puede imitar.",
+    "Keep playing": "Seguir jugando",
+    "Knowing when a game is gone is a real skill. Passive gives you room to build one that is not.": "Saber cuándo una partida está perdida es una habilidad de verdad. Pasivo te deja espacio para construir una que no lo esté.",
+    "No legal move and no check is a stalemate, which is a draw. Resign sits in the header once the game is under way.": "Sin jugada legal y sin jaque es rey ahogado, que son tablas. Abandonar aparece en la cabecera en cuanto la partida está en marcha.",
+    "PROMOTION · {sq}": "CORONACIÓN · {sq}",
+    "Resign": "Abandonar",
+    "Resign this game?": "¿Abandonar esta partida?",
+    "Resigned — Bears win": "Abandono: ganan los Osos",
+    "Resigned — Bulls win": "Abandono: ganan los Toros",
+    "The Bears have no legal move, and their king is not in check. That is a draw.": "Los Osos no tienen ninguna jugada legal y su rey no está en jaque. Eso son tablas.",
+    "The Bears resigned. The Bulls take the game.": "Los Osos abandonaron. La partida es para los Toros.",
+    "The Bears' pawn reaches the last rank": "El peón de los Osos llega a la última fila",
+    "The Bulls have no legal move, and their king is not in check. That is a draw.": "Los Toros no tienen ninguna jugada legal y su rey no está en jaque. Eso son tablas.",
+    "The Bulls resigned. The Bears take the game.": "Los Toros abandonaron. La partida es para los Osos.",
+    "The Bulls' pawn reaches the last rank": "El peón de los Toros llega a la última fila",
+    "The board was not the problem, the clock was. It starts on the first move, not when the panel opens.": "El problema no era el tablero, era el reloj. Arranca en la primera jugada, no al abrir el panel.",
+    "The game ends here, and the board stays for review.": "La partida termina aquí, y el tablero se queda para repasarla.",
+    "You have no legal move, and your king is not in check. That is a draw.": "No tienes ninguna jugada legal y tu rey no está en jaque. Eso son tablas.",
+    "You resigned. The Bears take the game.": "Abandonaste. La partida es para los Osos.",
+    "You were ahead on material when you stopped. Sit with a bad position longer — it is where the chess is.": "Ibas por delante en material cuando lo dejaste. Aguanta más una mala posición: ahí está el ajedrez.",
+    "Your pawn reaches the last rank": "Tu peón llega a la última fila",
+    "cancel the move": "cancelar la jugada",
+    "{s} are level on material.": "Los {s} van igualados en material.",
+    "{s} are {n} down on material.": "Los {s} van {n} por detrás en material.",
+    "{s} are {n} up on material.": "Los {s} van {n} por delante en material.",
     "The Bulls' king had nowhere to run.": "El rey de los Toros no tenía adónde huir.",
     "The game is over. Play again, or step back through it.": "La partida ha terminado. Juega otra vez o repásala hacia atrás.",
     "The house is choosing its move.": "La casa está eligiendo su jugada.",
@@ -1094,7 +1120,6 @@ const I18N = {
     "How to play": "Comment jouer",
     "Moves": "Coups",
     "New game": "Nouvelle partie",
-    "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "Les pions sont promus dame automatiquement. Règles simplifiées — ni roque, ni prise en passant.",
     "Tap a piece to see where it can go.": "Touchez une pièce pour voir où elle peut aller.",
     "The Bears' king is in check.": "Le roi des Ours est en échec.",
     "Your king is in check — you have to answer it.": "Votre roi est en échec — vous devez y répondre.",
@@ -1330,7 +1355,6 @@ const I18N = {
     "MOVES": "COUPS",
     "Neither side could force it. Swap seats and go again.": "Personne n'a pu conclure. Changez de place et rejouez.",
     "Next move": "Coup suivant",
-    "No legal move left, and no check. That is a draw.": "Plus aucun coup légal, et pas d'échec. C'est une nulle.",
     "POSITION": "POSITION",
     "Passive": "Passif",
     "Play again": "Rejouer",
@@ -1347,6 +1371,34 @@ const I18N = {
     "The Bears are yours to play. The house is sitting this one out.": "Les Ours sont à vous. La maison ne joue pas celle-ci.",
     "The Bears ran out of clock.": "Les Ours n'avaient plus de temps.",
     "The Bears' king had nowhere to run.": "Le roi des Ours n'avait nulle part où fuir.",
+    "A pawn reaching the last rank promotes, and you pick the piece. Casual rules — no castling, no en passant.": "Un pion qui atteint la dernière rangée est promu, et c'est vous qui choisissez la pièce. Règles simplifiées — ni roque, ni prise en passant.",
+    "Choose a promotion": "Choisir une promotion",
+    "Do the {s} resign?": "Les {s} abandonnent-ils ?",
+    "It can become anything but a king. A knight is the only one of the four a queen cannot imitate.": "Il peut devenir n'importe quelle pièce sauf un roi. Le cavalier est la seule des quatre qu'une dame ne sait pas imiter.",
+    "Keep playing": "Continuer la partie",
+    "Knowing when a game is gone is a real skill. Passive gives you room to build one that is not.": "Savoir quand une partie est perdue est une vraie compétence. Passif vous laisse la place d'en construire une qui ne l'est pas.",
+    "No legal move and no check is a stalemate, which is a draw. Resign sits in the header once the game is under way.": "Aucun coup légal et pas d'échec, c'est un pat, donc une nulle. Abandonner apparaît dans l'en-tête dès que la partie est lancée.",
+    "PROMOTION · {sq}": "PROMOTION · {sq}",
+    "Resign": "Abandonner",
+    "Resign this game?": "Abandonner cette partie ?",
+    "Resigned — Bears win": "Abandon — les Ours gagnent",
+    "Resigned — Bulls win": "Abandon — les Taureaux gagnent",
+    "The Bears have no legal move, and their king is not in check. That is a draw.": "Les Ours n'ont plus aucun coup légal, et leur roi n'est pas en échec. C'est une nulle.",
+    "The Bears resigned. The Bulls take the game.": "Les Ours ont abandonné. La partie revient aux Taureaux.",
+    "The Bears' pawn reaches the last rank": "Le pion des Ours atteint la dernière rangée",
+    "The Bulls have no legal move, and their king is not in check. That is a draw.": "Les Taureaux n'ont plus aucun coup légal, et leur roi n'est pas en échec. C'est une nulle.",
+    "The Bulls resigned. The Bears take the game.": "Les Taureaux ont abandonné. La partie revient aux Ours.",
+    "The Bulls' pawn reaches the last rank": "Le pion des Taureaux atteint la dernière rangée",
+    "The board was not the problem, the clock was. It starts on the first move, not when the panel opens.": "Le problème n'était pas l'échiquier mais la pendule. Elle démarre au premier coup, pas à l'ouverture du panneau.",
+    "The game ends here, and the board stays for review.": "La partie s'arrête ici, et l'échiquier reste pour la revoir.",
+    "You have no legal move, and your king is not in check. That is a draw.": "Vous n'avez plus aucun coup légal, et votre roi n'est pas en échec. C'est une nulle.",
+    "You resigned. The Bears take the game.": "Vous avez abandonné. La partie revient aux Ours.",
+    "You were ahead on material when you stopped. Sit with a bad position longer — it is where the chess is.": "Vous meniez au matériel quand vous avez arrêté. Restez plus longtemps dans une mauvaise position — c'est là que sont les échecs.",
+    "Your pawn reaches the last rank": "Votre pion atteint la dernière rangée",
+    "cancel the move": "annuler le coup",
+    "{s} are level on material.": "Les {s} sont à égalité au matériel.",
+    "{s} are {n} down on material.": "Les {s} ont {n} de retard au matériel.",
+    "{s} are {n} up on material.": "Les {s} ont {n} d'avance au matériel.",
     "The Bulls' king had nowhere to run.": "Le roi des Taureaux n'avait nulle part où fuir.",
     "The game is over. Play again, or step back through it.": "La partie est finie. Rejouez, ou remontez-la coup par coup.",
     "The house is choosing its move.": "La maison choisit son coup.",
@@ -1805,7 +1857,6 @@ const I18N = {
     "How to play": "Spielanleitung",
     "Moves": "Züge",
     "New game": "Neue Partie",
-    "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "Bauern werden automatisch zur Dame. Lockere Regeln — keine Rochade, kein En passant.",
     "Tap a piece to see where it can go.": "Tippe auf eine Figur, um ihre Züge zu sehen.",
     "The Bears' king is in check.": "Der König der Bären steht im Schach.",
     "Your king is in check — you have to answer it.": "Dein König steht im Schach — du musst darauf antworten.",
@@ -2041,7 +2092,6 @@ const I18N = {
     "MOVES": "ZÜGE",
     "Neither side could force it. Swap seats and go again.": "Keine Seite konnte es erzwingen. Plätze tauschen und noch mal.",
     "Next move": "Nächster Zug",
-    "No legal move left, and no check. That is a draw.": "Kein legaler Zug mehr, und kein Schach. Das ist ein Remis.",
     "POSITION": "STELLUNG",
     "Passive": "Passiv",
     "Play again": "Nochmal spielen",
@@ -2058,6 +2108,34 @@ const I18N = {
     "The Bears are yours to play. The house is sitting this one out.": "Die Bären gehören dir. Das Haus setzt diese Partie aus.",
     "The Bears ran out of clock.": "Den Bären ist die Zeit ausgegangen.",
     "The Bears' king had nowhere to run.": "Der König der Bären hatte kein Feld mehr.",
+    "A pawn reaching the last rank promotes, and you pick the piece. Casual rules — no castling, no en passant.": "Ein Bauer auf der letzten Reihe wird umgewandelt, und du wählst die Figur. Lockere Regeln — keine Rochade, kein En passant.",
+    "Choose a promotion": "Umwandlung wählen",
+    "Do the {s} resign?": "Geben die {s} auf?",
+    "It can become anything but a king. A knight is the only one of the four a queen cannot imitate.": "Er kann alles werden außer einem König. Der Springer ist die einzige der vier Figuren, die eine Dame nicht nachmachen kann.",
+    "Keep playing": "Weiterspielen",
+    "Knowing when a game is gone is a real skill. Passive gives you room to build one that is not.": "Zu erkennen, wann eine Partie verloren ist, ist echtes Können. Passiv lässt dir Raum, eine aufzubauen, die es nicht ist.",
+    "No legal move and no check is a stalemate, which is a draw. Resign sits in the header once the game is under way.": "Kein legaler Zug und kein Schach ist ein Patt, also ein Remis. Aufgeben steht in der Kopfzeile, sobald die Partie läuft.",
+    "PROMOTION · {sq}": "UMWANDLUNG · {sq}",
+    "Resign": "Aufgeben",
+    "Resign this game?": "Diese Partie aufgeben?",
+    "Resigned — Bears win": "Aufgabe — die Bären gewinnen",
+    "Resigned — Bulls win": "Aufgabe — die Bullen gewinnen",
+    "The Bears have no legal move, and their king is not in check. That is a draw.": "Die Bären haben keinen legalen Zug mehr, und ihr König steht nicht im Schach. Das ist ein Remis.",
+    "The Bears resigned. The Bulls take the game.": "Die Bären haben aufgegeben. Die Partie geht an die Bullen.",
+    "The Bears' pawn reaches the last rank": "Der Bauer der Bären erreicht die letzte Reihe",
+    "The Bulls have no legal move, and their king is not in check. That is a draw.": "Die Bullen haben keinen legalen Zug mehr, und ihr König steht nicht im Schach. Das ist ein Remis.",
+    "The Bulls resigned. The Bears take the game.": "Die Bullen haben aufgegeben. Die Partie geht an die Bären.",
+    "The Bulls' pawn reaches the last rank": "Der Bauer der Bullen erreicht die letzte Reihe",
+    "The board was not the problem, the clock was. It starts on the first move, not when the panel opens.": "Nicht das Brett war das Problem, sondern die Uhr. Sie startet mit dem ersten Zug, nicht beim Öffnen des Panels.",
+    "The game ends here, and the board stays for review.": "Die Partie endet hier, und das Brett bleibt zum Nachspielen.",
+    "You have no legal move, and your king is not in check. That is a draw.": "Du hast keinen legalen Zug mehr, und dein König steht nicht im Schach. Das ist ein Remis.",
+    "You resigned. The Bears take the game.": "Du hast aufgegeben. Die Partie geht an die Bären.",
+    "You were ahead on material when you stopped. Sit with a bad position longer — it is where the chess is.": "Du lagst beim Material vorn, als du aufgehört hast. Halte eine schlechte Stellung länger aus — dort steckt das Schach.",
+    "Your pawn reaches the last rank": "Dein Bauer erreicht die letzte Reihe",
+    "cancel the move": "Zug abbrechen",
+    "{s} are level on material.": "Die {s} stehen beim Material gleich.",
+    "{s} are {n} down on material.": "Die {s} liegen beim Material {n} zurück.",
+    "{s} are {n} up on material.": "Die {s} liegen beim Material {n} vorn.",
     "The Bulls' king had nowhere to run.": "Der König der Bullen hatte kein Feld mehr.",
     "The game is over. Play again, or step back through it.": "Die Partie ist vorbei. Spiel noch mal, oder geh sie zurück durch.",
     "The house is choosing its move.": "Das Haus wählt seinen Zug.",
@@ -2515,7 +2593,6 @@ const I18N = {
     "How to play": "Como jogar",
     "Moves": "Jogadas",
     "New game": "Novo jogo",
-    "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "Os peões promovem a dama automaticamente. Regras informais — sem roque nem captura en passant.",
     "Tap a piece to see where it can go.": "Toca numa peça para veres para onde pode ir.",
     "The Bears' king is in check.": "O rei dos Ursos está em xeque.",
     "Your king is in check — you have to answer it.": "O teu rei está em xeque — tens de responder.",
@@ -2751,7 +2828,6 @@ const I18N = {
     "MOVES": "LANCES",
     "Neither side could force it. Swap seats and go again.": "Nenhum dos lados conseguiu forçar. Troquem de lugar e joguem outra vez.",
     "Next move": "Lance seguinte",
-    "No legal move left, and no check. That is a draw.": "Não resta nenhum lance legal e não há xeque. Isso é empate.",
     "POSITION": "POSIÇÃO",
     "Passive": "Passivo",
     "Play again": "Jogar outra vez",
@@ -2768,6 +2844,34 @@ const I18N = {
     "The Bears are yours to play. The house is sitting this one out.": "Os Ursos são teus. A casa fica de fora desta.",
     "The Bears ran out of clock.": "Aos Ursos acabou-se o tempo.",
     "The Bears' king had nowhere to run.": "O rei dos Ursos não tinha para onde fugir.",
+    "A pawn reaching the last rank promotes, and you pick the piece. Casual rules — no castling, no en passant.": "Um peão que chega à última fila promove, e és tu que escolhes a peça. Regras informais — sem roque nem captura en passant.",
+    "Choose a promotion": "Escolhe uma promoção",
+    "Do the {s} resign?": "Os {s} abandonam?",
+    "It can become anything but a king. A knight is the only one of the four a queen cannot imitate.": "Pode tornar-se em qualquer peça menos rei. O cavalo é a única das quatro que uma dama não consegue imitar.",
+    "Keep playing": "Continuar a jogar",
+    "Knowing when a game is gone is a real skill. Passive gives you room to build one that is not.": "Saber quando uma partida está perdida é uma competência a sério. Passivo dá-te espaço para construir uma que não esteja.",
+    "No legal move and no check is a stalemate, which is a draw. Resign sits in the header once the game is under way.": "Sem jogada legal e sem xeque é rei afogado, ou seja, empate. Abandonar aparece no cabeçalho assim que a partida arranca.",
+    "PROMOTION · {sq}": "PROMOÇÃO · {sq}",
+    "Resign": "Abandonar",
+    "Resign this game?": "Abandonar esta partida?",
+    "Resigned — Bears win": "Abandono: ganham os Ursos",
+    "Resigned — Bulls win": "Abandono: ganham os Touros",
+    "The Bears have no legal move, and their king is not in check. That is a draw.": "Os Ursos não têm nenhuma jogada legal e o seu rei não está em xeque. Isso é empate.",
+    "The Bears resigned. The Bulls take the game.": "Os Ursos abandonaram. A partida é dos Touros.",
+    "The Bears' pawn reaches the last rank": "O peão dos Ursos chega à última fila",
+    "The Bulls have no legal move, and their king is not in check. That is a draw.": "Os Touros não têm nenhuma jogada legal e o seu rei não está em xeque. Isso é empate.",
+    "The Bulls resigned. The Bears take the game.": "Os Touros abandonaram. A partida é dos Ursos.",
+    "The Bulls' pawn reaches the last rank": "O peão dos Touros chega à última fila",
+    "The board was not the problem, the clock was. It starts on the first move, not when the panel opens.": "O problema não era o tabuleiro, era o relógio. Arranca na primeira jogada, não ao abrir o painel.",
+    "The game ends here, and the board stays for review.": "A partida termina aqui, e o tabuleiro fica para rever.",
+    "You have no legal move, and your king is not in check. That is a draw.": "Não tens nenhuma jogada legal e o teu rei não está em xeque. Isso é empate.",
+    "You resigned. The Bears take the game.": "Abandonaste. A partida é dos Ursos.",
+    "You were ahead on material when you stopped. Sit with a bad position longer — it is where the chess is.": "Estavas à frente no material quando paraste. Aguenta mais tempo uma má posição — é aí que está o xadrez.",
+    "Your pawn reaches the last rank": "O teu peão chega à última fila",
+    "cancel the move": "cancelar a jogada",
+    "{s} are level on material.": "Os {s} estão igualados no material.",
+    "{s} are {n} down on material.": "Os {s} estão {n} atrás no material.",
+    "{s} are {n} up on material.": "Os {s} estão {n} à frente no material.",
     "The Bulls' king had nowhere to run.": "O rei dos Touros não tinha para onde fugir.",
     "The game is over. Play again, or step back through it.": "A partida terminou. Joga outra vez ou percorre-a para trás.",
     "The house is choosing its move.": "A casa está a escolher o lance.",
@@ -3225,7 +3329,6 @@ const I18N = {
     "How to play": "Come si gioca",
     "Moves": "Mosse",
     "New game": "Nuova partita",
-    "Pawns promote to queens automatically. Casual rules — no castling, no en passant.": "I pedoni promuovono a donna automaticamente. Regole informali — niente arrocco, niente en passant.",
     "Tap a piece to see where it can go.": "Tocca un pezzo per vedere dove può andare.",
     "The Bears' king is in check.": "Il re degli Orsi è sotto scacco.",
     "Your king is in check — you have to answer it.": "Il tuo re è sotto scacco — devi rispondere.",
@@ -3461,7 +3564,6 @@ const I18N = {
     "MOVES": "MOSSE",
     "Neither side could force it. Swap seats and go again.": "Nessuno dei due è riuscito a forzarla. Cambiate posto e si riparte.",
     "Next move": "Mossa successiva",
-    "No legal move left, and no check. That is a draw.": "Non resta alcuna mossa legale e non c'è scacco. È patta.",
     "POSITION": "POSIZIONE",
     "Passive": "Passivo",
     "Play again": "Gioca ancora",
@@ -3478,6 +3580,34 @@ const I18N = {
     "The Bears are yours to play. The house is sitting this one out.": "Gli Orsi sono tuoi. Il banco resta fuori da questa.",
     "The Bears ran out of clock.": "Agli Orsi è finito il tempo.",
     "The Bears' king had nowhere to run.": "Il re degli Orsi non aveva dove scappare.",
+    "A pawn reaching the last rank promotes, and you pick the piece. Casual rules — no castling, no en passant.": "Un pedone che arriva all'ultima traversa promuove, e il pezzo lo scegli tu. Regole informali — niente arrocco, niente en passant.",
+    "Choose a promotion": "Scegli una promozione",
+    "Do the {s} resign?": "{s}: abbandonano?",
+    "It can become anything but a king. A knight is the only one of the four a queen cannot imitate.": "Può diventare qualsiasi pezzo tranne un re. Il cavallo è l'unico dei quattro che una donna non può imitare.",
+    "Keep playing": "Continua a giocare",
+    "Knowing when a game is gone is a real skill. Passive gives you room to build one that is not.": "Capire quando una partita è persa è una vera abilità. Passivo ti lascia spazio per costruirne una che non lo è.",
+    "No legal move and no check is a stalemate, which is a draw. Resign sits in the header once the game is under way.": "Nessuna mossa legale e nessuno scacco è uno stallo, cioè patta. Abbandona compare nell'intestazione appena la partita è avviata.",
+    "PROMOTION · {sq}": "PROMOZIONE · {sq}",
+    "Resign": "Abbandona",
+    "Resign this game?": "Abbandonare questa partita?",
+    "Resigned — Bears win": "Abbandono — vincono gli Orsi",
+    "Resigned — Bulls win": "Abbandono — vincono i Tori",
+    "The Bears have no legal move, and their king is not in check. That is a draw.": "Gli Orsi non hanno più mosse legali e il loro re non è sotto scacco. È patta.",
+    "The Bears resigned. The Bulls take the game.": "Gli Orsi hanno abbandonato. La partita va ai Tori.",
+    "The Bears' pawn reaches the last rank": "Il pedone degli Orsi arriva all'ultima traversa",
+    "The Bulls have no legal move, and their king is not in check. That is a draw.": "I Tori non hanno più mosse legali e il loro re non è sotto scacco. È patta.",
+    "The Bulls resigned. The Bears take the game.": "I Tori hanno abbandonato. La partita va agli Orsi.",
+    "The Bulls' pawn reaches the last rank": "Il pedone dei Tori arriva all'ultima traversa",
+    "The board was not the problem, the clock was. It starts on the first move, not when the panel opens.": "Il problema non era la scacchiera, era l'orologio. Parte alla prima mossa, non all'apertura del pannello.",
+    "The game ends here, and the board stays for review.": "La partita finisce qui, e la scacchiera resta per rivederla.",
+    "You have no legal move, and your king is not in check. That is a draw.": "Non hai più mosse legali e il tuo re non è sotto scacco. È patta.",
+    "You resigned. The Bears take the game.": "Hai abbandonato. La partita va agli Orsi.",
+    "You were ahead on material when you stopped. Sit with a bad position longer — it is where the chess is.": "Eri avanti di materiale quando ti sei fermato. Resta più a lungo in una posizione difficile — è lì che c'è il gioco.",
+    "Your pawn reaches the last rank": "Il tuo pedone arriva all'ultima traversa",
+    "cancel the move": "annulla la mossa",
+    "{s} are level on material.": "{s} — pari come materiale.",
+    "{s} are {n} down on material.": "{s} — {n} di svantaggio come materiale.",
+    "{s} are {n} up on material.": "{s} — {n} di vantaggio come materiale.",
     "The Bulls' king had nowhere to run.": "Il re dei Tori non aveva dove scappare.",
     "The game is over. Play again, or step back through it.": "La partita è finita. Gioca ancora, oppure ripercorrila a ritroso.",
     "The house is choosing its move.": "Il banco sta scegliendo la mossa.",
@@ -4290,9 +4420,17 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
   const [clock, setClock] = useState({ w: CHESS_START, b: CHESS_START });
   const [algo, setAlgo] = useState("balanced");            // how the house plays
   const [house, setHouse] = useState(true);                // is the house playing the Bears at all
-  const [end, setEnd] = useState(null);                    // { winner: 'w'|'b'|'draw', by }
+  const [end, setEnd] = useState(null);                    // { winner: 'w'|'b'|'draw', by, side }
   const [review, setReview] = useState(null);              // index into hist, or null
   const [showRules, setShowRules] = useState(false);
+  // The two questions the board can ask back. A promotion is a move waiting for
+  // its piece — { from, to, side } and no board change until it is answered.
+  // A resignation is the only way to end a game that the position did not end,
+  // so it asks first.
+  const [promo, setPromo] = useState(null);
+  const [confirm, setConfirm] = useState(false);
+  const promoRef = useRef(null);
+  const keepRef = useRef(null);
   // flying-piece overlay: the position applies instantly, but the moved glyph
   // slides from→to on top of the grid before the destination shows its piece
   const [anim, setAnim] = useState(null);                  // { from, to, glyph, color, go }
@@ -4310,24 +4448,36 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
   const reset = () => {
     setHist([chessInit()]); setTurn("w"); setSel(null); setMoves([]);
     setClock({ w: CHESS_START, b: CHESS_START });
-    setEnd(null); setReview(null);
+    setEnd(null); setReview(null); setPromo(null); setConfirm(false);
     clearTimeout(animTimer.current); setAnim(null);
   };
 
   // `house` goes with the winner because the anchor's reaction depends on it:
   // in a two-player game the Bears winning is somebody at this keyboard winning,
   // and there is nobody to commiserate with.
-  const finish = (winner, by) => { setEnd({ winner, by }); onWin?.(winner, house); };
+  //
+  // `side` is the side the ending happened TO — mated, stalemated, flagged or
+  // resigned. It is the only part of an ending the winner does not imply: a
+  // draw has no winner to read it off, and the screen has to say whose king
+  // ran out of moves. Any question still open goes with the game.
+  const finish = (winner, by, side) => {
+    setEnd({ winner, by, side });
+    setPromo(null); setConfirm(false);
+    onWin?.(winner, house);
+  };
 
   // Commit a move — from the player or from the house — then end the game or
   // pass the turn. Endings are real chess: checkmate wins, stalemate draws.
   // King capture stays only as a backstop; legal-move filtering makes it
   // unreachable.
-  const commit = (from, to, side) => {
+  const commit = (from, to, side, promoteTo) => {
     const cur = hist[hist.length - 1];
     const opp = side === "w" ? "b" : "w";
-    const san = chessSan(cur, from, to);
-    const { next, taken } = chessApply(cur, from, to);
+    // The same choice reaches the notation and the board, so a log reading
+    // "b8=N" is always a log with a knight on b8. The house never passes one
+    // and takes the queen, which is what its own search already scored.
+    const san = chessSan(cur, from, to, promoteTo);
+    const { next, taken } = chessApply(cur, from, to, promoteTo);
     const outcome = taken?.t === "k" ? "checkmate" : gameStatus(next, opp);
     const mark = outcome === "checkmate" ? "#" : inCheck(next, opp) ? "+" : "";
     setHist(h => [...h, next]);
@@ -4350,8 +4500,8 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
 
     // cheer the player's captures, not the computer's
     if (taken && !(house && side === "b")) onCheer?.();
-    if (outcome === "checkmate") { finish(side, "checkmate"); return; }
-    if (outcome === "stalemate") { finish("draw", "stalemate"); return; }
+    if (outcome === "checkmate") { finish(side, "checkmate", opp); return; }
+    if (outcome === "stalemate") { finish("draw", "stalemate", opp); return; }
     setTurn(opp);
   };
 
@@ -4375,8 +4525,8 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
 
   useEffect(() => {
     if (end || !started) return;
-    if (clock.w <= 0) finish("b", "time");
-    else if (clock.b <= 0) finish("w", "time");
+    if (clock.w <= 0) finish("b", "time", "w");
+    else if (clock.b <= 0) finish("w", "time", "b");
   }, [clock, end, started]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---- the house's turn ----
@@ -4385,7 +4535,7 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
     const id = setTimeout(() => {
       const mv = chessAIMove(board, "b", algo);
       if (!mv) {                                           // backstop — commit ends games before the turn passes
-        if (inCheck(board, "b")) finish("w", "checkmate"); else finish("draw", "stalemate");
+        if (inCheck(board, "b")) finish("w", "checkmate", "b"); else finish("draw", "stalemate", "b");
         return;
       }
       commit(mv.from, mv.to, "b");
@@ -4397,17 +4547,61 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
   const shown = review === null ? board : hist[review];
   const live = !end && review === null;
   const yours = !house || turn === "w";                    // is the side to move the one at this keyboard
-  const canAct = live && yours;
+  // A question on the screen takes the board with it: the squares stop
+  // accepting clicks and the rail's chips go with them, because the move under
+  // the overlay is the one being decided. The dots stay lit — that is the move
+  // you are being asked about.
+  const canAct = live && yours && !promo && !confirm;
   const targets = useMemo(() => (sel && review === null ? legalMoves(board, sel.r, sel.c) : []), [sel, board, review]);
   const suggest = useMemo(() => (sel && live ? chessSuggest(board, sel) : null), [sel, board, live]);
   const lastMove = review === null ? moves[moves.length - 1] : (review > 0 ? moves[review - 1] : null);
 
-  const play = (to) => { const from = sel; setSel(null); commit(from, to, turn); };
+  const play = (to) => {
+    const from = sel;
+    // The pawn stays selected under the chooser, so the board still shows the
+    // move about to be made — and cancelling puts you back exactly where you
+    // were, because nothing was committed. The clock keeps running: a chess
+    // clock has never stopped for a promotion, and this one already refuses to
+    // stop for anything else.
+    if (isPromotion(board, from, to)) {
+      setPromo({ from, to, side: turn });
+      requestAnimationFrame(() => promoRef.current?.focus());
+      return;
+    }
+    setSel(null);
+    commit(from, to, turn);
+  };
+  const takePromo = (type) => {
+    const p = promo;
+    setPromo(null); setSel(null);
+    commit(p.from, p.to, p.side, type);
+  };
   const clickSquare = (r, c) => {
     if (!canAct) return;
     if (sel && targets.some(x => x.r === r && x.c === c)) { play({ r, c }); return; }
     const p = board[r][c];
     if (p && p.s === turn) setSel({ r, c }); else setSel(null);
+  };
+
+  // ---- resigning ----
+  // In a house game the seat is always the Bulls', whoever is on the clock —
+  // you can concede while the house is still thinking, the same as over a
+  // board. With two players it is whoever is to move, because that is the
+  // person this keyboard belongs to right now.
+  const resigner = house ? "w" : turn;
+  const askResign = () => {
+    if (end) return;
+    // A promotion open at the same time is a move that was never committed, so
+    // there is nothing to take back — it just goes.
+    setPromo(null); setSel(null); setConfirm(true);
+    requestAnimationFrame(() => keepRef.current?.focus());
+  };
+  const doResign = () => {
+    setConfirm(false);
+    // The losing cue, in both modes. Somebody pressed a button to end their own
+    // game; there is one screen, and it belongs to them.
+    sfx?.("lose");
+    finish(resigner === "w" ? "b" : "w", "resign", resigner);
   };
 
   // ---- readouts, all of them derived ----
@@ -4505,14 +4699,54 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
     : sel ? selLine
     : t("Tap a piece to see where it can go.");
 
+  // ---- resigning ----
+  // The one fact worth putting in front of somebody about to concede: where the
+  // game actually stands. Read off the same `edge` the POSITION card is already
+  // showing, flipped to the resigning side's point of view so it is never "you
+  // are −3 up". Material is not the position, which is why the line states the
+  // number and stops there rather than telling you what it means.
+  const resignName = resigner === "w" ? t("Bulls") : t("Bears");
+  const resignEdge = resigner === "w" ? edge : -edge;
+  const resignLine = resignEdge === 0
+    ? t("{s} are level on material.").replace("{s}", resignName)
+    : resignEdge > 0
+      ? t("{s} are {n} up on material.").replace("{s}", resignName).replace("{n}", String(resignEdge))
+      : t("{s} are {n} down on material.").replace("{s}", resignName).replace("{n}", String(-resignEdge));
+
   // ---- the end card ----
   const won = end && (end.winner === "w");
+  const drawn = !!end && end.winner === "draw";
+  // TIME LEFT is the WINNER's clock, because the headline is about them. A draw
+  // has no winner, so one clock in that slot would be a number with no owner —
+  // exactly the way this screen is not allowed to fail. Both print instead, in
+  // the HUD's own two colours and in the HUD's own order.
+  const endClockText = !end ? ""
+    : drawn ? `${chessClock(clock.w)} / ${chessClock(clock.b)}`
+    : chessClock(end.winner === "b" ? clock.b : clock.w);
+  const endClockNode = !drawn ? endClockText : (
+    <>
+      <span style={{ color: C.accentText }}>{chessClock(clock.w)}</span>
+      <span style={{ color: FIELD.quaternary }}> / </span>
+      <span style={{ color: C.down }}>{chessClock(clock.b)}</span>
+    </>
+  );
   const headline = !end ? ""
     : end.by === "stalemate" ? t("Stalemate — nobody wins")
+    : end.by === "resign" ? (won ? t("Resigned — Bulls win") : t("Resigned — Bears win"))
     : end.by === "time" ? (won ? t("Flag — Bulls win on time") : t("Flag — Bears win on time"))
     : won ? t("Checkmate — Bulls win") : t("Checkmate — Bears win");
+  // A stalemate names the king it happened to. "No legal move left" with nobody
+  // attached is the one line on this card that could be about either army, and
+  // a draw has no winner in the headline to infer it from.
   const subline = !end ? ""
-    : end.by === "stalemate" ? t("No legal move left, and no check. That is a draw.")
+    : end.by === "stalemate"
+      ? (house && end.side === "w" ? t("You have no legal move, and your king is not in check. That is a draw.")
+        : end.side === "w" ? t("The Bulls have no legal move, and their king is not in check. That is a draw.")
+        : t("The Bears have no legal move, and their king is not in check. That is a draw."))
+    : end.by === "resign"
+      ? (house ? t("You resigned. The Bears take the game.")
+        : end.side === "w" ? t("The Bulls resigned. The Bears take the game.")
+        : t("The Bears resigned. The Bulls take the game."))
     : end.by === "time" ? (won ? t("The Bears ran out of clock.") : t("You ran out of clock."))
     : won ? t("The Bears' king had nowhere to run.")
     : house ? t("Your king had nowhere to run.") : t("The Bulls' king had nowhere to run.");
@@ -4527,8 +4761,15 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
     : won
       ? (algo === "ruthless" ? t("That was Ruthless. There is nothing harder here.")
         : t("Ruthless is one segment along. The house stops trading pieces evenly."))
-      : (edge < -4 ? t("You were well down on material before the mate. Trade only when you win the trade.")
-        : t("It was close on material. Passive gives you room to see the pattern."));
+    // Three ways to lose, and the advice for one is a lie about the others. The
+    // material reading only belongs to a mate: a game you resigned did not end
+    // on the board, and a game you flagged did not end on material at all.
+    : end.by === "resign"
+      ? (edge > 0 ? t("You were ahead on material when you stopped. Sit with a bad position longer — it is where the chess is.")
+        : t("Knowing when a game is gone is a real skill. Passive gives you room to build one that is not."))
+    : end.by === "time" ? t("The board was not the problem, the clock was. It starts on the first move, not when the panel opens.")
+    : (edge < -4 ? t("You were well down on material before the mate. Trade only when you win the trade.")
+      : t("It was close on material. Passive gives you room to see the pattern."));
 
   // ---- shared vocabulary ----
   const railLabel = { fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", color: C.faint, textTransform: "uppercase" };
@@ -4608,6 +4849,15 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
             already wrapped; these two never did. */}
         <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <button className="v-gameout" onClick={() => setShowRules(v => !v)} aria-expanded={showRules} style={outlineBtn}>{t("How to play")}</button>
+          {/* Not .v-gameout. Every outline button in the six games lights green
+              on hover, and the one control that ends your game is not a thing
+              to light green — .v-gamedanger goes the other way, to the red it
+              already prints in. */}
+          {started && !end && (
+            <button className="v-gamedanger" onClick={askResign} style={{ ...outlineBtn, color: C.danger, border: `1px solid ${C.downEdge}` }}>
+              {t("Resign")}
+            </button>
+          )}
           <button className="v-gameout" onClick={reset} style={outlineBtn}>{t("New game")}</button>
           {onBack && <button className="v-gameout" onClick={onBack} style={outlineBtn}>← {t("games")}</button>}
           {/* v-clearx, like every other bare ✕ in this product. Without it this
@@ -4809,6 +5059,94 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
               )}
             </div>
 
+            {/* ---- the promotion chooser ---- */}
+            {/* A move that has not happened yet. The pawn is still on its old
+                square underneath, still selected, still showing its dots —
+                because that is the move being asked about, and cancelling has
+                to put you back on it with nothing lost. */}
+            {promo && !end && (
+              <div className="v-awover" role="dialog" aria-modal="true" aria-label={t("Choose a promotion")}
+                onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setPromo(null); } }}
+                style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: alpha("#07090d", 0.72), padding: 16, borderRadius: R.lg }}>
+                <div>
+                  <div style={{ ...metaMono, fontSize: 10.5, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+                    {t("PROMOTION · {sq}").replace("{sq}", chessSquare(promo.to.r, promo.to.c).toUpperCase())}
+                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", marginTop: 8, color: C.text, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>
+                    {house ? t("Your pawn reaches the last rank")
+                      : promo.side === "w" ? t("The Bulls' pawn reaches the last rank")
+                      : t("The Bears' pawn reaches the last rank")}
+                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 13.5, color: C.muted, marginTop: 7, maxWidth: 400, marginLeft: "auto", marginRight: "auto", animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>
+                    {t("It can become anything but a king. A knight is the only one of the four a queen cannot imitate.")}
+                  </div>
+                  <div className="v-promorow" style={{ marginTop: 18, animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
+                    {PROMO_TYPES.map((type, i) => (
+                      // The queen carries the accent and the focus, because it
+                      // is what all but a handful of promotions want. The other
+                      // three are not hidden behind it — an underpromotion you
+                      // have to go looking for is one nobody finds.
+                      <button key={type} ref={i === 0 ? promoRef : undefined} className="v-promopick" onClick={() => takePromo(type)}
+                        aria-label={pieceWord(type)}
+                        style={{
+                          padding: "9px 0 8px", cursor: "pointer",
+                          background: C.surface, border: `1px solid ${i === 0 ? C.accent : C.edgeStrong}`, borderRadius: R.md,
+                        }}>
+                        <span aria-hidden="true" style={{
+                          display: "block", fontSize: 30, lineHeight: 1.1,
+                          color: promo.side === "w" ? C.bullPiece : C.bearPiece,
+                          textShadow: "0 2px 0 rgba(0,0,0,0.55)",
+                        }}>{chessGlyph(promo.side, type)}</span>
+                        <span aria-hidden="true" style={{ display: "block", fontFamily: SANS, fontSize: 11, color: C.muted, marginTop: 5 }}>{pieceWord(type)}</span>
+                        {/* The same table the MATERIAL readouts sum, so a tile
+                            cannot offer a piece worth something the HUD will
+                            then disagree about. */}
+                        <span aria-hidden="true" style={{ display: "block", ...metaMono, fontSize: 10, marginTop: 2 }}>{CHESS_VAL[type]}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={() => setPromo(null)}
+                    style={{ marginTop: 14, background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 12, cursor: "pointer", padding: "6px 8px", animation: "vt-fadeup 0.6s var(--v-ease) 0.4s both" }}>
+                    {t("cancel the move")}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ---- resign, asked before it is done ---- */}
+            {confirm && !end && (
+              <div className="v-awover" role="dialog" aria-modal="true" aria-label={t("Resign")}
+                onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setConfirm(false); } }}
+                style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: alpha("#07090d", 0.72), padding: 16, borderRadius: R.lg }}>
+                <div>
+                  <div style={{ ...metaMono, fontSize: 10.5, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+                    {t("MOVE {n} · {clock}").replace("{n}", String(moveNo)).replace("{clock}", chessClock(clock[resigner]))}
+                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", marginTop: 8, color: C.text, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>
+                    {house ? t("Resign this game?") : t("Do the {s} resign?").replace("{s}", resignName)}
+                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 13.5, color: C.muted, marginTop: 7, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>
+                    {resignLine}{" "}{t("The game ends here, and the board stays for review.")}
+                  </div>
+                  <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 20, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
+                    {/* Keeping the game is the default and takes the focus.
+                        There is no accent anywhere on this card: the green
+                        button on the end card is Play again, and an equally
+                        green one here would make conceding look like the
+                        thing to do. */}
+                    <button ref={keepRef} className="v-gameout" onClick={() => setConfirm(false)}
+                      style={{ ...outlineBtn, color: C.text, fontSize: 14, padding: "11px 20px", borderRadius: 9 }}>
+                      {t("Keep playing")}
+                    </button>
+                    <button className="v-gamedanger" onClick={doResign}
+                      style={{ ...outlineBtn, color: C.danger, border: `1px solid ${C.downEdge}`, fontSize: 14, padding: "11px 20px", borderRadius: 9 }}>
+                      {t("Resign")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {end && review === null && (
               <div className="v-awover" style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: alpha("#07090d", 0.72), padding: 16, borderRadius: R.lg }}>
                 {/* The piece the whole screen was about, at the size the moment
@@ -4816,12 +5154,17 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
                 <span aria-hidden="true" style={{
                   position: "absolute", left: "50%", top: "44%", transform: "translate(-50%, -50%)",
                   fontSize: 90, lineHeight: 1, pointerEvents: "none",
-                  color: end.winner === "draw" ? "rgba(221,154,60,0.12)" : won ? "rgba(110,212,154,0.14)" : "rgba(231,139,142,0.14)",
-                  textShadow: `0 0 60px ${end.winner === "draw" ? "rgba(221,154,60,0.2)" : won ? "rgba(70,167,88,0.25)" : "rgba(221,106,110,0.22)"}`,
-                }}>{chessGlyph(won ? "w" : "b", "k")}</span>
+                  color: drawn ? "rgba(221,154,60,0.12)" : won ? "rgba(110,212,154,0.14)" : "rgba(231,139,142,0.14)",
+                  textShadow: `0 0 60px ${drawn ? "rgba(221,154,60,0.2)" : won ? "rgba(70,167,88,0.25)" : "rgba(221,106,110,0.22)"}`,
+                  // The winner's king on a decisive result, and on a draw the
+                  // king the draw happened to — the one that ran out of moves.
+                  // Every ending records which side that was, because outline
+                  // against filled is the half of this a colourblind reader
+                  // still has, and it must not be the wrong army.
+                }}>{chessGlyph(drawn ? end.side : end.winner, "k")}</span>
                 <div style={{ position: "relative" }}>
                   <div style={{ ...metaMono, fontSize: 10.5, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
-                    {t("MOVE {n} · {clock}").replace("{n}", String(movesPlayed)).replace("{clock}", chessClock(end.winner === "b" ? clock.b : clock.w))}
+                    {t("MOVE {n} · {clock}").replace("{n}", String(movesPlayed)).replace("{clock}", endClockText)}
                   </div>
                   <div style={{ fontFamily: SANS, fontSize: 34, fontWeight: 700, letterSpacing: "-1px", marginTop: 10, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both", color: end.winner === "draw" ? C.warn : won ? C.accentText : C.down }}>
                     {headline}
@@ -4831,8 +5174,7 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
                     {[
                       [t("MOVES"), String(movesPlayed), C.text],
                       [t("MATERIAL"), edgeText, edge > 0 ? C.accentText : edge < 0 ? C.down : C.text],
-                      // The winner's clock, because the headline is about them.
-                      [t("TIME LEFT"), chessClock(end.winner === "b" ? clock.b : clock.w), C.text],
+                      [t("TIME LEFT"), endClockNode, C.text],
                     ].map(([label, value, color]) => (
                       <div key={label}>
                         <div style={{ ...metaMono, fontSize: 9.5, letterSpacing: "1.5px" }}>{label}</div>
@@ -5025,7 +5367,8 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
             ? t("You are the Bulls, in green, and you move first. Checkmate the Bears' king to win — get checkmated, or run your clock to zero, and it is over.")
             : t("Two players, one screen: Bulls first, then Bears. Checkmate the other king to win, or win on the clock.")}
           {" "}{t("Tap a piece to see where it can go, then tap a square or one of the chips in the rail.")}
-          {" "}{t("Pawns promote to queens automatically. Casual rules — no castling, no en passant.")}
+          {" "}{t("A pawn reaching the last rank promotes, and you pick the piece. Casual rules — no castling, no en passant.")}
+          {" "}{t("No legal move and no check is a stalemate, which is a draw. Resign sits in the header once the game is under way.")}
         </div>
       )}
     </div>

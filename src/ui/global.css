@@ -1112,6 +1112,34 @@ button:not(:disabled):active { transform: scale(0.97); }
 .v-chesssq { transition: filter var(--v-fast) var(--v-ease); }
 .v-chesssq:not([aria-disabled="true"]):hover { filter: brightness(1.22); }
 
+/* The four tiles a promoting pawn is offered — a grid, not a wrapping flex
+   row. Flex at a phone width breaks them 3 + 1 and leaves the knight on a line
+   of its own, which reads as an afterthought rather than as the fourth option;
+   the knight is the one underpromotion with a reason, and the row exists to be
+   compared. Four across or two by two, never three. The arithmetic: four 68px
+   tiles and three 9px gaps is 299, and the well is .v-chessboard less its own
+   padding — 28px once the panel is narrow — so 340 is the last width that can
+   still hold a row of four.
+   The unnamed @container resolves against .v-chessboard, which is already a
+   container for the --sq expression its children read. */
+.v-promorow { display: grid; grid-template-columns: repeat(4, 68px); gap: 9px; justify-content: center; }
+@container (max-width: 340px) { .v-promorow { grid-template-columns: repeat(2, 68px); } }
+
+/* Each tile answers with the same accent-on-hover contract as
+   everything else in the two games, plus a surface lift — the queen already
+   wears the accent border as the default, so a border-only hover would leave
+   the one tile most people reach for with no hover at all. */
+.v-promopick { transition: border-color var(--v-base-dur) var(--v-ease), background var(--v-base-dur) var(--v-ease); }
+.v-promopick:hover { border-color: var(--v-accent); background: var(--v-surface-raised); }
+
+/* Resign, and the Resign inside its own confirmation. The only destructive
+   control in the six games, and the only one that must NOT answer in accent:
+   the hover walks its hairline up to the red it already prints in, which is
+   the same "preview what you are about to do" rule as .v-gameout, pointed the
+   other way. */
+.v-gamedanger { transition: border-color var(--v-base-dur) var(--v-ease); }
+.v-gamedanger:hover { border-color: var(--v-down); }
+
 /* The move chips in the turn card, and the two arrows on the review scrubber.
    Same accent-on-hover contract as the games' outline buttons. */
 .v-movechip { transition: border-color var(--v-base-dur) var(--v-ease), color var(--v-base-dur) var(--v-ease); }
@@ -1302,6 +1330,7 @@ button:not(:disabled):active { transform: scale(0.97); }
    Nothing outside the six game screens moves. */
 @media (pointer: coarse) {
   .v-gamepanel .v-gameout,
+  .v-gamepanel .v-gamedanger,
   .v-gamepanel .v-gamectl,
   .v-gamepanel .v-outline,
   .v-gamepanel .v-coolseg,

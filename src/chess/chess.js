@@ -1,5 +1,7 @@
 // Bull vs Bear chess rules — extracted from React.jsx so legality logic is unit-testable.
-// Casual scope: no castling or en-passant, pawns auto-promote to queens. But movement is
+// Casual scope: no castling or en-passant. A pawn reaching the far rank promotes, and the
+// mover picks the piece — chessApply takes it as an argument and queens when nobody asks
+// for anything else, which is what every internal caller wants. But movement is
 // fully LEGAL: no side may leave its own king in check, and games end by checkmate or
 // stalemate — never by a king wandering into capture mid-game.
 
@@ -17,6 +19,17 @@ const FILES = "abcdefgh";
 // Rank 8 is row 0: the board is authored from the Bears' back rank downwards.
 export const chessSquare = (r, c) => `${FILES[c]}${8 - r}`;
 export const CHESS_VAL = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 1000 };
+// What a pawn may become, best first. Not a king — that is the rule — and not
+// another pawn, which would be a move that undoes itself.
+export const PROMO_TYPES = ["q", "r", "b", "n"];
+
+// Is this move a pawn arriving on the far rank? The one move in the game that
+// asks the mover a question before it can be played, so the board, the notation
+// and the tests all have to agree on which move it is.
+export function isPromotion(board, from, to) {
+  const p = board?.[from?.r]?.[from?.c];
+  return !!p && p.t === "p" && (to.r === 0 || to.r === 7);
+}
 
 export function chessInit() {
   const back = ["r", "n", "b", "q", "k", "b", "n", "r"];
@@ -46,13 +59,18 @@ export function chessMoves(board, r, c) {
   return out;
 }
 
-// return a NEW board with the piece moved from→to (immutable; assumes the move was already validated)
-export function chessApply(bd, from, to) {
+// Return a NEW board with the piece moved from→to (immutable; assumes the move was
+// already validated). `promoteTo` only means anything for a pawn reaching the far rank,
+// and an absent or impossible choice queens — a caller that does not care about
+// promotion (legality, the house, the coach) reads exactly as it did before.
+export function chessApply(bd, from, to, promoteTo = "q") {
   const next = bd.map(row => row.slice());
   const moving = next[from.r][from.c];
   const taken = next[to.r][to.c];
   next[to.r][to.c] = moving; next[from.r][from.c] = null;
-  if (moving.t === "p" && (to.r === 0 || to.r === 7)) next[to.r][to.c] = { s: moving.s, t: "q" }; // auto-queen
+  if (moving.t === "p" && (to.r === 0 || to.r === 7)) {
+    next[to.r][to.c] = { s: moving.s, t: PROMO_TYPES.includes(promoteTo) ? promoteTo : "q" };
+  }
   return { next, taken };
 }
 
@@ -71,7 +89,14 @@ export function inCheck(board, side) {
   return false;
 }
 
-// pseudo-legal moves minus any that leave the mover's own king in check (covers pins, checks, king safety)
+// Pseudo-legal moves minus any that leave the mover's own king in check (covers pins,
+// checks, king safety).
+//
+// The default queen is not a shortcut. Whether a move is legal turns on whether the
+// mover's own king is attacked afterwards, and a promoted piece cannot attack its own
+// king or fail to block a check its own square blocks — the square is the same whichever
+// piece lands on it. So all four promotions are legal together or illegal together, and
+// asking about one answers for all four.
 export function legalMoves(board, r, c) {
   const p = board[r][c]; if (!p) return [];
   return chessMoves(board, r, c).filter(m => !inCheck(chessApply(board, { r, c }, m).next, p.s));
@@ -147,13 +172,16 @@ const SAN_LETTER = { k: "K", q: "Q", r: "R", b: "B", n: "N", p: "" };
 // Disambiguation is included, because a move list you cannot replay is a
 // decoration. If a second knight could also legally reach f3, the move is Ngf3
 // or N1f3 — never a bare Nf3 that describes two different moves.
-export function chessSan(board, from, to) {
+export function chessSan(board, from, to, promoteTo = "q") {
   const p = board[from.r][from.c];
   if (!p) return "";
   const taken = !!board[to.r][to.c];
   const dest = chessSquare(to.r, to.c);
   if (p.t === "p") {
-    const promo = (to.r === 0 || to.r === 7) ? "=Q" : "";
+    // Same fallback as chessApply, so a move written "=Q" is always a move that
+    // put a queen on the board. A log that disagrees with the position is the
+    // one thing this screen is not allowed to do.
+    const promo = (to.r === 0 || to.r === 7) ? `=${SAN_LETTER[PROMO_TYPES.includes(promoteTo) ? promoteTo : "q"]}` : "";
     return taken ? `${FILES[from.c]}x${dest}${promo}` : `${dest}${promo}`;
   }
   let rival = false, sameFile = false, sameRank = false;
