@@ -4780,7 +4780,7 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
     background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm,
     color: C.muted, fontFamily: SANS, fontSize: 13, padding: "6px 12px", cursor: "pointer", whiteSpace: "nowrap",
   };
-  const sep = <span aria-hidden="true" style={{ color: C.edgeStrong }}>|</span>;
+  const sep = <span aria-hidden="true" className="v-hudsep" style={{ color: C.edgeStrong }}>|</span>;
   const meter = (frac, ramp) => (
     <div aria-hidden="true" style={{ height: 9, borderRadius: 5, background: C.surface, border: `1px solid ${C.edge}`, overflow: "hidden", position: "relative" }}>
       <div style={{ width: `${Math.max(0, Math.min(1, frac)) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${ramp[0]}, ${ramp[1]})`, transition: "width 200ms linear" }} />
@@ -4882,8 +4882,8 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
         {/* No minWidth: 0 on either half. They are what the HUD wraps BETWEEN,
             and an item allowed to shrink to nothing never makes its line break —
             it just collapses and lets its own contents hang out of it. */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ textAlign: "right", minWidth: 96 }}>
+        <div className="v-hudside" style={{ flex: 1, display: "flex", alignItems: "center", gap: 14 }}>
+          <div className="v-hudlabel" style={{ textAlign: "right", minWidth: 96 }}>
             <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{house ? t("BULLS · YOU") : t("BULLS")}</div>
             <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: C.accentText, lineHeight: 1.1 }}>{chessClock(clock.w)}</div>
           </div>
@@ -4892,7 +4892,7 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
             {/* Three facts and two separators at 10.5px is about 200px of mono
                 that will not break on its own, and it was the thing pushing the
                 clock off the edge of a narrow panel. Let it wrap. */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, ...metaMono }}>
+            <div className="v-hudstats" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, ...metaMono }}>
               <span>{t("{n} PIECES").replace("{n}", String(counts.w.pieces))}</span>{sep}
               <span>{t("MATERIAL {n}").replace("{n}", String(counts.w.material))}</span>{sep}
               <span>{t("{n} TAKEN").replace("{n}", String(held.b.length))}</span>
@@ -4912,16 +4912,24 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
           <div style={{ fontFamily: SANS, fontSize: 10.5, color: C.faint, marginTop: 5 }}>{evalNote}</div>
         </div>
 
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14 }}>
+        <div className="v-hudside v-hudflip" style={{ flex: 1, display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             {meter(counts.b.material / 39, FIELD.foeMeter)}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
-              <span>{t("{n} TAKEN").replace("{n}", String(held.w.length))}</span>{sep}
+            {/* Written in the same order as the near half's, not backwards.
+                The reflection this row used to be part of only survives on one
+                line, and measured, the line only holds at a 1390px panel: at
+                870 — a laptop — these three facts already wrap to two, and a
+                mirror that has wrapped is just a list in the wrong order. So
+                the block still mirrors and the facts inside it no longer do.
+                What is left of the reflection here is the alignment, which is
+                what keeps the row against the centre card on a desk. */}
+            <div className="v-hudstats" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
+              <span>{t("{n} PIECES").replace("{n}", String(counts.b.pieces))}</span>{sep}
               <span>{t("MATERIAL {n}").replace("{n}", String(counts.b.material))}</span>{sep}
-              <span>{t("{n} PIECES").replace("{n}", String(counts.b.pieces))}</span>
+              <span>{t("{n} TAKEN").replace("{n}", String(held.w.length))}</span>
             </div>
           </div>
-          <div style={{ minWidth: 96 }}>
+          <div className="v-hudlabel" style={{ minWidth: 96 }}>
             <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{house ? t("BEARS · HOUSE") : t("BEARS")}</div>
             <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: C.down, lineHeight: 1.1 }}>{chessClock(clock.b)}</div>
           </div>
@@ -7279,7 +7287,7 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
   // ---- small pieces ----
   const label = { fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", color: C.faint };
   const meta = { fontFamily: MONO, fontSize: 10.5, color: C.faint };
-  const sep = <span aria-hidden="true" style={{ color: C.edgeStrong }}>|</span>;
+  const sep = <span aria-hidden="true" className="v-hudsep" style={{ color: C.edgeStrong }}>|</span>;
   const headBtn = { background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, color: C.muted, fontFamily: SANS, fontSize: 13, padding: "6px 12px", cursor: "pointer" };
 
   const card = (c, i, hidden) => (
@@ -7334,7 +7342,7 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
           <span aria-hidden="true" className={STATUS.live ? "v-pulse" : undefined} style={{ width: 6, height: 6, borderRadius: "50%", background: STATUS.tone }} />
           {STATUS.text}
         </span>
-        <span style={{ ...meta, fontSize: 11.5 }}>
+        <span className="v-headmeta" style={{ ...meta, fontSize: 11.5 }}>
           {t("session {n} · market cools at {c}").replace("{n}", String(session)).replace("{c}", String(coolAt))}
         </span>
         <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -7419,10 +7427,10 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
         <>
           {/* ---- HUD ---- */}
           <div className="v-ohhud" style={{ display: "flex", alignItems: "center", gap: 20, padding: "15px 22px", borderBottom: `1px solid ${C.edge}`, flexWrap: "wrap" }}>
-            <div style={{ flex: "1 1 240px", display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
-              <div style={{ textAlign: "right", minWidth: 104 }}>
+            <div className="v-hudside" style={{ flex: "1 1 240px", display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+              <div className="v-hudlabel" style={{ textAlign: "right", minWidth: 104 }}>
                 <div style={label}>{t("CAPITAL")}</div>
-                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "flex-end", gap: 8 }}>
+                <div className="v-hudval" style={{ display: "flex", alignItems: "baseline", justifyContent: "flex-end", gap: 8 }}>
                   <span style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: capital > 0 ? C.up : C.down, lineHeight: 1.1 }}>{money(capital)}</span>
                   {delta && delta.n !== 0 && (
                     <span key={delta.id} className="v-chipfly" style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: delta.n > 0 ? C.up : C.down }}>
@@ -7436,7 +7444,7 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
                   <div style={{ width: `${Math.max(0, Math.min(100, (capital / OH_START) * 100))}%`, height: "100%", background: `linear-gradient(90deg, ${FIELD.youMeter[0]}, ${FIELD.youMeter[1]})` }} />
                   <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(90deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 11px)" }} />
                 </div>
-                <div style={{ display: "flex", gap: 8, marginTop: 7, ...meta, flexWrap: "wrap" }}>
+                <div className="v-hudstats" style={{ display: "flex", gap: 8, marginTop: 7, ...meta, flexWrap: "wrap" }}>
                   <span>{t("START {m}").replace("{m}", money(OH_START))}</span>{sep}
                   <span style={{ color: dd.direction === "down" ? C.down : dd.direction === "up" ? C.up : C.faint }}>
                     {dd.direction === "up"
@@ -7448,7 +7456,7 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
               </div>
             </div>
 
-            <div style={{ width: 168, flexShrink: 0, background: C.surface, border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, padding: "10px 14px", textAlign: "center" }}>
+            <div className="v-hudcentre" style={{ width: 168, flexShrink: 0, background: C.surface, border: `1px solid ${C.edgeStrong}`, borderRadius: R.lg, padding: "10px 14px", textAlign: "center" }}>
               <div style={label}>{t("NET P&L")}</div>
               <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: net < 0 ? C.down : net > 0 ? C.up : C.text, lineHeight: 1.15 }}>{money(net, { sign: true })}</div>
               {/* The split bar is the RECORD, not the money: green is the share
@@ -7469,13 +7477,13 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
               </div>
             </div>
 
-            <div style={{ flex: "1 1 240px", display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+            <div className="v-hudside v-hudflip" style={{ flex: "1 1 240px", display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ height: 9, borderRadius: 5, background: C.surface, border: `1px solid ${C.edge}`, overflow: "hidden", position: "relative" }}>
                   <div style={{ width: `${Math.min(100, (marketValue / OH_LIMIT) * 100)}%`, height: "100%", background: `linear-gradient(90deg, ${FIELD.foeMeter[0]}, ${FIELD.foeMeter[1]})` }} />
                   <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(90deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 11px)" }} />
                 </div>
-                <div style={{ display: "flex", gap: 8, marginTop: 7, justifyContent: "flex-end", ...meta, flexWrap: "wrap" }}>
+                <div className="v-hudstats" style={{ display: "flex", gap: 8, marginTop: 7, justifyContent: "flex-end", ...meta, flexWrap: "wrap" }}>
                   <span style={{ color: marketHot ? C.down : C.faint }}>
                     {marketHot ? t("OVERHEATED") : phase === "closed" ? t("COOLED") : t("OPEN")}
                   </span>{sep}
@@ -7483,7 +7491,7 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
                   <span>{t("LIMIT {n}").replace("{n}", String(OH_LIMIT))}</span>
                 </div>
               </div>
-              <div style={{ minWidth: 104 }}>
+              <div className="v-hudlabel" style={{ minWidth: 104 }}>
                 <div style={label}>{t("THE MARKET")}</div>
                 <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: marketHot ? C.down : C.text, lineHeight: 1.1 }}>{marketValue}</div>
               </div>
@@ -8029,7 +8037,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
       <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(90deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 11px)" }} />
     </div>
   );
-  const sep = <span aria-hidden="true" style={{ color: C.edgeStrong }}>|</span>;
+  const sep = <span aria-hidden="true" className="v-hudsep" style={{ color: C.edgeStrong }}>|</span>;
   const pct = (hp) => Math.round((hp / AW_BASE_HP) * 100);
 
   // One line about how it actually went, read off the round rather than written
@@ -8089,8 +8097,8 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
         {/* No minWidth: 0 on either half. They are what the HUD wraps BETWEEN,
             and an item allowed to shrink to nothing never makes its line break —
             it just collapses and lets its own contents hang out of it. */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ textAlign: "right", minWidth: 108 }}>
+        <div className="v-hudside" style={{ flex: 1, display: "flex", alignItems: "center", gap: 14 }}>
+          <div className="v-hudlabel" style={{ textAlign: "right", minWidth: 108 }}>
             <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{t("YOUR SERVER")}</div>
             <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: C.accentText, lineHeight: 1.1 }}>{hud.youHp}</div>
           </div>
@@ -8099,7 +8107,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
             {/* Three facts and two separators at 10.5px is about 200px of mono
                 that will not break on its own, and it was the thing pushing the
                 server count off the edge of a narrow panel. Let it wrap. */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, ...metaMono }}>
+            <div className="v-hudstats" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, ...metaMono }}>
               <span>{(hud.youN === 1 ? t("{n} BOT") : t("{n} BOTS")).replace("{n}", String(hud.youN))}</span>{sep}
               <span>{t("DPS {n}").replace("{n}", String(hud.youDps))}</span>{sep}
               <span>{t("INTEGRITY {n}%").replace("{n}", String(pct(hud.youHp)))}</span>
@@ -8118,16 +8126,24 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
           </div>
         </div>
 
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14 }}>
+        <div className="v-hudside v-hudflip" style={{ flex: 1, display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             {meter(hud.cpuHp / AW_BASE_HP, FIELD.foeMeter)}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
-              <span>{t("INTEGRITY {n}%").replace("{n}", String(pct(hud.cpuHp)))}</span>{sep}
+            {/* Written in the same order as the near half's, not backwards.
+                The reflection this row used to be part of only survives on one
+                line, and measured, the line only holds at a 1390px panel: at
+                870 — a laptop — these three facts already wrap to two, and a
+                mirror that has wrapped is just a list in the wrong order. So
+                the block still mirrors and the facts inside it no longer do.
+                What is left of the reflection here is the alignment, which is
+                what keeps the row against the centre card on a desk. */}
+            <div className="v-hudstats" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
+              <span>{(hud.cpuN === 1 ? t("{n} BOT") : t("{n} BOTS")).replace("{n}", String(hud.cpuN))}</span>{sep}
               <span>{t("DPS {n}").replace("{n}", String(hud.cpuDps))}</span>{sep}
-              <span>{(hud.cpuN === 1 ? t("{n} BOT") : t("{n} BOTS")).replace("{n}", String(hud.cpuN))}</span>
+              <span>{t("INTEGRITY {n}%").replace("{n}", String(pct(hud.cpuHp)))}</span>
             </div>
           </div>
-          <div style={{ minWidth: 108 }}>
+          <div className="v-hudlabel" style={{ minWidth: 108 }}>
             <div style={{ ...metaMono, fontSize: 10, letterSpacing: "1.5px" }}>{t("ENEMY SERVER")}</div>
             <div style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: C.down, lineHeight: 1.1 }}>{hud.cpuHp}</div>
           </div>
@@ -8137,59 +8153,72 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
       {/* ---- field + rail ---- */}
       <div className="v-awbody" style={{ display: "flex", alignItems: "stretch" }}>
         <div className="v-awmain" style={{ flex: 1, minWidth: 0, padding: "18px 16px 18px 22px" }}>
-          <div style={{ position: "relative", border: `1px solid ${C.edge}`, borderRadius: R.lg, overflow: "hidden", background: C.base }}>
-            <canvas ref={canvasRef} aria-hidden="true"
-              style={{ width: "100%", height: "auto", display: "block", aspectRatio: `${AW_W} / ${AW_H}` }} />
+          {/* v-awheld while an overlay is up: on a phone the frame is 161px tall
+              and the pause card is 220, so place-items: center clipped 61px off
+              the top of it — the round, the clock and half the word Paused. The
+              end card is taller still. The frame is told to make room instead of
+              the card being told to say less. */}
+          <div className={paused || over ? "v-awheld" : undefined} style={{ position: "relative", border: `1px solid ${C.edge}`, borderRadius: R.lg, overflow: "hidden", background: C.base }}>
+            {/* The picture and everything pinned to it. The frame outside this
+                is allowed to grow — on a phone the hint becomes a caption under
+                the field and makes it taller — and the lane buttons are
+                inset: 0 against their parent, so without this box they grew
+                with it: measured, a 102px canvas with three lanes at 53px each,
+                which put lane C's target on top of the caption. */}
+            <div className="v-awstage" style={{ position: "relative" }}>
+              <canvas ref={canvasRef} aria-hidden="true"
+                style={{ width: "100%", height: "auto", display: "block", aspectRatio: `${AW_W} / ${AW_H}` }} />
 
-            {/* The sweep is a DOM layer rather than a canvas draw: it is pure
-                decoration, and a CSS animation is something
-                prefers-reduced-motion can switch off without the draw loop
-                needing to know it exists. */}
-            <div aria-hidden="true" className="v-fieldscan" style={{ position: "absolute", top: 0, left: 0, width: 180, height: "100%", background: "linear-gradient(90deg, transparent, rgba(76,195,138,0.05), transparent)", pointerEvents: "none" }} />
+              {/* The sweep is a DOM layer rather than a canvas draw: it is pure
+                  decoration, and a CSS animation is something
+                  prefers-reduced-motion can switch off without the draw loop
+                  needing to know it exists. */}
+              <div aria-hidden="true" className="v-fieldscan" style={{ position: "absolute", top: 0, left: 0, width: 180, height: "100%", background: "linear-gradient(90deg, transparent, rgba(76,195,138,0.05), transparent)", pointerEvents: "none" }} />
 
-            {/* Three lanes, as real buttons. A canvas cannot be tabbed to and
-                announces nothing, so the thing you are told to click is a named
-                control whether you reach it with a mouse or not. */}
-            <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateRows: `repeat(${AW_LANES}, 1fr)` }}>
-              {AW_LANE_ID.map((id, i) => (
-                <button key={id} onClick={() => placeIn(i)}
-                  onMouseEnter={() => setHoverLane(i)} onMouseLeave={() => setHoverLane(null)}
-                  onFocus={() => setHoverLane(i)} onBlur={() => setHoverLane(null)}
-                  // aria-disabled, not disabled. The canvas is aria-hidden, so
-                  // these three buttons ARE the battlefield as far as a screen
-                  // reader is concerned — and disabling them whenever no bot was
-                  // armed, which is most of the round, left nothing there at all.
-                  // placeIn refuses the click either way.
-                  aria-disabled={!armed || !!over}
-                  aria-label={armed
-                    ? t("Deploy {bot} to lane {lane}").replace("{bot}", BOT_NAME[armed]).replace("{lane}", id)
-                    : t("Lane {lane} — pick a bot first").replace("{lane}", id)}
-                  style={{
-                    background: "transparent", border: "none", padding: 0,
-                    cursor: armed && !over ? "pointer" : "default",
-                    display: "flex", alignItems: "flex-start", justifyContent: "flex-start",
-                  }}>
-                  <span aria-hidden="true" style={{ ...metaMono, fontSize: 9.5, letterSpacing: "1.5px", color: FIELD.laneLabel, padding: "10px 0 0 12px" }}>
-                    {t("LANE {lane}").replace("{lane}", id)}
-                  </span>
-                </button>
-              ))}
+              {/* Three lanes, as real buttons. A canvas cannot be tabbed to and
+                  announces nothing, so the thing you are told to click is a named
+                  control whether you reach it with a mouse or not. */}
+              <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateRows: `repeat(${AW_LANES}, 1fr)` }}>
+                {AW_LANE_ID.map((id, i) => (
+                  <button key={id} onClick={() => placeIn(i)}
+                    onMouseEnter={() => setHoverLane(i)} onMouseLeave={() => setHoverLane(null)}
+                    onFocus={() => setHoverLane(i)} onBlur={() => setHoverLane(null)}
+                    // aria-disabled, not disabled. The canvas is aria-hidden, so
+                    // these three buttons ARE the battlefield as far as a screen
+                    // reader is concerned — and disabling them whenever no bot was
+                    // armed, which is most of the round, left nothing there at all.
+                    // placeIn refuses the click either way.
+                    aria-disabled={!armed || !!over}
+                    aria-label={armed
+                      ? t("Deploy {bot} to lane {lane}").replace("{bot}", BOT_NAME[armed]).replace("{lane}", id)
+                      : t("Lane {lane} — pick a bot first").replace("{lane}", id)}
+                    style={{
+                      background: "transparent", border: "none", padding: 0,
+                      cursor: armed && !over ? "pointer" : "default",
+                      display: "flex", alignItems: "flex-start", justifyContent: "flex-start",
+                    }}>
+                    <span aria-hidden="true" style={{ ...metaMono, fontSize: 9.5, letterSpacing: "1.5px", color: FIELD.laneLabel, padding: "10px 0 0 calc(7.8% + 14px)" }}>
+                      {t("LANE {lane}").replace("{lane}", id)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <span aria-hidden="true" className="v-awmid" style={{ position: "absolute", left: "50%", top: 12, transform: "translateX(-50%)", ...metaMono, fontSize: 9.5, letterSpacing: "1.5px", color: C.accentText, background: alpha(C.base, 0.85), padding: "3px 9px", borderRadius: 10, border: `1px solid ${C.edge}`, pointerEvents: "none" }}>
+                {t("MIDLINE")}
+              </span>
+              <span aria-hidden="true" className="v-awside" style={{ position: "absolute", left: 22, bottom: 12, ...metaMono, fontSize: 9.5, letterSpacing: "1.5px", color: C.accentText, pointerEvents: "none" }}>
+                {t("YOU")} {hud.youHp}
+              </span>
+              <span aria-hidden="true" className="v-awside" style={{ position: "absolute", right: 22, bottom: 12, ...metaMono, fontSize: 9.5, letterSpacing: "1.5px", color: C.down, pointerEvents: "none" }}>
+                {t("ENEMY")} {hud.cpuHp}
+              </span>
             </div>
 
-            <span aria-hidden="true" style={{ position: "absolute", left: "50%", top: 12, transform: "translateX(-50%)", ...metaMono, fontSize: 9.5, letterSpacing: "1.5px", color: C.accentText, background: alpha(C.base, 0.85), padding: "3px 9px", borderRadius: 10, border: `1px solid ${C.edge}`, pointerEvents: "none" }}>
-              {t("MIDLINE")}
-            </span>
-            <span aria-hidden="true" style={{ position: "absolute", left: 22, bottom: 12, ...metaMono, fontSize: 9.5, letterSpacing: "1.5px", color: C.accentText, pointerEvents: "none" }}>
-              {t("YOU")} {hud.youHp}
-            </span>
-            <span aria-hidden="true" style={{ position: "absolute", right: 22, bottom: 12, ...metaMono, fontSize: 9.5, letterSpacing: "1.5px", color: C.down, pointerEvents: "none" }}>
-              {t("ENEMY")} {hud.cpuHp}
-            </span>
-
             {!over && (
-              <div style={{ position: "absolute", left: "50%", bottom: 12, transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 8, background: alpha(C.base, 0.85), border: `1px solid ${C.edge}`, borderRadius: 20, padding: "6px 12px", color: C.muted, fontFamily: SANS, fontSize: 11.5, pointerEvents: "none", maxWidth: "calc(100% - 220px)" }}>
+              <div className="v-awhint" style={{ position: "absolute", left: "50%", bottom: 12, transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 8, background: alpha(C.base, 0.85), border: `1px solid ${C.edge}`, borderRadius: 20, padding: "6px 12px", color: C.muted, fontFamily: SANS, fontSize: 11.5, pointerEvents: "none", maxWidth: "calc(100% - 220px)" }}>
                 <span aria-hidden="true" className="v-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, flexShrink: 0 }} />
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span className="v-awhinttext" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {armed
                     ? t("Now click a lane to send the {bot} in.").replace("{bot}", BOT_NAME[armed])
                     : t("Pick a bot below, then click a lane to deploy")}
@@ -8198,7 +8227,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
             )}
 
             {paused && !over && (
-              <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: alpha("#07090d", 0.62), padding: 16 }}>
+              <div className="v-awveil" style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: alpha("#07090d", 0.62), padding: 16 }}>
                 <div>
                   <div style={{ ...metaMono, fontSize: 10.5, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
                     {t("ROUND {n} · {clock}").replace("{n}", String(round)).replace("{clock}", awClock(hud.clock))}
@@ -8219,7 +8248,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
               </div>
             )}
             {over && (
-              <div className="v-awover" style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: alpha("#07090d", 0.62), padding: 16 }}>
+              <div className="v-awover v-awveil" style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: alpha("#07090d", 0.62), padding: 16 }}>
                 <div>
                   <div style={{ ...metaMono, fontSize: 10.5, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
                     {t("ROUND {n} · {clock}").replace("{n}", String(round)).replace("{clock}", awClock(hud.clock))}

@@ -926,6 +926,34 @@ button:not(:disabled):active { transform: scale(0.97); }
      it. Below 740 the strip's content box is under the ~780 its three parts
      need, so it has wrapped by here in every case. */
   .v-hudcentre { width: 100% !important; }
+
+  /* A mirror is a left-and-right idea, and all three arcade strips are built
+     as one: your side reads label, number, meter, stats outwards from the
+     centre card, and the opponent's reads the same anatomy back towards it. On
+     a desk that makes "am I ahead" one comparison about an axis instead of six
+     readings.
+
+     Stacked, the axis is gone and the reflection becomes two rows that
+     disagree. Measured in a 287px panel: BULLS printed its label and clock at
+     the left of the row and its meter at the right; BEARS, directly below,
+     printed its meter at the left and its label and clock at the right. Same
+     three facts, opposite corners, one row apart — so reading one clock
+     against the other is a zigzag, and the lower row hands you its numbers
+     before the label that says whose they are.
+
+     So below the break the far half reads forward like the near one. The
+     half is two boxes and never wraps, so reversing it here is safe; the
+     three facts inside it are a wrapping row and could not be reversed in
+     CSS without scrambling their reading order, which is why they are
+     written forwards in the JSX instead. A desk still gets its mirror. */
+  .v-hudflip { flex-direction: row-reverse !important; }
+  .v-hudflip .v-hudstats { justify-content: flex-start !important; }
+
+  /* Both halves' labels start at the same left edge for the same reason: the
+     near one was right-aligned into a 96px box so that it would sit against
+     the centre, and there is no centre to sit against any more. */
+  .v-hudside .v-hudlabel { text-align: left !important; }
+  .v-hudside .v-hudval { justify-content: flex-start !important; }
 }
 
 /* Once that rail unhooks, Algorithm Wars stops being playable — and it is the
@@ -965,6 +993,89 @@ button:not(:disabled):active { transform: scale(0.97); }
    it is one tap from the same header. */
 @container (max-width: 460px) {
   .v-botblurb { display: none !important; }
+}
+
+/* The battlefield is drawn at a fixed 900 by 372 and letterboxed, which on a
+   phone means a 247 by 102 canvas carrying four separate layers of label. It
+   cannot. Measured at 375, in the order they matter:
+
+   The hint is the game. It is the only place that says "pick a bot below, then
+   click a lane to deploy", and the only place that answers back with "now
+   click a lane to send the Day-Trader in" once one is armed. Bottom-centred
+   inside the field, it wears maxWidth: calc(100% - 220px) so that it clears
+   YOU and ENEMY on either side of it — which on a 247px field is 27px. It was
+   rendering as an empty capsule: the pill 27 wide, the text inside it 0 wide
+   against a 225px scrollWidth. The instructions were not small on a phone,
+   they were gone.
+
+   So below 540 it stops being an overlay and becomes a caption under the
+   canvas, inside the same frame. It gives up the pill because a caption that
+   has the width to itself does not need one, and takes the width the pill was
+   spending on clearance instead. */
+@container (max-width: 540px) {
+  .v-awhint {
+    position: static !important;
+    transform: none !important;
+    max-width: none !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 14px 12px !important;
+    margin-top: 10px;
+    align-items: flex-start !important;
+  }
+  /* It had nowrap and an ellipsis because it was a pill that must not grow.
+     A caption may use a second line, and in a language with longer words it
+     will need one. */
+  .v-awhinttext { white-space: normal !important; overflow: visible !important; }
+  /* The dot sits on the first line rather than in the middle of two. */
+  .v-awhint .v-pulse { margin-top: 5px; }
+
+  /* YOU 200 and ENEMY 200 label the two towers with numbers the strip above
+     has just printed as YOUR SERVER and ENEMY SERVER — the same values, from
+     the same state, 120px apart. On a desk that repetition is free. On a
+     102px field it costs LANE C, which they cross at y 76–90 against the
+     label's 78–92, and LANE C is a target you tap. The towers keep their
+     colours, and the colours are the same two the strip uses. */
+  .v-awside { display: none; }
+
+  /* Pause and the end card are absolute overlays on a frame that is exactly as
+     tall as the picture, and on a phone the picture is 102px. The pause card
+     is 220 and the end card taller again, so place-items: center overflowed
+     both ways and overflow: hidden took 61px off the top of the pause card —
+     the round, the clock and half the word Paused, on the screen whose whole
+     job is to say Paused.
+
+     Rather than pick a min-height for the frame — a number that would be right
+     for one of the two cards, in one language — the frame becomes a single
+     stack of cells that the picture, the caption and the overlay all share, so
+     whichever is tallest sets the height and the overlay still covers the rest.
+     The stage takes align-self: start because it must keep the aspect its lane
+     buttons are measured against; letting it stretch would put lane C over the
+     caption again. */
+  .v-awheld { display: grid; grid-template-columns: 1fr; grid-template-rows: auto auto; }
+  /* All three name their column as well as their row. Auto-placement refuses to
+     overlap, so the overlay — the one item that has to — would be given a second
+     column of its own, and the picture would be squeezed into the first: measured
+     once, a 249px frame split 87 and 160, with the canvas drawn 87 wide. Only
+     explicitly placed items may share a cell. */
+  .v-awheld > .v-awstage { grid-area: 1 / 1; align-self: start; }
+  /* The caption keeps its space so the frame does not resize under the scrim,
+     but it stops showing through it: at 0.62 the veil is deliberately see-
+     through, and a caption that sits at the bottom of a desk-sized field sits
+     in the middle of a phone-sized one — directly behind the sentence the
+     pause card is there to say. */
+  .v-awheld > .v-awhint  { grid-area: 2 / 1; visibility: hidden; }
+  .v-awheld > .v-awveil  { grid-area: 1 / 1 / span 2 / span 1; position: static !important; }
+
+  /* MIDLINE goes with them, and it is the easiest of the three to lose: it
+     names a line the canvas already draws down the middle of the field, which
+     makes it the one label here that can be read off the picture. It also has
+     the least room. Measured, its pill clears lane A by 12px at a 287px panel
+     and overlaps it by 13 at 232 — a margin thin enough that a longer word for
+     it in another language closes on its own. A field this size holds one
+     layer of label, and that layer is the three you tap. */
+  .v-awmid { display: none; }
 }
 
 /* The Video desk takes the same break against the PANEL, at its own number. It
@@ -1037,6 +1148,34 @@ button:not(:disabled):active { transform: scale(0.97); }
    one line. */
 @container (max-width: 540px) {
   .v-awhud { padding: 12px 14px !important; gap: 14px !important; }
+}
+
+/* Each stat row is three facts and two pipes, and the pipes are flex children
+   like the facts are. Given one line that is exactly what you want. Given a
+   150px column it is not: the row wraps wherever it runs out, and measured on
+   a phone the Bulls' read "16 PIECES | MATERIAL 39" and then "| 0 TAKEN",
+   while the Bears' ended a line on a bare "|". A separator at the head of a
+   line separates it from nothing, and one at the tail is a promise of a fourth
+   fact that never comes.
+
+   Below 540 the row is wrapping in every game, so the pipes go and the column
+   gap does their job — which is the job the pipes were standing in for on a
+   line too tight to space out. The row gap stays at 8 so the two lines still
+   read as one block. */
+@container (max-width: 540px) {
+  .v-hudstats { column-gap: 12px !important; }
+  .v-hudstats .v-hudsep { display: none; }
+}
+
+/* Overheat's header subtitle, and only Overheat's. Both of its facts are
+   printed again within the same screen — the session count by the HUD's
+   "{n} SESSIONS" two readouts along, and the cool-off by the market card's own
+   "cools at {n}" a few hundred pixels below — so on a phone it is 29px of
+   header saying what the screen already says twice. Chess's move number and
+   Algorithm Wars' round are printed nowhere else, which is why those two
+   subtitles stay and this rule names one class rather than a family. */
+@container (max-width: 540px) {
+  .v-headmeta { display: none; }
 }
 
 /* ---------- marketing homepage ----------
