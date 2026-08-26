@@ -14487,59 +14487,85 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 {exportMsg}
               </div>
             )}
+
+            {/* The stage — the desk before anybody has asked it anything.
+                When nothing is on the desk, the space beside the anchor offers
+                the desk's verbs instead of rendering as a void; every card is an
+                existing capability whose result fills this same slot, so the
+                empty state teaches the filled one.
+
+                It now sits INSIDE the conversation column, which is what that
+                paragraph always claimed. It was a sibling of the whole ask row,
+                so it drew full-width UNDERNEATH the row instead of beside the
+                anchor — which left 1024 x 487 of nothing to the right of the
+                cartoon at the reference's own 1360px desk, and put the four
+                cards at y=834 on a 900px screen. The one thing written to teach
+                a new desk what it does was below the fold, and the void it was
+                written to fill was the part you could see.
+
+                On a phone there is no void — the columns stack — and this does
+                change the order there: conversation, these cards, then the
+                anchor at y=850 on an 812 screen instead of y=508. That is the
+                right trade for a desk nobody has asked anything yet. What you
+                lose is the top 300px of a cartoon; what you gain is the four
+                things the desk can do. The anchor presents answers, and there
+                are none. It comes back the moment there are.
+
+                And only while the desk really is empty. deskHasResult tracks
+                the ATTACHMENTS — news, calendar, portfolio, a report — and says
+                nothing about the conversation, so these four cards used to sit
+                under a ten-turn thread padding it out. A conversation is not a
+                void. Now that they render inside the column rather than beneath
+                the whole row, that matters: the block is an empty state, so it
+                goes when the desk stops being empty. */}
+            {!gameOn && !deskHasResult && chatThread.length === 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.panelEdge}` }}>
+                <div style={{ ...TYPE.eyebrowSm, color: C.faint }}>
+                  {t("ON THE DESK")} <span aria-hidden="true">/</span> <span style={{ color: C.accentText }}>{selected}</span>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 10 }}>
+                  {[
+                    ["news", newsBusy ? t("Searching…") : t("Load the news"), t("latest {sym} headlines and video").replace("{sym}", selected), () => fetchNews(), newsBusy, false],
+                    ["portfolio", t("Portfolio on desk"), t("positions and P&L"), () => setDeskPortfolio(true), false, false],
+                    ["calendar", t("Calendar on desk"), t("your events and market earnings"), () => setDeskCalendar(true), false, false],
+                    ["chart", t("Full chart"), t("the full {sym} chart").replace("{sym}", selected), () => openChart(selected), false],
+                  ].map(([icon, label, hint, run, off]) => (
+                    <button key={icon} onClick={run} disabled={off} className="v-lift v-verbcard"
+                      style={{
+                        display: "flex", alignItems: "center", gap: 14, textAlign: "left",
+                        background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg,
+                        padding: 14, cursor: off ? "default" : "pointer", opacity: off ? 0.6 : 1,
+                      }}>
+                      {/* A tile, not a bare emoji. An emoji cannot take a colour
+                          — the old markup set color:accentText on one and nothing
+                          happened — and it renders as a different picture on
+                          every platform. These are strokes in currentColor, which
+                          is what lets the tile go green under a press.
+
+                          All four rest neutral. One of them standing green said
+                          "this is the important one", which is not true — they
+                          are four peers — and it spent the screen's accent on a
+                          state rather than on an action. The green is the press
+                          now: it means "this is the one you just chose". */}
+                      <span aria-hidden="true" className="v-verbtile" style={{
+                        width: 40, height: 40, flexShrink: 0, borderRadius: R.md,
+                        display: "grid", placeItems: "center",
+                        background: C.surfaceRaised, color: C.muted,
+                        transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}`,
+                      }}>
+                        <DeskIcon name={icon} />
+                      </span>
+                      <span style={{ minWidth: 0 }}>
+                        <span style={{ display: "block", fontFamily: SANS, fontWeight: 700, fontSize: 14.5, color: C.text, letterSpacing: "-0.008em" }}>{label}</span>
+                        <span style={{ display: "block", fontFamily: SANS, fontSize: 13, color: C.muted, lineHeight: 1.45, marginTop: 2 }}>{hint}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             </div>
           </div>
-
-          {/* The stage. When nothing is on the desk, the space beside the
-              anchor offers the desk's verbs instead of rendering as a void —
-              every card here is an existing capability whose result fills
-              this same slot, so the empty state teaches the filled one. */}
-          {!gameOn && !deskHasResult && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 12, borderTop: `1px solid ${C.panelEdge}` }}>
-              <div style={{ ...TYPE.eyebrowSm, color: C.faint }}>
-                {t("ON THE DESK")} <span aria-hidden="true">/</span> <span style={{ color: C.accentText }}>{selected}</span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 10 }}>
-                {[
-                  ["news", newsBusy ? t("Searching…") : t("Load the news"), t("latest {sym} headlines and video").replace("{sym}", selected), () => fetchNews(), newsBusy, false],
-                  ["portfolio", t("Portfolio on desk"), t("positions and P&L"), () => setDeskPortfolio(true), false, false],
-                  ["calendar", t("Calendar on desk"), t("your events and market earnings"), () => setDeskCalendar(true), false, false],
-                  ["chart", t("Full chart"), t("the full {sym} chart").replace("{sym}", selected), () => openChart(selected), false],
-                ].map(([icon, label, hint, run, off]) => (
-                  <button key={icon} onClick={run} disabled={off} className="v-lift v-verbcard"
-                    style={{
-                      display: "flex", alignItems: "center", gap: 14, textAlign: "left",
-                      background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg,
-                      padding: 14, cursor: off ? "default" : "pointer", opacity: off ? 0.6 : 1,
-                    }}>
-                    {/* A tile, not a bare emoji. An emoji cannot take a colour
-                        — the old markup set color:accentText on one and nothing
-                        happened — and it renders as a different picture on
-                        every platform. These are strokes in currentColor, which
-                        is what lets the tile go green under a press.
-
-                        All four rest neutral. One of them standing green said
-                        "this is the important one", which is not true — they
-                        are four peers — and it spent the screen's accent on a
-                        state rather than on an action. The green is the press
-                        now: it means "this is the one you just chose". */}
-                    <span aria-hidden="true" className="v-verbtile" style={{
-                      width: 40, height: 40, flexShrink: 0, borderRadius: R.md,
-                      display: "grid", placeItems: "center",
-                      background: C.surfaceRaised, color: C.muted,
-                      transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}`,
-                    }}>
-                      <DeskIcon name={icon} />
-                    </span>
-                    <span style={{ minWidth: 0 }}>
-                      <span style={{ display: "block", fontFamily: SANS, fontWeight: 700, fontSize: 14.5, color: C.text, letterSpacing: "-0.008em" }}>{label}</span>
-                      <span style={{ display: "block", fontFamily: SANS, fontSize: 13, color: C.muted, lineHeight: 1.45, marginTop: 2 }}>{hint}</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
         </div>
       </div>
