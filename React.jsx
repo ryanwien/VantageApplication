@@ -814,6 +814,9 @@ const I18N = {
     "Ends {date}": "Termina el {date}",
     "Then {price}": "Después {price}",
     "Add payment card": "Añadir tarjeta",
+    "Your free trial has ended": "Tu prueba gratuita ha terminado",
+    "Pick a plan to carry on. Your watchlist, portfolio and alerts are untouched — they live in this browser, and nothing has been deleted.": "Elige un plan para continuar. Tu lista, tu cartera y tus alertas siguen intactas: viven en este navegador y no se ha borrado nada.",
+    "Continue on {plan}": "Continuar con {plan}",
     "Show": "Mostrar",
   },
   fr: {
@@ -1485,6 +1488,9 @@ const I18N = {
     "Ends {date}": "Se termine le {date}",
     "Then {price}": "Ensuite {price}",
     "Add payment card": "Ajouter une carte",
+    "Your free trial has ended": "Votre essai gratuit est terminé",
+    "Pick a plan to carry on. Your watchlist, portfolio and alerts are untouched — they live in this browser, and nothing has been deleted.": "Choisissez un forfait pour continuer. Votre liste, votre portefeuille et vos alertes sont intacts : ils vivent dans ce navigateur et rien n'a été supprimé.",
+    "Continue on {plan}": "Continuer avec {plan}",
     "Show": "Afficher",
   },
   de: {
@@ -2156,6 +2162,9 @@ const I18N = {
     "Ends {date}": "Endet am {date}",
     "Then {price}": "Danach {price}",
     "Add payment card": "Karte hinzufügen",
+    "Your free trial has ended": "Deine kostenlose Testphase ist beendet",
+    "Pick a plan to carry on. Your watchlist, portfolio and alerts are untouched — they live in this browser, and nothing has been deleted.": "Wähl einen Tarif, um weiterzumachen. Deine Watchlist, dein Depot und deine Alarme sind unberührt — sie liegen in diesem Browser, und nichts wurde gelöscht.",
+    "Continue on {plan}": "Weiter mit {plan}",
     "Show": "Anzeigen",
   },
   pt: {
@@ -2826,6 +2835,9 @@ const I18N = {
     "Ends {date}": "Termina a {date}",
     "Then {price}": "Depois {price}",
     "Add payment card": "Adicionar cartão",
+    "Your free trial has ended": "A tua avaliação gratuita terminou",
+    "Pick a plan to carry on. Your watchlist, portfolio and alerts are untouched — they live in this browser, and nothing has been deleted.": "Escolhe um plano para continuar. A tua lista, a tua carteira e os teus alertas estão intactos: vivem neste navegador e nada foi apagado.",
+    "Continue on {plan}": "Continuar com {plan}",
     "Show": "Mostrar",
   },
   it: {
@@ -3496,6 +3508,9 @@ const I18N = {
     "Ends {date}": "Finisce il {date}",
     "Then {price}": "Poi {price}",
     "Add payment card": "Aggiungi una carta",
+    "Your free trial has ended": "La tua prova gratuita è finita",
+    "Pick a plan to carry on. Your watchlist, portfolio and alerts are untouched — they live in this browser, and nothing has been deleted.": "Scegli un piano per continuare. La tua watchlist, il tuo portafoglio e i tuoi avvisi sono intatti: vivono in questo browser e non è stato cancellato nulla.",
+    "Continue on {plan}": "Continua con {plan}",
     "Show": "Mostra",
   },
 };
@@ -8032,11 +8047,17 @@ const saveAccount = (a) => { try { a ? localStorage.setItem("tape-account", JSON
 // suffix never rendered: it tested account.agreedAt, and no path had ever put
 // agreedAt on the object. The three dates travel together now — trial start,
 // terms accepted, and which version of them. Never the salt or the hash.
+//
+// `subscribed` is THREE-valued and the null matters. Only the backend can
+// answer it, so a local account leaves it null — meaning "nobody has said" —
+// and the lapsed-trial screen fires on `false` alone, never on a falsy value.
+// A missing answer must never read as "has not paid".
 const accountFrom = (src, extra) => ({
   email: src.email, name: src.name, plan: src.plan,
   createdAt: src.createdAt ?? null,
   agreedAt: src.agreedAt ?? null,
   legalVersion: src.legalVersion ?? null,
+  subscribed: src.subscribed ?? null,
   ...extra,
 });
 
@@ -8521,6 +8542,106 @@ function AuthScreen({ onAuthed }) {
   );
 }
 
+// ============================================================
+//  DAY 8 — THE END OF THE TRIAL
+// ============================================================
+// This REPLACES the dashboard rather than covering it, which is the choice the
+// auth gate above makes and for the reason stated there: the heavy component
+// should not be mounted, polling quotes and driving the anchor, behind a screen
+// saying this account cannot use it.
+//
+// Deciding WHEN it appears is App's job, not this component's, and every one of
+// those conditions resolves toward not showing it. This one only draws.
+function TrialEndedScreen({ account, onCheckout, onSignOut, busy, error }) {
+  const { lang, t } = useI18n();
+  // Opens on the plan they were already trialling — it is the one they picked,
+  // and picking it again is the likeliest thing anyone wants from this screen.
+  const [plan, setPlan] = useState(account?.plan || "pro");
+  const trial = trialState(account);
+  const ended = trial ? new Date(trial.ends).toLocaleDateString(lang || undefined, { day: "numeric", month: "long", year: "numeric" }) : null;
+
+  return (
+    <div className="v-aurora" style={{ minHeight: "100vh", background: `${GRAD.aurora}, ${C.base}`, color: C.text, fontFamily: SANS, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div className="v-rise" style={{ width: 880, maxWidth: "96vw", background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.xl, boxShadow: SHADOW.xl, overflow: "hidden" }}>
+
+        {/* Same brand block as the gate, deliberately. This is the same kind of
+            screen — the product's front door, with the account named on it —
+            and dressing it differently would read as an interstitial. */}
+        <div style={{ padding: "24px 28px 18px", borderBottom: `1px solid ${C.edge}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+            <VantageMark size={34} />
+            <div>
+              <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20, letterSpacing: "-0.018em", color: C.text }}>Vantage</div>
+              <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, marginTop: 3, display: "flex", alignItems: "center", gap: 6 }}>
+                <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: C.down }} />
+                {account?.email}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: "20px 26px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ ...TYPE.title, textAlign: "center" }}>{t("Your free trial has ended")}</div>
+          {ended && (
+            <div style={{ ...TYPE.caption, color: C.faint, textAlign: "center", marginTop: -6 }}>
+              {t("Your free trial ended on {date}").replace("{date}", ended)}
+            </div>
+          )}
+          {/* The most useful true thing this screen can say. The paywall is in
+              front of the desk, not in front of their work: every list the app
+              keeps is in this browser and none of it has been touched. */}
+          <div style={{ ...TYPE.body, fontSize: 13, color: C.muted, textAlign: "center", maxWidth: 560, margin: "0 auto" }}>
+            {t("Pick a plan to carry on. Your watchlist, portfolio and alerts are untouched — they live in this browser, and nothing has been deleted.")}
+          </div>
+
+          {error && (
+            <div role="alert" style={{ background: C.downSoft, border: `1px solid ${C.dangerEdge}`, color: C.down, borderRadius: R.md, padding: "10px 12px", ...TYPE.bodySm, fontSize: 13, lineHeight: 1.5 }}>{error}</div>
+          )}
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 12, marginTop: 4 }}>
+            {PLANS.map(p => {
+              const on = plan === p.id;
+              return (
+                <button key={p.id} onClick={() => setPlan(p.id)} aria-pressed={on}
+                  style={{ textAlign: "left", cursor: "pointer", background: on ? C.surfaceRaised : "transparent", border: `2px solid ${on ? C.accent : C.panelEdge}`, borderRadius: R.lg, padding: 16, display: "flex", flexDirection: "column", gap: 8, position: "relative" }}>
+                  {/* The badge marks the plan they were ON, not the popular one.
+                      This is not a shop window — they already chose once, and
+                      which one that was is the fact worth surfacing here. */}
+                  {p.id === account?.plan && <span style={{ position: "absolute", top: -10, right: 12, background: C.accent, color: C.textOnAccent, fontFamily: MONO, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", padding: "3px 10px", borderRadius: R.pill }}>{t("Current")}</span>}
+                  <div style={{ ...TYPE.subhead, fontSize: 15, fontWeight: 700 }}>{p.label}</div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                    <span style={{ ...TYPE.numLg, fontSize: 24, fontWeight: 700 }}>{p.price}</span>
+                    <span style={{ ...TYPE.caption, color: C.faint }}>{p.cadence}</span>
+                  </div>
+                  <div style={{ ...TYPE.caption, color: C.muted }}>{p.tagline}</div>
+                  {/* No "7 days free" line here, unlike the signup cards it is
+                      otherwise copied from. The seven days are spent. Printing
+                      them again on the screen that exists BECAUSE they ran out
+                      would be an offer the next click does not honour. */}
+                  <div style={{ height: 1, background: C.edge, margin: "2px 0" }} />
+                  {p.perks.map((k, i) => <div key={i} style={{ ...TYPE.caption, color: C.text, display: "flex", gap: 7, lineHeight: 1.5 }}><span style={{ color: C.up, flex: "0 0 auto" }}>✓</span>{k}</div>)}
+                </button>
+              );
+            })}
+          </div>
+
+          <button onClick={() => onCheckout(plan)} disabled={!!busy}
+            style={{ ...button("primary", "lg", { full: true }), opacity: busy ? 0.6 : 1 }}>
+            {busy ? "…" : t("Continue on {plan}").replace("{plan}", planLabel(plan))}
+          </button>
+
+          {/* Always reachable. A screen with no way off it is a trap, and the
+              way off this one is the door they came in by. */}
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <button onClick={onSignOut} className="v-taprow"
+              style={{ ...button("quiet", "sm"), color: C.accentSoft, textDecoration: "underline", padding: 0 }}>{t("Sign out")}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Point & Figure chart (SVG) ----------
 // Pure presentational: columns/boxSize come from src/pnf/pnf.js. Renders the last
 // 48 columns as an X/O box grid with price labels in a right gutter.
@@ -8678,10 +8799,11 @@ function Segmented({ value, onChange, options, tone = "neutral", label, labelled
   );
 }
 
-function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
+// billingCfg / billingBusy / onStartPlanChange come from App. They used to be
+// local state here, which stopped working when the day-8 screen — which this
+// component does not mount behind — needed the same three facts. One owner.
+function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billingBusy, onStartPlanChange } = {}) {
   const { lang, setLang, t } = useI18n();               // UI translation + AI-answer language
-  const [billingCfg, setBillingCfg] = useState(null);    // Stripe availability (Layer 3), probed on demand
-  const [billingBusy, setBillingBusy] = useState("");    // plan id mid-checkout, for button state
   const [agentPrefs, setAgentPrefs] = useState(null);     // server-stored opt-in scheduled briefing settings
   const [agentBusy, setAgentBusy] = useState(false);
 
@@ -11096,25 +11218,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
   useEffect(() => { if (showSettings && settingsTab === "meetings") refreshMeetStatus(); }, [showSettings, settingsTab, refreshMeetStatus]);
 
 
-  // ---- billing (Layer 3): probe Stripe availability ----
-  // If the backend has Stripe keys, paid upgrades route through Stripe's hosted checkout.
-  // Otherwise billingCfg.enabled stays false and paid plans unlock as a labelled simulation.
-  //
-  // Two triggers, not one. The account tab used to be the only one, which left
-  // the trial strip holding `null` for anyone who had never opened Settings —
-  // and a strip that cannot tell "add a card" from "nothing is charged in this
-  // build" would have had to guess at which one to print. So the probe also
-  // runs whenever the account carries a trial to count, before the strip draws.
-  const trialStart = trialStartOf(account);
-  useEffect(() => {
-    const wanted = (showSettings && settingsTab === "account") || trialStart != null;
-    if (!wanted || billingCfg) return;
-    let ok = true;
-    fetch("/api/billing/config").then(r => r.ok ? r.json() : null).then(j => ok && setBillingCfg(j || { enabled: false }))
-      .catch(() => ok && setBillingCfg({ enabled: false }));
-    return () => { ok = false; };
-  }, [showSettings, settingsTab, trialStart, billingCfg]);
-
   useEffect(() => {
     if (!showSettings || settingsTab !== "account" || !account?.backend || !account?.token) return;
     let active = true;
@@ -11133,28 +11236,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
     finally { setAgentBusy(false); }
   };
 
-  // ---- change plan. With Stripe configured this opens Stripe Checkout in this
-  // tab; without Stripe it's a simulated unlock. ----
-  // Every plan is a paid subscription now, so every switch is a checkout —
-  // including the one that used to be the free tier. This branched on
-  // `planId !== "free"` and sent Explorer down the local path, which was right
-  // when Explorer cost nothing and would now hand somebody a $12 plan for a
-  // click. ----
+  // ---- change plan ----
+  // The checkout itself moved to App, because the day-8 screen needs it too and
+  // this component does not mount behind that screen. All that is left here is
+  // where a failure gets shown, which on this screen is the command line.
   const startPlanChange = async (planId) => {
-    if (billingCfg?.enabled && account) {
-      setBillingBusy(planId);
-      try {
-        const r = await fetch("/api/billing/checkout", {
-          method: "POST", headers: { "Content-Type": "application/json", ...(account.token ? { Authorization: `Bearer ${account.token}` } : {}) },
-          body: JSON.stringify({ plan: planId, email: account.email }),
-        });
-        const j = await r.json();
-        if (r.ok && j.url) { window.location.href = j.url; return; } // hand off to Stripe's page
-        throw new Error(j.error || "Checkout unavailable");
-      } catch (e) { setCmdMsg(`Checkout unavailable — ${humanizeError(e)}`); return; }
-      finally { setBillingBusy(""); }
-    }
-    onChangePlan?.(planId); // simulated / local plan switch
+    const e = await onStartPlanChange?.(planId);
+    if (e) setCmdMsg(`Checkout unavailable — ${humanizeError(e)}`);
   };
 
   // Opening bell on arrival, on the exchange's clock (ET). Live: only if the market is truly open now.
@@ -13960,6 +14048,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
       {(() => {
         const trial = trialState(account);
         if (!trial) return null;
+        // A subscriber whose seven days have run out did not lapse — they
+        // converted, and the subscription took over on schedule. Telling them
+        // their trial ended is stale news dressed in red.
+        if (!trial.active && account?.subscribed === true) return null;
         // daysLeft counts down 7…1, so day counts up 1…7 and never reads 0 of 7.
         const day = TRIAL_DAYS - trial.daysLeft + 1;
         if (trial.active && trialDismissed === day) return null;
@@ -13967,13 +14059,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
         // here reads the browser locale, which produced "Termina el Aug 30" —
         // a translated sentence with an untranslated date sitting inside it.
         const ends = new Date(trial.ends).toLocaleDateString(lang || undefined, { day: "numeric", month: "short" });
-        // With Stripe configured there is a card to add and a price that will be
-        // charged on day 8. Without it there is neither, so the strip says
-        // neither: the price clause is absent rather than hedged, and the button
-        // opens the plan list — true in both builds, where "add payment card" is
-        // true in only one.
-        const live = !!billingCfg?.enabled;
-        const plan = live ? PLANS.find(p => p.id === account?.plan) : null;
+        // With Stripe configured there is a price that will be charged on day 8.
+        // Without it there is not, so the price clause is absent rather than
+        // hedged.
+        const charging = !!billingCfg?.enabled;
+        // ...and a card to add only if there is not one already. Somebody who
+        // converted on day 3 is still inside a real countdown and the days are
+        // still worth printing, but telling them to add the card they have
+        // already added is the strip talking about a state it is not in.
+        const needsCard = charging && account?.subscribed !== true;
+        const plan = charging ? PLANS.find(p => p.id === account?.plan) : null;
         const tone = trial.active ? C.accent : C.down;
         return (
           <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px 12px", padding: "8px 20px", background: `linear-gradient(90deg, ${alpha(tone, 0.20)}, ${alpha(tone, 0.03)})`, borderBottom: `1px solid ${tone}` }}>
@@ -13989,10 +14084,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan } = {}) {
                 <strong style={{ fontWeight: 600 }}>{t("Your free trial ended on {date}").replace("{date}", ends)}</strong>
               )}
             </span>
-            <button onClick={() => (live ? startPlanChange(account.plan) : (setSettingsTab("account"), setShowSettings(true)))}
+            <button onClick={() => (needsCard ? startPlanChange(account.plan) : (setSettingsTab("account"), setShowSettings(true)))}
               disabled={!!billingBusy} className="v-taprow"
               style={{ ...button(trial.active ? "ghost" : "primary", "sm"), fontSize: 12, whiteSpace: "nowrap", opacity: billingBusy ? 0.6 : 1 }}>
-              {billingBusy ? "…" : live ? t("Add payment card") : t("Your plan")}
+              {billingBusy ? "…" : needsCard ? t("Add payment card") : t("Your plan")}
             </button>
             {/* Only the ACTIVE strip closes, and only until the number on it
                 changes. A lapsed trial has no new fact coming tomorrow, so
@@ -16001,6 +16096,10 @@ export default function App() {
     // best-effort backend logout; local state always clears
     if (account?.backend && account?.token) { fetch("/api/auth/logout", { method: "POST", headers: { Authorization: `Bearer ${account.token}` } }).catch(() => {}); }
     saveAccount(null); setAccount(null);
+    setMeOk(false);
+    // The day-8 grace belongs to one person's session, not to the browser.
+    try { window.sessionStorage.removeItem("vantage-checkout-grace"); } catch { /* private mode */ }
+    setCheckoutGrace(false);
   };
   // Update the current plan. For a local account, also patch the tape-users record so it
   // survives sign-out/in. (Real paid upgrades route through Stripe in the ACCOUNT tab first.)
@@ -16018,10 +16117,116 @@ export default function App() {
     saveAccount(next); setAccount(next);
   };
 
+  // ---- billing, hoisted out of the dashboard ----
+  // Two components need to know whether Stripe is configured: the dashboard,
+  // which offers upgrades, and the day-8 screen, which is only allowed to exist
+  // where there is a way through it. Two copies of that state could disagree,
+  // so there is one copy, here, and the dashboard takes it as a prop.
+  const [billingCfg, setBillingCfg] = useState(null);
+  const [billingBusy, setBillingBusy] = useState("");
+  const [checkoutErr, setCheckoutErr] = useState("");
+  const signedIn = !!account;
+  useEffect(() => {
+    if (!signedIn || billingCfg) return;
+    let ok = true;
+    fetch("/api/billing/config").then(r => r.ok ? r.json() : null).then(j => ok && setBillingCfg(j || { enabled: false }))
+      .catch(() => ok && setBillingCfg({ enabled: false }));
+    return () => { ok = false; };
+  }, [signedIn, billingCfg]);
+
+  // ---- change plan. With Stripe configured this opens Stripe Checkout in this
+  // tab; without Stripe it is a simulated unlock. ----
+  // Every plan is a paid subscription now, so every switch is a checkout —
+  // including the one that used to be the free tier. This branched on
+  // `planId !== "free"` and sent Explorer down the local path, which was right
+  // when Explorer cost nothing and would now hand somebody a $12 plan for a
+  // click.
+  //
+  // Returns the failure rather than displaying it, because its two callers show
+  // errors in different places: the dashboard has a command line, the day-8
+  // screen has an alert box.
+  const startPlanChange = async (planId) => {
+    if (billingCfg?.enabled && account) {
+      setBillingBusy(planId);
+      try {
+        const r = await fetch("/api/billing/checkout", {
+          method: "POST", headers: { "Content-Type": "application/json", ...(account.token ? { Authorization: `Bearer ${account.token}` } : {}) },
+          body: JSON.stringify({ plan: planId, email: account.email }),
+        });
+        const j = await r.json();
+        if (r.ok && j.url) { window.location.href = j.url; return null; } // hand off to Stripe's page
+        throw new Error(j.error || "Checkout unavailable");
+      } catch (e) { return e; }
+      finally { setBillingBusy(""); }
+    }
+    changePlan(planId); // simulated / local plan switch
+    return null;
+  };
+
+  // ---- the server's own answer about this account, on arrival ----
+  // `plan` and `subscribed` both live on the server and both can have moved
+  // since this browser last looked: a Stripe webhook lands there, not in
+  // localStorage. It is asked HERE rather than in the dashboard because the
+  // person who needs it most is the one looking at the day-8 screen, and the
+  // dashboard does not mount behind that screen. Without this, somebody could
+  // pay and never be let back in.
+  //
+  // meOk is a separate freshness proof rather than a property of the data: a
+  // 401, an unreachable backend or a bad body all leave it false, and nothing
+  // locks anybody out without it.
+  const [meOk, setMeOk] = useState(false);
+  const backendToken = account?.backend ? account.token : null;
+  useEffect(() => {
+    if (!backendToken) { setMeOk(false); return; }
+    let ok = true;
+    fetch("/api/auth/me", { headers: { Authorization: `Bearer ${backendToken}` } })
+      .then(r => (r.ok ? r.json() : null))
+      .then(a => {
+        if (!ok || !a) return;
+        setAccount(prev => { const next = accountFrom(a, { token: prev?.token, backend: true }); saveAccount(next); return next; });
+        setMeOk(true);
+      })
+      .catch(() => { /* backend down — meOk stays false, which is the safe answer */ });
+    return () => { ok = false; };
+  }, [backendToken]);
+
+  // Stripe redirects to /?checkout=success the instant a payment goes through;
+  // the webhook that records it travels separately and can lose that race.
+  // Locking somebody out of the thing they have just bought, for as long as
+  // that race lasts, is the worst version of this screen — so a successful
+  // return suppresses it for the rest of the tab session.
+  //
+  // That parameter is client-trusted, and it is worth being exact about the
+  // cost. It cannot grant a plan; only a verified webhook does that. All it can
+  // do is keep a simulated demo desk visible to somebody who typed a URL, which
+  // is a trade this file already makes to confirm a plan after checkout.
+  const [checkoutGrace, setCheckoutGrace] = useState(() => {
+    try {
+      if (new URL(window.location.href).searchParams.get("checkout") === "success") window.sessionStorage.setItem("vantage-checkout-grace", "1");
+      return window.sessionStorage.getItem("vantage-checkout-grace") === "1";
+    } catch { return false; }
+  });
+
+  // Day 8. Every clause here is a reason NOT to show the screen, and an unknown
+  // always lands on "do not":
+  //   · no fresh answer from the server → we have not asked, so no
+  //   · no payment processor            → nothing to pay with, so a lock is a trap
+  //   · subscribed, or not yet known    → only an explicit false counts
+  //   · no start date, or days left     → the trial is not over
+  //   · just came back from Stripe      → the webhook may still be in flight
+  const trial = account ? trialState(account) : null;
+  const lapsed = !!account && meOk && !!billingCfg?.enabled
+    && account.subscribed === false && !checkoutGrace
+    && !!trial && !trial.active;
+
   return (
     <I18nContext.Provider value={i18n}>
       {account
-        ? <MarketDashboard account={account} onSignOut={signOut} onChangePlan={changePlan} />
+        ? lapsed
+          ? <TrialEndedScreen account={account} onSignOut={signOut} busy={billingBusy} error={checkoutErr}
+              onCheckout={async (planId) => { const e = await startPlanChange(planId); setCheckoutErr(e ? humanizeError(e) : ""); }} />
+          : <MarketDashboard account={account} onSignOut={signOut} onChangePlan={changePlan}
+              billingCfg={billingCfg} billingBusy={billingBusy} onStartPlanChange={startPlanChange} />
         : showAuth
           ? <AuthScreen onAuthed={signIn} />
           : <HomePage plans={PLANS} t={t} onStart={(planId) => goAuth("up", planId)} onSignIn={() => goAuth("in")} />}
