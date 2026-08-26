@@ -24,7 +24,7 @@
 //  ends up disagreeing with the rounds above it.
 // ============================================================
 
-import { awardWith, totalPoints, rightCount, streak, countdown } from "./quiz.js";
+import { awardWith, totalPoints, rightCount, streak, countdown, bestStreak, bonusCount, timeoutCount, scoreBand, coachKey } from "./quiz.js";
 
 export const ROUND_SECONDS = 20;
 // The footer promises a bonus for answering "inside 15 seconds", so the bonus
@@ -127,4 +127,4 @@ export const award = awardWith({
 
 // Re-exported so the screen and this game's tests keep reading them from the
 // game rather than having to know where the shared arithmetic lives.
-export { totalPoints, rightCount, streak, countdown };
+export { totalPoints, rightCount, streak, countdown, bestStreak, bonusCount, timeoutCount, scoreBand, coachKey };

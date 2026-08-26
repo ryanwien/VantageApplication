@@ -763,7 +763,6 @@ const I18N = {
     "The answer": "La respuesta",
     "Next →": "Siguiente →",
     "Finish →": "Terminar →",
-    "SCHOOL COMPLETE": "ESCUELA COMPLETADA",
     "You graduated": "Te has graduado",
     "{a} of {b} right, for {p} points.": "{a} de {b} correctas, {p} puntos.",
     "Start again": "Empezar de nuevo",
@@ -781,7 +780,31 @@ const I18N = {
     "Answer inside {n} seconds for a speed bonus": "Responde en menos de {n} segundos para un bonus de rapidez",
     "Next round →": "Siguiente ronda →",
     "See the score →": "Ver la puntuación →",
-    "ROUND OVER": "RONDA TERMINADA",
+    "{n} ROUNDS · {clock}": "{n} RONDAS · {clock}",
+    "{n} LESSONS · {clock}": "{n} LECCIONES · {clock}",
+    "BEST STREAK": "MEJOR RACHA",
+    "SPEED BONUSES": "BONOS DE RAPIDEZ",
+    "Every symbol matched": "Todos los símbolos acertados",
+    "You know these tickers": "Estos tickers te los sabes",
+    "Half the tape matched": "La mitad de la cinta acertada",
+    "The tape got away from you": "La cinta se te escapó",
+    "Every call right": "Todo acertado",
+    "More right than wrong": "Más aciertos que fallos",
+    "Split down the middle": "Mitad y mitad",
+    "The market went the other way": "El mercado fue por el otro lado",
+    "The clock took {n} rounds. Even a guess beats a blank.": "El reloj se llevó {n} rondas. Hasta adivinar gana a dejarlo en blanco.",
+    "The clock took a round from you. Even a guess beats a blank.": "El reloj se llevó una ronda. Hasta adivinar gana a dejarlo en blanco.",
+    "Every wrong row said why it was wrong — play it again with the reasons in mind.": "Cada fila fallada decía por qué estaba mal — juega otra vez con esas razones en mente.",
+    "All {t} matched inside the bonus window. There is no faster tape.": "Las {t} dentro de la ventana de bono. No hay cinta más rápida.",
+    "{b} of {r} right answers beat the clock. A fast match pays {x} extra.": "{b} de {r} aciertos ganaron al reloj. Un acierto rápido paga {x} más.",
+    "A solid tape. The bonus window is where the score grows.": "Una cinta sólida. La ventana de bono es donde crece la puntuación.",
+    "Each reveal said why the price moved. Read the why, then call it again.": "Cada revelación decía por qué se movió el precio. Lee el porqué y vuelve a jugarla.",
+    "All {t} calls inside the bonus window. Nothing left on the table.": "Las {t} dentro de la ventana de bono. Nada quedó sobre la mesa.",
+    "{b} of {r} right calls beat the clock. A fast call pays {x} extra.": "{b} de {r} aciertos ganaron al reloj. Una respuesta rápida paga {x} más.",
+    "A solid run. Faster calls are where the score grows.": "Una ronda sólida. La velocidad es donde crece la puntuación.",
+    "Nothing missed. Bull or Bear next door asks you to use it.": "Sin fallos. Alcista o bajista, aquí al lado, te pide usarlo.",
+    "You missed {n}. The lessons are short — a second pass usually clears them.": "Fallaste {n}. Las lecciones son cortas — una segunda pasada suele resolverlas.",
+    "Every reveal explained its rule. Run it back with those in mind.": "Cada revelación explicó su regla. Repítelo con ellas en mente.",
     "{a} of {b} symbols matched.": "{a} de {b} símbolos acertados.",
     // --- settings: the plain-language sidebar ---
     "not this company's symbol": "no es el símbolo de esta empresa",
@@ -1448,7 +1471,6 @@ const I18N = {
     "The answer": "La réponse",
     "Next →": "Suivant →",
     "Finish →": "Terminer →",
-    "SCHOOL COMPLETE": "ÉCOLE TERMINÉE",
     "You graduated": "Vous avez obtenu votre diplôme",
     "{a} of {b} right, for {p} points.": "{a} sur {b} justes, soit {p} points.",
     "Start again": "Recommencer",
@@ -1466,7 +1488,31 @@ const I18N = {
     "Answer inside {n} seconds for a speed bonus": "Répondez en moins de {n} secondes pour un bonus de rapidité",
     "Next round →": "Manche suivante →",
     "See the score →": "Voir le score →",
-    "ROUND OVER": "MANCHE TERMINÉE",
+    "{n} ROUNDS · {clock}": "{n} MANCHES · {clock}",
+    "{n} LESSONS · {clock}": "{n} LEÇONS · {clock}",
+    "BEST STREAK": "MEILLEURE SÉRIE",
+    "SPEED BONUSES": "BONUS DE VITESSE",
+    "Every symbol matched": "Tous les symboles trouvés",
+    "You know these tickers": "Vous connaissez vos tickers",
+    "Half the tape matched": "La moitié de la bande trouvée",
+    "The tape got away from you": "La bande vous a échappé",
+    "Every call right": "Tous les paris justes",
+    "More right than wrong": "Plus de justes que de fautes",
+    "Split down the middle": "Moitié-moitié",
+    "The market went the other way": "Le marché est parti de l'autre côté",
+    "The clock took {n} rounds. Even a guess beats a blank.": "Le chrono a pris {n} manches. Même deviner vaut mieux que rien.",
+    "The clock took a round from you. Even a guess beats a blank.": "Le chrono a pris une manche. Même deviner vaut mieux que rien.",
+    "Every wrong row said why it was wrong — play it again with the reasons in mind.": "Chaque mauvaise ligne disait pourquoi elle était fausse — rejouez avec ces raisons en tête.",
+    "All {t} matched inside the bonus window. There is no faster tape.": "Les {t} dans la fenêtre de bonus. Il n'y a pas de bande plus rapide.",
+    "{b} of {r} right answers beat the clock. A fast match pays {x} extra.": "{b} justes sur {r} ont battu le chrono. Une réponse rapide paie {x} de plus.",
+    "A solid tape. The bonus window is where the score grows.": "Une bande solide. La fenêtre de bonus est là où le score grandit.",
+    "Each reveal said why the price moved. Read the why, then call it again.": "Chaque révélation disait pourquoi le cours a bougé. Lisez le pourquoi, puis repariez.",
+    "All {t} calls inside the bonus window. Nothing left on the table.": "Les {t} paris dans la fenêtre de bonus. Rien laissé sur la table.",
+    "{b} of {r} right calls beat the clock. A fast call pays {x} extra.": "{b} bons paris sur {r} ont battu le chrono. Un pari rapide paie {x} de plus.",
+    "A solid run. Faster calls are where the score grows.": "Un parcours solide. Les paris rapides font grandir le score.",
+    "Nothing missed. Bull or Bear next door asks you to use it.": "Sans faute. Haussier ou baissier, juste à côté, vous attend.",
+    "You missed {n}. The lessons are short — a second pass usually clears them.": "Vous en avez manqué {n}. Les leçons sont courtes — une seconde passe suffit souvent.",
+    "Every reveal explained its rule. Run it back with those in mind.": "Chaque révélation expliquait sa règle. Recommencez en les gardant en tête.",
     "{a} of {b} symbols matched.": "{a} symboles sur {b} trouvés.",
     // --- settings: the plain-language sidebar ---
     "not this company's symbol": "ce n'est pas le symbole de cette société",
@@ -2133,7 +2179,6 @@ const I18N = {
     "The answer": "Die Antwort",
     "Next →": "Weiter →",
     "Finish →": "Abschließen →",
-    "SCHOOL COMPLETE": "SCHULE ABGESCHLOSSEN",
     "You graduated": "Du hast bestanden",
     "{a} of {b} right, for {p} points.": "{a} von {b} richtig, macht {p} Punkte.",
     "Start again": "Von vorn beginnen",
@@ -2151,7 +2196,31 @@ const I18N = {
     "Answer inside {n} seconds for a speed bonus": "Antworte in unter {n} Sekunden für einen Tempobonus",
     "Next round →": "Nächste Runde →",
     "See the score →": "Punktestand ansehen →",
-    "ROUND OVER": "RUNDE VORBEI",
+    "{n} ROUNDS · {clock}": "{n} RUNDEN · {clock}",
+    "{n} LESSONS · {clock}": "{n} LEKTIONEN · {clock}",
+    "BEST STREAK": "BESTE SERIE",
+    "SPEED BONUSES": "TEMPO-BONI",
+    "Every symbol matched": "Jedes Kürzel erkannt",
+    "You know these tickers": "Du kennst deine Ticker",
+    "Half the tape matched": "Das halbe Band erkannt",
+    "The tape got away from you": "Das Band ist dir entglitten",
+    "Every call right": "Jeder Tipp richtig",
+    "More right than wrong": "Mehr richtig als falsch",
+    "Split down the middle": "Genau die Hälfte",
+    "The market went the other way": "Der Markt lief in die andere Richtung",
+    "The clock took {n} rounds. Even a guess beats a blank.": "Die Uhr hat {n} Runden genommen. Selbst Raten schlägt Schweigen.",
+    "The clock took a round from you. Even a guess beats a blank.": "Die Uhr hat eine Runde genommen. Selbst Raten schlägt Schweigen.",
+    "Every wrong row said why it was wrong — play it again with the reasons in mind.": "Jede falsche Zeile sagte, warum sie falsch war — spiel noch einmal, mit den Gründen im Kopf.",
+    "All {t} matched inside the bonus window. There is no faster tape.": "Alle {t} im Bonusfenster. Schneller geht dieses Band nicht.",
+    "{b} of {r} right answers beat the clock. A fast match pays {x} extra.": "{b} von {r} richtigen Antworten schlugen die Uhr. Eine schnelle zahlt {x} extra.",
+    "A solid tape. The bonus window is where the score grows.": "Ein solides Band. Im Bonusfenster wächst die Punktzahl.",
+    "Each reveal said why the price moved. Read the why, then call it again.": "Jede Auflösung sagte, warum der Kurs sich bewegte. Lies das Warum, dann tippe wieder.",
+    "All {t} calls inside the bonus window. Nothing left on the table.": "Alle {t} Tipps im Bonusfenster. Nichts liegen gelassen.",
+    "{b} of {r} right calls beat the clock. A fast call pays {x} extra.": "{b} von {r} richtigen Tipps schlugen die Uhr. Ein schneller zahlt {x} extra.",
+    "A solid run. Faster calls are where the score grows.": "Ein solider Lauf. Schnellere Tipps lassen die Punktzahl wachsen.",
+    "Nothing missed. Bull or Bear next door asks you to use it.": "Nichts verfehlt. Bulle oder Bär nebenan will es angewendet sehen.",
+    "You missed {n}. The lessons are short — a second pass usually clears them.": "Du hast {n} verfehlt. Die Lektionen sind kurz — ein zweiter Durchlauf klärt sie meist.",
+    "Every reveal explained its rule. Run it back with those in mind.": "Jede Auflösung erklärte ihre Regel. Lauf es noch einmal, mit ihnen im Kopf.",
     "{a} of {b} symbols matched.": "{a} von {b} Kürzeln erkannt.",
     // --- settings: the plain-language sidebar ---
     "not this company's symbol": "nicht das Kürzel dieses Unternehmens",
@@ -2817,7 +2886,6 @@ const I18N = {
     "The answer": "A resposta",
     "Next →": "Seguinte →",
     "Finish →": "Terminar →",
-    "SCHOOL COMPLETE": "ESCOLA CONCLUÍDA",
     "You graduated": "Formaste-te",
     "{a} of {b} right, for {p} points.": "{a} de {b} certas, {p} pontos.",
     "Start again": "Começar de novo",
@@ -2835,7 +2903,31 @@ const I18N = {
     "Answer inside {n} seconds for a speed bonus": "Responde em menos de {n} segundos para um bónus de rapidez",
     "Next round →": "Ronda seguinte →",
     "See the score →": "Ver a pontuação →",
-    "ROUND OVER": "RONDA TERMINADA",
+    "{n} ROUNDS · {clock}": "{n} RONDAS · {clock}",
+    "{n} LESSONS · {clock}": "{n} LIÇÕES · {clock}",
+    "BEST STREAK": "MELHOR SEQUÊNCIA",
+    "SPEED BONUSES": "BÓNUS DE RAPIDEZ",
+    "Every symbol matched": "Todos os símbolos certos",
+    "You know these tickers": "Conheces os teus tickers",
+    "Half the tape matched": "Metade da fita certa",
+    "The tape got away from you": "A fita fugiu-te",
+    "Every call right": "Tudo certo",
+    "More right than wrong": "Mais certos do que errados",
+    "Split down the middle": "Meio a meio",
+    "The market went the other way": "O mercado foi para o outro lado",
+    "The clock took {n} rounds. Even a guess beats a blank.": "O relógio levou {n} rondas. Até adivinhar ganha a deixar em branco.",
+    "The clock took a round from you. Even a guess beats a blank.": "O relógio levou uma ronda. Até adivinhar ganha a deixar em branco.",
+    "Every wrong row said why it was wrong — play it again with the reasons in mind.": "Cada linha errada dizia porquê — joga outra vez com essas razões em mente.",
+    "All {t} matched inside the bonus window. There is no faster tape.": "As {t} dentro da janela de bónus. Não há fita mais rápida.",
+    "{b} of {r} right answers beat the clock. A fast match pays {x} extra.": "{b} de {r} acertos bateram o relógio. Um acerto rápido paga {x} a mais.",
+    "A solid tape. The bonus window is where the score grows.": "Uma fita sólida. A janela de bónus é onde a pontuação cresce.",
+    "Each reveal said why the price moved. Read the why, then call it again.": "Cada revelação dizia porque é que o preço se moveu. Lê o porquê e volta a jogar.",
+    "All {t} calls inside the bonus window. Nothing left on the table.": "As {t} dentro da janela de bónus. Nada ficou na mesa.",
+    "{b} of {r} right calls beat the clock. A fast call pays {x} extra.": "{b} de {r} acertos bateram o relógio. Uma resposta rápida paga {x} a mais.",
+    "A solid run. Faster calls are where the score grows.": "Uma ronda sólida. A rapidez é onde a pontuação cresce.",
+    "Nothing missed. Bull or Bear next door asks you to use it.": "Nada falhado. Alta ou baixa, aqui ao lado, pede para o usares.",
+    "You missed {n}. The lessons are short — a second pass usually clears them.": "Falhaste {n}. As lições são curtas — uma segunda passagem costuma resolvê-las.",
+    "Every reveal explained its rule. Run it back with those in mind.": "Cada revelação explicou a sua regra. Repete com elas em mente.",
     "{a} of {b} symbols matched.": "{a} de {b} símbolos acertados.",
     // --- settings: the plain-language sidebar ---
     "not this company's symbol": "não é o símbolo desta empresa",
@@ -3501,7 +3593,6 @@ const I18N = {
     "The answer": "La risposta",
     "Next →": "Avanti →",
     "Finish →": "Concludi →",
-    "SCHOOL COMPLETE": "SCUOLA COMPLETATA",
     "You graduated": "Ti sei diplomato",
     "{a} of {b} right, for {p} points.": "{a} su {b} giuste, per {p} punti.",
     "Start again": "Ricomincia",
@@ -3519,7 +3610,31 @@ const I18N = {
     "Answer inside {n} seconds for a speed bonus": "Rispondi entro {n} secondi per un bonus velocità",
     "Next round →": "Turno successivo →",
     "See the score →": "Vedi il punteggio →",
-    "ROUND OVER": "TURNO CONCLUSO",
+    "{n} ROUNDS · {clock}": "{n} ROUND · {clock}",
+    "{n} LESSONS · {clock}": "{n} LEZIONI · {clock}",
+    "BEST STREAK": "MIGLIOR SERIE",
+    "SPEED BONUSES": "BONUS VELOCITÀ",
+    "Every symbol matched": "Tutti i simboli indovinati",
+    "You know these tickers": "Questi ticker li conosci",
+    "Half the tape matched": "Metà del nastro indovinata",
+    "The tape got away from you": "Il nastro ti è sfuggito",
+    "Every call right": "Tutte le scelte giuste",
+    "More right than wrong": "Più giuste che sbagliate",
+    "Split down the middle": "Metà e metà",
+    "The market went the other way": "Il mercato è andato dall'altra parte",
+    "The clock took {n} rounds. Even a guess beats a blank.": "L'orologio si è preso {n} round. Persino tirare a indovinare batte il vuoto.",
+    "The clock took a round from you. Even a guess beats a blank.": "L'orologio si è preso un round. Persino tirare a indovinare batte il vuoto.",
+    "Every wrong row said why it was wrong — play it again with the reasons in mind.": "Ogni riga sbagliata diceva perché — rigioca con quelle ragioni in mente.",
+    "All {t} matched inside the bonus window. There is no faster tape.": "Tutti e {t} nella finestra bonus. Più veloce di così il nastro non va.",
+    "{b} of {r} right answers beat the clock. A fast match pays {x} extra.": "{b} risposte giuste su {r} hanno battuto l'orologio. Una risposta rapida paga {x} in più.",
+    "A solid tape. The bonus window is where the score grows.": "Un nastro solido. La finestra bonus è dove cresce il punteggio.",
+    "Each reveal said why the price moved. Read the why, then call it again.": "Ogni rivelazione diceva perché il prezzo si è mosso. Leggi il perché, poi scegli di nuovo.",
+    "All {t} calls inside the bonus window. Nothing left on the table.": "Tutte e {t} le scelte nella finestra bonus. Niente lasciato sul tavolo.",
+    "{b} of {r} right calls beat the clock. A fast call pays {x} extra.": "{b} scelte giuste su {r} hanno battuto l'orologio. Una scelta rapida paga {x} in più.",
+    "A solid run. Faster calls are where the score grows.": "Un giro solido. Le scelte rapide fanno crescere il punteggio.",
+    "Nothing missed. Bull or Bear next door asks you to use it.": "Nessun errore. Toro o orso, qui accanto, ti chiede di usarlo.",
+    "You missed {n}. The lessons are short — a second pass usually clears them.": "Ne hai mancate {n}. Le lezioni sono brevi — un secondo giro di solito le sistema.",
+    "Every reveal explained its rule. Run it back with those in mind.": "Ogni rivelazione ha spiegato la sua regola. Rifallo con quelle in mente.",
     "{a} of {b} symbols matched.": "{a} simboli su {b} indovinati.",
     // --- settings: the plain-language sidebar ---
     "not this company's symbol": "non è il simbolo di questa società",
@@ -10768,6 +10883,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // still reading is a pressure the design does not intend. So the card counts
   // UP, from a real timestamp, and says TIME.
   const [gameStartedAt, setGameStartedAt] = useState(null);
+  const [gameEndedAt, setGameEndedAt] = useState(0);
   // Ticker Match records one award per round played — {correct, points, bonus}.
   // Its score, its streak and its count of right answers are all read back out
   // of this list, so none of the three can drift from the rounds above them.
@@ -10781,7 +10897,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   }, [speak]);
   const openGames = useCallback(() => { setGameOn(true); setGameMode("menu"); stopSpeak(); }, [stopSpeak]);
   const startMode = useCallback((mode) => {
-    setGameMode(mode); setGameStep(0); setGameChoice(null); setGameScore(0); setGameStartedAt(Date.now()); setGameAwards([]);
+    setGameMode(mode); setGameStep(0); setGameChoice(null); setGameScore(0); setGameStartedAt(Date.now()); setGameEndedAt(0); setGameAwards([]);
     setGamePhase(mode === "school" ? "teach" : "quiz");
     narrateRound(mode, 0);
   }, [narrateRound]);
@@ -10798,13 +10914,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       const R = BULLBEAR_ROUNDS[gameStep];
       correct = bbRight(R, i);
       explain = R.why;
-      setGameAwards(a => [...a, bbAward(correct, secondsLeft)]);
+      setGameAwards(a => [...a, { ...bbAward(correct, secondsLeft), timeout: i == null }]);
     }
     else {
       const R = TICKER_ROUNDS[gameStep];
       correct = i != null && i === tickerAnswer(R);
       explain = R.teach;
-      setGameAwards(a => [...a, tickerAward(correct, secondsLeft)]);
+      setGameAwards(a => [...a, { ...tickerAward(correct, secondsLeft), timeout: i == null }]);
     }
     if (correct) { setGameScore(s => s + 1); triggerAnchor("cheer", { label: "CORRECT! ✓" }); }
     speak("school", explain);
@@ -10814,6 +10930,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     const data = gameSet(gameMode);
     if (gameStep >= data.length - 1) {
       setGamePhase("done");
+      setGameEndedAt(Date.now());
       triggerAnchor("cheer", { label: gameMode === "school" ? "GRADUATE! 🎓" : "ROUND OVER! 🏁" }); // celebrate without the market bell
       speak("school", gameMode === "school" ? "That's a wrap — you've graduated Stock School!" : "Nice work — that's the end of the round!");
     } else {
@@ -13542,6 +13659,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           score={gameScore}
           choice={gameChoice}
           startedAt={gameStartedAt}
+          endedAt={gameEndedAt}
           reading={speakingId === "school"}
           progressRef={speechProgressRef}
           anchorName={anchorName}
@@ -13574,6 +13692,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           done={gamePhase === "done"}
           choice={gameChoice}
           awards={gameAwards}
+          startedAt={gameStartedAt}
+          endedAt={gameEndedAt}
           quote={row?.price != null ? { price: row.price, chgPct: row.chgPct } : null}
           onAnswer={gameAnswer}
           onNext={gameNext}
@@ -13595,6 +13715,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           done={gamePhase === "done"}
           choice={gameChoice}
           awards={gameAwards}
+          startedAt={gameStartedAt}
+          endedAt={gameEndedAt}
           onAnswer={gameAnswer}
           onNext={gameNext}
           onRestart={() => startMode("bullbear")}

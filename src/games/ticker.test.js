@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   ROUNDS, ROUND_SECONDS, BONUS_WITHIN, BASE_POINTS, BONUS_POINTS,
   answerIndex, award, totalPoints, rightCount, streak, countdown,
+  bestStreak, bonusCount, timeoutCount, scoreBand, coachKey,
 } from "./ticker.js";
 
 describe("the eight rounds", () => {
@@ -101,6 +102,66 @@ describe("the score, the count and the streak all read one list", () => {
     expect(totalPoints([{ points: 20 }, null, {}, { points: "x" }])).toBe(20);
     expect(rightCount([null, { correct: true }])).toBe(1);
     expect(streak([null])).toBe(0);
+  });
+});
+
+// The end screen reads the whole run off the same list. Shorthand: R is a
+// right answer that beat the bonus window, S one that did not, W a wrong
+// call, T a round the clock ended.
+const R = { correct: true, points: 20, bonus: true };
+const S = { correct: true, points: 10, bonus: false };
+const W = { correct: false, points: 0, bonus: false };
+const T = { correct: false, points: 0, bonus: false, timeout: true };
+
+describe("the end screen's numbers read the same list", () => {
+  it("bestStreak is the peak, where streak is the tail — a late stumble keeps the peak", () => {
+    expect(bestStreak([R, R, R, W, S])).toBe(3);
+    expect(streak([R, R, R, W, S])).toBe(1);
+    expect(bestStreak([])).toBe(0);
+    expect(bestStreak([W, T])).toBe(0);
+    expect(bestStreak([null, R])).toBe(1);
+  });
+  it("bonusCount counts only the answers that beat the window", () => {
+    expect(bonusCount([R, S, R, W])).toBe(2);
+    expect(bonusCount([])).toBe(0);
+  });
+  it("timeoutCount reads the stamp, not the zero — a wrong call is not a blank", () => {
+    expect(timeoutCount([W, T, T])).toBe(2);
+    expect(timeoutCount([W, W])).toBe(0);
+  });
+});
+
+describe("scoreBand", () => {
+  it("bands where the wording changes", () => {
+    expect(scoreBand(8, 8)).toBe("perfect");
+    expect(scoreBand(5, 8)).toBe("most");
+    expect(scoreBand(4, 8)).toBe("even");
+    expect(scoreBand(3, 8)).toBe("few");
+    expect(scoreBand(0, 8)).toBe("few");
+    expect(scoreBand(2, 3)).toBe("most");
+    expect(scoreBand(0, 0)).toBe("few");
+  });
+});
+
+describe("coachKey", () => {
+  it("orders by what most needs saying: the clock beats the wrong answers", () => {
+    // five right, three misses, all three the clock's — replay advice would
+    // send them to reread answers they never got to give.
+    expect(coachKey([R, R, R, R, R, T, T, T])).toBe("timeout");
+    // two right, six misses, only two of them timeouts — the wrong calls are
+    // the story, and every reveal explained them.
+    expect(coachKey([R, S, W, W, W, W, T, T])).toBe("replay");
+  });
+  it("a perfect run splits on the clock", () => {
+    expect(coachKey([R, R, R, R, R, R, R, R])).toBe("flawless");
+    expect(coachKey([S, S, S, S, S, S, S, S])).toBe("slow");
+    expect(coachKey([R, R, R, R, R, S, S, S])).toBe("steady");
+  });
+  it("right but slow coaches speed even on a winning run", () => {
+    expect(coachKey([S, S, S, S, S, R, W, W])).toBe("slow");
+  });
+  it("a mixed run with pace is steady", () => {
+    expect(coachKey([R, R, R, S, R, W, S, R])).toBe("steady");
   });
 });
 

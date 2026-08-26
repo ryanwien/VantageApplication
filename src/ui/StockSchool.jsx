@@ -30,6 +30,7 @@ import Waveform from "./Waveform.jsx";
 import useSpeechProgress from "./useSpeechProgress.js";
 import { clock } from "../lib/time.js";
 import { POINTS_PER_ANSWER, points, syllabusWindow, lessonNo } from "../games/school.js";
+import { scoreBand, countdown } from "../games/quiz.js";
 
 const railLabel = { fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", color: C.faint };
 const outline = { background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: 9, color: C.muted, fontFamily: SANS, fontSize: 14, padding: "12px 18px", cursor: "pointer" };
@@ -81,6 +82,7 @@ export default function StockSchool({
   score = 0,            // the COUNT of right answers — points are it times twenty
   choice = null,
   startedAt = null,
+  endedAt = 0,          // stamped by the parent when the last quiz closed
   reading = false,      // the anchor is speaking this lesson right now
   progressRef = null,
   anchorName = "Sterling",
@@ -104,10 +106,18 @@ export default function StockSchool({
   );
 
   // ---- the graduation card ----
-  // The handoff does not design an end screen for the quiz games ("not designed
-  // yet"), so this stays deliberately plain and on-system rather than inventing
-  // a sixth layout for it.
+  // The end-state anatomy the arcade games speak, in graduation green — always
+  // green, because school has no loser: finishing all eight lessons IS the
+  // outcome, and the sentence right below states the score plainly. No stats
+  // row either — the sentence already carries both numbers a row would, and a
+  // third stat invented to fill the space would be padding. The footer coaches
+  // off scoreBand, the same tested rule the other two summaries tint by.
   if (phase === "done") {
+    const band = scoreBand(score, total);
+    const coachLine = band === "perfect" ? t("Nothing missed. Bull or Bear next door asks you to use it.")
+      : band === "most" ? t("You missed {n}. The lessons are short — a second pass usually clears them.").replace("{n}", String(total - score))
+      : t("Every reveal explained its rule. Run it back with those in mind.");
+    const secs = endedAt > startedAt ? Math.round((endedAt - startedAt) / 1000) : null;
     return (
       <div className="v-gamepanel" style={{ fontFamily: SANS, background: C.base, color: C.text }}>
         <div style={HEAD}>
@@ -115,16 +125,32 @@ export default function StockSchool({
           <span style={{ fontWeight: 700, fontSize: 14.5 }}>{t("Stock School")}</span>
           <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8 }}>{backBtn}{closeBtn}</span>
         </div>
-        <div style={{ padding: "40px 22px", textAlign: "center" }}>
-          <div style={{ ...railLabel, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>{t("SCHOOL COMPLETE")}</div>
-          <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.03em", color: C.accentText, marginTop: 10, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>{t("You graduated")}</div>
-          <div style={{ color: C.muted, fontSize: 15, marginTop: 8, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>
-            {t("{a} of {b} right, for {p} points.").replace("{a}", String(score)).replace("{b}", String(total)).replace("{p}", String(points(score)))}
+        <div style={{ position: "relative", minHeight: 340, background: "radial-gradient(120% 100% at 50% 45%, #0e1a14, #07090d)", overflow: "hidden" }}>
+          <div aria-hidden="true" style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(#171b22 1px, transparent 1px), linear-gradient(90deg, #171b22 1px, transparent 1px)", backgroundSize: "46px 46px", opacity: 0.4 }} />
+          <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: "44%", transform: "translate(-50%, -50%)", fontFamily: MONO, fontSize: 96, fontWeight: 700, color: "rgba(76,195,138,0.12)", whiteSpace: "nowrap" }}>{score}/{total}</div>
+          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: "rgba(7,9,13,0.6)", padding: 20 }}>
+            <div>
+              {/* No stamp, no clock line — never a 0:00 that did not happen. */}
+              {secs != null && (
+                <div style={{ ...railLabel, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+                  {t("{n} LESSONS · {clock}").replace("{n}", String(total)).replace("{clock}", countdown(secs))}
+                </div>
+              )}
+              <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.03em", color: C.accentText, marginTop: 10, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>{t("You graduated")}</div>
+              <div style={{ color: C.muted, fontSize: 15, marginTop: 8, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>
+                {t("{a} of {b} right, for {p} points.").replace("{a}", String(score)).replace("{b}", String(total)).replace("{p}", String(points(score)))}
+              </div>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
+                <button onClick={onRestart} className="vt-sheen" style={{ ...sheen, fontSize: 14, padding: "11px 24px" }}>{t("Start again")}</button>
+                {onBack && <button onClick={onBack} className="v-outline" style={{ ...outline, color: C.text, fontSize: 14, padding: "11px 20px" }}>{t("Back to the games")}</button>}
+              </div>
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
-            <button onClick={onRestart} className="vt-sheen" style={{ ...sheen, fontSize: 14, padding: "11px 24px" }}>{t("Start again")}</button>
-            {onBack && <button onClick={onBack} className="v-outline" style={{ ...outline, color: C.text, fontSize: 14, padding: "11px 20px" }}>{t("Back to the games")}</button>}
-          </div>
+        </div>
+        <div style={{ padding: "16px 20px", borderTop: `1px solid ${C.edge}`, display: "flex", alignItems: "center", gap: 10 }}>
+          <span aria-hidden="true" style={{ width: 26, height: 26, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", color: band === "perfect" ? C.accentText : C.warn, fontSize: 13, flexShrink: 0 }}>{band === "perfect" ? "✓" : "!"}</span>
+          {/* Read off the score, so it can only say what happened. */}
+          <span style={{ color: C.muted, fontSize: 13, lineHeight: 1.5 }}>{coachLine}</span>
         </div>
       </div>
     );

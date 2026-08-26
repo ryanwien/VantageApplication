@@ -21,8 +21,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { C, GRAD, FIELD, MONO, SANS, R } from "./theme.js";
 import {
-  ROUNDS, ROUND_SECONDS, BONUS_WITHIN, movePct, moveText, sparkPath, isRight,
+  ROUNDS, ROUND_SECONDS, BONUS_WITHIN, BONUS_POINTS, movePct, moveText, sparkPath, isRight,
   award, totalPoints, rightCount, countdown,
+  bestStreak, bonusCount, timeoutCount, scoreBand, coachKey,
 } from "../games/bullbear.js";
 
 const railLabel = { fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", color: C.faint };
@@ -38,6 +39,8 @@ export default function BullOrBear({
   choice = null,        // 0 bullish, 1 bearish, null when the clock ran out
   awards = [],
   done = false,
+  startedAt = 0,        // when the run began — the summary prints how long it took
+  endedAt = 0,          // stamped by the parent the moment the last round closed
   onAnswer,             // (index | null, secondsLeft)
   onNext, onRestart, onBack, onClose,
   t = (s) => s,
@@ -103,8 +106,32 @@ export default function BullOrBear({
     </span>
   );
 
-  // ---- the run's score ----
+  // ---- the run's summary ----
+  // Same anatomy as Ticker Match's summary — the two games share their shape
+  // by design, and share their end screen's rules through quiz.js. Only the
+  // vocabulary differs: calls, not symbols.
   if (done) {
+    const band = scoreBand(called, total);
+    const tone = band === "perfect" || band === "most"
+      ? { color: C.accentText, radial: "radial-gradient(120% 100% at 50% 45%, #0e1a14, #07090d)", glyph: "rgba(76,195,138,0.12)" }
+      : band === "even"
+        ? { color: C.text, radial: "radial-gradient(120% 100% at 50% 45%, #10141b, #07090d)", glyph: "rgba(230,232,235,0.10)" }
+        : { color: C.down, radial: "radial-gradient(120% 100% at 50% 45%, #14090b, #07090d)", glyph: "rgba(221,106,110,0.12)" };
+    const verdict = band === "perfect" ? t("Every call right")
+      : band === "most" ? t("More right than wrong")
+      : band === "even" ? t("Split down the middle")
+      : t("The market went the other way");
+    const coach = coachKey(awards);
+    const late = timeoutCount(awards);
+    const coachLine = coach === "timeout"
+      ? (late === 1 ? t("The clock took a round from you. Even a guess beats a blank.")
+        : t("The clock took {n} rounds. Even a guess beats a blank.").replace("{n}", String(late)))
+      : coach === "replay" ? t("Each reveal said why the price moved. Read the why, then call it again.")
+      : coach === "flawless" ? t("All {t} calls inside the bonus window. Nothing left on the table.").replace("{t}", String(total))
+      : coach === "slow" ? t("{b} of {r} right calls beat the clock. A fast call pays {x} extra.")
+          .replace("{b}", String(bonusCount(awards))).replace("{r}", String(called)).replace("{x}", String(BONUS_POINTS))
+      : t("A solid run. Faster calls are where the score grows.");
+    const secs = endedAt > startedAt ? Math.round((endedAt - startedAt) / 1000) : null;
     return (
       <div className="v-gamepanel" style={{ fontFamily: SANS, background: C.base, color: C.text }}>
         <div style={HEAD}>
@@ -115,16 +142,40 @@ export default function BullOrBear({
             {closeBtn}
           </span>
         </div>
-        <div style={{ padding: "40px 22px", textAlign: "center" }}>
-          <div style={{ ...railLabel, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>{t("ROUND OVER")}</div>
-          <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.03em", color: C.accentText, marginTop: 10, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>{points}</div>
-          <div style={{ color: C.muted, fontSize: 15, marginTop: 8, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>
-            {t("{a} of {b} calls right.").replace("{a}", String(called)).replace("{b}", String(total))}
+        <div style={{ position: "relative", minHeight: 340, background: tone.radial, overflow: "hidden" }}>
+          <div aria-hidden="true" style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(#171b22 1px, transparent 1px), linear-gradient(90deg, #171b22 1px, transparent 1px)", backgroundSize: "46px 46px", opacity: 0.4 }} />
+          <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: "44%", transform: "translate(-50%, -50%)", fontFamily: MONO, fontSize: 96, fontWeight: 700, color: tone.glyph, whiteSpace: "nowrap" }}>{called}/{total}</div>
+          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: "rgba(7,9,13,0.6)", padding: 20 }}>
+            <div>
+              {/* No stamp, no clock line — never a 0:00 that did not happen. */}
+              {secs != null && (
+                <div style={{ ...railLabel, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+                  {t("{n} ROUNDS · {clock}").replace("{n}", String(total)).replace("{clock}", countdown(secs))}
+                </div>
+              )}
+              <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.03em", color: tone.color, marginTop: 10, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>{verdict}</div>
+              <div style={{ color: C.muted, fontSize: 15, marginTop: 8, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>
+                {t("{a} of {b} calls right.").replace("{a}", String(called)).replace("{b}", String(total))}
+              </div>
+              <div style={{ display: "flex", gap: 26, justifyContent: "center", marginTop: 22, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
+                {[[t("SCORE"), String(points)], [t("BEST STREAK"), String(bestStreak(awards))], [t("SPEED BONUSES"), String(bonusCount(awards))]].map(([k, v]) => (
+                  <div key={k}>
+                    <div style={{ ...railLabel, fontSize: 9.5 }}>{k}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 20, fontWeight: 700, marginTop: 3, color: C.text }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.4s both" }}>
+                <button onClick={onRestart} className="vt-sheen" style={{ ...sheen, fontSize: 14, padding: "11px 24px" }}>{t("Play again")}</button>
+                {onBack && <button onClick={onBack} className="v-outline" style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: 9, color: C.text, fontFamily: SANS, fontSize: 14, padding: "11px 20px", cursor: "pointer" }}>{t("Back to the games")}</button>}
+              </div>
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
-            <button onClick={onRestart} className="vt-sheen" style={{ ...sheen, fontSize: 14, padding: "11px 24px" }}>{t("Play again")}</button>
-            {onBack && <button onClick={onBack} className="v-outline" style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: 9, color: C.text, fontFamily: SANS, fontSize: 14, padding: "11px 20px", cursor: "pointer" }}>{t("Back to the games")}</button>}
-          </div>
+        </div>
+        <div style={{ padding: "16px 20px", borderTop: `1px solid ${C.edge}`, display: "flex", alignItems: "center", gap: 10 }}>
+          <span aria-hidden="true" style={{ width: 26, height: 26, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", color: coach === "flawless" ? C.accentText : C.warn, fontSize: 13, flexShrink: 0 }}>{coach === "flawless" ? "✓" : "!"}</span>
+          {/* Read off the awards list, so it can only say what happened. */}
+          <span style={{ color: C.muted, fontSize: 13, lineHeight: 1.5 }}>{coachLine}</span>
         </div>
       </div>
     );

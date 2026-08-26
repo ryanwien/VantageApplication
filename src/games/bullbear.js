@@ -23,7 +23,7 @@
 //  and another that a bigger move travels further than a smaller one.
 // ============================================================
 
-import { awardWith, totalPoints, rightCount, streak, countdown } from "./quiz.js";
+import { awardWith, totalPoints, rightCount, streak, countdown, bestStreak, bonusCount, timeoutCount, scoreBand, coachKey } from "./quiz.js";
 
 export const ROUND_SECONDS = 15;
 // "Call it inside 10 seconds for a speed bonus", says the footer — so the
@@ -163,4 +163,4 @@ export const award = awardWith({
   roundSeconds: ROUND_SECONDS, bonusWithin: BONUS_WITHIN, base: BASE_POINTS, bonus: BONUS_POINTS,
 });
 
-export { totalPoints, rightCount, streak, countdown };
+export { totalPoints, rightCount, streak, countdown, bestStreak, bonusCount, timeoutCount, scoreBand, coachKey };

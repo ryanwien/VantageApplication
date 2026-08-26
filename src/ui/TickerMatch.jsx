@@ -22,7 +22,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { C, GRAD, FIELD, MONO, SANS, R } from "./theme.js";
-import { ROUNDS, ROUND_SECONDS, BONUS_WITHIN, answerIndex, award, totalPoints, streak, countdown } from "../games/ticker.js";
+import {
+  ROUNDS, ROUND_SECONDS, BONUS_WITHIN, BONUS_POINTS, answerIndex, award, totalPoints, streak, countdown,
+  rightCount, bestStreak, bonusCount, timeoutCount, scoreBand, coachKey,
+} from "../games/ticker.js";
 
 const railLabel = { fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", color: C.faint };
 const headBtn = { background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, color: C.muted, fontFamily: SANS, fontSize: 13, padding: "6px 12px", cursor: "pointer" };
@@ -39,6 +42,8 @@ export default function TickerMatch({
   quote = null,         // { price, chgPct } for this round's symbol, when the desk has one
   onAnswer,             // (index | null, secondsLeft)
   done = false,         // every round called; show the run's score
+  startedAt = 0,        // when the run began — the summary prints how long it took
+  endedAt = 0,          // stamped by the parent the moment the last round closed
   onNext, onRestart, onBack, onClose,
   t = (s) => s,
 }) {
@@ -119,24 +124,71 @@ export default function TickerMatch({
     </div>
   );
 
-  // ---- the run's score ----
-  // The handoff does not design an end screen for the quiz games, so this stays
-  // plain and on-system rather than inventing a layout for it.
+  // ---- the run's summary ----
+  // The end-state anatomy the arcade games already speak — a tinted field, the
+  // outcome as a giant translucent mark, the verdict, the numbers, one
+  // coaching line read off the run. Which tint and which line are RULES in
+  // quiz.js, where they are tested; only the wording lives here.
   if (done) {
-    const got = awards.filter(a => a?.correct).length;
+    const got = rightCount(awards);
+    const band = scoreBand(got, total);
+    const tone = band === "perfect" || band === "most"
+      ? { color: C.accentText, radial: "radial-gradient(120% 100% at 50% 45%, #0e1a14, #07090d)", glyph: "rgba(76,195,138,0.12)" }
+      : band === "even"
+        ? { color: C.text, radial: "radial-gradient(120% 100% at 50% 45%, #10141b, #07090d)", glyph: "rgba(230,232,235,0.10)" }
+        : { color: C.down, radial: "radial-gradient(120% 100% at 50% 45%, #14090b, #07090d)", glyph: "rgba(221,106,110,0.12)" };
+    const verdict = band === "perfect" ? t("Every symbol matched")
+      : band === "most" ? t("You know these tickers")
+      : band === "even" ? t("Half the tape matched")
+      : t("The tape got away from you");
+    const coach = coachKey(awards);
+    const late = timeoutCount(awards);
+    const coachLine = coach === "timeout"
+      ? (late === 1 ? t("The clock took a round from you. Even a guess beats a blank.")
+        : t("The clock took {n} rounds. Even a guess beats a blank.").replace("{n}", String(late)))
+      : coach === "replay" ? t("Every wrong row said why it was wrong — play it again with the reasons in mind.")
+      : coach === "flawless" ? t("All {t} matched inside the bonus window. There is no faster tape.").replace("{t}", String(total))
+      : coach === "slow" ? t("{b} of {r} right answers beat the clock. A fast match pays {x} extra.")
+          .replace("{b}", String(bonusCount(awards))).replace("{r}", String(got)).replace("{x}", String(BONUS_POINTS))
+      : t("A solid tape. The bonus window is where the score grows.");
+    const secs = endedAt > startedAt ? Math.round((endedAt - startedAt) / 1000) : null;
     return (
       <div className="v-gamepanel" style={{ fontFamily: SANS, background: C.base, color: C.text }}>
         {header}
-        <div style={{ padding: "40px 22px", textAlign: "center" }}>
-          <div style={{ ...railLabel, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>{t("ROUND OVER")}</div>
-          <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.03em", color: C.accentText, marginTop: 10, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>{points}</div>
-          <div style={{ color: C.muted, fontSize: 15, marginTop: 8, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>
-            {t("{a} of {b} symbols matched.").replace("{a}", String(got)).replace("{b}", String(total))}
+        <div style={{ position: "relative", minHeight: 340, background: tone.radial, overflow: "hidden" }}>
+          <div aria-hidden="true" style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(#171b22 1px, transparent 1px), linear-gradient(90deg, #171b22 1px, transparent 1px)", backgroundSize: "46px 46px", opacity: 0.4 }} />
+          <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: "44%", transform: "translate(-50%, -50%)", fontFamily: MONO, fontSize: 96, fontWeight: 700, color: tone.glyph, whiteSpace: "nowrap" }}>{got}/{total}</div>
+          <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", background: "rgba(7,9,13,0.6)", padding: 20 }}>
+            <div>
+              {/* No stamp, no clock line — never a 0:00 that did not happen. */}
+              {secs != null && (
+                <div style={{ ...railLabel, letterSpacing: "2.5px", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+                  {t("{n} ROUNDS · {clock}").replace("{n}", String(total)).replace("{clock}", countdown(secs))}
+                </div>
+              )}
+              <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.03em", color: tone.color, marginTop: 10, animation: "vt-fadeup 0.6s var(--v-ease) 0.1s both" }}>{verdict}</div>
+              <div style={{ color: C.muted, fontSize: 15, marginTop: 8, animation: "vt-fadeup 0.6s var(--v-ease) 0.2s both" }}>
+                {t("{a} of {b} symbols matched.").replace("{a}", String(got)).replace("{b}", String(total))}
+              </div>
+              <div style={{ display: "flex", gap: 26, justifyContent: "center", marginTop: 22, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
+                {[[t("SCORE"), String(points)], [t("BEST STREAK"), String(bestStreak(awards))], [t("SPEED BONUSES"), String(bonusCount(awards))]].map(([k, v]) => (
+                  <div key={k}>
+                    <div style={{ ...railLabel, fontSize: 9.5 }}>{k}</div>
+                    <div style={{ fontFamily: MONO, fontSize: 20, fontWeight: 700, marginTop: 3, color: C.text }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.4s both" }}>
+                <button onClick={onRestart} className="vt-sheen" style={{ ...sheen, fontSize: 14, padding: "11px 24px" }}>{t("Play again")}</button>
+                {onBack && <button onClick={onBack} className="v-outline" style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: 9, color: C.text, fontFamily: SANS, fontSize: 14, padding: "11px 20px", cursor: "pointer" }}>{t("Back to the games")}</button>}
+              </div>
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24, flexWrap: "wrap", animation: "vt-fadeup 0.6s var(--v-ease) 0.3s both" }}>
-            <button onClick={onRestart} className="vt-sheen" style={{ ...sheen, fontSize: 14, padding: "11px 24px" }}>{t("Play again")}</button>
-            {onBack && <button onClick={onBack} className="v-outline" style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: 9, color: C.text, fontFamily: SANS, fontSize: 14, padding: "11px 20px", cursor: "pointer" }}>{t("Back to the games")}</button>}
-          </div>
+        </div>
+        <div style={{ padding: "16px 20px", borderTop: `1px solid ${C.edge}`, display: "flex", alignItems: "center", gap: 10 }}>
+          <span aria-hidden="true" style={{ width: 26, height: 26, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", color: coach === "flawless" ? C.accentText : C.warn, fontSize: 13, flexShrink: 0 }}>{coach === "flawless" ? "✓" : "!"}</span>
+          {/* Read off the awards list, so it can only say what happened. */}
+          <span style={{ color: C.muted, fontSize: 13, lineHeight: 1.5 }}>{coachLine}</span>
         </div>
       </div>
     );
