@@ -186,6 +186,35 @@ export function canDouble({ book, size, capital }) {
   return book.length === 2 && !overheated(book) && size * 2 <= capital;
 }
 
+// What buying one more card would do to this book — the mid-hand question the
+// whole game is asking, answered by counting rather than by guessing.
+//
+// Every rank is run through the real handValue(), so the ace's demotion from
+// 11 to 1 is the rule this module already enforces rather than a second copy
+// of it that could disagree with the first. On a book of 15 an ace is a 1 and
+// does not overheat you, which is exactly the case a hand-written "anything
+// above a 6" rule gets wrong.
+//
+// Counted in RANKS, deliberately, and the screen says "ranks" too. A rank
+// count is a fact about a deck's composition and is the same 4/13 either way,
+// because every rank holds four cards. Counting what is left in the shoe would
+// be a different and larger claim — the player cannot see the shoe, and a
+// readout that quietly counted it would be telling them something the game
+// never offered to tell them.
+//
+// Returns null once the book has already overheated: there is no decision left
+// to describe, and the position closes on its own.
+export function buyRisk(book = []) {
+  if (overheated(book)) return null;
+  const bustRanks = RANKS.filter(r => handValue([...book, { r }]) > LIMIT);
+  return {
+    bust: bustRanks.length,
+    safe: RANKS.length - bustRanks.length,
+    total: RANKS.length,
+    spare: LIMIT - handValue(book),
+  };
+}
+
 export function isWiped(capital) {
   return capital < MIN_POSITION;
 }

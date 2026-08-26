@@ -3,7 +3,7 @@ import {
   SUITS, RANKS, LIMIT, START_CAPITAL, MIN_POSITION,
   deck, cardValue, handValue, isNatural, overheated, marketPlays, settle,
   netPnl, capitalFrom, drawdown, riskPct, winRate, record, riskBand,
-  sizeOptions, clampSize, canDouble, isWiped, money, tapeLine, adviceKey,
+  sizeOptions, clampSize, canDouble, isWiped, money, tapeLine, adviceKey, buyRisk,
 } from "./overheat.js";
 
 const c = (r, s = "♠") => ({ r, s });
@@ -254,6 +254,59 @@ describe("tapeLine", () => {
   it("says held for an opening book and bought for one that took cards", () => {
     expect(tapeLine({ market: 25, book: 13, cards: 2 })).toBe("market 25 · held 13");
     expect(tapeLine({ market: 18, book: 24, cards: 4 })).toBe("market 18 · bought to 24");
+  });
+});
+
+describe("buyRisk", () => {
+  it("says nothing can overheat a book of eleven or less", () => {
+    for (const b of [[c("2"), c("3")], [c("5"), c("6")], [c("A"), c("2")]]) {
+      const r = buyRisk(b);
+      expect(r.bust).toBe(0);
+      expect(r.safe).toBe(13);
+    }
+  });
+  it("counts the ranks that would overheat, not the ones that look like they would", () => {
+    // 15: a 7 or better busts — EXCEPT the ace, which demotes to a 1.
+    const r = buyRisk([c("10"), c("5")]);
+    expect(r.spare).toBe(6);
+    expect(r.bust).toBe(7);          // 7 8 9 10 J Q K
+    expect(r.safe).toBe(6);          // A 2 3 4 5 6
+    expect(r.bust + r.safe).toBe(r.total);
+  });
+  it("leaves a twenty-one with nothing safe to draw", () => {
+    const r = buyRisk([c("10"), c("6"), c("5")]);
+    expect(r.spare).toBe(0);
+    expect(r.bust).toBe(13);
+    expect(r.safe).toBe(0);
+  });
+  it("knows a soft book cannot be overheated at all", () => {
+    // A + 6 is a soft 17: four to spare on the face of it, but the ace demotes
+    // to a 1 the moment a card would take it past the limit, so NOTHING
+    // overheats it. This is the case a hand-written "anything above a 4" rule
+    // gets wrong, and the reason this counts through handValue.
+    const r = buyRisk([c("A"), c("6")]);
+    expect(r.spare).toBe(4);
+    expect(r.bust).toBe(0);
+    expect(r.safe).toBe(13);
+  });
+  it("only starts to bite once the ace has already been spent", () => {
+    // A + 6 + 9 is a hard 16 — the ace is a 1 now and cannot save it twice.
+    const r = buyRisk([c("A"), c("6"), c("9")]);
+    expect(r.spare).toBe(5);
+    expect(r.bust).toBe(8);   // 6 7 8 9 10 J Q K
+  });
+  it("has nothing to say about a book that already overheated", () => {
+    expect(buyRisk([c("10"), c("9"), c("8")])).toBeNull();
+  });
+  it("agrees with handValue on every reachable book", () => {
+    for (const a of RANKS) for (const b of RANKS) {
+      const book = [c(a), c(b)];
+      const r = buyRisk(book);
+      if (!r) continue;
+      const counted = RANKS.filter(x => handValue([...book, c(x)]) > LIMIT).length;
+      expect(r.bust).toBe(counted);
+      expect(r.spare).toBe(LIMIT - handValue(book));
+    }
   });
 });
 

@@ -41,7 +41,7 @@ import { shape as shapeTitle, genreMap } from "./src/movies/movies.js";
 import {
   deck as ohDeck, handValue as ohValue, isNatural as ohNatural, overheated as ohOverheated,
   marketPlays, settle as settlePosition, capitalFrom, netPnl, drawdown, riskPct, riskBand,
-  winRate, record as tapeRecord, adviceKey, sizeOptions, clampSize, canDouble, isWiped,
+  winRate, record as tapeRecord, adviceKey, sizeOptions, clampSize, canDouble, buyRisk, isWiped,
   money, tapeLine, LIMIT as OH_LIMIT, START_CAPITAL as OH_START, MIN_POSITION as OH_MIN,
   COOL_OPTIONS,
 } from "./src/games/overheat.js";
@@ -817,6 +817,12 @@ const I18N = {
     "Your free trial has ended": "Tu prueba gratuita ha terminado",
     "Pick a plan to carry on. Your watchlist, portfolio and alerts are untouched — they live in this browser, and nothing has been deleted.": "Elige un plan para continuar. Tu lista, tu cartera y tus alertas siguen intactas: viven en este navegador y no se ha borrado nada.",
     "Continue on {plan}": "Continuar con {plan}",
+    "Nothing in the deck can overheat you.": "Nada en la baraja puede recalentarte.",
+    "Only buying can lose this.": "Sólo comprar puede perder esto.",
+    "You have {n} to spare.": "Te sobran {n}.",
+    "The market draws to {n}.": "El mercado pide hasta {n}.",
+    "{b} of {t} ranks would overheat you · the market draws to {c}.": "{b} de {t} valores te recalentarían · el mercado pide hasta {c}.",
+    "AT RISK": "EN RIESGO",
     "Show": "Mostrar",
   },
   fr: {
@@ -1491,6 +1497,12 @@ const I18N = {
     "Your free trial has ended": "Votre essai gratuit est terminé",
     "Pick a plan to carry on. Your watchlist, portfolio and alerts are untouched — they live in this browser, and nothing has been deleted.": "Choisissez un forfait pour continuer. Votre liste, votre portefeuille et vos alertes sont intacts : ils vivent dans ce navigateur et rien n'a été supprimé.",
     "Continue on {plan}": "Continuer avec {plan}",
+    "Nothing in the deck can overheat you.": "Rien dans le paquet ne peut vous faire surchauffer.",
+    "Only buying can lose this.": "Seul un achat peut faire perdre ce coup.",
+    "You have {n} to spare.": "Il vous reste {n} de marge.",
+    "The market draws to {n}.": "Le marché tire jusqu'à {n}.",
+    "{b} of {t} ranks would overheat you · the market draws to {c}.": "{b} valeurs sur {t} vous feraient surchauffer · le marché tire jusqu'à {c}.",
+    "AT RISK": "EN JEU",
     "Show": "Afficher",
   },
   de: {
@@ -2165,6 +2177,12 @@ const I18N = {
     "Your free trial has ended": "Deine kostenlose Testphase ist beendet",
     "Pick a plan to carry on. Your watchlist, portfolio and alerts are untouched — they live in this browser, and nothing has been deleted.": "Wähl einen Tarif, um weiterzumachen. Deine Watchlist, dein Depot und deine Alarme sind unberührt — sie liegen in diesem Browser, und nichts wurde gelöscht.",
     "Continue on {plan}": "Weiter mit {plan}",
+    "Nothing in the deck can overheat you.": "Nichts im Stapel kann dich überhitzen.",
+    "Only buying can lose this.": "Nur ein Kauf kann das noch verlieren.",
+    "You have {n} to spare.": "Du hast {n} Luft.",
+    "The market draws to {n}.": "Der Markt zieht bis {n}.",
+    "{b} of {t} ranks would overheat you · the market draws to {c}.": "{b} von {t} Werten würden dich überhitzen · der Markt zieht bis {c}.",
+    "AT RISK": "IM RISIKO",
     "Show": "Anzeigen",
   },
   pt: {
@@ -2838,6 +2856,12 @@ const I18N = {
     "Your free trial has ended": "A tua avaliação gratuita terminou",
     "Pick a plan to carry on. Your watchlist, portfolio and alerts are untouched — they live in this browser, and nothing has been deleted.": "Escolhe um plano para continuar. A tua lista, a tua carteira e os teus alertas estão intactos: vivem neste navegador e nada foi apagado.",
     "Continue on {plan}": "Continuar com {plan}",
+    "Nothing in the deck can overheat you.": "Nada no baralho te pode sobreaquecer.",
+    "Only buying can lose this.": "Só comprar pode perder isto.",
+    "You have {n} to spare.": "Tens {n} de folga.",
+    "The market draws to {n}.": "O mercado pede até {n}.",
+    "{b} of {t} ranks would overheat you · the market draws to {c}.": "{b} de {t} valores sobreaqueciam-te · o mercado pede até {c}.",
+    "AT RISK": "EM RISCO",
     "Show": "Mostrar",
   },
   it: {
@@ -3511,6 +3535,12 @@ const I18N = {
     "Your free trial has ended": "La tua prova gratuita è finita",
     "Pick a plan to carry on. Your watchlist, portfolio and alerts are untouched — they live in this browser, and nothing has been deleted.": "Scegli un piano per continuare. La tua watchlist, il tuo portafoglio e i tuoi avvisi sono intatti: vivono in questo browser e non è stato cancellato nulla.",
     "Continue on {plan}": "Continua con {plan}",
+    "Nothing in the deck can overheat you.": "Niente nel mazzo può surriscaldarti.",
+    "Only buying can lose this.": "Solo comprare può perdere questa mano.",
+    "You have {n} to spare.": "Hai {n} di margine.",
+    "The market draws to {n}.": "Il mercato pesca fino a {n}.",
+    "{b} of {t} ranks would overheat you · the market draws to {c}.": "{b} valori su {t} ti surriscalderebbero · il mercato pesca fino a {c}.",
+    "AT RISK": "A RISCHIO",
     "Show": "Mostra",
   },
 };
@@ -7027,6 +7057,54 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
                       </span>
                     </div>
                   )}
+
+                  {/* ---- the decision, while it is still a decision ----
+                      The reference draws this felt twice: the closed table and
+                      the wipeout. Both are aftermaths. The state you actually
+                      spend the hand in — book dealt, market showing one card,
+                      Buy and Hold live — was never drawn, and the screen said
+                      nothing at all about the only question it is asking.
+
+                      It sits exactly where the result banner will, so the felt
+                      does not jump when the position closes: the thing that
+                      answers "what now" is replaced in place by the thing that
+                      answers "what happened".
+
+                      Every number is counted, never predicted. buyRisk runs all
+                      thirteen ranks through the real hand rule, which is why a
+                      soft seventeen reads here as unbustable rather than as
+                      four away from trouble. Nothing on this line claims to
+                      know what the market will draw. */}
+                  {!result && phase === "open" && (() => {
+                    const risk = buyRisk(book);
+                    if (!risk) return null;
+                    const line = risk.bust === 0
+                      ? t("Nothing in the deck can overheat you.")
+                      : risk.safe === 0
+                        ? t("Only buying can lose this.")
+                        : t("You have {n} to spare.").replace("{n}", String(risk.spare));
+                    const note = (risk.bust === 0 || risk.safe === 0)
+                      ? t("The market draws to {n}.").replace("{n}", String(coolAt))
+                      : t("{b} of {t} ranks would overheat you · the market draws to {c}.")
+                          .replace("{b}", String(risk.bust)).replace("{t}", String(risk.total)).replace("{c}", String(coolAt));
+                    return (
+                      <div role="status" style={{
+                        display: "flex", alignItems: "center", gap: 12, marginTop: 18, flexWrap: "wrap",
+                        background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: 11, padding: "13px 16px",
+                        animation: "vt-fadeup 0.5s var(--v-ease) 0.3s both",
+                      }}>
+                        <span aria-hidden="true" className="v-pulse" style={{ width: 6, height: 6, borderRadius: "50%", flex: "0 0 auto", background: C.accentText }} />
+                        <span style={{ minWidth: 0 }}>
+                          <span style={{ display: "block", fontWeight: 700, fontSize: 14.5, color: C.text }}>{line}</span>
+                          <span style={{ display: "block", fontFamily: MONO, fontSize: 11, color: C.faint, marginTop: 3, lineHeight: 1.45 }}>{note}</span>
+                        </span>
+                        <span style={{ marginLeft: "auto", textAlign: "right", flexShrink: 0 }}>
+                          <span style={{ display: "block", fontFamily: MONO, fontSize: 14, fontWeight: 700, color: C.text }}>{money(staked)}</span>
+                          <span style={{ display: "block", ...label, marginTop: 3 }}>{t("AT RISK")}</span>
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
