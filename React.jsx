@@ -13,6 +13,9 @@ import {
   chessAIMove, chessCount, chessSan, chessSuggest, isPromotion, PROMO_TYPES, CHESS_VAL,
 } from "./src/chess/chess.js";
 import {
+  chessClockNew, chessClockTick, chessClockTurn, chessClockRun, chessClockStop, chessClockFlagged,
+} from "./src/chess/clock.js";
+import {
   AW_W, AW_H, AW_LANES, AW_LANE_ID, AW_BOTS, AW_ORDER, AW_STANCES, AW_CAP_MAX, AW_BASE_HP,
   awStats, awClock, awRate, awLog, awNewSim, awDeploy, awStep, awBlankHud, awReadHud,
 } from "./src/games/algowars.js";
@@ -4482,7 +4485,10 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
   const [turn, setTurn] = useState("w");                   // 'w' = Bulls (green) move first
   const [sel, setSel] = useState(null);
   const [moves, setMoves] = useState([]);                  // { san, side, from, to }
-  const [clock, setClock] = useState({ w: CHESS_START, b: CHESS_START });
+  // Not two numbers but a ledger: the two clocks, which side is being charged,
+  // and the moment it was last settled. See src/chess/clock.js for why the last
+  // of those has to live in the state rather than in the timer.
+  const [clock, setClock] = useState(() => chessClockNew(CHESS_START));
   const [algo, setAlgo] = useState("balanced");            // how the house plays
   const [house, setHouse] = useState(true);                // is the house playing the Bears at all
   const [end, setEnd] = useState(null);                    // { winner: 'w'|'b'|'draw', by, side }
@@ -4512,7 +4518,7 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
 
   const reset = () => {
     setHist([chessInit()]); setTurn("w"); setSel(null); setMoves([]);
-    setClock({ w: CHESS_START, b: CHESS_START });
+    setClock(chessClockNew(CHESS_START));
     setEnd(null); setReview(null); setPromo(null); setConfirm(false);
     clearTimeout(animTimer.current); setAnim(null);
   };
@@ -4574,24 +4580,42 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
   // They start on the first move, not when the panel opens: a chess clock has
   // always worked that way, and it means reading the board before you play
   // cannot lose you the game.
+  //
+  // The arithmetic is in src/chess/clock.js and the three effects below do
+  // nothing but tell it what happened. That split IS the repair. `turn` used to
+  // be in the ticker's dependency list, so every half-move tore the interval
+  // down and rebuilt it, re-seeding the "time since the last tick" it kept in
+  // its closure — and what survived was the whole ticks that happened to fit
+  // inside a gap, nothing else. Measured in the browser at 73 half-moves over
+  // 40 seconds, 4.5 of those seconds were charged to nobody; and a side that
+  // moved in under half a second was charged nothing at all, because its
+  // interval never lived long enough to fire once.
   const started = moves.length > 0;
+  // Reviewing the game is free and so is the time after it ends, and neither is
+  // backdated on the way back in.
+  const clockRuns = started && !end && review === null;
+
+  // A move. This is declared BEFORE the on/off effect on purpose: the first
+  // move starts the clock and passes the turn in the same commit, and running
+  // the turn through a ledger that is still paused is what keeps the move that
+  // started the game free.
+  useEffect(() => { setClock(c => chessClockTurn(c, performance.now(), turn)); }, [turn]);
+
+  // On and off, and the only timer in the game. It restarts when the clock
+  // starts or stops and at no other time — not when the turn changes, which was
+  // the bug, and not when the board does.
   useEffect(() => {
-    if (!started || end || review !== null) return;
-    // Ticked off real elapsed time rather than counted in whole seconds, so
-    // switching sides mid-second is not a small refund.
-    let last = performance.now();
-    const id = setInterval(() => {
-      const now = performance.now();
-      const dt = (now - last) / 1000; last = now;
-      setClock(c => ({ ...c, [turn]: Math.max(0, c[turn] - dt) }));
-    }, 500);
+    const now = performance.now();
+    if (!clockRuns) { setClock(c => chessClockStop(c, now)); return; }
+    setClock(c => chessClockRun(c, now));
+    const id = setInterval(() => setClock(c => chessClockTick(c, performance.now())), 500);
     return () => clearInterval(id);
-  }, [started, end, turn, review]);
+  }, [clockRuns]);
 
   useEffect(() => {
     if (end || !started) return;
-    if (clock.w <= 0) finish("b", "time", "w");
-    else if (clock.b <= 0) finish("w", "time", "b");
+    const flagged = chessClockFlagged(clock);
+    if (flagged) finish(flagged === "w" ? "b" : "w", "time", flagged);
   }, [clock, end, started]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---- the house's turn ----
