@@ -136,7 +136,7 @@ const OAUTH = {
 };
 
 // ---- persistent JSON stores (all gitignored — they hold hashes, live tokens, secrets) ----
-const USERS_FILE = path.join(__dirname, "users.json");        // { [email]: { email,name,plan,salt,hash,agreedAt,legalVersion,createdAt } }
+const USERS_FILE = path.join(__dirname, "users.json");        // { [email]: { email,name,plan,salt,hash,agreedAt,legalVersion,createdAt,subscription? } }
 const SESSIONS_FILE = path.join(__dirname, "sessions.json");  // { [token]: { email, createdAt } }
 const AI_USAGE_FILE = path.join(__dirname, "ai-usage.json");
 const TOKENS_FILE = path.join(__dirname, "tokens.json");      // { [email]: { zoom:{...}, google:{...} } }  ← per-user OAuth tokens
@@ -246,12 +246,33 @@ const tokenFromReq = (req, url) => {
   return url?.searchParams.get("token") || null; // ⚠ query tokens can leak into logs/Referer — prototype-acceptable
 };
 const emailFromReq = (req, url) => SESSIONS[tokenFromReq(req, url)]?.email || null;
+// Does this account actually have a subscription? Distinct from WHICH plan it
+// is on, which is all the record used to carry — and the two questions have
+// different answers for the person who converted on day 3 and the one who never
+// did. On day 9 those records are otherwise identical.
+//
+// SUB_DEAD lists Stripe's terminal statuses. Everything else counts as live,
+// INCLUDING a record with an id and no status: only the subscription.* events
+// carry a status, and an endpoint configured for checkout.session.completed
+// alone will store the id without one. Every unknown resolves toward "this
+// account has a subscription", because being wrong that way leaves a lapsed
+// trialist on a simulated desk, and being wrong the other way locks out
+// somebody who paid.
+//
+// ⚠ If no webhook is configured at all, the server never learns that anyone
+// subscribed. That is a deployment gap this file cannot close from here — see
+// the warning above stripeCheckout.
+const SUB_DEAD = new Set(["canceled", "unpaid", "incomplete_expired"]);
+const hasSubscription = (u) => !!u?.subscription?.id && !SUB_DEAD.has(u.subscription.status);
+
 // the safe public view of an account (never the salt/hash)
 // createdAt is here because the front end draws the trial countdown from it —
 // a countdown needs a start date, and this is the one the server already
 // stamps. legalVersion so the account pane can name the terms this user
 // actually accepted rather than the ones the build currently ships.
-const accountView = (email) => { const u = USERS[email]; return u ? { email: u.email, name: u.name, plan: u.plan, createdAt: u.createdAt ?? null, agreedAt: u.agreedAt ?? null, legalVersion: u.legalVersion ?? null } : null; };
+// `subscribed` is a boolean on purpose: the browser needs to know whether the
+// trial screen applies, and nothing else about the Stripe object is its business.
+const accountView = (email) => { const u = USERS[email]; return u ? { email: u.email, name: u.name, plan: u.plan, createdAt: u.createdAt ?? null, agreedAt: u.agreedAt ?? null, legalVersion: u.legalVersion ?? null, subscribed: hasSubscription(u) } : null; };
 
 // ---- social sign-in (OpenID Connect): exchange the code, then fetch the profile ----
 // Returns { email, name }. The caller creates-or-logs-in the user and mints a session.
@@ -499,17 +520,35 @@ const server = http.createServer(async (req, res) => {
       const event = JSON.parse(raw.toString("utf8")), obj = event.data?.object || {};
       const email = obj.client_reference_id || obj.customer_email || obj.metadata?.email;
       if (email && USERS[email]) {
-        if (event.type === "checkout.session.completed" || event.type === "customer.subscription.updated") {
+        // Two questions, recorded separately: which plan, and whether a
+        // subscription exists at all. Only the first was ever asked here, which
+        // is why hasSubscription() needed something new to read.
+        //
+        // checkout.session.completed carries the subscription id but not its
+        // status; the subscription.* events carry the status. Each writes what
+        // it actually knows and leaves the rest of the record alone.
+        const sub = USERS[email].subscription || {};
+        if (event.type === "checkout.session.completed") {
           const plan = planFromStripeObject(obj); if (plan) USERS[email].plan = plan;
+          if (obj.subscription) USERS[email].subscription = { ...sub, id: String(obj.subscription), updatedAt: Date.now() };
+        } else if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+          // .created was not listened for at all, so a subscription that was
+          // never subsequently updated left the plan unset.
+          const plan = planFromStripeObject(obj); if (plan) USERS[email].plan = plan;
+          USERS[email].subscription = { id: obj.id || sub.id || null, status: obj.status || sub.status || null, updatedAt: Date.now() };
         // A cancelled subscription drops back to the entry id. That id is no
         // longer a free tier, so this looks like it hands out $12 of Explorer —
         // but Explorer's perks (demo data, watchlist, portfolio, games, the
         // browser's own voice) are all client-side and the server has never
         // enforced one of them. What this line actually grants is the anonymous
-        // AI allowance, which planQuota gives an unknown plan anyway. Locking a
-        // lapsed account out of the demo desk is a product decision and would
-        // have to be enforced here, not in the browser.
-        } else if (event.type === "customer.subscription.deleted") USERS[email].plan = "free";
+        // AI allowance, which planQuota gives an unknown plan anyway. The
+        // browser now shows a lapsed account the day-8 screen instead of the
+        // desk, and it does that off `subscribed` — which this line is what
+        // turns off.
+        } else if (event.type === "customer.subscription.deleted") {
+          USERS[email].plan = "free";
+          USERS[email].subscription = { id: obj.id || sub.id || null, status: "canceled", updatedAt: Date.now() };
+        }
         writeJSON(USERS_FILE, USERS);
       }
       return send(res, 200, { received: true });
