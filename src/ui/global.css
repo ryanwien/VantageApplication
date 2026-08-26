@@ -1271,6 +1271,56 @@ button:not(:disabled):active { transform: scale(0.97); }
   height: 44px;
 }
 
+/* ---------- the games' own 44px floor ----------
+   "Touch targets: minimum 44px" is a stated token in the games handoff, and on
+   a phone not one of the six screens met it. Hit-tested at 375 with a coarse
+   pointer, walking outward from each control rather than reading a declared
+   height: Overheat's header buttons 34, its position presets 31, its cools-at
+   segments 36; Algorithm Wars' header 33.5 and its army-logic segments 34.8.
+   All of them wide enough — only height failed.
+
+   A REAL min-height here, not the pseudo-element every other target in this
+   file uses, and the reason is the game headers WRAP on a phone. Stacked at a
+   42px pitch, two 44px phantoms would each reach 5px past their box into an
+   8px gap and overlap by 2px, and whichever painted last would answer for
+   both — a tap on Restart firing How to play. A real box cannot do that. It
+   reflows the row instead: 10px of extra header on touch, nothing at all on a
+   mouse.
+
+   Scoped to .v-gamepanel because the token belongs to the games handoff, and
+   because .v-outline is shared with the video desk further down this file.
+   Nothing outside the six game screens moves. */
+@media (pointer: coarse) {
+  .v-gamepanel .v-gameout,
+  .v-gamepanel .v-gamectl,
+  .v-gamepanel .v-outline,
+  .v-gamepanel .v-coolseg,
+  .v-gamepanel .v-syllabus,
+  .v-gamepanel [role="radio"] {
+    min-height: 44px;
+  }
+}
+
+/* Two families this rule deliberately does NOT reach, because neither is a
+   control that is too short — both are the right size for a box that is too
+   small, and growing the target without growing the box would put it over a
+   neighbour:
+
+     Algorithm Wars' three lanes, 34px each at a 375 viewport. They tile the
+     battlefield edge to edge, so a 44px target would deploy into the lane
+     above. The field is 249 wide inside a 287px panel and draws at its 2.42
+     aspect, which is 102 tall; three 44px lanes need 134, which needs a 325px
+     field. That is wider than the whole panel.
+
+     Chess's 64 squares, 27–28px. The note above already derives the number:
+     squares reach 44 at a 732px panel, and 27 is "the smallest the board is
+     ever asked to be".
+
+   Both need the battlefield and the board to be laid out differently on a
+   phone, and "mobile layouts for all six" is on the games handoff's own
+   not-designed list. A target that lies about where the lane is would be
+   worse than a small one that tells the truth. */
+
 /* ---------- video desk ----------
    Everything a pointer can act on in this panel answers it the same way the
    rest of the product does: the border goes to the accent. The handoff asks

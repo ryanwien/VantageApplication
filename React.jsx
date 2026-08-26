@@ -4416,11 +4416,20 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
         <span style={{ ...metaMono, fontSize: 11.5 }}>
           {t("move {n} · casual rules").replace("{n}", String(moveNo))}
         </span>
-        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        {/* Wraps, and does not refuse to shrink. With flexShrink: 0 these four
+            controls measured 289 inside a 287px panel on a phone, which put the
+            ✕ 24px past the right edge — the button that leaves the game was off
+            the screen, on the screen you most need it. Overheat's header
+            already wrapped; these two never did. */}
+        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <button className="v-gameout" onClick={() => setShowRules(v => !v)} aria-expanded={showRules} style={outlineBtn}>{t("How to play")}</button>
           <button className="v-gameout" onClick={reset} style={outlineBtn}>{t("New game")}</button>
           {onBack && <button className="v-gameout" onClick={onBack} style={outlineBtn}>← {t("games")}</button>}
-          {onClose && <button onClick={onClose} aria-label={t("Close games")} style={{ ...outlineBtn, border: "none", color: C.faint, padding: "6px 4px" }}>✕</button>}
+          {/* v-clearx, like every other bare ✕ in this product. Without it this
+              was 18.6 by 31.5 — the smallest control on the screen, sitting 8px
+              from the button beside it. The class is 30 wide rather than 44 for
+              exactly that reason; the height is the handoff's own number. */}
+          {onClose && <button onClick={onClose} className="v-clearx" aria-label={t("Close games")} style={{ ...outlineBtn, border: "none", color: C.faint, padding: "6px 4px" }}>✕</button>}
         </span>
       </div>
 
@@ -7446,11 +7455,20 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
         <span style={{ ...metaMono, fontSize: 11.5 }}>
           {t("round {n} · {logic}").replace("{n}", String(round)).replace("{logic}", STANCE_LABEL[stance].toLowerCase())}
         </span>
-        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        {/* Wraps, and does not refuse to shrink. With flexShrink: 0 these four
+            controls measured 289 inside a 287px panel on a phone, which put the
+            ✕ 24px past the right edge — the button that leaves the game was off
+            the screen, on the screen you most need it. Overheat's header
+            already wrapped; these two never did. */}
+        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <button className="v-gameout" onClick={() => setShowRules(v => !v)} aria-expanded={showRules} style={outlineBtn}>{t("How to play")}</button>
           <button className="v-gameout" onClick={reset} style={outlineBtn}>{t("Restart")}</button>
           {onBack && <button className="v-gameout" onClick={onBack} style={outlineBtn}>← {t("games")}</button>}
-          {onClose && <button onClick={onClose} aria-label={t("Close games")} style={{ ...outlineBtn, border: "none", color: C.faint, padding: "6px 4px" }}>✕</button>}
+          {/* v-clearx, like every other bare ✕ in this product. Without it this
+              was 18.6 by 31.5 — the smallest control on the screen, sitting 8px
+              from the button beside it. The class is 30 wide rather than 44 for
+              exactly that reason; the height is the handoff's own number. */}
+          {onClose && <button onClick={onClose} className="v-clearx" aria-label={t("Close games")} style={{ ...outlineBtn, border: "none", color: C.faint, padding: "6px 4px" }}>✕</button>}
         </span>
       </div>
 
