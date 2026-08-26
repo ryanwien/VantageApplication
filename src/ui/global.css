@@ -791,6 +791,16 @@ button:not(:disabled):active { transform: scale(0.97); }
 }
 .v-verbcard:disabled .v-verbtile { background: var(--v-surface-raised) !important; color: var(--v-faint) !important; }
 
+/* ---------- game room ----------
+   The handoff never drew the room, but it drew its card-picker — the deploy
+   row — and this is that row's hover: the border lightens to the accent and
+   the card lifts 3px, 0.2s. The press cancels the lift so the card goes DOWN
+   under a finger. The reduced-motion blanket zeroes transition-duration,
+   which turns the lift into an instant state change rather than motion. */
+.v-roomcard { transition: border-color 0.2s ease, transform 0.2s ease; }
+.v-roomcard:hover { border-color: var(--v-accent); transform: translateY(-3px); }
+.v-roomcard:active { transform: none; }
+
 /* ---------- Algorithm Wars ----------
    Deploying spends capital, and spending is the thing the player is judging
    every second of the match. Both outcomes get an answer:

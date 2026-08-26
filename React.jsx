@@ -48,9 +48,9 @@ import {
 import { LESSONS as STOCK_LESSONS } from "./src/games/school.js";
 import StockSchool from "./src/ui/StockSchool.jsx";
 import TickerMatch from "./src/ui/TickerMatch.jsx";
-import { ROUNDS as TICKER_ROUNDS, answerIndex as tickerAnswer, award as tickerAward } from "./src/games/ticker.js";
+import { ROUNDS as TICKER_ROUNDS, ROUND_SECONDS as TICKER_SECONDS, answerIndex as tickerAnswer, award as tickerAward } from "./src/games/ticker.js";
 import BullOrBear from "./src/ui/BullOrBear.jsx";
-import { ROUNDS as BULLBEAR_ROUNDS, isRight as bbRight, award as bbAward } from "./src/games/bullbear.js";
+import { ROUNDS as BULLBEAR_ROUNDS, ROUND_SECONDS as BB_SECONDS, isRight as bbRight, award as bbAward } from "./src/games/bullbear.js";
 import Waveform from "./src/ui/Waveform.jsx";
 import VantageMark from "./src/ui/VantageMark.jsx";
 import DeskIcon from "./src/ui/DeskIcon.jsx";
@@ -472,7 +472,12 @@ const I18N = {
     "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Los gráficos, las noticias, los juegos, la música y el calendario funcionan, pero la mesa no puede responder preguntas hasta que añadas una.",
     "Close games": "Cerrar los juegos",
     "Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.": "El modo demo funciona sin nada, y la mesa de IA, los precios en directo, la música y el vídeo se activan solos cuando este servidor los ofrece: no hay claves que pegar.",
-    "Eight short lessons on stocks, prices and P&L.": "Ocho lecciones breves sobre acciones, precios y resultados.",
+    "Short lessons on stocks, prices and P&L.": "Lecciones breves sobre acciones, precios y resultados.",
+    "{n} lessons · narrated": "{n} lecciones · narradas",
+    "{n} rounds · {s}s clock": "{n} rondas · reloj de {s} s",
+    "{m} capital · limit {n}": "{m} de capital · límite {n}",
+    "Two players · house algo": "Dos jugadores · algoritmo de la casa",
+    "{l} lanes · {b} bot types": "{l} carriles · {b} tipos de bot",
     "Game room": "Sala de juegos",
     "I'll spotlight each part of the screen, step by step.": "Iré señalando cada parte de la pantalla, paso a paso.",
     "Match companies to their tickers.": "Relaciona cada empresa con su símbolo.",
@@ -494,7 +499,7 @@ const I18N = {
     "Take the guided tour": "Hacer la visita guiada",
     "Ticker Match": "Empareja tickers",
     "Try the missions": "Probar las misiones",
-    "Two-player chess: Bulls against Bears.": "Ajedrez para dos: toros contra osos.",
+    "Bulls against Bears — checkmate, or win on the clock.": "Toros contra osos: jaque mate, o gana por tiempo.",
     "Watch me demo it": "Ver una demostración",
     "What each key does and where to get it.": "Qué hace cada clave y dónde conseguirla.",
     "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "Tu mesa de mercados con IA: un presentador animado que hace gráficos, responde en voz alta, lee las noticias e incluso pone tráilers. Elige cómo quieres aprenderla:",
@@ -1152,7 +1157,12 @@ const I18N = {
     "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Les graphiques, les actualités, les jeux, le streaming et le calendrier fonctionnent — mais le desk ne peut pas répondre tant que vous n'en ajoutez pas une.",
     "Close games": "Fermer les jeux",
     "Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.": "Le mode démo fonctionne sans rien, et le desk IA, les cours en direct, le streaming et la vidéo s'activent d'eux-mêmes quand ce serveur les fournit — aucune clé à coller.",
-    "Eight short lessons on stocks, prices and P&L.": "Huit courtes leçons sur les actions, les cours et le résultat.",
+    "Short lessons on stocks, prices and P&L.": "Courtes leçons sur les actions, les cours et le résultat.",
+    "{n} lessons · narrated": "{n} leçons · narrées",
+    "{n} rounds · {s}s clock": "{n} manches · chrono {s} s",
+    "{m} capital · limit {n}": "{m} de capital · limite {n}",
+    "Two players · house algo": "Deux joueurs · algo de la maison",
+    "{l} lanes · {b} bot types": "{l} couloirs · {b} types de bots",
     "Game room": "Salle de jeux",
     "I'll spotlight each part of the screen, step by step.": "Je mettrai en lumière chaque partie de l'écran, étape par étape.",
     "Match companies to their tickers.": "Reliez chaque société à son symbole.",
@@ -1174,7 +1184,7 @@ const I18N = {
     "Take the guided tour": "Faire la visite guidée",
     "Ticker Match": "Associez les tickers",
     "Try the missions": "Essayer les missions",
-    "Two-player chess: Bulls against Bears.": "Échecs à deux : taureaux contre ours.",
+    "Bulls against Bears — checkmate, or win on the clock.": "Taureaux contre ours — mat, ou gagnez au temps.",
     "Watch me demo it": "Regarder la démo",
     "What each key does and where to get it.": "Ce que fait chaque clé et où l'obtenir.",
     "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "Votre desk de marché IA — un présentateur animé qui trace des graphiques, répond à voix haute, lit les actualités et passe même des bandes-annonces. Choisissez comment l'apprendre :",
@@ -1832,7 +1842,12 @@ const I18N = {
     "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Charts, Nachrichten, Spiele, Streaming und Kalender funktionieren — aber das Desk kann erst antworten, wenn du einen hinzufügst.",
     "Close games": "Spiele schließen",
     "Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.": "Der Demo-Modus läuft ganz ohne alles, und KI-Desk, Live-Kurse, Streaming und Video schalten sich von selbst ein, sobald dieser Server sie bereitstellt — es gibt keine Schlüssel zum Einfügen.",
-    "Eight short lessons on stocks, prices and P&L.": "Acht kurze Lektionen zu Aktien, Kursen und Ergebnis.",
+    "Short lessons on stocks, prices and P&L.": "Kurze Lektionen zu Aktien, Kursen und Ergebnis.",
+    "{n} lessons · narrated": "{n} Lektionen · vorgelesen",
+    "{n} rounds · {s}s clock": "{n} Runden · je {s} s",
+    "{m} capital · limit {n}": "{m} Kapital · Limit {n}",
+    "Two players · house algo": "Zwei Spieler · Haus-Algo",
+    "{l} lanes · {b} bot types": "{l} Bahnen · {b} Bot-Typen",
     "Game room": "Spieleraum",
     "I'll spotlight each part of the screen, step by step.": "Ich hebe jeden Teil des Bildschirms hervor, Schritt für Schritt.",
     "Match companies to their tickers.": "Ordne jedem Unternehmen sein Kürzel zu.",
@@ -1854,7 +1869,7 @@ const I18N = {
     "Take the guided tour": "Geführte Tour machen",
     "Ticker Match": "Ticker zuordnen",
     "Try the missions": "Missionen ausprobieren",
-    "Two-player chess: Bulls against Bears.": "Schach zu zweit: Bullen gegen Bären.",
+    "Bulls against Bears — checkmate, or win on the clock.": "Bullen gegen Bären — Schachmatt, oder Sieg auf Zeit.",
     "Watch me demo it": "Demo ansehen",
     "What each key does and where to get it.": "Was jeder Schlüssel tut und wo du ihn bekommst.",
     "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "Dein KI-Marktdesk — ein animierter Moderator, der Charts zeichnet, laut antwortet, die Nachrichten liest und sogar Trailer abspielt. Wähle, wie du es lernen willst:",
@@ -2511,7 +2526,12 @@ const I18N = {
     "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Os gráficos, as notícias, os jogos, o streaming e o calendário funcionam — mas a mesa não consegue responder até adicionares uma.",
     "Close games": "Fechar os jogos",
     "Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.": "O modo demo funciona sem nada, e a mesa de IA, os preços em direto, o streaming e o vídeo ligam-se sozinhos quando este servidor os fornece — não há chaves para colar.",
-    "Eight short lessons on stocks, prices and P&L.": "Oito lições curtas sobre ações, preços e resultado.",
+    "Short lessons on stocks, prices and P&L.": "Lições curtas sobre ações, preços e resultado.",
+    "{n} lessons · narrated": "{n} lições · narradas",
+    "{n} rounds · {s}s clock": "{n} rondas · relógio de {s} s",
+    "{m} capital · limit {n}": "{m} de capital · limite {n}",
+    "Two players · house algo": "Dois jogadores · algoritmo da casa",
+    "{l} lanes · {b} bot types": "{l} faixas · {b} tipos de bot",
     "Game room": "Sala de jogos",
     "I'll spotlight each part of the screen, step by step.": "Vou destacar cada parte do ecrã, passo a passo.",
     "Match companies to their tickers.": "Liga cada empresa ao seu símbolo.",
@@ -2533,7 +2553,7 @@ const I18N = {
     "Take the guided tour": "Fazer a visita guiada",
     "Ticker Match": "Associa os tickers",
     "Try the missions": "Experimentar as missões",
-    "Two-player chess: Bulls against Bears.": "Xadrez a dois: touros contra ursos.",
+    "Bulls against Bears — checkmate, or win on the clock.": "Touros contra ursos — xeque-mate, ou vence por tempo.",
     "Watch me demo it": "Ver a demonstração",
     "What each key does and where to get it.": "O que faz cada chave e onde a obter.",
     "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "A tua mesa de mercados com IA — um pivô animado que faz gráficos, responde em voz alta, lê as notícias e até passa trailers. Escolhe como queres aprender:",
@@ -3190,7 +3210,12 @@ const I18N = {
     "Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.": "Grafici, notizie, giochi, streaming e calendario funzionano — ma la postazione non può rispondere finché non ne aggiungi una.",
     "Close games": "Chiudi i giochi",
     "Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.": "La modalità demo funziona senza nulla, e la postazione IA, i prezzi in tempo reale, lo streaming e i video si attivano da soli quando questo server li fornisce — non c'è nessuna chiave da incollare.",
-    "Eight short lessons on stocks, prices and P&L.": "Otto brevi lezioni su azioni, prezzi e risultato.",
+    "Short lessons on stocks, prices and P&L.": "Brevi lezioni su azioni, prezzi e risultato.",
+    "{n} lessons · narrated": "{n} lezioni · narrate",
+    "{n} rounds · {s}s clock": "{n} round · timer di {s} s",
+    "{m} capital · limit {n}": "{m} di capitale · limite {n}",
+    "Two players · house algo": "Due giocatori · algoritmo del banco",
+    "{l} lanes · {b} bot types": "{l} corsie · {b} tipi di bot",
     "Game room": "Sala giochi",
     "I'll spotlight each part of the screen, step by step.": "Metterò in evidenza ogni parte dello schermo, passo dopo passo.",
     "Match companies to their tickers.": "Collega ogni società al suo simbolo.",
@@ -3212,7 +3237,7 @@ const I18N = {
     "Take the guided tour": "Fai il tour guidato",
     "Ticker Match": "Abbina i ticker",
     "Try the missions": "Prova le missioni",
-    "Two-player chess: Bulls against Bears.": "Scacchi in due: tori contro orsi.",
+    "Bulls against Bears — checkmate, or win on the clock.": "Tori contro orsi — scacco matto, o vinci sul tempo.",
     "Watch me demo it": "Guarda la demo",
     "What each key does and where to get it.": "Cosa fa ogni chiave e dove ottenerla.",
     "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "La tua postazione di mercato con IA — un conduttore animato che traccia grafici, risponde ad alta voce, legge le notizie e manda pure i trailer. Scegli come impararla:",
@@ -13397,13 +13422,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     // The icons are DeskIcon marks rather than emoji, for the reasons that
     // component's header sets out — chiefly that an emoji is a different
     // picture on every platform and cannot take a colour.
+    // Each card also prints the game's own contract — counts, clocks and
+    // limits read from the constants the games themselves run on, so the menu
+    // can never promise a number the code does not ship. Chess is the one game
+    // whose facts are modes rather than numbers: two seats, and a house
+    // algorithm for when only one of them is taken.
     const GAMES = [
-      { id: "school",   icon: "school",   name: t("Stock School"),         desc: t("Eight short lessons on stocks, prices and P&L.") },
-      { id: "bullbear", icon: "bullbear", name: t("Bull or Bear"),         desc: t("Read a headline, call it up or down.") },
-      { id: "ticker",   icon: "ticker",   name: t("Ticker Match"),         desc: t("Match companies to their tickers.") },
-      { id: "cards",    icon: "cards",    name: t("Overheat"),             desc: t("Twenty-one, told as a market. Buy past the limit and you overheat.") },
-      { id: "chess",    icon: "chess",    name: t("Bulls vs Bears Chess"), desc: t("Two-player chess: Bulls against Bears.") },
-      { id: "algowars", icon: "algowars", name: t("Algorithm Wars"),       desc: t("A trading-floor RTS: script bot armies in real time.") },
+      { id: "school",   icon: "school",   name: t("Stock School"),         fact: t("{n} lessons · narrated").replace("{n}", String(STOCK_LESSONS.length)), desc: t("Short lessons on stocks, prices and P&L.") },
+      { id: "bullbear", icon: "bullbear", name: t("Bull or Bear"),         fact: t("{n} rounds · {s}s clock").replace("{n}", String(BULLBEAR_ROUNDS.length)).replace("{s}", String(BB_SECONDS)), desc: t("Read a headline, call it up or down.") },
+      { id: "ticker",   icon: "ticker",   name: t("Ticker Match"),         fact: t("{n} rounds · {s}s clock").replace("{n}", String(TICKER_ROUNDS.length)).replace("{s}", String(TICKER_SECONDS)), desc: t("Match companies to their tickers.") },
+      { id: "cards",    icon: "cards",    name: t("Overheat"),             fact: t("{m} capital · limit {n}").replace("{m}", money(OH_START)).replace("{n}", String(OH_LIMIT)), desc: t("Twenty-one, told as a market. Buy past the limit and you overheat.") },
+      { id: "chess",    icon: "chess",    name: t("Bulls vs Bears Chess"), fact: t("Two players · house algo"), desc: t("Bulls against Bears — checkmate, or win on the clock.") },
+      { id: "algowars", icon: "algowars", name: t("Algorithm Wars"),       fact: t("{l} lanes · {b} bot types").replace("{l}", String(AW_LANES)).replace("{b}", String(AW_ORDER.length)), desc: t("A trading-floor RTS: script bot armies in real time.") },
     ];
     const gameMeta = (id) => GAMES.find(g => g.id === id) || { icon: "games", name: "" };
     // The panel's title bar. Sentence-case sans at 13/600 — the same voice
@@ -13427,7 +13457,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             {headerRight}
-            <button onClick={closeGame} className="v-gamectl" aria-label={t("Close games")} style={{ ...ctlBtn, padding: "7px 10px" }}>✕</button>
+            <button onClick={closeGame} className="v-gamectl v-tap" aria-label={t("Close games")} style={{ ...ctlBtn, padding: "7px 10px" }}>✕</button>
           </span>
         </div>
         )}
@@ -13440,16 +13470,24 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       return shell("games", t("Game room"),
         <span style={{ fontFamily: SANS, fontSize: 12, color: C.faint }}>{t("No account needed")}</span>,
         <div style={{ padding: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 10 }}>
-          {GAMES.map(g => (
-            <button key={g.id} onClick={() => startMode(g.id)} className="v-verbcard"
-              style={{ textAlign: "left", background: C.surfaceRaised, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: 14, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 8, minHeight: 118 }}>
+          {/* The games handoff never drew this screen, but it drew its
+              card-picker — the deploy row — and these cards borrow that
+              anatomy: tile, title at the games' 14.5/700, a mono fact line,
+              then the description in the secondary ink, dealing in on the
+              deploy cards' own 0.08s stagger. */}
+          {GAMES.map((g, gi) => (
+            <button key={g.id} onClick={() => startMode(g.id)} className="v-verbcard v-roomcard"
+              style={{ textAlign: "left", background: C.surfaceRaised, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: 14, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 8, minHeight: 118, animation: `vt-fadeup 0.5s var(--v-ease) ${gi * 0.08}s both` }}>
               {/* Same tile behaviour as the desk's verb cards: neutral at rest
                   because these six are peers, accent on press. */}
               <span className="v-verbtile" style={{ width: 32, height: 32, borderRadius: R.xs, display: "grid", placeItems: "center", background: C.surface, color: C.muted }}>
                 <DeskIcon name={g.icon} />
               </span>
-              <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 13.5, color: C.text }}>{g.name}</span>
-              <span style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.5, color: C.faint }}>{g.desc}</span>
+              <span style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 14.5, color: C.text }}>{g.name}</span>
+                <span style={{ fontFamily: MONO, fontSize: 10, letterSpacing: 1.2, textTransform: "uppercase", lineHeight: 1.6, color: C.faint }}>{g.fact}</span>
+              </span>
+              <span style={{ fontFamily: SANS, fontSize: 12.5, lineHeight: 1.5, color: C.muted }}>{g.desc}</span>
             </button>
           ))}
         </div>
