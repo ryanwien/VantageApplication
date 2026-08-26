@@ -956,6 +956,54 @@ button:not(:disabled):active { transform: scale(0.97); }
   .v-hudside .v-hudval { justify-content: flex-start !important; }
 }
 
+/* ---------- the arcade header, at the width where it is not a line ----------
+   Chess, Overheat and Algorithm Wars draw their own header bar instead of
+   taking the games shell's, because each carries something live the shell
+   cannot see — whose turn it is, the round clock, the market's status. On a
+   desk each is one line: name, state, then four or five controls pushed right.
+
+   Measured at a 287px panel it was five lines and 233px of chess, 204 of the
+   other two — a fifth of a phone spent before the board. Two things were
+   wrong with it and only one of them was height. The bar wrapped one item at a
+   time, so the name, the turn and the move number each took a line of their own
+   with 60 to 145px of nothing beside them; and the controls, wrapping the same
+   way, ended on "← games" and then a bare ✕ with 130px of nothing after it —
+   the smallest control on the screen, unlabelled, adrift in the middle of the
+   bar, on the screen where leaving is the thing you are most likely to want.
+
+   The JSX now groups the bar into identity, state and controls, so it can only
+   break where a break means something. Below the break the control row folds
+   into a More menu — the desk header's own menu, one level down — and the ✕
+   comes with it as the last thing on the last line, which is the one place a
+   close button is always looked for. */
+@container (max-width: 540px) {
+  /* Chess is the only one of the three whose two state readouts stack: the
+     pill and the move line want 251 of a 243px row. 12px is the gap between
+     GROUPS, and these two are one group across two lines. */
+  .v-gamestate { row-gap: 6px !important; }
+
+  /* Constant, and said in full one press away in the rules panel. Derivation
+     in the JSX beside it. */
+  .v-metatail { display: none; }
+
+  /* Both clusters are in the DOM at every width and exactly one is display:
+     none, which is a stylesheet decision rather than a resize listener — and
+     display: none takes the hidden one out of the tab order too, so neither is
+     ever a control you can reach but not see. */
+  .v-gamectls { display: none !important; }
+  /* flex-basis 100% rather than the inline margin-left: auto, because the
+     controls being the LAST line is the invariant that makes the ✕ findable:
+     let it ride up beside a short name — Overheat's is 65px — and the bar
+     would put its exit in a different place in each of the three games. */
+  .v-gamemenu { display: flex !important; flex: 1 0 100%; justify-content: flex-end; }
+
+  /* Nothing here truncates today: the longest name is 143px inside 188 at the
+     narrowest panel this renders in. This is for the language that changes
+     that, and it fails to an ellipsis rather than to a clipped word. */
+  .v-gameid { min-width: 0; }
+  .v-gamename { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
 /* Once that rail unhooks, Algorithm Wars stops being playable — and it is the
    only one of the six where that is a sentence about the game rather than
    about the layout. Measured at 375: the battlefield ended at y=584 and the

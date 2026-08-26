@@ -192,7 +192,7 @@ const I18N = {
     "last": "último",
     "last trade": "última operación",
     "prev close": "cierre ant.",
-    "Export": "Exportar", "More": "Más", "Settings": "Ajustes", "sign in": "iniciar sesión",
+    "Export": "Exportar", "More": "Más", "More game controls": "Más controles del juego", "Settings": "Ajustes", "sign in": "iniciar sesión",
     "Games": "Juegos", "learn how stocks work": "aprende cómo funcionan las acciones",
     "Ambient sound": "Sonido ambiente", "waves, jungle, space hum…": "olas, jungla, zumbido espacial…",
     "Music": "Música", "background score": "música de fondo",
@@ -387,7 +387,8 @@ const I18N = {
     "The Bears' king is in check.": "El rey de los Osos está en jaque.",
     "Your king is in check — you have to answer it.": "Tu rey está en jaque: tienes que responder.",
     "Your move": "Te toca",
-    "move {n} · casual rules": "jugada {n} · reglas informales",
+    "casual rules": "reglas informales",
+    "move {n}": "jugada {n}",
     "pawn": "peón",
     "knight": "caballo",
     "bishop": "alfil",
@@ -929,7 +930,7 @@ const I18N = {
     "last": "dernier",
     "last trade": "dernière transaction",
     "prev close": "clôture préc.",
-    "Export": "Exporter", "More": "Plus", "Settings": "Réglages", "sign in": "se connecter",
+    "Export": "Exporter", "More": "Plus", "More game controls": "Plus de commandes de jeu", "Settings": "Réglages", "sign in": "se connecter",
     "Games": "Jeux", "learn how stocks work": "apprenez le fonctionnement des actions",
     "Ambient sound": "Son d'ambiance", "waves, jungle, space hum…": "vagues, jungle, bourdonnement spatial…",
     "Music": "Musique", "background score": "musique de fond",
@@ -1124,7 +1125,8 @@ const I18N = {
     "The Bears' king is in check.": "Le roi des Ours est en échec.",
     "Your king is in check — you have to answer it.": "Votre roi est en échec — vous devez y répondre.",
     "Your move": "À vous de jouer",
-    "move {n} · casual rules": "coup {n} · règles simplifiées",
+    "casual rules": "règles simplifiées",
+    "move {n}": "coup {n}",
     "pawn": "pion",
     "knight": "cavalier",
     "bishop": "fou",
@@ -1666,7 +1668,7 @@ const I18N = {
     "last": "letzter",
     "last trade": "letzter Handel",
     "prev close": "Vortagesschluss",
-    "Export": "Exportieren", "More": "Mehr", "Settings": "Einstellungen", "sign in": "anmelden",
+    "Export": "Exportieren", "More": "Mehr", "More game controls": "Weitere Spielsteuerung", "Settings": "Einstellungen", "sign in": "anmelden",
     "Games": "Spiele", "learn how stocks work": "lerne, wie Aktien funktionieren",
     "Ambient sound": "Umgebungston", "waves, jungle, space hum…": "Wellen, Dschungel, Weltraumbrummen…",
     "Music": "Musik", "background score": "Hintergrundmusik",
@@ -1861,7 +1863,8 @@ const I18N = {
     "The Bears' king is in check.": "Der König der Bären steht im Schach.",
     "Your king is in check — you have to answer it.": "Dein König steht im Schach — du musst darauf antworten.",
     "Your move": "Du bist am Zug",
-    "move {n} · casual rules": "Zug {n} · lockere Regeln",
+    "casual rules": "lockere Regeln",
+    "move {n}": "Zug {n}",
     "pawn": "Bauer",
     "knight": "Springer",
     "bishop": "Läufer",
@@ -2403,7 +2406,7 @@ const I18N = {
     "last": "último",
     "last trade": "última negociação",
     "prev close": "fecho ant.",
-    "Export": "Exportar", "More": "Mais", "Settings": "Definições", "sign in": "iniciar sessão",
+    "Export": "Exportar", "More": "Mais", "More game controls": "Mais controlos do jogo", "Settings": "Definições", "sign in": "iniciar sessão",
     "Games": "Jogos", "learn how stocks work": "aprenda como as ações funcionam",
     "Ambient sound": "Som ambiente", "waves, jungle, space hum…": "ondas, selva, zumbido espacial…",
     "Music": "Música", "background score": "música de fundo",
@@ -2597,7 +2600,8 @@ const I18N = {
     "The Bears' king is in check.": "O rei dos Ursos está em xeque.",
     "Your king is in check — you have to answer it.": "O teu rei está em xeque — tens de responder.",
     "Your move": "É a tua vez",
-    "move {n} · casual rules": "jogada {n} · regras informais",
+    "casual rules": "regras informais",
+    "move {n}": "jogada {n}",
     "pawn": "peão",
     "knight": "cavalo",
     "bishop": "bispo",
@@ -3139,7 +3143,7 @@ const I18N = {
     "last": "ultimo",
     "last trade": "ultima operazione",
     "prev close": "chius. prec.",
-    "Export": "Esporta", "More": "Altro", "Settings": "Impostazioni", "sign in": "accedi",
+    "Export": "Esporta", "More": "Altro", "More game controls": "Altri comandi di gioco", "Settings": "Impostazioni", "sign in": "accedi",
     "Games": "Giochi", "learn how stocks work": "scopri come funzionano le azioni",
     "Ambient sound": "Suono ambientale", "waves, jungle, space hum…": "onde, giungla, ronzio spaziale…",
     "Music": "Musica", "background score": "musica di sottofondo",
@@ -3333,7 +3337,8 @@ const I18N = {
     "The Bears' king is in check.": "Il re degli Orsi è sotto scacco.",
     "Your king is in check — you have to answer it.": "Il tuo re è sotto scacco — devi rispondere.",
     "Your move": "Tocca a te",
-    "move {n} · casual rules": "mossa {n} · regole informali",
+    "casual rules": "regole informali",
+    "move {n}": "mossa {n}",
     "pawn": "pedone",
     "knight": "cavallo",
     "bishop": "alfiere",
@@ -4359,6 +4364,66 @@ function etNow() {
   }
 }
 
+// ---- the arcade header's overflow menu ----
+// Three of the six games draw their own header bar, and each of those bars
+// carries four or five controls. On a desk they are the right-hand end of one
+// line. On a phone they are a pile: measured at a 287px panel, two rows of
+// buttons 96px tall, with the closing X — the control you most need on the
+// screen you most need it, and the smallest thing on the bar — stranded in the
+// middle of the second row with 130px of nothing after it.
+//
+// So below the break they fold into this. It is not a new idea in this
+// product: it is the desk header's own More menu one level down, and it
+// borrows the whole anatomy — a wrapper the outside-press listener can
+// recognise by attribute, Escape to dismiss, and plain buttons rather than
+// role="menu", because role="menu" is a promise of arrow-key navigation and
+// tabbing through four buttons is the honest version of that promise.
+function GameMenu({ t, btnStyle, items }) {
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef(null);
+  // items may carry falsy holes: Resign only exists while a game is under way,
+  // and the back button only when the games shell handed one down.
+  const live = items.filter(Boolean);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => { if (!e.target.closest?.("[data-gamemenu]")) setOpen(false); };
+    // Escape hands focus back to the button that opened this, which is the
+    // only place a keyboard can carry on from once the list is gone.
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      setOpen(false);
+      btnRef.current?.focus();
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+  return (
+    <>
+      <button ref={btnRef} type="button" className="v-gameout" onClick={() => setOpen(v => !v)}
+        aria-haspopup="true" aria-expanded={open} aria-label={t("More game controls")}
+        style={{ ...btnStyle, display: "inline-flex", alignItems: "center", gap: 6 }}>
+        {t("More")} <span aria-hidden="true">&#9662;</span>
+      </button>
+      {open && (
+        // Hangs from the cluster's right edge, which at this width is the
+        // panel's. It cannot overhang the way the desk's menus could: those sit
+        // in a toolbar that wraps, and this one is 178 wide inside 243.
+        <div className="v-rise"
+          style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 30, minWidth: 178, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: SHADOW.lg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {live.map((it, i) => (
+            <button key={it.key} type="button" className="v-row" onClick={() => { setOpen(false); it.onClick(); }}
+              style={{ display: "flex", alignItems: "center", textAlign: "left", background: "transparent", border: "none", borderTop: i ? `1px solid ${C.panelEdge}` : "none", color: it.danger ? C.danger : C.text, fontFamily: SANS, fontSize: 13, padding: "0 14px", minHeight: 44, cursor: "pointer" }}>
+              {it.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
 // ---- Stock School: a beginner tutorial the anchor teaches, no API/credits needed (all local) ----
 // The eight lessons moved to src/games/school.js when the handoff gave each one
 // two takeaway cards, a worked example and a set of terms. That is a shape with
@@ -4829,25 +4894,44 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
           live in it — whose turn it is, the move number — is this component's
           state, and lifting a per-move counter into the dashboard would
           re-render the whole desk on every move. */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceAlt }}>
-        <span style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", color: C.text, flexShrink: 0 }}>
-          <DeskIcon name="chess" size={17} />
+      {/* Three boxes, not eight loose items. A wrapping row breaks wherever it
+          runs out of room, one item at a time, and eight items give it eight
+          chances: measured at a 287px panel this bar was five ragged lines and
+          233px tall — the name, then the turn, then the move number, then two
+          buttons, then one button and a stranded ✕. Boxed, it can only break
+          between the three things it is made of, and the desk's own line does
+          not move: the gap between the boxes is the gap that was between the
+          items. */}
+      <div className="v-gamehead" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceAlt }}>
+        <span className="v-gameid" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", color: C.text, flexShrink: 0 }}>
+            <DeskIcon name="chess" size={17} />
+          </span>
+          <span className="v-gamename" style={{ fontWeight: 700, fontSize: 14.5, color: C.text }}>{t("Bulls vs Bears Chess")}</span>
         </span>
-        <span style={{ fontWeight: 700, fontSize: 14.5, color: C.text }}>{t("Bulls vs Bears Chess")}</span>
-        <span style={{ display: "flex", alignItems: "center", gap: 7, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5, color: C.muted, whiteSpace: "nowrap" }}>
-          <span aria-hidden="true" className={live ? "v-pulse" : undefined}
-            style={{ width: 6, height: 6, borderRadius: "50%", background: !live ? C.faint : turn === "w" ? C.accent : C.down }} />
-          {pill}
-        </span>
-        <span style={{ ...metaMono, fontSize: 11.5 }}>
-          {t("move {n} · casual rules").replace("{n}", String(moveNo))}
+        <span className="v-gamestate" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 7, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5, color: C.muted, whiteSpace: "nowrap" }}>
+            <span aria-hidden="true" className={live ? "v-pulse" : undefined}
+              style={{ width: 6, height: 6, borderRadius: "50%", background: !live ? C.faint : turn === "w" ? C.accent : C.down }} />
+            {pill}
+          </span>
+          <span style={{ ...metaMono, fontSize: 11.5 }}>
+            {t("move {n}").replace("{n}", String(moveNo))}
+            {/* The move number changes every half-move. "casual rules" has never
+                changed for anybody. On a desk that costs nothing at the end of a
+                line with room to spare; on a phone it is the whole reason this
+                row needs two of them — 251px wanted of a 243px row — and the
+                rules panel one press away says the same thing with its content
+                attached: "Casual rules — no castling, no en passant." */}
+            <span className="v-metatail"> · {t("casual rules")}</span>
+          </span>
         </span>
         {/* Wraps, and does not refuse to shrink. With flexShrink: 0 these four
             controls measured 289 inside a 287px panel on a phone, which put the
             ✕ 24px past the right edge — the button that leaves the game was off
             the screen, on the screen you most need it. Overheat's header
             already wrapped; these two never did. */}
-        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span className="v-gamectls" style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <button className="v-gameout" onClick={() => setShowRules(v => !v)} aria-expanded={showRules} style={outlineBtn}>{t("How to play")}</button>
           {/* Not .v-gameout. Every outline button in the six games lights green
               on hover, and the one control that ends your game is not a thing
@@ -4864,6 +4948,21 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
               was 18.6 by 31.5 — the smallest control on the screen, sitting 8px
               from the button beside it. The class is 30 wide rather than 44 for
               exactly that reason; the height is the handoff's own number. */}
+          {onClose && <button onClick={onClose} className="v-clearx" aria-label={t("Close games")} style={{ ...outlineBtn, border: "none", color: C.faint, padding: "6px 4px" }}>✕</button>}
+        </span>
+        {/* The same controls, folded, for the width where they do not fit. Both
+            clusters are in the DOM at every width and one of them is always
+            display: none — a stylesheet decision rather than a resize listener,
+            and display: none is what keeps the hidden one out of the tab order
+            as well as out of sight. The ✕ stays out of the menu: the way out of
+            a game is one press at every width. */}
+        <span className="v-gamemenu" data-gamemenu="" style={{ marginLeft: "auto", position: "relative", display: "none", alignItems: "center", gap: 8 }}>
+          <GameMenu t={t} btnStyle={outlineBtn} items={[
+            { key: "rules", label: t("How to play"), onClick: () => setShowRules(v => !v) },
+            started && !end && { key: "resign", label: t("Resign"), danger: true, onClick: askResign },
+            { key: "new", label: t("New game"), onClick: reset },
+            onBack && { key: "back", label: `← ${t("games")}`, onClick: onBack },
+          ]} />
           {onClose && <button onClick={onClose} className="v-clearx" aria-label={t("Close games")} style={{ ...outlineBtn, border: "none", color: C.faint, padding: "6px 4px" }}>✕</button>}
         </span>
       </div>
@@ -7335,20 +7434,40 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
   return (
     <div className="v-gamepanel" style={{ fontFamily: SANS, background: C.base, color: C.text }}>
       {/* ---- header ---- */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceAlt, flexWrap: "wrap" }}>
-        <span aria-hidden="true" style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", fontFamily: MONO, fontWeight: 700, fontSize: 12, flexShrink: 0 }}>21</span>
-        <span style={{ fontWeight: 700, fontSize: 14.5 }}>{t("Overheat")}</span>
-        <span style={{ display: "flex", alignItems: "center", gap: 7, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5, color: STATUS.tone }}>
-          <span aria-hidden="true" className={STATUS.live ? "v-pulse" : undefined} style={{ width: 6, height: 6, borderRadius: "50%", background: STATUS.tone }} />
-          {STATUS.text}
+      {/* Boxed into identity, state and controls, like the other two bars. The
+          derivation is in the chess header; this one is 204px at a 287px panel
+          rather than 233 only because its subtitle is already gone by there. */}
+      <div className="v-gamehead" style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceAlt, flexWrap: "wrap" }}>
+        <span className="v-gameid" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span aria-hidden="true" style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", fontFamily: MONO, fontWeight: 700, fontSize: 12, flexShrink: 0 }}>21</span>
+          <span className="v-gamename" style={{ fontWeight: 700, fontSize: 14.5 }}>{t("Overheat")}</span>
         </span>
-        <span className="v-headmeta" style={{ ...meta, fontSize: 11.5 }}>
-          {t("session {n} · market cools at {c}").replace("{n}", String(session)).replace("{c}", String(coolAt))}
+        <span className="v-gamestate" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 7, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5, color: STATUS.tone }}>
+            <span aria-hidden="true" className={STATUS.live ? "v-pulse" : undefined} style={{ width: 6, height: 6, borderRadius: "50%", background: STATUS.tone }} />
+            {STATUS.text}
+          </span>
+          <span className="v-headmeta" style={{ ...meta, fontSize: 11.5 }}>
+            {t("session {n} · market cools at {c}").replace("{n}", String(session)).replace("{c}", String(coolAt))}
+          </span>
         </span>
-        <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span className="v-gamectls" style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {onBack && <button onClick={onBack} className="v-gamectl" style={headBtn}>← {t("games")}</button>}
           <button onClick={() => setShowRules(v => !v)} aria-expanded={showRules} className="v-outline" style={headBtn}>{t("How to play")}</button>
           <button onClick={resetCapital} className="v-outline" style={headBtn}>{t("Reset capital")}</button>
+          {onClose && (
+            <button onClick={onClose} className="v-clearx" aria-label={t("Close games")}
+              style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 14, cursor: "pointer", padding: 2 }}>&#10005;</button>
+          )}
+        </span>
+        {/* The folded twin. See the chess header for why there are two of these
+            and why only one is ever in the tab order. */}
+        <span className="v-gamemenu" data-gamemenu="" style={{ marginLeft: "auto", position: "relative", display: "none", alignItems: "center", gap: 8 }}>
+          <GameMenu t={t} btnStyle={headBtn} items={[
+            { key: "rules", label: t("How to play"), onClick: () => setShowRules(v => !v) },
+            { key: "reset", label: t("Reset capital"), onClick: resetCapital },
+            onBack && { key: "back", label: `← ${t("games")}`, onClick: onBack },
+          ]} />
           {onClose && (
             <button onClick={onClose} className="v-clearx" aria-label={t("Close games")}
               style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 14, cursor: "pointer", padding: 2 }}>&#10005;</button>
@@ -8058,25 +8177,35 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
           live in it — the clock, the logic in force — is this component's
           state, and lifting a per-frame clock into the dashboard would
           re-render the whole desk eight times a second. */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceAlt }}>
-        <span style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", color: C.accentText, flexShrink: 0 }}>
-          <DeskIcon name="algowars" size={17} />
+      {/* Boxed into identity, state and controls; the derivation is in the
+          chess header. */}
+      <div className="v-gamehead" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, background: C.surfaceAlt }}>
+        <span className="v-gameid" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ width: 28, height: 28, background: C.surfaceRaised, borderRadius: R.xs, display: "grid", placeItems: "center", color: C.accentText, flexShrink: 0 }}>
+            <DeskIcon name="algowars" size={17} />
+          </span>
+          <span className="v-gamename" style={{ fontWeight: 700, fontSize: 14.5, color: C.text }}>{t("Algorithm Wars")}</span>
         </span>
-        <span style={{ fontWeight: 700, fontSize: 14.5, color: C.text }}>{t("Algorithm Wars")}</span>
-        <span style={{ display: "flex", alignItems: "center", gap: 7, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5, color: C.muted, whiteSpace: "nowrap" }}>
-          <span aria-hidden="true" className={over || paused ? undefined : "v-pulse"}
-            style={{ width: 6, height: 6, borderRadius: "50%", background: over ? C.faint : paused ? C.warn : C.accent }} />
-          {over ? t("OVER") : paused ? t("PAUSED") : t("LIVE")} {awClock(hud.clock)}
-        </span>
-        <span style={{ ...metaMono, fontSize: 11.5 }}>
-          {t("round {n} · {logic}").replace("{n}", String(round)).replace("{logic}", STANCE_LABEL[stance].toLowerCase())}
+        <span className="v-gamestate" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 7, background: C.surface, border: `1px solid ${C.edge}`, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5, color: C.muted, whiteSpace: "nowrap" }}>
+            <span aria-hidden="true" className={over || paused ? undefined : "v-pulse"}
+              style={{ width: 6, height: 6, borderRadius: "50%", background: over ? C.faint : paused ? C.warn : C.accent }} />
+            {over ? t("OVER") : paused ? t("PAUSED") : t("LIVE")} {awClock(hud.clock)}
+          </span>
+          {/* Both facts here are live — the round counts up and the logic is a
+              thing you change mid-game — so unlike chess's tail neither of them
+              goes, and measured they do not need to: 104 and 121 fit the 243px
+              row with 6 to spare. */}
+          <span style={{ ...metaMono, fontSize: 11.5 }}>
+            {t("round {n} · {logic}").replace("{n}", String(round)).replace("{logic}", STANCE_LABEL[stance].toLowerCase())}
+          </span>
         </span>
         {/* Wraps, and does not refuse to shrink. With flexShrink: 0 these four
             controls measured 289 inside a 287px panel on a phone, which put the
             ✕ 24px past the right edge — the button that leaves the game was off
             the screen, on the screen you most need it. Overheat's header
             already wrapped; these two never did. */}
-        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span className="v-gamectls" style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {!over && <button className="v-gameout" onClick={togglePause} aria-pressed={paused} style={outlineBtn}>{paused ? t("Resume") : t("Pause")}</button>}
           <button className="v-gameout" onClick={toggleRules} aria-expanded={showRules} style={outlineBtn}>{t("How to play")}</button>
           <button className="v-gameout" onClick={reset} style={outlineBtn}>{t("Restart")}</button>
@@ -8085,6 +8214,19 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
               was 18.6 by 31.5 — the smallest control on the screen, sitting 8px
               from the button beside it. The class is 30 wide rather than 44 for
               exactly that reason; the height is the handoff's own number. */}
+          {onClose && <button onClick={onClose} className="v-clearx" aria-label={t("Close games")} style={{ ...outlineBtn, border: "none", color: C.faint, padding: "6px 4px" }}>✕</button>}
+        </span>
+        {/* The folded twin — see the chess header. Pause is the one control of
+            the eleven across the three games that does not go into a menu: this
+            is the only game with a clock running while you read, so the button
+            that stops it is the one you reach for without looking. */}
+        <span className="v-gamemenu" data-gamemenu="" style={{ marginLeft: "auto", position: "relative", display: "none", alignItems: "center", gap: 8 }}>
+          {!over && <button className="v-gameout" onClick={togglePause} aria-pressed={paused} style={outlineBtn}>{paused ? t("Resume") : t("Pause")}</button>}
+          <GameMenu t={t} btnStyle={outlineBtn} items={[
+            { key: "rules", label: t("How to play"), onClick: toggleRules },
+            { key: "restart", label: t("Restart"), onClick: reset },
+            onBack && { key: "back", label: `← ${t("games")}`, onClick: onBack },
+          ]} />
           {onClose && <button onClick={onClose} className="v-clearx" aria-label={t("Close games")} style={{ ...outlineBtn, border: "none", color: C.faint, padding: "6px 4px" }}>✕</button>}
         </span>
       </div>
