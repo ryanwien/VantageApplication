@@ -11249,6 +11249,23 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     document.addEventListener("keydown", onKey);
     return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
   }, [showExportMenu, showMoreMenu]);
+  // Both menus hang from `right: 0`, and the desk panel clips its children —
+  // overflow: hidden on the panel is what rounds its corners. When the toolbar
+  // wraps at a narrow width the buttons land at the panel's LEFT edge, and a
+  // menu wider than its own button then hangs past that edge and loses its
+  // first letters. Measured, not guessed: on mount, shift the menu right by
+  // exactly how far it sticks out, and never past the panel's right edge. The
+  // shift rides `right` rather than transform because v-rise is already
+  // animating transform; reset first so a re-clamp measures the unshifted box.
+  const clampMenu = useCallback((el) => {
+    if (!el) return;
+    const panel = el.closest(".v-deskpanel");
+    if (!panel) return;
+    el.style.right = "0px";
+    const r = el.getBoundingClientRect(), p = panel.getBoundingClientRect();
+    const shift = Math.min(Math.max(0, (p.left + 8) - r.left), Math.max(0, (p.right - 8) - r.right));
+    el.style.right = `${-Math.round(shift)}px`;
+  }, []);
   // shared style for the AI-desk header toolbar buttons — one consistent look, amber when active
   // Secondary controls: outlined, never filled. The "active" state fills with the
   // inset surface rather than lighting the border green — a menu that happens to
@@ -14230,7 +14247,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 
       {/* ===== AI desk ===== */}
       <div id="sec-desk" style={{ padding: "14px 14px 0" }}>
-        <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
+        <div className="v-deskpanel" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
           <div className="v-deskhead" style={{ borderBottom: `1px solid ${C.panelEdge}` }}>
             <h2 className="v-deskhead-title" style={{ margin: 0, fontFamily: SANS, fontSize: 19, fontWeight: 700, letterSpacing: "-0.012em", color: C.text }}>{t("AI Desk")}</h2>
             <span className="v-deskhead-tools">
@@ -14242,7 +14259,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                   <DeskIcon name="download" size={15} /> {t("Export")} <span aria-hidden="true">▾</span>
                 </button>
                 {showExportMenu && (
-                  <div className="v-rise" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", minWidth: 150, overflow: "hidden" }}>
+                  <div ref={clampMenu} className="v-rise" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", width: "max-content", maxWidth: "calc(100vw - 46px)", minWidth: 150, overflow: "hidden" }}>
                     {exportMsg && <div style={{ fontFamily: MONO, fontSize: 12, color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted, padding: "6px 10px", borderBottom: `1px solid ${C.panelEdge}` }}>{exportMsg}</div>}
                     {[["xlsx", "sheet", "Excel (.xlsx)"], ["docx", "report", "Word (.docx)"], ["pptx", "deck", "PowerPoint (.pptx)"]].map(([fmt, mark, label]) => (
                       <button key={fmt} onClick={() => { setShowExportMenu(false); openExportPreview(fmt); }} className="v-row"
@@ -14266,7 +14283,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                   {t("More")} <span aria-hidden="true">▾</span>
                 </button>
                 {showMoreMenu && (
-                  <div className="v-rise" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", minWidth: 258, overflow: "hidden" }}>
+                  <div ref={clampMenu} className="v-rise" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", width: "max-content", maxWidth: "calc(100vw - 46px)", minWidth: 258, overflow: "hidden" }}>
                     {[
                       { key: "games", icon: "games", label: t("Games"), sub: t("learn how stocks work"), active: gameOn, onClick: () => { setShowMoreMenu(false); gameOn ? closeGame() : openGames(); } },
                       { key: "ambient", icon: "headphones", label: t("Ambient sound"), sub: t("waves, jungle, space hum…"), active: ambienceOn, onClick: () => setAmbienceOn(v => !v) },
