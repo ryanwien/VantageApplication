@@ -4869,7 +4869,6 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
     background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm,
     color: C.muted, fontFamily: SANS, fontSize: 13, padding: "6px 12px", cursor: "pointer", whiteSpace: "nowrap",
   };
-  const sep = <span aria-hidden="true" className="v-hudsep" style={{ color: C.edgeStrong }}>|</span>;
   const meter = (frac, ramp) => (
     <div aria-hidden="true" style={{ height: 9, borderRadius: 5, background: C.surface, border: `1px solid ${C.edge}`, overflow: "hidden", position: "relative" }}>
       <div style={{ width: `${Math.max(0, Math.min(1, frac)) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${ramp[0]}, ${ramp[1]})`, transition: "width 200ms linear" }} />
@@ -5012,12 +5011,24 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             {meter(counts.w.material / 39, FIELD.youMeter)}
-            {/* Three facts and two separators at 10.5px is about 200px of mono
-                that will not break on its own, and it was the thing pushing the
-                clock off the edge of a narrow panel. Let it wrap. */}
-            <div className="v-hudstats" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, ...metaMono }}>
-              <span>{t("{n} PIECES").replace("{n}", String(counts.w.pieces))}</span>{sep}
-              <span>{t("MATERIAL {n}").replace("{n}", String(counts.w.material))}</span>{sep}
+            {/* Three facts spaced apart rather than divided by pipes. A pipe
+                reads well between two facts on one line, and this row does not
+                get to stay on one line: 284px of it at a 1030px panel, 154 at
+                the 770px panel a 1180px laptop gives, against the 254 that
+                "16 FIGUREN | MATERIAL 39 | 16 GESCHLAGEN" wanted. German wrapped
+                on a desk and every language wraps on a laptop. Wrapped is where
+                a separator fails — the row ended a line on a bare "|", which is
+                a promise of a fourth fact that never comes, and there is no rule
+                that hides only the pipe that lands at a line's edge.
+
+                Dropping them is not a way of avoiding the wrap. It is 20px back
+                — two glyphs and the two extra gaps around them, which buys more
+                than the 12px column gap replacing them costs — and past that
+                the row wraps with nothing left to orphan. The row gap stays at
+                8, so a wrap still reads as one block. */}
+            <div className="v-hudstats" style={{ display: "flex", flexWrap: "wrap", columnGap: 12, rowGap: 8, marginTop: 7, ...metaMono }}>
+              <span>{t("{n} PIECES").replace("{n}", String(counts.w.pieces))}</span>
+              <span>{t("MATERIAL {n}").replace("{n}", String(counts.w.material))}</span>
               <span>{t("{n} TAKEN").replace("{n}", String(held.b.length))}</span>
             </div>
           </div>
@@ -5046,9 +5057,9 @@ function ChessGame({ onCheer, onWin, sfx, onBack, onClose }) {
                 the block still mirrors and the facts inside it no longer do.
                 What is left of the reflection here is the alignment, which is
                 what keeps the row against the centre card on a desk. */}
-            <div className="v-hudstats" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
-              <span>{t("{n} PIECES").replace("{n}", String(counts.b.pieces))}</span>{sep}
-              <span>{t("MATERIAL {n}").replace("{n}", String(counts.b.material))}</span>{sep}
+            <div className="v-hudstats" style={{ display: "flex", flexWrap: "wrap", columnGap: 12, rowGap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
+              <span>{t("{n} PIECES").replace("{n}", String(counts.b.pieces))}</span>
+              <span>{t("MATERIAL {n}").replace("{n}", String(counts.b.material))}</span>
               <span>{t("{n} TAKEN").replace("{n}", String(held.w.length))}</span>
             </div>
           </div>
@@ -7410,7 +7421,6 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
   // ---- small pieces ----
   const label = { fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", color: C.faint };
   const meta = { fontFamily: MONO, fontSize: 10.5, color: C.faint };
-  const sep = <span aria-hidden="true" className="v-hudsep" style={{ color: C.edgeStrong }}>|</span>;
   const headBtn = { background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, color: C.muted, fontFamily: SANS, fontSize: 13, padding: "6px 12px", cursor: "pointer" };
 
   const card = (c, i, hidden) => (
@@ -7587,13 +7597,18 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
                   <div style={{ width: `${Math.max(0, Math.min(100, (capital / OH_START) * 100))}%`, height: "100%", background: `linear-gradient(90deg, ${FIELD.youMeter[0]}, ${FIELD.youMeter[1]})` }} />
                   <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(90deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 11px)" }} />
                 </div>
-                <div className="v-hudstats" style={{ display: "flex", gap: 8, marginTop: 7, ...meta, flexWrap: "wrap" }}>
-                  <span>{t("START {m}").replace("{m}", money(OH_START))}</span>{sep}
+                {/* Spaced, not piped: see the chess HUD. This is the widest of
+                    the six stat rows in the three games — "START $1,000",
+                    "RÜCKGANG 100%" and "99 SITZUNGEN" come to 272px of mono
+                    against the 271 the row gets at a 1030px panel — so it was
+                    the one wrapping while still on a desk. */}
+                <div className="v-hudstats" style={{ display: "flex", columnGap: 12, rowGap: 8, marginTop: 7, ...meta, flexWrap: "wrap" }}>
+                  <span>{t("START {m}").replace("{m}", money(OH_START))}</span>
                   <span style={{ color: dd.direction === "down" ? C.down : dd.direction === "up" ? C.up : C.faint }}>
                     {dd.direction === "up"
                       ? t("UP {n}%").replace("{n}", String(dd.pct))
                       : t("DRAWDOWN {n}%").replace("{n}", String(dd.pct))}
-                  </span>{sep}
+                  </span>
                   <span>{(tape.length === 1 ? t("{n} SESSION") : t("{n} SESSIONS")).replace("{n}", String(tape.length))}</span>
                 </div>
               </div>
@@ -7626,11 +7641,11 @@ function OverheatGame({ onCheer, onWin, onBack, onClose }) {
                   <div style={{ width: `${Math.min(100, (marketValue / OH_LIMIT) * 100)}%`, height: "100%", background: `linear-gradient(90deg, ${FIELD.foeMeter[0]}, ${FIELD.foeMeter[1]})` }} />
                   <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(90deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 11px)" }} />
                 </div>
-                <div className="v-hudstats" style={{ display: "flex", gap: 8, marginTop: 7, justifyContent: "flex-end", ...meta, flexWrap: "wrap" }}>
+                <div className="v-hudstats" style={{ display: "flex", columnGap: 12, rowGap: 8, marginTop: 7, justifyContent: "flex-end", ...meta, flexWrap: "wrap" }}>
                   <span style={{ color: marketHot ? C.down : C.faint }}>
                     {marketHot ? t("OVERHEATED") : phase === "closed" ? t("COOLED") : t("OPEN")}
-                  </span>{sep}
-                  <span>{t("PRINT {n}").replace("{n}", String(marketValue))}</span>{sep}
+                  </span>
+                  <span>{t("PRINT {n}").replace("{n}", String(marketValue))}</span>
                   <span>{t("LIMIT {n}").replace("{n}", String(OH_LIMIT))}</span>
                 </div>
               </div>
@@ -8180,7 +8195,6 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
       <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(90deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 11px)" }} />
     </div>
   );
-  const sep = <span aria-hidden="true" className="v-hudsep" style={{ color: C.edgeStrong }}>|</span>;
   const pct = (hp) => Math.round((hp / AW_BASE_HP) * 100);
 
   // One line about how it actually went, read off the round rather than written
@@ -8270,12 +8284,14 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             {meter(hud.youHp / AW_BASE_HP, FIELD.youMeter)}
-            {/* Three facts and two separators at 10.5px is about 200px of mono
-                that will not break on its own, and it was the thing pushing the
-                server count off the edge of a narrow panel. Let it wrap. */}
-            <div className="v-hudstats" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, ...metaMono }}>
-              <span>{(hud.youN === 1 ? t("{n} BOT") : t("{n} BOTS")).replace("{n}", String(hud.youN))}</span>{sep}
-              <span>{t("DPS {n}").replace("{n}", String(hud.youDps))}</span>{sep}
+            {/* Spaced, not piped — the chess HUD is the same row and carries
+                the reasoning. This one runs 12px narrower for having a 108px
+                label column where chess has 96: 272px at a 1030px panel against
+                the 229 that "12 BOTS | DPS 288 | INTEGRIDADE 100%" wanted, so
+                it held on a desk and ended a line on a bare "|" below one. */}
+            <div className="v-hudstats" style={{ display: "flex", flexWrap: "wrap", columnGap: 12, rowGap: 8, marginTop: 7, ...metaMono }}>
+              <span>{(hud.youN === 1 ? t("{n} BOT") : t("{n} BOTS")).replace("{n}", String(hud.youN))}</span>
+              <span>{t("DPS {n}").replace("{n}", String(hud.youDps))}</span>
               <span>{t("INTEGRITY {n}%").replace("{n}", String(pct(hud.youHp)))}</span>
             </div>
           </div>
@@ -8303,9 +8319,9 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
                 the block still mirrors and the facts inside it no longer do.
                 What is left of the reflection here is the alignment, which is
                 what keeps the row against the centre card on a desk. */}
-            <div className="v-hudstats" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
-              <span>{(hud.cpuN === 1 ? t("{n} BOT") : t("{n} BOTS")).replace("{n}", String(hud.cpuN))}</span>{sep}
-              <span>{t("DPS {n}").replace("{n}", String(hud.cpuDps))}</span>{sep}
+            <div className="v-hudstats" style={{ display: "flex", flexWrap: "wrap", columnGap: 12, rowGap: 8, marginTop: 7, justifyContent: "flex-end", ...metaMono }}>
+              <span>{(hud.cpuN === 1 ? t("{n} BOT") : t("{n} BOTS")).replace("{n}", String(hud.cpuN))}</span>
+              <span>{t("DPS {n}").replace("{n}", String(hud.cpuDps))}</span>
               <span>{t("INTEGRITY {n}%").replace("{n}", String(pct(hud.cpuHp)))}</span>
             </div>
           </div>

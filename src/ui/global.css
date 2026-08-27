@@ -1198,23 +1198,6 @@ button:not(:disabled):active { transform: scale(0.97); }
   .v-awhud { padding: 12px 14px !important; gap: 14px !important; }
 }
 
-/* Each stat row is three facts and two pipes, and the pipes are flex children
-   like the facts are. Given one line that is exactly what you want. Given a
-   150px column it is not: the row wraps wherever it runs out, and measured on
-   a phone the Bulls' read "16 PIECES | MATERIAL 39" and then "| 0 TAKEN",
-   while the Bears' ended a line on a bare "|". A separator at the head of a
-   line separates it from nothing, and one at the tail is a promise of a fourth
-   fact that never comes.
-
-   Below 540 the row is wrapping in every game, so the pipes go and the column
-   gap does their job — which is the job the pipes were standing in for on a
-   line too tight to space out. The row gap stays at 8 so the two lines still
-   read as one block. */
-@container (max-width: 540px) {
-  .v-hudstats { column-gap: 12px !important; }
-  .v-hudstats .v-hudsep { display: none; }
-}
-
 /* Overheat's header subtitle, and only Overheat's. Both of its facts are
    printed again within the same screen — the session count by the HUD's
    "{n} SESSIONS" two readouts along, and the cool-off by the market card's own
