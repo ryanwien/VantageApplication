@@ -175,13 +175,13 @@ A question the catalog *can* answer still goes to a model for narration — comp
 All keys live in your **browser's localStorage only** — they're sent only to their own provider's
 API, never to us. Enter them in **settings** (⚙, top-right).
 
-| Key | Unlocks | Where |
-|-----|---------|-------|
-| OpenRouter / Claude / OpenAI / Gemini / Ollama / LM Studio | AI desk answers | settings → AI |
-| Finnhub | Live quotes + earnings calendar | settings → DATA |
-| TMDB | Streaming catalog + trailers | settings → START/DATA |
-| YouTube | Real embeddable video results | settings → DATA |
-| ElevenLabs | Studio-grade anchor voice | settings → VOICE |
+| Key | Unlocks | Where | Get one / rotate it |
+|-----|---------|-------|---------------------|
+| OpenRouter / Claude / OpenAI / Gemini / Ollama / LM Studio | AI desk answers | settings → AI | [openrouter.ai/keys](https://openrouter.ai/keys) · [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+| Finnhub | Live quotes + earnings calendar | settings → DATA | [finnhub.io/dashboard](https://finnhub.io/dashboard) |
+| TMDB | Streaming catalog + trailers | settings → START/DATA | [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api) |
+| YouTube | Real embeddable video results | settings → DATA | [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) |
+| ElevenLabs | Studio-grade anchor voice | settings → VOICE | [elevenlabs.io/app/settings/api-keys](https://elevenlabs.io/app/settings/api-keys) |
 
 Without any of them the app still runs — demo data, browser text-to-speech, and the full UI.
 
@@ -216,16 +216,43 @@ It listens on **http://localhost:8787**; the Vite dev server proxies `/api` to i
 ### Environment variables (`.env`, see `.env.example`)
 
 ```
-ZOOM_CLIENT_ID / ZOOM_CLIENT_SECRET          # meetings (optional)
-GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET       # meetings + calendar (optional)
+# Provider keys the SERVER holds. These are separate from the browser-side keys
+# in the table above — a key here is never sent to the browser, and it is what
+# lets a visitor use a feature without bringing a key of their own.
+OPENROUTER_API_KEY / OPENROUTER_MODEL         # AI desk answers
+GEMINI_API_KEY                                # Gemini answers + market briefs
+FINNHUB_API_KEY                               # quotes, search, earnings, news
+TMDB_API_KEY                                  # film & TV catalog
+YOUTUBE_API_KEY                               # video search
+ELEVENLABS_API_KEY                            # studio anchor voice
+
+# Billing
 STRIPE_SECRET_KEY                             # billing (optional; else simulated)
 STRIPE_PRICE_EXPLORER / _PRO / _DESK          # Stripe Price IDs; every plan is paid
 STRIPE_WEBHOOK_SECRET                         # Stripe endpoint-signing secret
+
+# Sign-in and meetings — OAuth apps you register yourself
+ZOOM_CLIENT_ID / ZOOM_CLIENT_SECRET           # meetings (optional)
+GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET       # meetings + calendar (optional)
+YAHOO_CLIENT_ID / YAHOO_CLIENT_SECRET         # Yahoo sign-in (optional)
+
+# Vertex AI — the hosted-brief path
 GOOGLE_CLOUD_PROJECT / GOOGLE_CLOUD_LOCATION  # Vertex AI project and region
 GCP_SERVICE_ACCOUNT_EMAIL / _PRIVATE_KEY      # Vertex AI service account (server-only)
-VERTEX_GEMINI_MODEL                           # defaults to gemini-2.0-flash
-FINNHUB_API_KEY                               # server-only quotes for scheduled AI briefs
+VERTEX_GEMINI_MODEL                           # defaults to gemini-3.6-flash
+
+# Metering: how much of YOUR provider spend a signed-out visitor may use,
+# per IP per hour. These are the ceiling on what a stranger can cost you.
+ANON_AI_PER_HOUR      (default 6)
+ANON_TTS_PER_HOUR     (default 30)    # ElevenLabs bills per character
+ANON_YT_PER_HOUR      (default 20)
+ANON_QUOTE_PER_HOUR   (default 1000)  # one watchlist tick is one call
+
 AGENT_CRON_SECRET                             # protects the scheduled-agent endpoint
+DATAHUB_GMS_URL / DATAHUB_TOKEN               # optional catalog context (see above)
+SPOTIFY_PLAYLIST                              # defaults to a public playlist
+TRUST_PROXY                                   # set to exactly "1" behind a reverse proxy, so
+                                              # rate limits read X-Forwarded-For and not the proxy
 PORT           (default 8787)
 PUBLIC_ORIGIN  (default http://localhost:8787 — must match your OAuth redirect URIs)
 APP_ORIGIN     (default http://127.0.0.1:5173 — where the dashboard runs)
@@ -234,6 +261,34 @@ APP_ORIGIN     (default http://127.0.0.1:5173 — where the dashboard runs)
 > **You don't have to hand-edit a file.** `.env` is just one way to set these. On a real host
 > (Vercel / Render / Railway, Docker `-e`, or a shell `export`) set them as normal environment
 > variables — the server reads `process.env` either way. See [MEETINGS_SETUP.md](MEETINGS_SETUP.md).
+
+### Rotating a key
+
+Consoles, so you can get at them without hunting:
+
+| Variable | Console |
+|----------|---------|
+| `OPENROUTER_API_KEY` | [openrouter.ai/keys](https://openrouter.ai/keys) |
+| `GEMINI_API_KEY` | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+| `FINNHUB_API_KEY` | [finnhub.io/dashboard](https://finnhub.io/dashboard) |
+| `TMDB_API_KEY` | [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api) |
+| `YOUTUBE_API_KEY` | [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) |
+| `ELEVENLABS_API_KEY` | [elevenlabs.io/app/settings/api-keys](https://elevenlabs.io/app/settings/api-keys) |
+| `STRIPE_SECRET_KEY` | [dashboard.stripe.com/apikeys](https://dashboard.stripe.com/apikeys) |
+| `STRIPE_PRICE_*` | [dashboard.stripe.com/products](https://dashboard.stripe.com/products) — copy the **Price** ID (`price_…`), not the product's |
+| `STRIPE_WEBHOOK_SECRET` | [dashboard.stripe.com/webhooks](https://dashboard.stripe.com/webhooks) — the endpoint's signing secret (`whsec_…`) |
+
+The order matters, because the last step is irreversible:
+
+1. Issue the new key **without deleting the old one**.
+2. Paste it into `.env` — no quotes, no trailing space. A key with a stray character is *set* and refused, which looks exactly like a revoked one.
+3. Restart the server. It must be `npm run server`, or `node --env-file=.env server/index.js` — plain `node server/index.js` starts fine and reports every key as unset.
+4. Run the checker (below). It makes one real call per service, because `/api/status` only knows whether a key is *present* — and a revoked key is present.
+5. Only once the new key reads `ok`, go back and revoke the old one.
+
+```bash
+node scripts/check-keys.mjs
+```
 
 ---
 
