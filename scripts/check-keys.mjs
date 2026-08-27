@@ -52,21 +52,47 @@ const verdict = ({ status, text }) => {
 };
 
 const pad = (s, n) => String(s).padEnd(n);
-let bad = 0, live = 0;
 
-try { await fetch(base + "/api/status"); }
-catch { console.error(`No server on ${base}. Start it with: npm run server`); process.exit(2); }
+// Exit codes: 0 every configured key works · 1 a key is set and refused · 2 the
+// question could not be asked at all.
+const run = async () => {
+  let bad = 0, live = 0, unset = 0;
 
-console.log(`asking ${base} — one real call per service\n`);
-for (const c of CHECKS) {
-  let state, note;
-  try { [state, note] = verdict(await call(c.req)); }
-  catch (e) { state = "FAILING"; note = String(e.message).slice(0, 96); }
-  if (state === "FAILING") bad++;
-  if (state === "works") live++;
-  console.log(`${pad(state === "works" ? "ok" : state, 14)}${pad(c.key, 22)}${pad(c.what, 15)}${note}`);
-}
+  try { await fetch(base + "/api/status"); }
+  catch { console.error(`No server on ${base}. Start it with: npm run server`); return 2; }
 
-console.log(`\n${live} working, ${bad} failing`);
-if (bad) console.log("A failing key is set but refused by the provider — check for a stray newline before assuming it is revoked.");
-process.exit(bad ? 1 : 0);
+  console.log(`asking ${base} — one real call per service\n`);
+  for (const c of CHECKS) {
+    let state, note;
+    try { [state, note] = verdict(await call(c.req)); }
+    catch (e) { state = "FAILING"; note = String(e.message).slice(0, 96); }
+    if (state === "FAILING") bad++;
+    if (state === "works") live++;
+    if (state === "not set") unset++;
+    console.log(`${pad(state === "works" ? "ok" : state, 14)}${pad(c.key, 22)}${pad(c.what, 15)}${note}`);
+  }
+
+  // Every key unset at once is almost never six revocations. It is a server
+  // started as `node server/index.js` rather than `npm run server`, which is
+  // the only place --env-file=.env lives: the server boots, answers, and
+  // reports exactly what a wiped .env would report. Mid-rotation that reads as
+  // "the paste did not take" — the one wrong conclusion that gets an old key
+  // revoked on the strength of a new one nobody has actually proved.
+  if (unset === CHECKS.length) {
+    console.log(`\nEvery key reads as unset, which is what a server started without its`);
+    console.log(`environment looks like. Restart it with \`npm run server\` — that is the`);
+    console.log(`command carrying --env-file=.env — and run this again before believing it.`);
+    return 2;
+  }
+
+  console.log(`\n${live} working, ${bad} failing`);
+  if (bad) console.log("A failing key is set but refused by the provider — check for a stray newline before assuming it is revoked.");
+  return bad ? 1 : 0;
+};
+
+// process.exitCode, not process.exit(). The sockets from those calls are still
+// closing, and tearing the process down on top of them trips a libuv assertion
+// on Windows — which prints a crash report directly underneath advice about a
+// rotation, at the exact moment the reader has to trust what they just read.
+// Letting Node finish on its own costs about 40ms and reports the real code.
+process.exitCode = await run();
