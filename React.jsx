@@ -1,7 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, createContext, useContext } from "react";
-import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer, CartesianGrid,
-} from "recharts";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, createContext, useContext, lazy, Suspense } from "react";
 import { exportExcel, exportWord, exportPowerPoint } from "./exporters.js";
 import { isLocalModel } from "./src/settings/localProof.js";
 import { DEFAULT_PREFS, loadPrefs, directionColor, directionGlyph, notifyEnabled, coerceRefreshMs } from "./src/settings/preferences.js";
@@ -22,6 +19,19 @@ import {
 import { C, GRAD, FIELD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, alpha, button, panel, panelHead, panelNote, field as fieldRecipe, chip, segmentTrack, segmentItem, pill } from "./src/ui/theme.js";
 import { passwordCheck, PW_MIN } from "./src/auth/password.js";
 import { loadDict, peekDict, makeT } from "./src/i18n/index.js";
+
+// recharts is 374kB raw — 103kB gzipped — and it draws exactly one thing: the
+// session chart in the markets column. Measured on the section this app opens
+// on, that chart starts 963px down a 900px-tall desktop window and 2,193px down
+// a phone. Nobody could see it at first paint and everybody was waiting for it,
+// so it is a chunk of its own now.
+//
+// The loader is named rather than written inline into lazy(), so the same
+// import can be warmed on idle — see the effect in MarketDashboard. React.lazy
+// resolves from the module cache, so warming it means the fallback is normally
+// on screen for no frames at all.
+const loadPriceChart = () => import("./src/ui/PriceChart.jsx");
+const PriceChart = lazy(loadPriceChart);
 import Sparkline from "./src/ui/Sparkline.jsx";
 import RichText from "./src/ui/RichText.jsx";
 import Toggle, { ToggleGlyph } from "./src/ui/Toggle.jsx";
@@ -10202,6 +10212,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 
   const [activeSection, setActiveSection] = useState("desk");
 
+  // Pull the chart's chunk down once the page has gone quiet, so that scrolling
+  // to the chart is not the first time anybody asks for it. requestIdleCallback
+  // where it exists, and a plain timer where it does not — Safari still ships
+  // without it.
+  useEffect(() => {
+    if (window.requestIdleCallback) {
+      const id = window.requestIdleCallback(loadPriceChart);
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = setTimeout(loadPriceChart, 1200);
+    return () => clearTimeout(id);
+  }, []);
+
   // While a click-driven smooth scroll is travelling it crosses every section in
   // between, and the scroll-spy below would flicker the nav through each one. This
   // suppresses the spy until the animation settles.
@@ -12013,54 +12036,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                   </div>
                 )
               ) : chartData.length > 1 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={comparePlot || chartPlot} margin={{ top: 8, right: 6, bottom: 0, left: 0 }}>
-                    <defs>
-                      <linearGradient id="fillArea" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={accent} stopOpacity={0.28} />
-                        <stop offset="100%" stopColor={accent} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid stroke={C.grid} vertical={false} />
-                    <XAxis dataKey="t" tick={{ fill: C.faint, fontSize: 12, fontFamily: MONO }} minTickGap={48} axisLine={{ stroke: C.panelEdge }} tickLine={false} />
-                    <YAxis domain={comparePlot ? ["auto", "auto"] : yDomain} tick={{ fill: C.faint, fontSize: 12, fontFamily: MONO }} width={56} axisLine={false} tickLine={false} tickFormatter={v => (comparePlot ? `${v > 0 ? "+" : ""}${(+v).toFixed(1)}%` : fmt(v))} />
-                    <Tooltip
-                      contentStyle={{ background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, fontFamily: MONO, fontSize: 12 }}
-                      labelStyle={{ color: C.muted }} itemStyle={{ color: C.text }}
-                      formatter={(v, name) => (comparePlot
-                        ? [`${v > 0 ? "+" : ""}${(+v).toFixed(2)}%`, name === "vs" ? chartVs : selected]
-                        : [fmt(v), name === "sma" ? `SMA ${SMA_N}` : "price"])}
-                    />
-                    {comparePlot && (
-                      <ReferenceLine y={0} stroke={C.faint} strokeDasharray="4 4"
-                        label={{ value: "0%", fill: C.faint, fontSize: 12, fontFamily: MONO, position: "insideTopRight" }} />
-                    )}
-                    {!comparePlot && prevCloseOnAxis && (
-                      <ReferenceLine y={selectedRow.prevClose} stroke={C.faint} strokeDasharray="4 4"
-                        label={{ value: `prev ${fmt(selectedRow.prevClose)}`, fill: C.faint, fontSize: 12, fontFamily: MONO, position: "insideTopRight" }} />
-                    )}
-                    {!comparePlot && sessionHL && (
-                      <ReferenceLine y={sessionHL.hi} stroke={C.up} strokeOpacity={0.5} strokeDasharray="2 4"
-                        label={{ value: `hi ${fmt(sessionHL.hi)}`, fill: C.up, fontSize: 12, fontFamily: MONO, position: "insideTopLeft" }} />
-                    )}
-                    {!comparePlot && sessionHL && (
-                      <ReferenceLine y={sessionHL.lo} stroke={C.down} strokeOpacity={0.5} strokeDasharray="2 4"
-                        label={{ value: `lo ${fmt(sessionHL.lo)}`, fill: C.down, fontSize: 12, fontFamily: MONO, position: "insideBottomLeft" }} />
-                    )}
-                    {/* C.info, not amber or a direction colour: the SMA is data,
-                        and every other hue on this chart already has a meaning. */}
-                    {!comparePlot && chartSMA && chartPlot.some(d => d.sma != null) && (
-                      <Area type="monotone" dataKey="sma" stroke={C.info} strokeWidth={1.3} strokeDasharray="5 3" fill="transparent" isAnimationActive={false} dot={false} />
-                    )}
-                    {/* pathLength=1 + .v-chartdraw is the draw-on; recharts' own
-                        isAnimationActive stays off because it replays on every
-                        data change, and this tape changes every few seconds. */}
-                    {!comparePlot && <Area key={`price-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="price" stroke={accent} strokeWidth={1.8} fill="url(#fillArea)" isAnimationActive={false} dot={false} />}
-                    {comparePlot && <Area key={`base-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="base" stroke={accent} strokeWidth={1.8} fill="url(#fillArea)" isAnimationActive={false} dot={false} />}
-                    {/* the comparison line owns purple — every other hue here has a meaning already */}
-                    {comparePlot && <Area key={`vs-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="vs" stroke="#C08BFF" strokeWidth={1.5} fill="transparent" isAnimationActive={false} dot={false} />}
-                  </AreaChart>
-                </ResponsiveContainer>
+                // Suspense, not a spinner: the fallback is the same empty box
+                // the chart fills, so nothing moves when it arrives.
+                <Suspense fallback={<div aria-busy="true" style={{ height: "100%" }} />}>
+                  <PriceChart
+                    comparePlot={comparePlot} chartPlot={chartPlot} accent={accent} yDomain={yDomain}
+                    chartVs={chartVs} selected={selected} smaN={SMA_N} fmt={fmt}
+                    prevCloseOnAxis={prevCloseOnAxis} prevClose={selectedRow?.prevClose}
+                    sessionHL={sessionHL} chartSMA={chartSMA} chartDrawKey={chartDrawKey}
+                  />
+                </Suspense>
               ) : (
                 <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, color: live && liveBad[selected] ? C.down : C.faint, fontFamily: MONO, fontSize: 12, textAlign: "center", padding: "0 24px" }}>
                   {live && liveBad[selected] ? (
