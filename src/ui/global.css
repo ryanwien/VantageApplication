@@ -721,6 +721,32 @@ button:not(:disabled):active { transform: scale(0.97); }
 
 .vt-marquee { animation: vt-marquee 28s linear infinite; }
 .vt-fadeup  { animation: vt-fadeup 0.7s var(--v-ease) both; }
+
+/* ---------- scroll-triggered entrances ----------
+   The gesture is vt-fadeup exactly — same distance, same curve, same duration —
+   because "the page arrived" and "you scrolled to it" should look like one
+   kind of thing happening, not two. Only the trigger differs.
+
+   Everything here is nested under html.v-scrollfx, which src/ui/reveal.js adds
+   only after it has found IntersectionObserver AND checked that motion is
+   wanted. That nesting is the whole safety argument: with scripting off, or on
+   a browser without the observer, or for a reader who asked for less motion,
+   .v-scrollin means nothing and the content is simply there. The failure mode
+   is a missing animation, never a blank panel.
+
+   Not called .v-rise, which is the obvious name and is already the app's own
+   pop-in for menus, modals and chat bubbles (line 377). Sharing it would have
+   been worse than a name clash: that rule's `both` fill pins opacity at 1 for
+   the life of the element, so the hidden state below would never have applied
+   to anything, and the module would have claimed every dropdown in the app as
+   scroll-in scenery. */
+html.v-scrollfx .v-scrollin       { opacity: 0; }
+html.v-scrollfx .v-scrollin.v-in  { animation: vt-fadeup 0.7s var(--v-ease) both; }
+/* On screen before the reader has moved the page: shown, not played. Animating
+   what the page arrived at is a load animation in a scroll animation's
+   clothes, and on a dashboard it delays the numbers for nothing. */
+html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
+
 .vt-pulse   { animation: vt-pulse 1.1s ease-in-out infinite; }
 .vt-sheen   { background-size: 200% auto; animation: vt-sheen 3.5s linear infinite; }
 .vt-bob     { animation: vt-bob 6s ease-in-out infinite; }

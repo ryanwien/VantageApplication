@@ -19,6 +19,7 @@ import {
 import { C, GRAD, FIELD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, alpha, button, panel, panelHead, panelNote, field as fieldRecipe, chip, segmentTrack, segmentItem, pill } from "./src/ui/theme.js";
 import { passwordCheck, PW_MIN } from "./src/auth/password.js";
 import { loadDict, peekDict, makeT } from "./src/i18n/index.js";
+import { startReveal } from "./src/ui/reveal.js";
 
 // recharts is 374kB raw — 103kB gzipped — and it draws exactly one thing: the
 // session chart in the markets column. Measured on the section this app opens
@@ -10814,7 +10815,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // News is the answer to "load the news", so it belongs where the answers are.
   // Keeps #sec-news so the News nav item still lands on it.
   const newsPanel = panels.news && (news?.news?.length > 0 || news?.videos?.length > 0 || newsBusy || newsErr) && (
-    <div key="news" id="sec-news" style={{ minWidth: 0 }}>
+    <div key="news" id="sec-news" className="v-scrollin" style={{ minWidth: 0 }}>
       <NewsDesk
         items={orderedNews}
         videos={news?.videos || []}
@@ -10864,7 +10865,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 
   // ---- a video, opened on the desk ----
   const videoDeskPanel = videoDesk && (
-    <div key="videodesk" id="sec-videodesk" style={{ minWidth: 0 }}>
+    <div key="videodesk" id="sec-videodesk" className="v-scrollin" style={{ minWidth: 0 }}>
       <VideoDesk
         topic={videoDesk.topic}
         video={videoDesk.video}
@@ -11374,7 +11375,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       )}
 
       {/* ===== AI desk ===== */}
-      <div id="sec-desk" style={{ padding: "14px 14px 0" }}>
+      <div id="sec-desk" className="v-scrollin" style={{ padding: "14px 14px 0" }}>
         <div className="v-deskpanel" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
           <div className="v-deskhead" style={{ borderBottom: `1px solid ${C.panelEdge}` }}>
             <h2 className="v-deskhead-title" style={{ margin: 0, fontFamily: SANS, fontSize: 19, fontWeight: 700, letterSpacing: "-0.012em", color: C.text }}>{t("AI Desk")}</h2>
@@ -11819,7 +11820,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         <div className="v-dash-col v-dash-left">
         {/* --- watchlist --- */}
         {panels.watchlist && (
-        <div id="sec-watchlist" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
+        <div id="sec-watchlist" className="v-scrollin" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
           <div style={panelHead({ pad: "10px 8px 10px 14px" })}>
             <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
               {t("Watchlist")}
@@ -12192,7 +12193,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 
         {/* --- Portfolio (right rail) --- */}
         {panels.portfolio && (
-          <div id="sec-portfolio" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
+          <div id="sec-portfolio" className="v-scrollin" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
             <div style={panelHead({ divider: positions.length > 0, pad: "16px 16px 12px" })}>
               <span>{t("Portfolio")}</span>
               {positions.length > 0 && (
@@ -13273,6 +13274,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 //  dashboard never runs behind a locked screen.
 // ============================================================
 export default function App() {
+  // Scroll-triggered entrances, armed once for the whole app. It is an effect
+  // rather than a module-scope call because it must not run during the server
+  // pass and must be torn down with the app — and because until React has
+  // painted there is nothing on the page to observe.
+  useEffect(() => startReveal(), []);
+
   // account: the signed-in user — the only way past the gate.
   const [account, setAccount] = useState(loadAccount);
   // UI + AI language (persisted). Provided app-wide so AuthScreen and the dashboard both translate.

@@ -261,7 +261,7 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
         {/* ---- plans ---- */}
         {/* Read from the product's real PLANS rather than the reference's, so
             the prices on the front door are the prices in Settings. */}
-        <section id="home-plans" style={{ marginTop: 64 }}>
+        <section id="home-plans" className="v-scrollin" style={{ marginTop: 64 }}>
           <h2 style={{ ...TYPE.displayLg, margin: 0, textAlign: "center" }}>{t("Pick your desk")}</h2>
           <div className="v-homeplans">
             {plans.map(p => {
