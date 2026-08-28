@@ -67,9 +67,14 @@ function Tape() {
       ))}
     </span>
   );
+  // No rules above and below. Two hairlines 38px apart, with the nav carrying
+  // no border of its own, drew a box around the tape and read as a seam across
+  // the top of the page rather than as one of its surfaces. The band separates
+  // itself without them: it is full-bleed where everything else is inset, it is
+  // the only mono text up here, and it moves.
   return (
     <div style={{
-      borderTop: `1px solid ${C.edge}`, borderBottom: `1px solid ${C.edge}`,
+      background: C.surface,
       padding: "9px 0", overflow: "hidden", fontSize: 12,
     }}>
       {/* Duplicated so the -50% translate loops without a seam. The copy is
@@ -203,6 +208,23 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
         </span>
         <button onClick={onSignIn} className="v-taprow" style={{ ...navLink, marginLeft: "auto", color: C.text }}>{t("Sign in")}</button>
       </nav>
+
+      {/* How far down the page you are, drawn by the scroller rather than by a
+          scroll handler — see .v-scrollprogress in global.css. aria-hidden and
+          pointer-events:none: it is a readout of something the reader is
+          already doing, so it should be invisible to a screen reader and
+          impossible to click. Where scroll timelines are unsupported it stays
+          at scaleX(0) and is simply never seen, which is the correct outcome
+          for a decoration. */}
+      <div className="v-scrollprogress" aria-hidden="true" style={{
+        position: "fixed", top: 0, left: 0, right: 0, height: 2,
+        zIndex: 60, pointerEvents: "none",
+      }}>
+        <i style={{
+          display: "block", height: "100%", transform: "scaleX(0)",
+          background: `linear-gradient(90deg, ${C.accent}, ${C.accentSoft})`,
+        }} />
+      </div>
 
       <Tape />
 
