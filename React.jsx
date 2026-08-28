@@ -20,6 +20,7 @@ import { C, GRAD, FIELD, MONO, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, al
 import { passwordCheck, PW_MIN } from "./src/auth/password.js";
 import { loadDict, peekDict, makeT } from "./src/i18n/index.js";
 import { startReveal } from "./src/ui/reveal.js";
+import { routeTyped, smallTalkKind } from "./src/desk/route.js";
 
 // recharts is 374kB raw — 103kB gzipped — and it draws exactly one thing: the
 // session chart in the markets column. Measured on the section this app opens
@@ -469,7 +470,30 @@ function anchorGreeting({ name, open, hour, sym, said }) {
     ? said[0].toUpperCase() + said.slice(1).toLowerCase()
     : hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening";
   const state = open ? "we're mid-session" : "the market's closed, so it's quiet up here";
-  return `${timeOfDay} — ${who} here, and ${state}. ${sym} is up front: ask me anything about it, or type another symbol in the bar above to switch.`;
+  // "the bar below", not above: the composer sits at the FOOT of the conversation
+  // — see the overlay comment on it, which opens the typeahead upward for that
+  // exact reason. A greeting that points at the wrong half of the screen is a
+  // greeting from something that has not looked at its own page.
+  return `${timeOfDay} — ${who} here, and ${state}. ${sym} is up front: ask me anything about it, or type another symbol in the bar below to switch.`;
+}
+
+// Thanks gets an answer, not an analysis, and it stays short — the turn is
+// being handed back, not opened.
+function anchorThanks({ name, open, sym }) {
+  const who = name || "the desk";
+  return open
+    ? `Any time — that's what ${who} is up here for. ${sym} is still on the desk if you want another angle on it.`
+    : `Any time. The tape's closed, so ${who} has all night — ask me anything else while it's quiet.`;
+}
+
+// A sign-off is the one reply that must not end in a question. Answering
+// "goodnight" with "what else can I look at for you?" is the desk refusing to
+// let someone leave.
+function anchorSignoff({ name, open }) {
+  const who = name || "the desk";
+  return open
+    ? `See you — ${who} is on the desk through the close if you come back.`
+    : `Night. ${who}, signing off the quiet shift — the desk stays lit, so come back whenever.`;
 }
 
 // all-caps words that look like tickers but aren't, for intent parsing
@@ -7722,6 +7746,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   const cmdOpen = cmdFocus && cmdRows > 0;
   useEffect(() => { setCmdIdx(0); }, [cmd]);
 
+  // Every symbol the desk can chart without guessing at it. routeTyped consults
+  // this before it consults its list of things people say, so a word that is
+  // BOTH — SO, LUV, EAT, CAR — stays a symbol for anyone who has it, and the
+  // ambiguity is resolved by the user's own watchlist rather than by a rule.
+  const chartable = useMemo(() => new Set([
+    ...UNIVERSE.map(u => u.sym),
+    ...watchlist,
+    ...Object.keys(SYMBOL_ALIASES),
+    ...Object.values(SYMBOL_ALIASES),
+  ]), [watchlist]);
+
   // Enter on a highlighted row does what that row says.
   //
   // With the list closed this used to fall through to runCmd(), which treats
@@ -7730,9 +7765,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // composer: "why is the market down today" matches no symbol, so the list
   // never opens, so the question went to chartQuery() and vanished.
   //
-  // The rule: one bare word that could be a ticker gets charted — that is the
-  // "type any ticker and press Enter" promise, and it has to survive a symbol
-  // that is not in UNIVERSE. Anything with a space in it is a question.
+  // The rule after that was "one bare word that could be a ticker gets
+  // charted", which fixed the sentence and broke the word: `hello` is one bare
+  // word of six letters, so it went to chartQuery, and in demo mode nothing
+  // downstream can refuse a symbol — so the desk invented HELLO, priced it, and
+  // put it on the watchlist. src/desk/route.js is the rule now, and it is a
+  // module with a test rather than a regex with a comment.
   const runCmdRow = async () => {
     if (cmdOpen) {
       if (cmdIdx >= cmdMatches.length) { const q = cmd.trim(); setCmd(""); askDesk(q); return; }
@@ -7741,12 +7779,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       await chartQuery(pick.sym);
       return;
     }
-    const raw = cmd.trim();
-    if (!raw) return;
-    if (/^(help|add|del)\b/i.test(raw)) return runCmd();
-    if (/^[A-Za-z.]{1,6}$/.test(raw)) { setCmd(""); await chartQuery(raw); return; }
+    const route = routeTyped(cmd, { known: chartable });
+    if (route.kind === "none") return;
+    if (route.kind === "command") return runCmd();
     setCmd("");
-    askDesk(raw);
+    if (route.kind === "chart") return chartQuery(route.text);
+    askDesk(route.text);
   };
 
   const runCmd = async () => {
@@ -9816,15 +9854,28 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       return; // desk-handled — no model fan-out
     }
 
-    // "hi" / "good morning": greet back, then point at what's on the desk.
-    if (/^\s*(?:hi|hey|hello|hiya|howdy|yo|sup|good\s+(?:morning|afternoon|evening))(?:\s+(?:there|desk|vantage|anchor|\w+))?\s*[!,.?]*$/i.test(q)) {
-      pushDeskAnswer(anchorGreeting({
-        name: CHARACTERS.find(c => c.id === characterId)?.name,
-        open: (() => { const { day, mins } = etNow(); return day >= 1 && day <= 5 && mins >= 570 && mins < 960; })(),
-        hour: new Date().getHours(),
-        sym: selected,
-        said: (/\b(morning|afternoon|evening)\b/i.exec(q) || [])[1] || null,
-      }));
+    // "hi" / "good morning" / "thanks" / "night": someone talking to the desk
+    // rather than searching it. Answered here, from the session, and never by a
+    // model — a hello that needs an API key is a hello that fails on a fresh
+    // install, which is the first thing anybody types.
+    //
+    // `chatter` ("wow", "why", "ok") deliberately does NOT stop here. It is
+    // speech, so route.js keeps it out of the symbol bar, but there is nothing
+    // canned worth saying back to it: it wants the real answer below.
+    const talk = smallTalkKind(q);
+    if (talk === "greeting" || talk === "thanks" || talk === "farewell") {
+      const name = CHARACTERS.find(c => c.id === characterId)?.name;
+      const open = (() => { const { day, mins } = etNow(); return day >= 1 && day <= 5 && mins >= 570 && mins < 960; })();
+      pushDeskAnswer(
+        talk === "greeting" ? anchorGreeting({
+          name, open,
+          hour: new Date().getHours(),
+          sym: selected,
+          said: (/\b(morning|afternoon|evening)\b/i.exec(q) || [])[1] || null,
+        })
+        : talk === "thanks" ? anchorThanks({ name, open, sym: selected })
+        : anchorSignoff({ name, open }),
+      );
       return; // desk-handled — no model fan-out
     }
 
@@ -11704,9 +11755,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               anchorName={anchorName}
               busy={aiResponses.desk?.status === "running" || reportBusy}
               subject={selected}
-              /* The merged box says what it now does: a symbol charts, anything
-                 else is a question. This is the reference's own line. */
-              placeholder={t("Type a symbol and press Enter  ·  HELP for commands")}
+              /* The merged box says what it now does. It used to read "Type a
+                 symbol and press Enter", which was the truth when this was a
+                 command bar and a half-truth ever since — and it is the reason
+                 somebody typed `hello` into it and got a stock: the label named
+                 one of the box's two jobs, and the router only did that one. */
+              placeholder={t("Ask the desk, or type a symbol  ·  HELP for commands")}
               suggestions={[
                 { label: t("Summarize {sym} today").replace("{sym}", selected), value: `Summarize ${selected} today — price action and why` },
                 { label: t("What's moving today?"), value: "What's moving in the market today and why?" },

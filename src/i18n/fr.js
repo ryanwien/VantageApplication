@@ -51,7 +51,7 @@ export default {
   "Games": "Jeux", "learn how stocks work": "apprenez le fonctionnement des actions",
   "Ambient sound": "Son d'ambiance", "waves, jungle, space hum…": "vagues, jungle, bourdonnement spatial…",
   "Music": "Musique", "background score": "musique de fond",
-  "Type a symbol and press Enter  ·  HELP for commands": "Saisissez un symbole et appuyez sur Entrée  ·  HELP pour les commandes",
+  "Ask the desk, or type a symbol  ·  HELP for commands": "Posez une question au plateau ou saisissez un symbole  ·  HELP pour les commandes",
   "OPEN": "OUVERT", "CLOSED": "FERMÉ",
   "standing by": "en attente",
   "Voice & anchor settings": "Réglages voix et présentateur", "SET": "DÉCOR", "free": "gratuites",
