@@ -12694,16 +12694,24 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               {t("Demo mode runs on nothing at all, and the AI desk, live prices, streaming and video switch on automatically when this server provides them — there are no keys to paste.")}
             </div>
 
-            {!aiReady() && (
-              <div style={{ fontFamily: SANS, fontSize: 12.5, lineHeight: 1.55, color: C.muted, marginTop: 10, background: C.dangerSoft, border: `1px solid ${C.dangerEdge}`, borderRadius: R.md, padding: "10px 12px" }}>
-                <b style={{ color: C.down, fontWeight: 600 }}>{t("No AI key set up yet.")}</b>{" "}
-                {t("Charts, news, games, streaming and the calendar all work — but the desk can't answer questions until you add one.")}{" "}
-                <button onClick={() => { setShowTutorial(false); setSetupOpen(true); }}
-                  style={{ background: "transparent", border: "none", padding: 0, color: C.accentText, textDecoration: "underline", textUnderlineOffset: 2, cursor: "pointer", fontFamily: SANS, fontSize: 12.5 }}>
-                  {t("Set it up")}
-                </button>
-              </div>
-            )}
+            {/* A red "No AI key set up yet — add one" panel used to sit here,
+                gated on !aiReady(). Two things were wrong with it and neither
+                was fixable by rewording.
+
+                It contradicted the box directly above it, which says there is
+                no setup required and no keys to paste. Those were two
+                paragraphs of the same modal disagreeing about the same fact.
+
+                And it diagnosed the wrong thing. aiReady() is
+                planAllows("ai") && a model being reachable, so on Explorer it
+                fired against a server whose key was perfectly fine — telling
+                someone their key was missing when the actual answer was their
+                plan, and sending them to a setup guide that could not have
+                helped. The plan gate says so itself, in the reply, at the
+                moment it applies.
+
+                The "Set it up (keys & options)" row below is still the way in
+                for anyone who does want to paste one. */}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
               {[
