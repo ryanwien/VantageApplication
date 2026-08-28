@@ -250,9 +250,15 @@ VERTEX_GEMINI_MODEL                           # defaults to gemini-3.6-flash
 # Metering: how much of YOUR provider spend a signed-out visitor may use,
 # per IP per hour. These are the ceiling on what a stranger can cost you.
 ANON_AI_PER_HOUR      (default 6)
-ANON_TTS_PER_HOUR     (default 30)    # ElevenLabs bills per character
+ANON_TTS_PER_HOUR     (default 30)    # a burst guard only — /api/tts also
+                                      #   requires a signed-in Trading Floor
+                                      #   account, so no stranger reaches it
 ANON_YT_PER_HOUR      (default 20)
 ANON_QUOTE_PER_HOUR   (default 1000)  # one watchlist tick is one call
+
+TTS_DAILY_CHARS       (default 40000) # studio voice per ACCOUNT per day,
+                                      #   counted in characters because that
+                                      #   is the unit ElevenLabs invoices
 
 AGENT_CRON_SECRET                             # protects the scheduled-agent endpoint
 DATAHUB_GMS_URL / DATAHUB_TOKEN               # optional catalog context (see above)

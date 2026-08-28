@@ -183,6 +183,32 @@ async function askVertex(prompt) {
 }
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const planQuota = (plan) => plan === "desk" ? 250 : plan === "pro" ? 75 : 5;
+
+// ---- the studio voice, metered in the unit it is billed in ----
+//
+// ElevenLabs charges per CHARACTER, so a per-call allowance is the right
+// number in the wrong unit: 250 runs at the 5,000-character cap is 1.25M
+// characters. This counts what the invoice counts.
+//
+// Kept in AI_USAGE beside the model runs — same file, same write path, one
+// place to look when a bill is bigger than expected.
+const TTS_DAILY_CHARS = Number(process.env.TTS_DAILY_CHARS || 40000);
+const ttsBudget = (email) => {
+  const used = AI_USAGE[email]?.ttsChars?.[todayKey()] || 0;
+  return { used, limit: TTS_DAILY_CHARS, left: Math.max(0, TTS_DAILY_CHARS - used) };
+};
+// Charged only after the provider actually produced audio. A 502 from
+// ElevenLabs is our problem, and it must not eat somebody's day.
+function recordTts(email, chars) {
+  const u = AI_USAGE[email] || (AI_USAGE[email] = { days: {}, runs: [] });
+  const t = u.ttsChars || (u.ttsChars = {});
+  const day = todayKey();
+  t[day] = (t[day] || 0) + chars;
+  // Yesterday's counts are of no interest and this file is read on every boot.
+  for (const k of Object.keys(t)) if (k < day) delete t[k];
+  writeJSON(AI_USAGE_FILE, AI_USAGE);
+  return t[day];
+}
 function canUseAi(email) { const used = AI_USAGE[email]?.days?.[todayKey()] || 0, limit = planQuota(USERS[email]?.plan || "free"); return { used, limit, allowed: used < limit }; }
 function recordAiRun(email, promptChars, outcome, meta = {}, charge = true) {
   const user = AI_USAGE[email] || (AI_USAGE[email] = { days: {}, runs: [] }), day = todayKey();
@@ -958,14 +984,57 @@ const server = http.createServer(async (req, res) => {
       }
       return send(res, 200, await r.json());
     }
+    // ---- STUDIO VOICE ----
+    //
+    // This route used to be open. Measured, not guessed: a POST with no
+    // account, no token and no plan came back 200 audio/mpeg with 7,150 bytes
+    // in it, billed to the server's key. The only guard was an IP rate limit —
+    // 30 requests an hour at the 5,000-character cap is 150,000 characters per
+    // IP per hour, and IPs are cheap.
+    //
+    // Every other expensive route asks who is calling; this one did not. It is
+    // also the only route whose cost is per character, which makes it the one
+    // that could run up a bill overnight with nobody signed in at all.
+    //
+    // Three gates now, cheapest first: burst, identity, entitlement, budget.
     if (p === "/api/tts" && req.method === "POST") {
       if (!ELEVEN_KEY) return send(res, 503, { error: "Studio voice is not configured on this server (set ELEVENLABS_API_KEY)." });
+      // Still first, and still by IP: it costs a Map lookup and it stops an
+      // unauthenticated flood before the session table is touched.
       const rl = rateLimit(`tts:${clientIp(req)}`, ANON_TTS_PER_HOUR, 3600000);
       if (!rl.ok) return send(res, 429, { error: `Rate limit reached (${rl.limit} per hour).` }, { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
+
+      // The plan gate for this feature lives in the browser, which makes it a
+      // convention rather than a control — FEATURE_PLAN.elevenlabs never
+      // reached the server. A per-character bill needs an account to charge it
+      // to, so identity is required here and nowhere else in the media routes.
+      const email = emailFromReq(req, url);
+      if (!email) return send(res, 401, { error: "The studio voice needs a signed-in Vantage account." });
+      const user = USERS[email];
+      if (user?.plan !== "desk") {
+        return send(res, 403, { error: "The studio voice is a Trading Floor feature. Every plan can use your browser's own voice." });
+      }
+      // NOT checked here: hasSubscription(user), and whether the 7-day trial
+      // has run out. Both are the correct business rule and both are wrong to
+      // enforce today — STRIPE_SECRET_KEY is unset, so no account can hold a
+      // subscription and every legitimate user would be locked out on day 8 by
+      // a payment route that does not exist yet. Add `&& (hasSubscription(user)
+      // || inTrial(user))` to the line above on the day Stripe goes live.
+
       const { text, voiceId } = await readBody(req);
       const say = String(text || "").slice(0, 5000);   // characters are billed; cap the blast radius
       if (!say.trim()) return send(res, 400, { error: "Pass { text, voiceId }." });
       if (!/^[A-Za-z0-9]{1,40}$/.test(String(voiceId || ""))) return send(res, 400, { error: "Bad voiceId." });
+
+      // Checked BEFORE the upstream call, so the last request of the day is
+      // refused rather than served and then billed.
+      const budget = ttsBudget(email);
+      if (say.length > budget.left) {
+        return send(res, 429, {
+          error: `Studio voice is out for today (${budget.used} of ${budget.limit} characters used). Your browser's voice still works.`,
+          used: budget.used, limit: budget.limit,
+        });
+      }
       let up;
       try {
         up = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_44100_128`,
@@ -977,8 +1046,15 @@ const server = http.createServer(async (req, res) => {
         return send(res, ours ? 502 : up.status,
           { error: ours ? error : `ElevenLabs HTTP ${up.status}` });
       }
+      // Charged here and not earlier: upstream has accepted and is about to
+      // stream, so these characters are on the invoice whether or not the
+      // client hangs up midway. Everything above this line is free to fail.
+      const spent = recordTts(email, say.length);
       res.writeHead(200, { "Content-Type": up.headers.get("content-type") || "audio/mpeg",
-        "Cache-Control": "no-store", "Access-Control-Allow-Origin": APP_ORIGIN });
+        "Cache-Control": "no-store", "Access-Control-Allow-Origin": APP_ORIGIN,
+        // So the desk can say how much voice is left without a second round
+        // trip, and so an operator can watch it from curl.
+        "X-Tts-Chars-Left": String(Math.max(0, TTS_DAILY_CHARS - spent)) });
       const rd = up.body.getReader();
       req.on("close", () => { rd.cancel().catch(() => {}); });
       try { for (;;) { const { value, done } = await rd.read(); if (done) break; res.write(Buffer.from(value)); } } catch { /* hung up */ }

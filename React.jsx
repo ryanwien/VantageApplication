@@ -6765,18 +6765,46 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     setSpeakingId(null);
   }, []);
 
+  // Backend calls are per-user: send the session token (Bearer) so the server scopes
+  // OAuth tokens / meetings / calendar to THIS account. Empty for guests & local accounts.
+  const authHdr = useMemo(() => (account?.token ? { Authorization: `Bearer ${account.token}` } : {}), [account?.token]);
+
   const speakEleven = useCallback(async (id, text, onDone) => {
     if (!canUseStudioVoice || !elevenVoiceId) { setCmdMsg(t("Pick a studio voice in settings")); return; }
     try {
       setSpeakingId(id);
+      // The token is the point. /api/tts used to take anyone's word for it and
+      // spend the server's ElevenLabs key on an unauthenticated stranger; it
+      // now wants an account to bill the characters to, so this is what makes
+      // the studio voice keep working rather than 401 on every line.
       const r = await fetch(
         "/api/tts",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authHdr },
           body: JSON.stringify({ text, voiceId: elevenVoiceId }),
         }
       );
+      // A refusal here is about the ACCOUNT, not the audio: not signed in, not
+      // on Trading Floor, or out of characters for the day. None of those get
+      // better by retrying, so the engine is demoted to the browser voice and
+      // the server's own sentence is shown — it is more specific than anything
+      // that could be written here, and it already names the way out.
+      //
+      // Demoting rather than re-reading this line on the spot is deliberate.
+      // speak() is what dispatches INTO this function, so calling it back
+      // would re-enter here — setVoiceEngine does not change the closure that
+      // is currently running. The next line spoken uses the browser voice; the
+      // rest of the error path matches the catch below, which likewise does
+      // not fire onDone, because a read that never happened has not finished.
+      if (r.status === 401 || r.status === 403 || r.status === 429) {
+        const why = await r.json().catch(() => null);
+        setVoiceEngine("browser");
+        setElevenErr(why?.error || "");
+        setCmdMsg(why?.error || t("Studio voice unavailable — switched to your browser's voice."));
+        setSpeakingId(cur => (cur === id ? null : cur));
+        return;
+      }
       if (!r.ok) throw await serverError(r, "ElevenLabs");
       const blob = await r.blob();
       const url = URL.createObjectURL(blob);
@@ -6827,7 +6855,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       analyserRef.current = null;
       setSpeakingId(cur => (cur === id ? null : cur));
     }
-  }, [elevenVoiceId, speechRate]);
+  }, [elevenVoiceId, speechRate, authHdr]);
 
   // `onDone` fires when a read reaches its end on its own — never when it is
   // stopped, replaced or errors. That distinction is the whole reason the News
@@ -7992,10 +8020,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   const closeGame = useCallback(() => { setGameOn(false); setGameMode("menu"); stopSpeak(); setCmdMsg(""); }, [stopSpeak]);
 
   // ---- meetings (Zoom / Google Meet) via the backend at /api (see server/index.js) ----
-  // Backend calls are per-user: send the session token (Bearer) so the server scopes
-  // OAuth tokens / meetings / calendar to THIS account. Empty for guests & local accounts.
-  const authHdr = useMemo(() => (account?.token ? { Authorization: `Bearer ${account.token}` } : {}), [account?.token]);
-  // ---- Google Calendar: upcoming events shown in a dashboard panel ----
   const [calEvents, setCalEvents] = useState(null);     // null = not loaded, [] = none, [...] = events
   const [calErr, setCalErr] = useState("");
   const [calBusy, setCalBusy] = useState(false);
