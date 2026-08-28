@@ -5724,7 +5724,15 @@ function AuthScreen({ onAuthed }) {
             </label>
             <div style={{ display: "flex", gap: 10 }}>
               <button style={{ ...primaryBtn(), background: "transparent", color: C.text, border: `1px solid ${C.panelEdge}`, width: "auto", flex: "0 0 auto", padding: "12px 18px" }} onClick={() => setStep("plan")}>← Back</button>
-              <button style={primaryBtn({ opacity: !agree || busy ? 0.6 : 1 })} disabled={!agree || busy} onClick={doSignup}>{busy ? "Creating…" : `Agree & create ${planLabel(plan)} account`}</button>
+              {/* minWidth:0 and a wrap, because button() sets white-space:nowrap
+                  and a flex item's automatic minimum size is its max-content
+                  width — so this could not shrink to fit the row and ran out
+                  past the card's rounded edge, where overflow:hidden cut it in
+                  half. Not a width to tune: the label interpolates a plan name
+                  ("Trading Floor" is half again as long as "Pro Desk") and every
+                  translation of it is longer than the English. Two lines is the
+                  right answer at this width, so let it have two lines. */}
+              <button style={primaryBtn({ opacity: !agree || busy ? 0.6 : 1, minWidth: 0, whiteSpace: "normal", lineHeight: 1.3, textAlign: "center" })} disabled={!agree || busy} onClick={doSignup}>{busy ? "Creating…" : `Agree & create ${planLabel(plan)} account`}</button>
             </div>
           </>)}
 
