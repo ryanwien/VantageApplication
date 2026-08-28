@@ -50,8 +50,10 @@ Two properties worth calling out:
 - **Keys and conversation memory never leave the device** — they live in `localStorage` and are sent
   only to their own provider's API.
 - **The desk degrades instead of breaking.** No AI key → everything but answers still works. No
-  Finnhub key → demo market engine. No ElevenLabs key → browser speech. Cloud model fails → it
-  retries on your local model.
+  ElevenLabs key → browser speech. Cloud model fails → it retries on your local model. Quotes have
+  two providers and fall back to a keyless one, so Finnhub going down (or never being configured)
+  costs you real prices for as long as it takes the fallback to answer — and `/api/status` names
+  which one is carrying the tape, because a failover nobody can see is worse than an outage.
 
 ---
 
@@ -221,7 +223,11 @@ It listens on **http://localhost:8787**; the Vite dev server proxies `/api` to i
 # lets a visitor use a feature without bringing a key of their own.
 OPENROUTER_API_KEY / OPENROUTER_MODEL         # AI desk answers
 GEMINI_API_KEY                                # Gemini answers + market briefs
-FINNHUB_API_KEY                               # quotes, search, earnings, news
+FINNHUB_API_KEY                               # search, earnings, news — and quotes,
+                                              #   where it is PREFERRED, not required:
+                                              #   quotes fall back to a keyless provider
+BREAKER_REST_MS                               # how long a failing quote provider sits
+                                              #   out before one request probes it (60s)
 TMDB_API_KEY                                  # film & TV catalog
 YOUTUBE_API_KEY                               # video search
 ELEVENLABS_API_KEY                            # studio anchor voice

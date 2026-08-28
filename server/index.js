@@ -460,15 +460,184 @@ const planFromStripeObject = (obj) => obj?.metadata?.plan || Object.entries(STRI
 // not a security boundary, so a restart clearing the counters is acceptable and
 // it keeps the backend dependency-free.
 const RATE_BUCKETS = new Map();
-// Intraday history, cached briefly. A watchlist of ten symbols re-selected a
-// few times a minute would otherwise be ten upstream calls a click, against an
-// endpoint that is doing us a favour by answering at all. Five minutes is well
-// inside a 5-minute candle's own resolution, so nothing is lost by it.
-const CANDLE_TTL_MS = 5 * 60 * 1000;
-const candleCache = new Map();
+// ---- one answer cache for every upstream route ----
+//
+// Intraday history has been cached here for a while; everything else went
+// upstream on every single call. A ten-symbol watchlist ticking every 15
+// seconds is 2,400 quote calls an hour from ONE browser, and every one of them
+// asked a question that had been answered seconds earlier.
+//
+// The TTLs are per route because the questions age differently. A quote is
+// stale in seconds; a symbol search returns the same answer next week.
+//
+// The single-flight half matters more than the caching half. Ten symbols
+// requested at once used to be ten upstream calls even when eight of them were
+// already in the air — the second caller now joins the first one's promise
+// rather than starting its own.
+const TTL = {
+  quote: 10 * 1000,          // a quote at most ten seconds old; the client polls at 15
+  candle: 5 * 60 * 1000,     // well inside a 5-minute candle's own resolution
+  news: 5 * 60 * 1000,
+  earnings: 30 * 60 * 1000,  // a calendar of scheduled dates
+  search: 6 * 60 * 60 * 1000, // "what ticker is Coca-Cola" does not change
+};
+const answerCache = new Map();
+
+async function cached(key, ttlMs, produce) {
+  const hit = answerCache.get(key);
+  if (hit) {
+    if (hit.pending) return hit.pending;                        // in flight — join it
+    if (Date.now() - hit.at < ttlMs) return hit.body;
+  }
+  // A rejection is NOT cached: a failed call must not poison the key until its
+  // TTL expires, or one blip becomes ten minutes of an error nobody can retry.
+  const pending = produce().then(
+    (body) => { answerCache.set(key, { at: Date.now(), body }); return body; },
+    (e) => { answerCache.delete(key); throw e; },
+  );
+  answerCache.set(key, { pending, at: Date.now() });
+  // Opportunistic sweep, same bound as the rate buckets: this holds answers,
+  // not sessions, so dropping the oldest half costs one repeated upstream call.
+  if (answerCache.size > 2000) {
+    const stale = [...answerCache.entries()].filter(([, v]) => !v.pending).sort((a, b) => a[1].at - b[1].at);
+    for (const [k] of stale.slice(0, 1000)) answerCache.delete(k);
+  }
+  return pending;
+}
+
+// ---- a provider that is failing should sit out, not be re-tried every call ----
+//
+// With an 8-second timeout, a dead Finnhub turns a ten-symbol watchlist tick
+// into eighty seconds of waiting before the fallback is even reached. Three
+// consecutive failures and it sits out a minute; any success clears the count.
+// Only PROVIDER failures count — a symbol the provider does not know is a
+// correct answer to a bad question, and says nothing about its health.
+const BREAKER_TRIPS = 3;
+const BREAKER_REST_MS = Number(process.env.BREAKER_REST_MS || 60 * 1000);
+const breakers = new Map();
+// Is this provider sitting out right now? A pure question, safe to ask from
+// anywhere — /api/status asks it to report.
+const breakerResting = (name) => {
+  const b = breakers.get(name);
+  return !!b && b.fails >= BREAKER_TRIPS && Date.now() - b.at < BREAKER_REST_MS;
+};
+
+// May I call this provider? NOT a question — asking it claims the single probe
+// the rest window allows, so only the request path may ask.
+//
+// These two were one function, and /api/status called it. Reporting the
+// breaker consumed the probe, so no request ever made one, `probing` stayed
+// set and the provider could never come back: a status board that broke the
+// thing it was describing. Measured as fails stuck at 8 and resting stuck true
+// while every quote silently came from the fallback.
+//
+// The probe itself is the other half. Without it the first watchlist tick
+// after the window opened sent all eight symbols at a provider that was still
+// down — eight timeouts to learn one fact. One goes; the rest keep skipping
+// until breakerNote() either clears the breaker or restarts its window.
+const breakerAllows = (name) => {
+  const b = breakers.get(name);
+  if (!b || b.fails < BREAKER_TRIPS) return true;
+  if (Date.now() - b.at < BREAKER_REST_MS) return false;
+  if (b.probing) return false;
+  b.probing = true;
+  return true;
+};
+const breakerNote = (name, ok) => {
+  if (ok) return void breakers.delete(name);
+  const b = breakers.get(name) || { fails: 0 };
+  breakers.set(name, { fails: b.fails + 1, at: Date.now() });
+};
+
 // TMDB's genre table, by kind. Two entries at most, and no TTL: the list of
 // film genres is not a thing that changes while a process is up.
 const genreCache = new Map();
+
+// ---- quotes, from either of two providers ----
+//
+// Finnhub was the single point of failure for the whole live surface: quotes,
+// search, earnings, news. If it went down or repriced, live mode went with it.
+//
+// The second provider needs no new key and no new vendor, because it is
+// already in this file. Finnhub's free tier answers 403 on /stock/candle, so
+// /api/candles has been proxying Yahoo's chart endpoint for a while — and that
+// same response carries a full quote in its `meta`. Verified against AAPL:
+// regularMarketPrice, chartPreviousClose, regularMarketDayHigh/Low and
+// regularMarketTime are all there. Open is the one field it does not carry, and
+// the candles in the same payload have it — first non-null open of the session.
+//
+// Both are normalized to Finnhub's quote shape, because that is what the
+// browser already parses.
+const shapeQuote = (o, src) => ({ c: o.c, d: o.d, dp: o.dp, o: o.o, h: o.h, l: o.l, pc: o.pc, t: o.t, src });
+
+// Distinguishes the two failures that must never be confused: "unknown" is a
+// correct answer about a bad symbol, "down" is this provider being unusable.
+// Only the second one trips a breaker or justifies asking anyone else.
+const QUOTE_UNKNOWN = { unknown: true };
+
+async function finnhubQuote(sym) {
+  if (!FINNHUB_KEY) throw new Error("unconfigured");
+  const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${FINNHUB_KEY}`,
+    { signal: AbortSignal.timeout(8000) });
+  if (r.status === 401 || r.status === 403) throw new Error("key");
+  if (!r.ok) throw new Error(`http_${r.status}`);
+  const j = await r.json();
+  // Finnhub answers 200 with all-zero fields for a symbol it does not know.
+  if (!j || typeof j.c !== "number" || j.c === 0) return QUOTE_UNKNOWN;
+  return shapeQuote(j, "finnhub");
+}
+
+async function yahooQuote(sym) {
+  // Yahoo spells a class share BRK-B where Finnhub spells it BRK.B.
+  const y = sym.replace(/\./g, "-");
+  const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(y)}?interval=5m&range=1d`, {
+    // Without a browser UA this endpoint returns 429 to some hosts.
+    headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36" },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (r.status === 404) return QUOTE_UNKNOWN;   // verified: ZZZZQQ → 404 "Not Found"
+  if (!r.ok) throw new Error(`http_${r.status}`);
+  const j = await r.json();
+  const meta = j?.chart?.result?.[0]?.meta;
+  const c = meta?.regularMarketPrice, pc = meta?.chartPreviousClose ?? meta?.previousClose;
+  if (typeof c !== "number" || typeof pc !== "number") return QUOTE_UNKNOWN;
+  const opens = j.chart.result[0]?.indicators?.quote?.[0]?.open || [];
+  return shapeQuote({
+    c, pc,
+    d: c - pc,
+    dp: pc ? ((c - pc) / pc) * 100 : 0,
+    o: opens.find(v => typeof v === "number") ?? null,
+    h: meta.regularMarketDayHigh ?? null,
+    l: meta.regularMarketDayLow ?? null,
+    t: meta.regularMarketTime ?? null,
+  }, "yahoo");
+}
+
+// Ask each provider in turn, skipping any that is currently sitting out.
+//
+// "unknown" from the first provider still asks the second — the two do not
+// list identical universes, and a second opinion on one symbol is cheap once
+// it is cached. Only when EVERY provider says unknown is a symbol unknown.
+const QUOTE_PROVIDERS = [["finnhub", finnhubQuote], ["yahoo", yahooQuote]];
+
+async function quoteOne(sym) {
+  let sawUnknown = false, lastErr = null;
+  for (const [name, get] of QUOTE_PROVIDERS) {
+    if (!breakerAllows(name)) continue;
+    try {
+      const q = await get(sym);
+      breakerNote(name, true);
+      if (q === QUOTE_UNKNOWN) { sawUnknown = true; continue; }
+      return q;
+    } catch (e) {
+      // "unconfigured" is a deployment choice, not a fault: no key was ever
+      // set, so there is nothing here to be failing and nothing to trip.
+      if (e.message !== "unconfigured") breakerNote(name, false);
+      lastErr = e.message;
+    }
+  }
+  return { error: sawUnknown ? "unknown" : (lastErr || "unreachable") };
+}
 
 function rateLimit(key, limit, windowMs) {
   const now = Date.now(), slot = Math.floor(now / windowMs), id = `${key}:${slot}`;
@@ -595,7 +764,11 @@ const server = http.createServer(async (req, res) => {
     // Accepts a comma-separated list so a watchlist refresh is one request
     // rather than one per symbol — the old client fanned out N calls a tick.
     if (p === "/api/quote" && req.method === "GET") {
-      if (!FINNHUB_KEY) return send(res, 503, { error: "Live quotes are not configured on this server (set FINNHUB_API_KEY)." });
+      // No longer gated on FINNHUB_KEY. The Yahoo fallback needs no key, so a
+      // server with no Finnhub key at all can still answer this — which is the
+      // whole point of having a second provider. It 503s only when every
+      // provider is unusable, which is checked after the calls rather than
+      // guessed from configuration.
       const rl = rateLimit(`q:${clientIp(req)}`, ANON_QUOTE_PER_HOUR, 3600000);
       if (!rl.ok) return send(res, 429,
         { error: `Rate limit reached (${rl.limit} per hour).`, retryInSec: Math.ceil(rl.resetMs / 1000) },
@@ -607,22 +780,24 @@ const server = http.createServer(async (req, res) => {
       const bad = syms.find(s => !/^[A-Z.-]{1,10}$/.test(s));
       if (bad) return send(res, 400, { error: `Not a symbol: ${bad}` });
 
-      const one = async (sym) => {
-        try {
-          const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(sym)}&token=${FINNHUB_KEY}`,
-            { signal: AbortSignal.timeout(8000) });
-          if (!r.ok) return [sym, { error: r.status === 401 || r.status === 403 ? "key" : `http_${r.status}` }];
-          const j = await r.json();
-          // Finnhub answers 200 with all-zero fields for a symbol it does not know.
-          if (!j || typeof j.c !== "number" || j.c === 0) return [sym, { error: "unknown" }];
-          return [sym, { c: j.c, d: j.d, dp: j.dp, o: j.o, h: j.h, l: j.l, pc: j.pc, t: j.t }];
-        } catch { return [sym, { error: "unreachable" }]; }
-      };
-      const pairs = await Promise.all(syms.map(one));
+      const pairs = await Promise.all(syms.map(async (sym) =>
+        [sym, await cached(`q:${sym}`, TTL.quote, () => quoteOne(sym))]));
       const quotes = Object.fromEntries(pairs);
-      // A key rejected upstream is our misconfiguration, not the caller's.
-      if (pairs.every(([, v]) => v.error === "key")) return send(res, 502, { error: "The server's Finnhub key was rejected." });
-      return send(res, 200, { quotes });
+
+      // Which provider actually answered. The client can ignore it, but a
+      // failover nobody is told about is the failure mode this was built to
+      // avoid: prices that quietly come from somewhere else are worse than
+      // prices that stop, because nothing on screen changes.
+      const answered = pairs.filter(([, v]) => v.src);
+      const via = [...new Set(answered.map(([, v]) => v.src))];
+      if (!answered.length && pairs.some(([, v]) => v.error && v.error !== "unknown")) {
+        return send(res, 502, { error: "No market-data provider is answering right now.", tried: QUOTE_PROVIDERS.map(([n]) => n) });
+      }
+      return send(res, 200, {
+        quotes, via,
+        // True when the primary is out and something else is carrying the tape.
+        degraded: via.length > 0 && !via.includes(QUOTE_PROVIDERS[0][0]),
+      });
     }
 
     // ---- INTRADAY CANDLES ----
@@ -652,47 +827,57 @@ const server = http.createServer(async (req, res) => {
       };
       const span = spans[String(url.searchParams.get("span") || "1d")] || spans["1d"];
 
-      const hit = candleCache.get(`${symbol}:${span.range}`);
-      if (hit && Date.now() - hit.at < CANDLE_TTL_MS) return send(res, 200, hit.body);
-
-      let r;
+      // On the shared cache now, for the sweep and the single flight. Its own
+      // Map had neither: every symbol/span ever asked for stayed in it for the
+      // life of the process, and two clients opening the same chart at the same
+      // moment both went upstream.
+      let body;
       try {
-        r = await fetch(
-          `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${span.interval}&range=${span.range}`,
-          {
-            // Without a browser UA this endpoint returns 429 to some hosts.
-            headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36" },
-            signal: AbortSignal.timeout(8000),
-          });
-      } catch { return send(res, 502, { error: "Could not reach the history feed." }); }
-      if (!r.ok) return send(res, 502, { error: `History feed HTTP ${r.status}` });
+        body = await cached(`candle:${symbol}:${span.range}`, TTL.candle, async () => {
+          // Yahoo spells a class share BRK-B where the rest of this app spells
+          // it BRK.B — the same translation the quote path makes. Without it
+          // every class share charted as a 404.
+          const y = symbol.replace(/\./g, "-");
+          let r;
+          try {
+            r = await fetch(
+              `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(y)}?interval=${span.interval}&range=${span.range}`,
+              {
+                // Without a browser UA this endpoint returns 429 to some hosts.
+                headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36" },
+                signal: AbortSignal.timeout(8000),
+              });
+          } catch { throw Object.assign(new Error("x"), { code: 502, msg: "Could not reach the history feed." }); }
+          if (!r.ok) throw Object.assign(new Error("x"), { code: 502, msg: `History feed HTTP ${r.status}` });
 
-      let j;
-      try { j = await r.json(); } catch { return send(res, 502, { error: "History feed sent something unreadable." }); }
-      const result = j?.chart?.result?.[0];
-      const stamps = result?.timestamp;
-      const closes = result?.indicators?.quote?.[0]?.close;
-      if (!Array.isArray(stamps) || !Array.isArray(closes)) return send(res, 404, { error: `No history for ${symbol}.` });
+          let j;
+          try { j = await r.json(); } catch { throw Object.assign(new Error("x"), { code: 502, msg: "History feed sent something unreadable." }); }
+          const result = j?.chart?.result?.[0];
+          const stamps = result?.timestamp;
+          const closes = result?.indicators?.quote?.[0]?.close;
+          const none = () => Object.assign(new Error("x"), { code: 404, msg: `No history for ${symbol}.` });
+          if (!Array.isArray(stamps) || !Array.isArray(closes)) throw none();
 
-      // Yahoo pads the session with nulls for minutes that never traded. Drop
-      // them rather than plotting gaps or, worse, zeroes.
-      const points = [];
-      for (let i = 0; i < stamps.length; i++) {
-        const c = closes[i];
-        if (typeof c !== "number" || !Number.isFinite(c)) continue;
-        points.push({ t: stamps[i], c: +c.toFixed(4) });
-      }
-      if (!points.length) return send(res, 404, { error: `No history for ${symbol}.` });
+          // Yahoo pads the session with nulls for minutes that never traded. Drop
+          // them rather than plotting gaps or, worse, zeroes.
+          const points = [];
+          for (let i = 0; i < stamps.length; i++) {
+            const c = closes[i];
+            if (typeof c !== "number" || !Number.isFinite(c)) continue;
+            points.push({ t: stamps[i], c: +c.toFixed(4) });
+          }
+          if (!points.length) throw none();
 
-      const body = {
-        symbol,
-        span: span.range,
-        points,
-        prevClose: typeof result?.meta?.chartPreviousClose === "number" ? result.meta.chartPreviousClose : null,
-        tz: result?.meta?.exchangeTimezoneName || "America/New_York",
-        gmtoffset: typeof result?.meta?.gmtoffset === "number" ? result.meta.gmtoffset : 0,
-      };
-      candleCache.set(`${symbol}:${span.range}`, { at: Date.now(), body });
+          return {
+            symbol,
+            span: span.range,
+            points,
+            prevClose: typeof result?.meta?.chartPreviousClose === "number" ? result.meta.chartPreviousClose : null,
+            tz: result?.meta?.exchangeTimezoneName || "America/New_York",
+            gmtoffset: typeof result?.meta?.gmtoffset === "number" ? result.meta.gmtoffset : 0,
+          };
+        });
+      } catch (e) { return send(res, e.code || 502, { error: e.msg || "History feed failed." }); }
       return send(res, 200, body);
     }
 
@@ -865,34 +1050,51 @@ const server = http.createServer(async (req, res) => {
         { error: `Rate limit reached (${rl.limit} per hour).`, retryInSec: Math.ceil(rl.resetMs / 1000) },
         { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
 
-      let upstream;
+      // The cache key has to carry the ARGUMENTS, not just the route, or every
+      // symbol search would be served the first one's answer.
+      let upstream, ck, ttl;
       if (p === "/api/symbol-search") {
         const q = String(url.searchParams.get("q") || "").trim().slice(0, 60);
         if (!q) return send(res, 400, { error: "Pass ?q=company+name." });
         upstream = `https://finnhub.io/api/v1/search?q=${encodeURIComponent(q)}&token=${FINNHUB_KEY}`;
+        ck = `search:${q.toLowerCase()}`; ttl = TTL.search;
       } else if (p === "/api/earnings") {
         const day = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
         const from = String(url.searchParams.get("from") || ""), to = String(url.searchParams.get("to") || "");
         if (!day.test(from) || !day.test(to)) return send(res, 400, { error: "Pass ?from=YYYY-MM-DD&to=YYYY-MM-DD." });
         upstream = `https://finnhub.io/api/v1/calendar/earnings?from=${from}&to=${to}&token=${FINNHUB_KEY}`;
+        ck = `earnings:${from}:${to}`; ttl = TTL.earnings;
       } else {
         upstream = `https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`;
+        ck = "marketnews"; ttl = TTL.news;
       }
 
-      let r;
-      try { r = await fetch(upstream, { signal: AbortSignal.timeout(8000) }); }
-      catch { return send(res, 502, { error: "Could not reach Finnhub." }); }
-      if (!r.ok) {
-        // 401/403 is our key, not the caller's request.
-        const ours = r.status === 401 || r.status === 403;
-        return send(res, ours ? 502 : r.status,
-          { error: ours ? "The server's Finnhub key was rejected." : `Finnhub HTTP ${r.status}` });
-      }
-      const data = await r.json();
-      // Trim to what the desk actually renders; an unbounded wire feed is megabytes.
-      if (p === "/api/market-news") return send(res, 200, (Array.isArray(data) ? data : []).slice(0, 40));
-      if (p === "/api/symbol-search") return send(res, 200, { result: (data?.result || []).slice(0, 30) });
-      return send(res, 200, { earningsCalendar: (data?.earningsCalendar || []).slice(0, 400) });
+      // Thrown, not returned, so a failure is never written to the cache —
+      // see the rejection branch in cached().
+      let body;
+      try {
+        body = await cached(ck, ttl, async () => {
+          let r;
+          try { r = await fetch(upstream, { signal: AbortSignal.timeout(8000) }); }
+          catch { throw Object.assign(new Error("unreachable"), { code: 502, msg: "Could not reach Finnhub." }); }
+          if (!r.ok) {
+            // 401/403 is our key, not the caller's request.
+            const ours = r.status === 401 || r.status === 403;
+            throw Object.assign(new Error("upstream"), {
+              code: ours ? 502 : r.status,
+              msg: ours ? "The server's Finnhub key was rejected." : `Finnhub HTTP ${r.status}`,
+            });
+          }
+          const data = await r.json();
+          // Trim to what the desk actually renders; an unbounded wire feed is
+          // megabytes — and the trimmed copy is what goes in the cache, so this
+          // holds kilobytes rather than the whole feed per key.
+          if (p === "/api/market-news") return (Array.isArray(data) ? data : []).slice(0, 40);
+          if (p === "/api/symbol-search") return { result: (data?.result || []).slice(0, 30) };
+          return { earningsCalendar: (data?.earningsCalendar || []).slice(0, 400) };
+        });
+      } catch (e) { return send(res, e.code || 502, { error: e.msg || "Upstream failed." }); }
+      return send(res, 200, body);
     }
 
     if (p === "/api/news" && req.method === "GET") {
@@ -1239,7 +1441,21 @@ const server = http.createServer(async (req, res) => {
       const status = {};
       status.ai = { configured: !!OPENROUTER.key, model: OPENROUTER.model };
       status.youtube = { configured: !!YOUTUBE_KEY };
-      status.quotes = { configured: !!FINNHUB_KEY };
+      // `configured` is now true if ANY provider can answer, which is what the
+      // caller is really asking. Yahoo needs no key, so this is effectively
+      // always true — and `providers` is the honest detail underneath it: which
+      // one is carrying the tape, and which is sitting out a failure. A
+      // failover nobody can see is the thing worth avoiding, so it is printed
+      // rather than inferred.
+      status.quotes = {
+        configured: !!FINNHUB_KEY || QUOTE_PROVIDERS.some(([n]) => n !== "finnhub"),
+        primary: !!FINNHUB_KEY,
+        providers: QUOTE_PROVIDERS.map(([name]) => ({
+          name,
+          resting: breakerResting(name),
+          fails: breakers.get(name)?.fails || 0,
+        })),
+      };
       status.tmdb = { configured: !!TMDB_KEY };
       status.gemini = { configured: !!GEMINI_KEY };
       status.eleven = { configured: !!ELEVEN_KEY };
