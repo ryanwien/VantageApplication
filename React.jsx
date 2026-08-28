@@ -5198,6 +5198,9 @@ function trialState(account, now = Date.now()) {
 //   Pro Desk    → AI models, live Finnhub data, YouTube, TMDB, Spotify
 //   Trading Floor → adds the ElevenLabs studio voice (browser TTS is on every plan)
 const PLAN_RANK = { free: 0, pro: 1, desk: 2 };
+// How long the missions pass runs once it is claimed. See the state that holds
+// it for why it is claimed rather than granted, and why it stops at Pro Desk.
+const PASS_HOURS = 24;
 const FEATURE_PLAN = { ai: "pro", finnhub: "pro", youtube: "pro", tmdb: "pro", spotify: "pro", elevenlabs: "desk" };
 
 // Plain-language legal copy shown behind the "I agree" gate. Intentionally short and
@@ -6052,10 +6055,41 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   });
   useEffect(() => { try { localStorage.setItem("tape-dev-mode", devMode ? "1" : "0"); } catch { /* ignore */ } }, [devMode]);
 
+  // ---- what finishing the missions is worth ----
+  //
+  // Six missions have been checking themselves off since the day they shipped
+  // and paying nothing at all. This is the payment: a 24-hour Pro Desk pass.
+  //
+  // CLAIMED, not granted. Every account opens on a 7-day trial that already
+  // unlocks everything, so a pass that started itself the moment the sixth
+  // mission ticked would burn down entirely inside that trial and be gone
+  // before it could persuade anybody of anything. It waits until it is asked
+  // for, which is also the only version of it that is worth anything on day 8.
+  //
+  // Pro-tier features only, and that line is not arbitrary: ElevenLabs bills
+  // per character, so the studio voice is the one gate here whose cost scales
+  // with use. Everything the pass opens is a fixed-cost or rate-limited call.
+  const [dayPass, setDayPass] = useState(() => {
+    try { return JSON.parse(window.localStorage.getItem("tape-daypass") || "null"); } catch { return null; }
+  });
+  const passEndsAt = dayPass?.claimedAt ? dayPass.claimedAt + PASS_HOURS * 3600000 : 0;
+  useEffect(() => {
+    try {
+      if (dayPass) window.localStorage.setItem("tape-daypass", JSON.stringify(dayPass));
+      else window.localStorage.removeItem("tape-daypass");
+    } catch { /* private mode */ }
+  }, [dayPass]);
+
   // ---- feature gating: a premium integration needs BOTH the right plan AND its own key ----
   // planAllows() is the PLAN half (each feature still checks its own key). Dev mode unlocks everything.
   const planRank = PLAN_RANK[account?.plan] ?? 0;
-  const planAllows = useCallback((f) => devMode || (PLAN_RANK[account?.plan] ?? 0) >= (PLAN_RANK[FEATURE_PLAN[f]] ?? 99), [account?.plan, devMode]);
+  // Date.now() is read INSIDE the callback rather than captured as a boolean
+  // outside it, so the gate closes the moment the pass expires rather than at
+  // whatever later render happens to recompute it.
+  const planAllows = useCallback((f) => devMode
+    || (PLAN_RANK[account?.plan] ?? 0) >= (PLAN_RANK[FEATURE_PLAN[f]] ?? 99)
+    || (FEATURE_PLAN[f] === "pro" && Date.now() < passEndsAt),
+    [account?.plan, devMode, passEndsAt]);
   const planFor = (f) => PLANS.find(p => p.id === FEATURE_PLAN[f])?.label || "a paid plan";
   // small "🔒 Pro Desk" chip shown next to a locked control; clicking jumps to the ACCOUNT tab to upgrade.
   // Returns null when the feature is unlocked (by plan or dev mode). Safe to render inline in any tab.
@@ -6584,8 +6618,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       if (prev.has(id)) return prev;
       const next = new Set(prev); next.add(id);
       try { window.localStorage.setItem("tape-missions", JSON.stringify([...next])); } catch { /* private mode */ }
+      // The sixth one is worth saying out loud. It is the only mission that
+      // changes what the app will do for you, and a panel nobody has open
+      // cannot be the only place that says so.
+      if (next.size === MISSIONS.length) {
+        setCmdMsg(`All six missions done — claim your ${PASS_HOURS}-hour Pro Desk pass in Getting started.`);
+        setMissionsOpen(true);
+      }
       return next;
     });
+  }, []);
+
+  // Once only, and only on the full set. A pass already claimed is never
+  // re-issued: the missions do not reset, so there is nothing left to earn it
+  // with a second time.
+  const claimPass = useCallback(() => {
+    setDayPass(p => (p?.claimedAt ? p : { claimedAt: Date.now(), hours: PASS_HOURS }));
   }, []);
 
   const BROKERS = [
@@ -12469,6 +12517,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       {missionsOpen && (() => {
         const done = MISSIONS.filter(m => missionsDone.has(m.id)).length;
         const allDone = done === MISSIONS.length;
+        // Read at render, not held in state: the pass expires on a clock, and a
+        // number kept in state would keep claiming time it no longer has.
+        const passLeftMs = passEndsAt - Date.now();
         return (
           <div className="v-rise" style={{ position: "fixed", left: 12, bottom: 12, zIndex: 55, width: 268, maxWidth: "92vw", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.lg, boxShadow: "0 12px 40px rgba(0,0,0,0.55)", overflow: "hidden" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
@@ -12497,9 +12548,44 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 <div style={{ height: 5, borderRadius: 3, background: C.grid, overflow: "hidden" }}>
                   <div style={{ width: `${(done / MISSIONS.length) * 100}%`, height: "100%", background: C.text, transition: "width 0.4s" }} />
                 </div>
-                <div style={{ fontFamily: SANS, fontSize: 11, color: allDone ? C.up : C.faint, marginTop: 8, textAlign: "center" }}>
-                  {allDone ? "🎉 All six. You know the desk." : "These check off as you use the app."}
-                </div>
+                {/* Four states, and the middle two are the point of the panel.
+                    The countdown is recomputed on render rather than driven by
+                    a timer of its own — the tape re-renders this every few
+                    seconds anyway, and an hours-granularity number does not
+                    need its own interval to stay honest. */}
+                {!allDone ? (
+                  <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint, marginTop: 8, textAlign: "center" }}>
+                    {t("These check off as you use the app.")}
+                  </div>
+                ) : !dayPass ? (
+                  <div style={{ marginTop: 10 }}>
+                    <button onClick={claimPass} className="v-taprow"
+                      style={{ ...button("primary", "sm", { full: true }), fontSize: 12, whiteSpace: "normal", lineHeight: 1.35 }}>
+                      🎉 {t("Claim {n} hours of Pro Desk").replace("{n}", PASS_HOURS)}
+                    </button>
+                    <div style={{ fontFamily: SANS, fontSize: 10.5, color: C.faint, marginTop: 6, textAlign: "center", lineHeight: 1.5 }}>
+                      {t("Live data, AI answers, video and streaming. Starts when you claim it, not now.")}
+                    </div>
+                  </div>
+                ) : passLeftMs > 0 ? (
+                  <div style={{ fontFamily: SANS, fontSize: 11, color: C.up, marginTop: 8, textAlign: "center", lineHeight: 1.5 }}>
+                    {/* One key, not "…active" + "left" around a number: the two
+                        halves sit on opposite sides of the duration in some of
+                        the five languages, and a sentence split into fragments
+                        cannot be reordered by a translator. */}
+                    {t("Pro Desk pass active · {t} left").replace("{t}", passLeftMs > 3600000
+                      ? `${Math.floor(passLeftMs / 3600000)}h ${Math.floor((passLeftMs % 3600000) / 60000)}m`
+                      : `${Math.max(1, Math.ceil(passLeftMs / 60000))}m`)}
+                  </div>
+                ) : (
+                  <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint, marginTop: 8, textAlign: "center", lineHeight: 1.5 }}>
+                    {t("Your Pro Desk pass has run out.")}{" "}
+                    <button onClick={() => setSettingsTab("account")}
+                      style={{ background: "transparent", border: "none", padding: 0, color: C.accentText, cursor: "pointer", fontFamily: SANS, fontSize: 11, textDecoration: "underline" }}>
+                      {t("See plans")}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
