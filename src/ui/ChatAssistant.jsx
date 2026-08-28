@@ -303,6 +303,10 @@ export default function ChatAssistant({
   subject,                       // e.g. the selected symbol, shown in the header
   suggestions = [],
   placeholder = "Ask anything, or type a command…",
+  placeholderShort,   // shown once the composer is too narrow for the long one.
+                      // Not an abbreviation of it — a phone has no HELP command
+                      // worth advertising, so the short line drops that clause
+                      // rather than truncating the sentence that carries it.
   height = 460,
   header = true,
   embedded = false,   // rendered inside a host panel: the host owns the chrome,
@@ -359,14 +363,58 @@ export default function ChatAssistant({
     if (pinned) setUnread(false);
   }, []);
 
+  // ---- how much room the composer row actually has ----
+  //
+  // Measured at 375px: the row is 297px wide and the text field gets 98 of it.
+  // The other 199 are 18px of left padding, three 12px gaps, and 135px of
+  // controls — two thirds of the row is chrome, and the placeholder needs 367px
+  // of type it will never see. It wrapped inside a one-line box and scrolled.
+  //
+  // No amount of trimming fixes it: handed the whole 271px the row can spare,
+  // the long placeholder still wraps. So below the threshold the row wraps too
+  // — field on its own line, controls beneath at full size — and the label
+  // drops to its short form. Both move on ONE number, because two numbers that
+  // have to agree are two numbers that eventually will not.
+  const TIGHT = 460;
+  const composerRef = useRef(null);
+  const [tight, setTight] = useState(false);
+
   // Grow the composer with its content, up to a ceiling, then scroll inside it.
+  //
+  // The PLACEHOLDER counts toward scrollHeight — an empty box is as tall as its
+  // label wraps. That is not obvious and it is the other half of the phone bug:
+  // at 98px wide the placeholder wrapped to five lines, so an untouched
+  // composer measured 174px, clipped itself to the 132 ceiling, and scrolled.
+  // The box looked broken because it was honestly reporting a label that did
+  // not fit.
+  //
+  // Which means height depends on WIDTH, so this has to re-run when the width
+  // moves — on the wrap (`tight`), and on any resize that did not cross it.
   const autosize = useCallback(() => {
     const ta = taRef.current;
     if (!ta) return;
     ta.style.height = "auto";
     ta.style.height = `${Math.min(ta.scrollHeight, 132)}px`;
   }, []);
-  useEffect(autosize, [draft, autosize]);
+  useEffect(autosize, [draft, autosize, tight]);
+
+  // Watch the row's own width — a ResizeObserver rather than a media query,
+  // because this box is a column in a flex row. It is cramped at 400px inside a
+  // 1200px window just as surely as it is on a phone, and only the box knows.
+  useEffect(() => {
+    const el = composerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([e]) => {
+      const w = e.contentRect.width;
+      // The wrap changes the row's HEIGHT, not its width, so this cannot
+      // oscillate — but an 8px dead band either side of the threshold keeps a
+      // drag-resize from setting state on every frame it spends near it.
+      setTight(prev => (w < TIGHT - (prev ? 0 : 8) ? true : w > TIGHT + (prev ? 8 : 0) ? false : prev));
+      autosize();   // height follows width; see above
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [autosize]);
 
   const submit = useCallback(() => {
     const text = draft.trim();
@@ -479,17 +527,28 @@ export default function ChatAssistant({
       )}
 
       {/* composer */}
-      <div style={{ padding: SP[3], borderTop: `1px solid ${C.edge}`, background: C.surfaceSunken, flexShrink: 0 }}>
+      <div ref={composerRef} style={{ padding: SP[3], borderTop: `1px solid ${C.edge}`, background: C.surfaceSunken, flexShrink: 0 }}>
         {disabled && disabledReason && (
           <div style={{ ...TYPE.bodySm, fontSize: 12, color: C.faint, padding: "0 2px 8px" }}>{disabledReason}</div>
         )}
+        {/* Tight is a WRAP, not a squeeze. flex-wrap alone does nothing here:
+            the field's basis is 0, so it never claims enough width to push
+            anything onto a second line — all four items "fit" on one and the
+            field is left with whatever the controls did not take. Giving it a
+            100% basis is what actually breaks the row.
+
+            justify-content only bites on the second line, since the field fills
+            the first on its own. The controls land right — where a send button
+            belongs — and Clear is pushed back to the left by its own auto
+            margin, away from Ask. */}
         <div
           className="cmdbar"
           style={{
             position: "relative",
-            display: "flex", alignItems: "flex-end", gap: 12,
+            display: "flex", alignItems: "flex-end", gap: tight ? 8 : 12,
             background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`,
-            borderRadius: R.lg, padding: "8px 8px 8px 18px",
+            borderRadius: R.lg, padding: tight ? "8px" : "8px 8px 8px 18px",
+            ...(tight && { flexWrap: "wrap", justifyContent: "flex-end" }),
             transition: `border-color ${MOTION.fast} ${MOTION.ease}, box-shadow ${MOTION.fast} ${MOTION.ease}`,
           }}
         >
@@ -513,19 +572,36 @@ export default function ChatAssistant({
               // Escape stops a run in flight, matching the stop button.
               else if (e.key === "Escape" && showStop) { e.preventDefault(); onStop(); }
             }}
-            placeholder={disabled ? "Unavailable" : placeholder}
+            placeholder={disabled ? "Unavailable" : (tight && placeholderShort) || placeholder}
             aria-label="Message the AI assistant"
             style={{
-              flex: 1, minWidth: 0, resize: "none", background: "transparent",
+              flex: tight ? "1 1 100%" : 1, minWidth: 0, resize: "none", background: "transparent",
               border: "none", outline: "none", color: C.text,
               fontFamily: SANS, fontSize: 15, lineHeight: 1.5, padding: "8px 0", maxHeight: 132,
             }}
           />
           {/* Compact mode has no header for Clear to live in, so it rides the
-              composer row — quiet, and only once there is something to clear. */}
+              composer row — quiet, and only once there is something to clear.
+
+              v-tap, because this measured 19 by 26 on a touch screen — not
+              cramped, untappable — on the one row where the mic beside it
+              already honours HIT. That was true at every width, not just the
+              narrow ones, so it takes the house's real-box rule rather than
+              anything conditional: 44 square on a coarse pointer, unchanged on
+              a mouse, which does not need it and would only lose field width
+              to it. It was v-taprow's shape of problem and not its fix — that
+              pseudo pins left/right to 0 and grows height alone, and height
+              was never what failed here.
+
+              The auto margin is layout, not targeting: once the row wraps,
+              Clear belongs at the far end of the control line, away from Ask. */}
           {compact && messages.length > 0 && onClear && (
-            <button onClick={onClear} aria-label="Clear conversation" title="Clear conversation"
-              style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontSize: 14, padding: "6px 4px", flexShrink: 0 }}>
+            <button onClick={onClear} aria-label="Clear conversation" title="Clear conversation" className="v-tap"
+              style={{
+                background: "transparent", border: "none", color: C.faint, cursor: "pointer",
+                fontSize: 14, padding: "6px 4px", flexShrink: 0,
+                ...(tight && { marginRight: "auto" }),
+              }}>
               ↺
             </button>
           )}

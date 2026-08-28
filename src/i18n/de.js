@@ -52,6 +52,7 @@ export default {
   "Ambient sound": "Umgebungston", "waves, jungle, space hum…": "Wellen, Dschungel, Weltraumbrummen…",
   "Music": "Musik", "background score": "Hintergrundmusik",
   "Ask the desk, or type a symbol  ·  HELP for commands": "Frag das Pult oder gib ein Symbol ein  ·  HELP für Befehle",
+  "Ask, or type a symbol": "Fragen oder Symbol eingeben",
   "OPEN": "OFFEN", "CLOSED": "GESCHLOSSEN",
   "standing by": "bereit",
   "Voice & anchor settings": "Stimme & Moderator-Einstellungen", "SET": "KULISSE", "free": "kostenlos",

@@ -52,6 +52,7 @@ export default {
   "Ambient sound": "Som ambiente", "waves, jungle, space hum…": "ondas, selva, zumbido espacial…",
   "Music": "Música", "background score": "música de fundo",
   "Ask the desk, or type a symbol  ·  HELP for commands": "Pergunte à mesa ou escreva um símbolo  ·  HELP para comandos",
+  "Ask, or type a symbol": "Pergunte ou escreva um símbolo",
   "OPEN": "ABERTO", "CLOSED": "FECHADO",
   "standing by": "em espera",
   "Voice & anchor settings": "Definições de voz e apresentador", "SET": "CENÁRIO", "free": "grátis",

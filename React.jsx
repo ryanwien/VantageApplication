@@ -11761,6 +11761,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                  somebody typed `hello` into it and got a stock: the label named
                  one of the box's two jobs, and the router only did that one. */
               placeholder={t("Ask the desk, or type a symbol  ·  HELP for commands")}
+              /* On a phone the long one needs 367px of type in a 98px box. The
+                 short one drops the HELP clause rather than truncating it: HELP
+                 is a thing you discover at a keyboard, and the chips under this
+                 row already teach the vocabulary on touch. */
+              placeholderShort={t("Ask, or type a symbol")}
               suggestions={[
                 { label: t("Summarize {sym} today").replace("{sym}", selected), value: `Summarize ${selected} today — price action and why` },
                 { label: t("What's moving today?"), value: "What's moving in the market today and why?" },
