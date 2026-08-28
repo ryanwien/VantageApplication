@@ -248,9 +248,17 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
         </header>
 
         {/* ---- features ---- */}
+        {/* Scroll-triggered rather than vt-fadeup on load, because where these
+            sit depends entirely on the viewport: at 1280x900 they are on screen
+            when the page arrives, but on a 390px phone the hero alone runs to
+            980px and these start at y=1084 — a third of a screen below the
+            fold, fading in to nobody. reveal.js already knows the difference,
+            so let it decide: shown at once when they are visible, played when
+            the reader scrolls to them. The stagger comes from the module too,
+            which is why the hand-written animationDelay is gone. */}
         <section id="home-features" className="v-homefeat">
           {FEATURE_NOS.map((n, i) => (
-            <div key={n} className="vt-fadeup" style={{ animationDelay: `${0.08 * i}s` }}>
+            <div key={n} className="v-scrollin">
               <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", color: C.accentText }}>{n}</div>
               <h2 style={{ margin: "10px 0 0", fontFamily: SANS, fontSize: 16, fontWeight: 700, letterSpacing: "-0.010em" }}>{featureTitles[i]}</h2>
               <p style={{ margin: "8px 0 0", fontFamily: SANS, fontSize: 14, lineHeight: 1.6, color: C.muted }}>{featureBodies[i]}</p>
@@ -261,13 +269,19 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
         {/* ---- plans ---- */}
         {/* Read from the product's real PLANS rather than the reference's, so
             the prices on the front door are the prices in Settings. */}
-        <section id="home-plans" className="v-scrollin" style={{ marginTop: 64 }}>
-          <h2 style={{ ...TYPE.displayLg, margin: 0, textAlign: "center" }}>{t("Pick your desk")}</h2>
+        {/* The section itself is not marked: revealing it as one slab is a
+            single fade for the whole lower half of the page, which is barely
+            an animation at all. The heading and each card are marked instead,
+            so they arrive in sequence — reveal.js staggers whatever enters in
+            the same batch by 70ms, which is what makes it read as arriving
+            rather than switching on. */}
+        <section id="home-plans" style={{ marginTop: 64 }}>
+          <h2 className="v-scrollin" style={{ ...TYPE.displayLg, margin: 0, textAlign: "center" }}>{t("Pick your desk")}</h2>
           <div className="v-homeplans">
             {plans.map(p => {
               const featured = !!p.featured;
               return (
-                <div key={p.id} style={{
+                <div key={p.id} className="v-scrollin" style={{
                   position: "relative",
                   background: C.surface,
                   border: `1px solid ${featured ? C.accent : C.edge}`,
@@ -323,7 +337,7 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
           </p>
         </section>
 
-        <footer style={{ marginTop: 64, paddingTop: 22, paddingBottom: 48, borderTop: `1px solid ${C.edge}`, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+        <footer className="v-scrollin" style={{ marginTop: 64, paddingTop: 22, paddingBottom: 48, borderTop: `1px solid ${C.edge}`, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
           <VantageMark size={20} />
           <span style={{ fontFamily: SANS, fontSize: 13, color: C.faint }}>
             {t("Vantage — an AI market desk. Not investment advice.")}
