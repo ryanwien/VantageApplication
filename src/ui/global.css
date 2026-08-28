@@ -783,6 +783,16 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
       animation: v-heroexit linear both;
       animation-timeline: view(block);
       animation-range: exit 0% exit 100%;
+      /* Published for the hero's own descendants to animate against, and it is
+         not a convenience — it is the only thing that works. .v-aurora sets
+         overflow:hidden, which makes this element a scroll container, so an
+         anonymous view() on anything INSIDE it measures against this box rather
+         than against the window. That box never scrolls, so those animations
+         sit at a constant progress and never move. Measured before the fix: the
+         card held translateY(0.1px) and the aurora held opacity 0.75 across a
+         full 0-717px scrub. A name resolves on the element's ancestors, so the
+         card and both aurora layers can share the hero's real progress. */
+      view-timeline-name: --v-hero-view;
     }
   }
 }
@@ -792,6 +802,98 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
    at opacity 0 is one bug away from a blank page. */
 @keyframes v-scrollprogress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes v-heroexit { to { opacity: 0.3; transform: translateY(-34px); } }
+
+/* ---------- the hero, in six beats ----------
+   Each piece of the hero column arrives on its own, --i beats after the one
+   before it. The whole column used to share a single vt-fadeup, which reads as
+   a slide appearing rather than as something being said. */
+.v-herostep {
+  animation: vt-fadeup 0.7s var(--v-ease) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+/* The two halves of the headline. Block-level so each is its own line and can
+   be revealed separately — as text nodes either side of a <br> they could not
+   be. The colour lives here rather than inline because the sheen below repaints
+   them through background-clip, and an inline colour would outrank it. */
+.v-heroline { display: block; }
+.v-heroline-1 { color: var(--v-text); }
+.v-heroline-2 { color: var(--v-accent-soft); }
+
+/* A light travels across each line just after it lands. Guarded on
+   background-clip because the mechanism is a gradient painted through the
+   glyphs with the text itself transparent — where that is unsupported, a
+   transparent headline is an invisible headline, so the whole block is skipped
+   and the colours above stand.
+
+   The sheen deliberately has NO fill-mode. vt-sheen ends at background-position
+   200%, and the finished state of an unfilled animation is the element's own —
+   position 0%, gradient over the glyphs, text visible. Give this `both` to tidy
+   it up and the headline ends the animation painted with the far edge of a
+   gradient that is no longer over it. */
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  @media (prefers-reduced-motion: no-preference) {
+    .v-heroline {
+      background-size: 220% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation-name: vt-fadeup, vt-sheen;
+      animation-duration: 0.7s, 2.2s;
+      animation-timing-function: var(--v-ease), linear;
+      animation-fill-mode: both, none;
+      animation-delay: calc(var(--i, 0) * 90ms), calc(var(--i, 0) * 90ms + 520ms);
+    }
+    /* Mostly the base colour with a narrow brighter band to travel through it —
+       the line should look lit, not two-tone. */
+    .v-heroline-1 {
+      background-image: linear-gradient(100deg,
+        var(--v-text) 0%, var(--v-text) 42%, #ffffff 50%, var(--v-text) 58%, var(--v-text) 100%);
+    }
+    .v-heroline-2 {
+      background-image: linear-gradient(100deg,
+        var(--v-accent-soft) 0%, var(--v-accent-soft) 42%, #b6f2d0 50%, var(--v-accent-soft) 58%, var(--v-accent-soft) 100%);
+    }
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Parallax proper: the header drifts on `exit`, this runs across the whole
+       `cover` range, so the two are never at the same offset and the card and
+       the words separate as you scroll. Kept to 22px — enough to read as depth,
+       small enough that the card is not visibly out of place on arrival. */
+    .v-heroparallax {
+      animation: v-heroparallax linear both;
+      animation-timeline: --v-hero-view;
+      animation-range: cover 0% cover 100%;
+    }
+
+    /* The aurora answers the scroll by blooming rather than by moving, and that
+       is not a stylistic choice: the two drift keyframes already own
+       `transform` on these pseudo-elements, and a second animation on the same
+       property would replace them outright instead of composing. Opacity and
+       blur are free, so the wash deepens as the hero goes by while the idle
+       drift underneath it carries on untouched. */
+    .v-hero.v-aurora::before {
+      animation: v-drift-cool 26s ease-in-out infinite alternate, v-aurorabloom linear both;
+      animation-timeline: auto, --v-hero-view;
+      animation-range: normal, cover 0% cover 100%;
+    }
+    .v-hero.v-aurora::after {
+      animation: v-drift-warm 34s ease-in-out infinite alternate, v-aurorabloom linear both;
+      animation-timeline: auto, --v-hero-view;
+      animation-range: normal, cover 0% cover 100%;
+    }
+  }
+}
+@keyframes v-heroparallax { from { transform: translateY(22px); } to { transform: translateY(-22px); } }
+/* Never to zero: this is a decorative wash, and 0.5 is the floor so that a
+   miscalculated range cannot switch the hero's background off. */
+@keyframes v-aurorabloom {
+  from { opacity: 0.5; filter: blur(70px); }
+  to   { opacity: 1;   filter: blur(115px); }
+}
 
 .vt-pulse   { animation: vt-pulse 1.1s ease-in-out infinite; }
 .vt-sheen   { background-size: 200% auto; animation: vt-sheen 3.5s linear infinite; }

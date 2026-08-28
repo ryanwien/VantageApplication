@@ -231,8 +231,13 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
       <div className="v-homewrap">
         {/* ---- hero ---- */}
         <header className="v-hero v-aurora" style={{ paddingTop: 66 }}>
-          <div className="vt-fadeup">
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 9 }}>
+          {/* The block used to fade in as one. Each piece now arrives on its
+              own, 90ms apart, driven by --i — the eyebrow, then each half of
+              the headline, then the sentence, the button and the price. One
+              fade of a whole column reads as a slide appearing; six staggered
+              ones read as something being said. */}
+          <div>
+            <span className="v-herostep" style={{ "--i": 0, display: "inline-flex", alignItems: "center", gap: 9 }}>
               <span className="vt-pulse" aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent }} />
               <span style={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 500, letterSpacing: "2px", textTransform: "uppercase", color: C.accentText }}>
                 {t("An AI news anchor for the markets")}
@@ -241,32 +246,48 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
 
             {/* Two lines, and the break is load-bearing: the second line is the
                 promise and it takes the accent. Each half is its own key, so a
-                translation can put the accent on the right words. */}
+                translation can put the accent on the right words. The <br/> is
+                gone because each half is now its own block-level element — a
+                line cannot be revealed separately while it is only a text node.
+                Their colour lives in CSS, not here: the sheen paints them with
+                a gradient through background-clip, and an inline colour would
+                outrank it. */}
             <h1 className="v-herotitle" style={{ margin: "22px 0 0" }}>
-              {t("The market,")}<br />
-              <span style={{ color: C.accentText }}>{t("on air.")}</span>
+              <span className="v-heroline v-heroline-1" style={{ "--i": 1 }}>{t("The market,")}</span>
+              <span className="v-heroline v-heroline-2" style={{ "--i": 2 }}>{t("on air.")}</span>
             </h1>
 
-            <p style={{ fontFamily: SANS, fontSize: 18, lineHeight: 1.6, color: C.muted, maxWidth: 460, margin: "20px 0 0" }}>
+            <p className="v-herostep" style={{ "--i": 3, fontFamily: SANS, fontSize: 18, lineHeight: 1.6, color: C.muted, maxWidth: 460, margin: "20px 0 0" }}>
               {t("Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know.")}
             </p>
 
-            {/* The one primary action on the page. */}
-            <button onClick={() => onStart()} className="vt-sheen"
-              style={{ ...button("primary", "lg"), marginTop: 26, background: GRAD.sheen, fontWeight: 700, fontSize: 15.5 }}>
-              {t("Start 7-day free trial")}
-            </button>
+            {/* The one primary action on the page. Wrapped rather than marked:
+                the button already owns its `animation` for the sheen, and a
+                second class setting `animation` would replace it outright
+                rather than add to it. The wrapper carries the entrance. */}
+            <div className="v-herostep" style={{ "--i": 4 }}>
+              <button onClick={() => onStart()} className="vt-sheen"
+                style={{ ...button("primary", "lg"), marginTop: 26, background: GRAD.sheen, fontWeight: 700, fontSize: 15.5 }}>
+                {t("Start 7-day free trial")}
+              </button>
+            </div>
 
             {/* The entry price, taken from PLANS rather than typed here, so the
                 number under the button cannot drift from the number on the card
                 forty lines below it. */}
-            <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, marginTop: 12 }}>
+            <div className="v-herostep" style={{ "--i": 5, fontFamily: SANS, fontSize: 12.5, color: C.faint, marginTop: 12 }}>
               {t("7 days free, then {price}/mo. Cancel before day 8 and you pay nothing.")
                 .replace("{price}", plans[0]?.price || "")}
             </div>
           </div>
 
-          <BroadcastCard t={t} />
+          {/* The card travels against the hero, which is what parallax is: two
+              speeds, not one. The header itself drifts up as it exits; this
+              runs its own view() timeline over the whole cover range, so the
+              gap between them opens and closes as you scroll. */}
+          <div className="v-heroparallax">
+            <BroadcastCard t={t} />
+          </div>
         </header>
 
         {/* ---- features ---- */}
