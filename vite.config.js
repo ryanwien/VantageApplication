@@ -3,6 +3,21 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  test: {
+    // Vitest's default exclude does not know about vendored agent tooling, and
+    // `npx skills add heygen-com/hyperframes` drops 26 skill packages under
+    // .agents/ — several of which ship their own .test.mjs files. Left alone,
+    // `npm test` collected 142 foreign test files and reported the suite red
+    // while all 621 of this project's own tests were passing.
+    //
+    // Overriding `exclude` REPLACES the defaults rather than extending them, so
+    // node_modules and dist are restated here on purpose; dropping them would
+    // silently re-admit every dependency's tests.
+    // .claude/skills is the same 26 packages again — the installer writes them
+    // to .agents/ and symlinks them into .claude/ for Claude Code, so excluding
+    // only one of the two leaves the suite just as red.
+    exclude: ['**/node_modules/**', '**/dist/**', '.agents/**', '.claude/**', 'video/**'],
+  },
   build: {
     rollupOptions: {
       output: {

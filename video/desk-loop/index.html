@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <!-- TextPlugin drives the keystroke reveal. Core GSAP ignores a `text`
+         tween without it — silently, which is the dangerous kind: the ticker
+         would simply never appear and nothing would report why. -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/TextPlugin.min.js"></script>
+    <style>
+      /* Local, not @import: render-time network is banned, and a webfont that
+         fails to arrive does not error — it silently falls back and the whole
+         graphic ships in the wrong typeface. */
+      @font-face {
+        font-family: "Schibsted Grotesk";
+        src: url("fonts/schibsted-grotesk.woff2") format("woff2");
+        font-weight: 100 900; font-display: block;
+      }
+      @font-face {
+        font-family: "JetBrains Mono";
+        src: url("fonts/jetbrains-mono.woff2") format("woff2");
+        font-weight: 100 900; font-display: block;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0b0e13; }
+      body { font-family: "Schibsted Grotesk", sans-serif; }
+
+      :root {
+        --base: #0b0e13; --surface: #11151c; --raised: #171c24; --edge: #262d38;
+        --ink: #e6e8eb; --body: #cfd4da; --muted: #9aa3ae; --faint: #5b6470;
+        --accent: #46a758; --accent-soft: #4cc38a; --down: #dd6a6e;
+      }
+      .mono { font-family: "JetBrains Mono", monospace; }
+      .fill { position: absolute; inset: 0; }
+
+      .panel {
+        background: var(--surface); border: 1px solid var(--edge);
+        border-radius: 24px; padding: 44px 48px;
+        box-shadow: 0 40px 90px rgba(0,0,0,0.5);
+      }
+      .chip {
+        display: inline-block; font-family: "JetBrains Mono", monospace;
+        font-size: 22px; letter-spacing: 0.05em; border-radius: 999px; padding: 10px 20px;
+        color: var(--accent-soft); background: rgba(70,167,88,0.10);
+        border: 1px solid rgba(70,167,88,0.35);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="12"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Backdrop spans the whole piece so nothing about it can change across
+           the loop point. The 26px lattice is the landing page's own. -->
+      <div id="bg" class="clip fill" data-start="0" data-duration="12" data-track-index="0"
+           style="background:
+             radial-gradient(circle at 1px 1px, rgba(230,232,235,0.085) 1.4px, transparent 0);
+             background-size: 26px 26px;"></div>
+      <div id="glow" class="clip fill" data-start="0" data-duration="12" data-track-index="0"
+           style="background: radial-gradient(64% 58% at 76% 24%, rgba(70,167,88,0.11), transparent 70%);"></div>
+
+      <!-- ONE clip for the whole duration. Scene-style clips would hide and show
+           elements at fixed times, and the framework's visibility switching is
+           not something the loop can blend across. Holding everything mounted
+           and driving it entirely from the timeline is what makes frame 360
+           reproducible as frame 0. -->
+      <div id="stage" class="clip fill" data-start="0" data-duration="12" data-track-index="1"
+           style="display: flex; align-items: center; justify-content: center;">
+
+        <div style="width: 1320px;">
+          <!-- the command bar -->
+          <div id="bar" class="panel mono"
+               style="display: flex; align-items: center; gap: 20px; padding: 34px 44px;
+                      font-size: 50px; color: var(--ink); background: var(--base);">
+            <span style="color: var(--faint);">&gt;</span>
+            <span id="typed"></span>
+            <span id="caret" style="width: 5px; height: 56px; background: var(--accent); display: inline-block;"></span>
+          </div>
+
+          <!-- the quote -->
+          <div id="quote" class="panel" style="margin-top: 26px; display: flex; align-items: baseline; gap: 26px;">
+            <span class="mono" style="font-size: 36px; font-weight: 700; color: var(--muted); letter-spacing: 0.05em;">AMD</span>
+            <span id="price" class="mono" style="font-size: 92px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink);">158.90</span>
+            <span id="pct" class="mono" style="font-size: 36px; color: var(--down);">-0.84%</span>
+            <svg viewBox="0 0 520 120" preserveAspectRatio="none"
+                 style="margin-left: auto; width: 520px; height: 120px; display: block;">
+              <polyline id="spark"
+                points="0,26 43,34 87,22 130,52 173,44 217,70 260,58 303,80 347,70 390,92 433,84 476,104 520,96"
+                fill="none" stroke="#dd6a6e" stroke-width="5"
+                stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+
+          <!-- the answer, carrying its sources -->
+          <div id="answer" class="panel" style="margin-top: 26px; background: var(--raised);">
+            <div style="font-size: 40px; line-height: 1.4; color: var(--body);">
+              Down 0.84% on light volume. Support held at 156.
+            </div>
+            <div style="margin-top: 24px; display: flex; gap: 16px;">
+              <span id="chip1" class="chip">quote · 16:00</span>
+              <span id="chip2" class="chip">P&amp;F · daily</span>
+            </div>
+          </div>
+
+          <!-- the alert -->
+          <div id="alert" class="panel" style="margin-top: 26px; display: flex; align-items: center;
+               gap: 28px; padding: 30px 44px; background: rgba(70,167,88,0.07);
+               border-color: rgba(70,167,88,0.35);">
+            <span id="dot" style="width: 18px; height: 18px; border-radius: 50%;
+                  background: var(--accent); display: inline-block;"></span>
+            <span class="mono" style="font-size: 32px; font-weight: 700; color: var(--muted); letter-spacing: 0.05em;">AMD</span>
+            <span style="font-size: 36px; color: var(--ink);">crossed 160.00</span>
+            <span class="mono" style="margin-left: auto; font-size: 30px; color: var(--faint);">16:02</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      gsap.registerPlugin(TextPlugin);
+      const tl = gsap.timeline({ paused: true });
+      const E = "power3.out";
+
+      // ---- the loop contract -------------------------------------------------
+      // Frame 360 (t=12) must be pixel-identical to frame 0. Everything below
+      // therefore obeys two rules:
+      //   1. every element STARTS at its resting state and RETURNS to it, and
+      //   2. nothing oscillates on a period that does not divide the duration.
+      // Get this right and `<video loop>` has no seam to hide — which is the
+      // whole reason this is authored rather than generated footage. A model
+      // cannot be asked to end exactly where it began.
+      //
+      // Resting state = empty bar, everything else invisible.
+      //
+      // These are immediate gsap.set calls, NOT tl.set(..., 0), and lint is
+      // right to insist: a zero-duration set at position 0 does not render
+      // while the playhead sits exactly at 0, so frame 0 would have shown the
+      // quote, answer and alert already visible — against a frame 360 where
+      // they are hidden. That is a hard cut at precisely the loop point, which
+      // is the one defect this whole piece exists to avoid.
+      //
+      // Set immediately rather than in CSS because `y` is a transform, and a
+      // CSS transform paired with a GSAP tween on the same property is its own
+      // lint failure (gsap_css_transform_conflict).
+      gsap.set("#typed", { text: "" });
+      gsap.set(["#quote", "#answer", "#alert"], { opacity: 0, y: 24 });
+      gsap.set("#caret", { opacity: 1 });
+      gsap.set("#spark", { strokeDasharray: 1200, strokeDashoffset: 1200 });
+
+      // ---- 0.5s → the ticker is typed ---------------------------------------
+      // Stepped, so the characters land like keystrokes rather than sliding in.
+      tl.to("#typed", { duration: 0.75, text: "amd", ease: "none" }, 0.5);
+
+      // The caret blinks only while typing and finishes ON, so its state at the
+      // loop point is the same as its state at t=0. A caret blinking through the
+      // whole piece would need its period to divide 12s exactly; ending the
+      // blink is simpler than arithmetic that a later timing tweak would break.
+      tl.to("#caret", { opacity: 0, duration: 0.28, repeat: 5, yoyo: true, ease: "steps(1)" }, 0.5);
+      tl.set("#caret", { opacity: 1 }, 2.2);
+
+      // ---- 1.6s → the quote resolves ----------------------------------------
+      tl.to("#quote", { opacity: 1, y: 0, duration: 0.7, ease: E }, 1.6);
+      tl.to("#spark", { strokeDashoffset: 0, duration: 1.5, ease: "power2.out" }, 2.0);
+
+      // ---- 3.4s → the answer, then its receipts -----------------------------
+      tl.to("#answer", { opacity: 1, y: 0, duration: 0.7, ease: E }, 3.4);
+      tl.fromTo(["#chip1", "#chip2"], { opacity: 0, y: 10 },
+        { opacity: 1, y: 0, duration: 0.45, stagger: 0.12, ease: E }, 3.9);
+
+      // ---- 5.4s → the alert fires -------------------------------------------
+      tl.to("#alert", { opacity: 1, y: 0, duration: 0.7, ease: E }, 5.4);
+      // 6 half-cycles of 0.42s = 2.52s, finishing back at full opacity well
+      // before the reset. Finite, because `repeat: -1` has no defined value at
+      // a given frame and the determinism rules ban it.
+      tl.to("#dot", { opacity: 0.25, duration: 0.42, repeat: 5, yoyo: true, ease: "sine.inOut" }, 5.9);
+      tl.set("#dot", { opacity: 1 }, 8.5);
+
+      // ---- 9.4s → everything returns ----------------------------------------
+      // Reverse order: the newest thing leaves first, so the eye follows the
+      // stack unwinding rather than watching four things vanish together.
+      tl.to("#alert",  { opacity: 0, y: 24, duration: 0.5, ease: "power2.in" }, 9.4);
+      tl.to("#answer", { opacity: 0, y: 24, duration: 0.5, ease: "power2.in" }, 9.65);
+      tl.to("#quote",  { opacity: 0, y: 24, duration: 0.5, ease: "power2.in" }, 9.9);
+      tl.to("#typed",  { duration: 0.4, text: "", ease: "none" }, 10.3);
+      // Reset the spark so the next pass draws it again from nothing.
+      tl.set("#spark", { strokeDashoffset: 1200 }, 10.6);
+
+      // 10.8 → 12.0 is 1.2s of the resting state, identical to 0 → 0.5. The
+      // hold is deliberate: it gives the loop a beat to breathe instead of
+      // snapping straight back into typing.
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

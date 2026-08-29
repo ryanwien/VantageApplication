@@ -1,66 +1,66 @@
 // ============================================================
 //  HomeBand.jsx — the beat between the demo and the price list.
 //
-//  WHY THE VIDEO IS IN FRONT AND NOT BEHIND
-//  The first version put the clip full-bleed behind the copy. That forces a
-//  choice nobody wins: the clip's brightest pixel measures 0.3212 relative
-//  luminance, and #e6e8eb over that is 2.30:1, so the copy needed a 0.62
-//  scrim to be readable at all — and a 0.62 scrim is most of the way to
-//  deleting the video. It cost 1.55 MB to render something you had to be told
-//  was there.
+//  WHAT IS PLAYING
+//  A motion graphic of the desk working: a ticker typed, the quote resolving,
+//  the sparkline drawing, the answer arriving with its sources, an alert
+//  firing, then everything clearing. Authored in HyperFrames as HTML and
+//  rendered to MP4 — not generated footage.
 //
-//  In front, that whole trade disappears. Nothing is laid over the picture, so
-//  nothing has to be dimmed to protect anything, and the clip plays at full
-//  strength in a frame that matches the app's own panels. The copy sits above
-//  it on the page background, where it measures against #0b0e13 like every
-//  other paragraph here.
+//  WHY AUTHORED FOOTAGE REPLACED THE GENERATED KIND
+//  This slot used to hold an AI-generated broadcast studio. It was atmosphere:
+//  it looked like a stock library, said nothing about the product, and could
+//  not be made to loop. Three measurements decided it.
 //
-//  WHY THERE IS A PAUSE BUTTON
-//  Not politeness — WCAG 2.2.2. Content that moves automatically for more than
-//  five seconds must have a mechanism to stop it, and this loops forever. It
-//  was optional while the video was decoration behind a scrim; the moment it
-//  became the thing you are meant to look at, it stopped being optional.
+//    loop seam (PSNR of first frame against last, higher = more identical)
+//      generated studio   35.87 dB   visibly different frames
+//      authored graphic   59.73 dB   identical bar compression noise
 //
-//  WHY THE LOOP IS TWO VIDEOS
-//  A generated clip does not loop. Measured on this one, the last frame differs
-//  from the first by 3/255 on average and 75/255 at worst, so `<video loop>`
-//  jumps visibly every five seconds — and now that the clip is the foreground
-//  at full brightness, that jump is far more obvious than it would have been
-//  behind a scrim. Seedance can take the same frame as both start and end,
-//  which fixes it at source, but that mode needs a plan above this account's.
-//  So two copies cross fade over 0.8s and the cut happens inside the dissolve.
+//    weight   2.31 MB → 1.02 MB
+//    subject  a room nobody works in → the product doing the thing it claims
+//
+//  A model cannot be asked to end exactly where it began. An authored timeline
+//  can, because frame 0 and frame 360 are both just the resting state, so the
+//  loop is closed by construction rather than concealed.
+//
+//  WHICH IS WHY THIS FILE IS HALF THE SIZE IT WAS
+//  The previous version ran two copies of the clip and cross faded them, so
+//  the generated seam happened underneath a 0.8s dissolve. That machinery —
+//  a second video, a `front` index, a timeupdate handler, an opacity
+//  transition — existed only to hide a defect that no longer exists. It is
+//  gone. `<video loop>` is now simply true.
+//
+//  WHY THE PAUSE BUTTON STAYED
+//  WCAG 2.2.2: anything that moves by itself for more than five seconds needs
+//  a mechanism to stop it, and this loops forever. That was true of the studio
+//  clip and is true of this one.
+//
+//  WHY THE POSTER IS NOT FRAME 0
+//  Frame 0 is the resting state — an empty command bar. It is the honest
+//  first frame but a poor still, and under prefers-reduced-motion the poster
+//  is the ENTIRE piece. So the poster is lifted from 6.4s, where the quote,
+//  the answer, its sources and the alert are all on screen. The cost is one
+//  cut when playback starts; the gain is that a reader who never sees motion
+//  still sees the product.
 //
 //  WHAT IT COSTS AND WHEN
-//  1.55 MB, seven times the JS bundle, which would be indefensible inside the
-//  app. This is a page seen once, and nothing is fetched until an
-//  IntersectionObserver says the section is within 300px: `preload="none"`, no
-//  `src` at all before that, both copies paused on leaving. Scroll past without
-//  stopping and you pay for the 17 kB poster and nothing else.
-//
-//  REDUCED MOTION
-//  No video element is created — not paused, not muted, not loaded. The poster
-//  frame stays and the 1.55 MB is never requested.
+//  1.02 MB, and nothing is fetched until an IntersectionObserver says the
+//  section is within 300px: `preload="none"`, no `src` before that, paused on
+//  leaving. Scroll past and you pay for the 33 kB poster alone.
 // ============================================================
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import { C } from "./theme.js";
 
-const SRC = "/studio-loop.mp4";
-const POSTER = "/studio-poster.jpg";
-
-// Long enough to dissolve a hard cut, short enough that the overlap — the only
-// moment two videos decode at once — stays brief.
-const FADE = 0.8;
+const SRC = "/desk-loop.mp4";
+const POSTER = "/desk-poster.jpg";
 
 export default function HomeBand({ t = (x) => x }) {
   const reduce = useReducedMotion();
-  const [near, setNear] = useState(false);    // close enough to be worth loading
-  const [front, setFront] = useState(0);      // which copy is visible
+  const [near, setNear] = useState(false);
   const [playing, setPlaying] = useState(true);
   const wrap = useRef(null);
-  const a = useRef(null);
-  const b = useRef(null);
-  const vids = [a, b];
+  const vid = useRef(null);
 
   useEffect(() => {
     const el = wrap.current;
@@ -72,37 +72,22 @@ export default function HomeBand({ t = (x) => x }) {
 
   // `preload="none"` means React assigning `src` does NOT start a fetch, and
   // calling play() before the element has run resource selection silently does
-  // nothing at all — no error, no rejected promise, just a video that never
-  // starts. One explicit load() when the source first appears turns that race
-  // into a sequence. This effect is declared before the play effect below so it
-  // runs first on the render where `near` flips.
+  // nothing — no error, no rejected promise, just a video that never starts.
+  // One explicit load() turns that race into a sequence. Declared before the
+  // play effect so it runs first on the render where `near` flips.
   useEffect(() => {
     if (reduce || !near) return;
-    [a.current, b.current].forEach((v) => { if (v && v.readyState === 0) v.load(); });
+    const v = vid.current;
+    if (v && v.readyState === 0) v.load();
   }, [near, reduce]);
 
   useEffect(() => {
     if (reduce) return;
-    const els = [a.current, b.current];
-    if (!els[0] || !els[1]) return;
-    if (!near || !playing) { els.forEach((v) => v.pause()); return; }
-    const f = vids[front].current;
-    if (f) f.play().catch(() => {});   // refused autoplay just leaves the poster up
-  }, [near, front, playing, reduce]);
-
-  // `timeupdate` fires roughly four times a second. Coarse, but what it
-  // schedules is an 0.8s dissolve, so 250ms of slack is invisible — and a rAF
-  // loop would run sixty times a second for as long as the band is on screen.
-  const onTime = (i) => () => {
-    if (i !== front || !playing) return;
-    const cur = vids[i].current;
-    const other = vids[1 - i].current;
-    if (!cur || !other || !cur.duration) return;
-    if (cur.currentTime < cur.duration - FADE) return;
-    other.currentTime = 0;
-    other.play().catch(() => {});
-    setFront(1 - i);
-  };
+    const v = vid.current;
+    if (!v) return;
+    if (near && playing) v.play().catch(() => {});   // refused autoplay leaves the poster up
+    else v.pause();
+  }, [near, playing, reduce]);
 
   const toggle = useCallback(() => setPlaying((p) => !p), []);
 
@@ -125,25 +110,23 @@ export default function HomeBand({ t = (x) => x }) {
         </p>
 
         <div className="v-band-frame">
-          {/* Always present. It is the whole picture under reduced motion, and
-              what shows while the clip loads or if autoplay is refused. */}
+          {/* The whole picture under reduced motion, and what shows while the
+              clip loads or if autoplay is refused. */}
           <img src={POSTER} alt="" aria-hidden="true" style={fill} />
 
-          {!reduce && [0, 1].map((i) => (
+          {!reduce && (
             <video
-              key={i}
-              ref={vids[i]}
+              ref={vid}
               src={near ? SRC : undefined}
               poster={POSTER}
+              loop
               muted
               playsInline
               preload="none"
               aria-hidden="true"
-              onTimeUpdate={onTime(i)}
-              className="v-band-vid"
-              style={{ ...fill, opacity: front === i ? 1 : 0 }}
+              style={fill}
             />
-          ))}
+          )}
 
           {!reduce && (
             <button type="button" onClick={toggle} className="v-band-toggle"

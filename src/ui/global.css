@@ -1524,10 +1524,6 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
     var(--v-base) 100%);
 }
 
-/* The crossfade. Linear, because an eased dissolve spends most of its time
-   near one end and reads as a cut with a stutter rather than as a blend. */
-.v-band-vid { transition: opacity 0.8s linear; }
-
 /* The player. Same border, radius and shadow as the showcase panels and the
    BroadcastCard — this is a surface from the app's own vocabulary, not a
    YouTube embed dropped into the page. `aspect-ratio` rather than a height so
