@@ -40,6 +40,7 @@ import { C, GRAD, MONO, SANS, TYPE, R, SHADOW, button } from "./theme.js";
 import VantageMark from "./VantageMark.jsx";
 import HeroPlate from "./HeroPlate.jsx";
 import HomeShowcase from "./HomeShowcase.jsx";
+import HomeBand from "./HomeBand.jsx";
 
 // The tape. Static numbers on purpose: this is a marketing page, and wiring it
 // to the live market would mean opening a quote subscription for a visitor who
@@ -309,7 +310,17 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
           eyebrow={t("How it works")}
           heading={t("Type a ticker. Get a session.")}
         />
+      </div>
 
+      {/* ---- the band ---- */}
+      {/* Deliberately OUTSIDE .v-homewrap. It is the only full-bleed element on
+          the page, and being a sibling of the wrap rather than a child of it is
+          what makes that free: no `calc(50% - 50vw)`, which would have run 15px
+          wide here because `vw` counts the scrollbar and this page has one. The
+          wrap simply reopens underneath. */}
+      <HomeBand t={t} />
+
+      <div className="v-homewrap">
         {/* ---- plans ---- */}
         {/* Read from the product's real PLANS rather than the reference's, so
             the prices on the front door are the prices in Settings. */}
