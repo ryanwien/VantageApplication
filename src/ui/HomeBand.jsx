@@ -70,6 +70,17 @@ export default function HomeBand({ t = (x) => x }) {
     return () => io.disconnect();
   }, [reduce]);
 
+  // `preload="none"` means React assigning `src` does NOT start a fetch, and
+  // calling play() before the element has run resource selection silently does
+  // nothing at all — no error, no rejected promise, just a video that never
+  // starts. One explicit load() when the source first appears turns that race
+  // into a sequence. This effect is declared before the play effect below so it
+  // runs first on the render where `near` flips.
+  useEffect(() => {
+    if (reduce || !near) return;
+    [a.current, b.current].forEach((v) => { if (v && v.readyState === 0) v.load(); });
+  }, [near, reduce]);
+
   useEffect(() => {
     if (reduce) return;
     const els = [a.current, b.current];
