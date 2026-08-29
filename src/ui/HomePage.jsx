@@ -39,6 +39,7 @@ import React from "react";
 import { C, GRAD, MONO, SANS, TYPE, R, SHADOW, button } from "./theme.js";
 import VantageMark from "./VantageMark.jsx";
 import HeroPlate from "./HeroPlate.jsx";
+import HomeShowcase from "./HomeShowcase.jsx";
 
 // The tape. Static numbers on purpose: this is a marketing page, and wiring it
 // to the live market would mean opening a quote subscription for a visitor who
@@ -48,11 +49,6 @@ const TAPE = [
   ["AMD", "158.90", -0.84], ["AMZN", "203.34", 2.42], ["GOOGL", "182.26", 0.6],
   ["META", "572.34", -0.84], ["TSLA", "256.71", 2.07],
 ];
-
-// Numbered rather than mapped over a translated list: the index is part of the
-// design, and the copy is spelled out as static t() literals at the call site
-// so the i18n audit can see it.
-const FEATURE_NOS = ["01", "02", "03"];
 
 function Tape() {
   const half = (
@@ -307,15 +303,12 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
             so let it decide: shown at once when they are visible, played when
             the reader scrolls to them. The stagger comes from the module too,
             which is why the hand-written animationDelay is gone. */}
-        <section id="home-features" className="v-homefeat">
-          {FEATURE_NOS.map((n, i) => (
-            <div key={n} className="v-scrollin">
-              <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 500, letterSpacing: "0.1em", color: C.accentText }}>{n}</div>
-              <h2 style={{ margin: "10px 0 0", fontFamily: SANS, fontSize: 16, fontWeight: 700, letterSpacing: "-0.010em" }}>{featureTitles[i]}</h2>
-              <p style={{ margin: "8px 0 0", fontFamily: SANS, fontSize: 14, lineHeight: 1.6, color: C.muted }}>{featureBodies[i]}</p>
-            </div>
-          ))}
-        </section>
+        <HomeShowcase
+          titles={featureTitles}
+          bodies={featureBodies}
+          eyebrow={t("How it works")}
+          heading={t("Type a ticker. Get a session.")}
+        />
 
         {/* ---- plans ---- */}
         {/* Read from the product's real PLANS rather than the reference's, so
