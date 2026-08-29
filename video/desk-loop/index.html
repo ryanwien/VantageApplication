@@ -59,6 +59,21 @@
     >
       <!-- Backdrop spans the whole piece so nothing about it can change across
            the loop point. The 26px lattice is the landing page's own. -->
+      <!-- The landing page's own plate, masked to the upper right exactly as
+           HeroPlate.jsx masks it. This is the piece that stops the graphic
+           reading as generic dark-mode UI: the site has a photograph, a dot
+           lattice and an accent wash behind everything, and a video that
+           carries none of them looks like it came from somewhere else.
+           Slightly stronger here (0.62 vs 0.55) because no body copy sits over
+           it — the legibility budget that constrains it on the page does not
+           apply inside a frame with nothing on top. -->
+      <div id="plate" class="clip fill" data-start="0" data-duration="12" data-track-index="0"
+           style="background-image: url('hero-plate.webp');
+                  background-size: cover; background-position: center;
+                  opacity: 0.62;
+                  -webkit-mask-image: radial-gradient(78% 72% at 80% 16%, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 38%, rgba(0,0,0,0.25) 64%, transparent 84%);
+                  mask-image: radial-gradient(78% 72% at 80% 16%, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 38%, rgba(0,0,0,0.25) 64%, transparent 84%);"></div>
+
       <div id="bg" class="clip fill" data-start="0" data-duration="12" data-track-index="0"
            style="background:
              radial-gradient(circle at 1px 1px, rgba(230,232,235,0.085) 1.4px, transparent 0);
@@ -154,6 +169,24 @@
       gsap.set(["#quote", "#answer", "#alert"], { opacity: 0, y: 24 });
       gsap.set("#caret", { opacity: 1 });
       gsap.set("#spark", { strokeDasharray: 1200, strokeDashoffset: 1200 });
+
+      // ---- the backdrop does NOT breathe, and that was measured --------------
+      // A 5% sine scale over 6s out and 6s back was authored here. It closed
+      // the loop correctly (it ends on the value it starts from) and it looked
+      // fine. It was removed because it cost 0.8 MB:
+      //
+      //     plate static   1.2 MB
+      //     plate drifting 2.0 MB
+      //
+      // Inter-frame compression is the reason. A still backdrop is almost free
+      // after frame 1 — the encoder stores "unchanged" for 359 frames. Scaling
+      // it moves every pixel of a photograph every frame, so nothing can be
+      // reused and the plate is effectively re-encoded 360 times. At the 856px
+      // the band actually renders, a 5% drift over twelve seconds is not
+      // visible enough to be worth two thirds of the file.
+      //
+      // If you re-add it, re-measure. The cost is not in the animation, it is
+      // in what the animation does to the encoder.
 
       // ---- 0.5s → the ticker is typed ---------------------------------------
       // Stepped, so the characters land like keystrokes rather than sliding in.
