@@ -41,6 +41,7 @@ import VantageMark from "./VantageMark.jsx";
 import HeroPlate from "./HeroPlate.jsx";
 import HomeShowcase from "./HomeShowcase.jsx";
 import HomeBand from "./HomeBand.jsx";
+import HomeTour from "./HomeTour.jsx";
 import HomeFaq from "./HomeFaq.jsx";
 
 // The tape. Static numbers on purpose: this is a marketing page, and wiring it
@@ -322,6 +323,15 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
       <HomeBand t={t} />
 
       <div className="v-homewrap">
+        {/* ---- the thirty-second tour ---- */}
+        {/* Inside the wrap, unlike the band: the band is the page's one
+            full-bleed element and this is a 880px player centred in the 1200px
+            measure, the same width the band's own frame runs at. Placed here
+            because of how the clip ends — on "Seven days free." — and what
+            comes next is the plans, all of which start with those same seven
+            days. It hands off rather than stopping. */}
+        <HomeTour t={t} />
+
         {/* ---- plans ---- */}
         {/* Read from the product's real PLANS rather than the reference's, so
             the prices on the front door are the prices in Settings. */}

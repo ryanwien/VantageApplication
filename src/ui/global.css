@@ -1569,6 +1569,141 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
 .v-band-toggle:hover { background: rgba(11, 14, 19, 0.82); border-color: rgba(230, 232, 235, 0.4); }
 .v-band-toggle:focus-visible { outline: 2px solid var(--v-accent); outline-offset: 3px; }
 
+/* ---------- the thirty-second tour ----------
+   Same frame vocabulary as .v-band-frame — same border, radius, shadow and
+   16:9 — because they are the same object seen twice, and a second, differently
+   dressed player would read as a second, unrelated product. The difference
+   between them is behavioural, and lives in HomeTour.jsx.
+
+   The one dimension that does differ is width, and it differs on purpose. The
+   band's clip is a loop of large elements and is legible at any size. This one
+   is authored at 1920 and shows a dense interface — a rail, a tape, a quote
+   table. At the band's 880px that is 46% scale and the 17px mono tape lands
+   near 8px, which is texture rather than text. 1040 is the widest the 1200
+   measure allows once its padding is paid, and takes the same tape to ~9.6px:
+   still small, but the headline, the price and the chart — the things the step
+   is actually about — are comfortably readable. */
+.v-tour { margin-top: 88px; }
+
+.v-tour-h {
+  margin: 14px 0 0;
+  text-align: center;
+  font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: 40px;
+  letter-spacing: -0.032em;
+  line-height: 1.08;
+  color: var(--v-text);
+}
+
+.v-tour-sub {
+  margin: 14px auto 0;
+  max-width: 560px;
+  text-align: center;
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--v-muted);
+}
+
+.v-tour-frame {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  max-width: 1040px;
+  margin: 34px auto 0;
+  border: 1px solid var(--v-edge-strong);
+  border-radius: var(--v-r-xl, 16px);
+  background: var(--v-base);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.v-tour-vid,
+.v-tour-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* The poster is the button, not something sitting behind one: the whole frame
+   is the target, which is 880x495 rather than the 64px disc. */
+.v-tour-play {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  display: block;
+  color: var(--v-text);
+}
+.v-tour-play:focus-visible { outline: 2px solid var(--v-accent); outline-offset: -3px; border-radius: var(--v-r-xl, 16px); }
+
+/* Sits between poster and disc. The poster frame is dark where the disc lands,
+   but it is a photograph-backed still and the disc has to survive any frame
+   this is ever repointed at. */
+.v-tour-scrim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(closest-side at 50% 50%, rgba(11, 14, 19, 0.62), rgba(11, 14, 19, 0.28) 72%, rgba(11, 14, 19, 0.12));
+  transition: background var(--v-base-dur, 200ms) var(--v-ease);
+}
+
+.v-tour-disc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  /* Optical centring: a triangle's visual centre of mass sits left of its
+     bounding box centre, so the box is nudged right rather than the glyph
+     being left to look like it is falling out of the circle. */
+  padding-left: 4px;
+  border-radius: 9999px;
+  border: 1px solid rgba(230, 232, 235, 0.28);
+  background: rgba(11, 14, 19, 0.66);
+  backdrop-filter: blur(6px);
+  transition: transform var(--v-base-dur, 200ms) var(--v-ease),
+              background var(--v-base-dur, 200ms) var(--v-ease),
+              border-color var(--v-base-dur, 200ms) var(--v-ease);
+}
+
+.v-tour-badge {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--v-text);
+  border: 1px solid rgba(230, 232, 235, 0.22);
+  background: rgba(11, 14, 19, 0.66);
+  backdrop-filter: blur(6px);
+  border-radius: 9999px;
+  padding: 5px 11px;
+}
+
+.v-tour-play:hover .v-tour-disc,
+.v-tour-play:focus-visible .v-tour-disc {
+  transform: translate(-50%, -50%) scale(1.07);
+  background: var(--v-accent);
+  border-color: var(--v-accent);
+}
+.v-tour-play:hover .v-tour-scrim {
+  background: radial-gradient(closest-side at 50% 50%, rgba(11, 14, 19, 0.5), rgba(11, 14, 19, 0.2) 72%, rgba(11, 14, 19, 0.08));
+}
+
 /* ---------- the FAQ ----------
    Narrower than the 1200px measure the rest of the page runs at. These are the
    longest unbroken paragraphs on the page and 1200px would put them at well
@@ -1697,6 +1832,14 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
   .v-band-h { font-size: 32px; letter-spacing: -0.028em; }
   .v-band-sub { font-size: 15.5px; }
   .v-band-frame { margin-top: 28px; }
+  /* The frame keeps its 16:9 and simply narrows, as .v-band-frame does. The
+     disc does not scale with it: 64px is already at the low end of a
+     comfortable touch target and shrinking it with the viewport would take it
+     under. */
+  .v-tour { margin-top: 64px; }
+  .v-tour-h { font-size: 30px; letter-spacing: -0.026em; }
+  .v-tour-sub { font-size: 15.5px; }
+  .v-tour-frame { margin-top: 26px; }
   .v-faq { margin-top: 64px; }
   .v-faq-h { font-size: 32px; letter-spacing: -0.028em; }
   /* The question is the tap target, so it keeps its padding while the type
