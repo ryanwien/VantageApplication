@@ -590,21 +590,20 @@ a:hover { text-decoration: underline; }
   .v-askrow { justify-content: flex-start; }
   .v-askrow-chat { flex: 1 1 100%; }
 
-  /* ---------- and the conversation goes FIRST ----------
-     It wrapped below the anchor, which put the product below the fold. Measured
-     on a 375 by 812 phone: the desk starts at 122, the anchor column runs 257 to
-     872 — a 322px portrait, a roster row, a read button and a four-row status
-     block, 615px in all — and the conversation starts at 884. Every pixel of the
-     thread and the composer was off-screen on arrival. You landed on this app
-     and saw a cartoon.
+  /* ---------- the presenter leads ----------
+     Anchor first, conversation beneath it. This reverses what this rule used
+     to do, so the argument it overturned is kept rather than deleted — the
+     next person to read this should find a decision, not a blank space.
 
-     The handoff asks for the opposite in as many words: on mobile, "the answer
-     text is the largest text block on the screen".
+     The case against was that the anchor column is tall, so leading with it
+     pushes the thread and the composer down by its whole height. That case is
+     not wrong, and the cost is now measured on this build at 375 by 812:
+     anchor 266 to 906, thread 918, composer 1095. The composer lands 322px
+     below the fold on arrival. That is the price of this order, paid
+     knowingly; it is not an oversight to be tidied away later.
 
-     The reason the anchor led was that "the presenter is in view from the
-     composer" — and the composer is the LAST element inside .v-askrow-chat, so
-     this order serves that better than the old one did. Thread, composer, then
-     the presenter directly beneath it, rather than the presenter 615px above.
+     It also makes the 336px cap below load-bearing for the fold rather than
+     merely for tablets. Every pixel the portrait gains, the composer loses.
 
      Full width rather than 300, so its edges line up with the chat and the desk
      header instead of stopping 21px short of both. Overriding an inline width,
@@ -616,7 +615,6 @@ a:hover { text-decoration: underline; }
      measure: it draws the app at 390, which leaves 336 after the desk's 15px
      sides and the row's 12px padding. So on any phone the card fills its row
      exactly, and above that it stops rather than following the column. */
-  .v-askrow-chat { order: -1; }
   /* Both !important: the element carries inline width:300 AND maxWidth:100%,
      and a stylesheet loses to either without it. */
   .v-deskrow-anchor { width: 100% !important; max-width: 336px !important; }
