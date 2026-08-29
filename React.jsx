@@ -41,6 +41,7 @@ import Overlay from "./src/ui/Overlay.jsx";
 import { api, ApiError, tokenStore } from "./src/api/client.js";
 import { AuthProvider, useAuth } from "./src/api/auth-context.jsx";
 import AppShell from "./src/ui/AppShell.jsx";
+import { AuthPlate } from "./src/ui/HeroPlate.jsx";
 import ChatAssistant from "./src/ui/ChatAssistant.jsx";
 import NewsDesk from "./src/ui/NewsDesk.jsx";
 import VideoFrame, { ytId } from "./src/ui/VideoFrame.jsx";
@@ -5545,7 +5546,17 @@ function AuthScreen({ onAuthed }) {
   // flat black for the frame before the blobs paint — and so reduced-motion users
   // still get the wash rather than nothing at all.
   return (
-    <div className="v-aurora" style={{ minHeight: "100vh", background: `${GRAD.aurora}, ${C.base}`, color: C.text, fontFamily: SANS, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div className="v-aurora" style={{ minHeight: "100vh", background: `${GRAD.aurora}, ${C.base}`, color: C.text, fontFamily: SANS, display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+      // Both are for AuthPlate, and they are the same pair HomePage gives
+      // HeroPlate: `relative` gives it something to be absolute against, and
+      // `isolate` makes its z-index -1 land above this background and below
+      // the card rather than behind the screen entirely.
+      position: "relative", isolation: "isolate" }}>
+      {/* The rings come out from under the card. On the landing page the same
+          light has to stay in the empty column because prose sits on the page
+          background; here every word is inside an opaque card, so the source
+          can go directly behind it. See the AuthPlate header. */}
+      <AuthPlate />
       <div className="v-rise" style={{ width: step === "plan" ? 880 : 428, maxWidth: "96vw", background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.xl, boxShadow: SHADOW.xl, overflow: "hidden" }}>
 
         {/* header / brand — the gradient mark is the same one the app header uses,
@@ -5699,7 +5710,11 @@ function AuthScreen({ onAuthed }) {
                 const on = plan === p.id;
                 return (
                   <button key={p.id} onClick={() => setPlan(p.id)} style={{ textAlign: "left", cursor: "pointer", background: on ? C.surfaceRaised : "transparent", border: `2px solid ${on ? C.accent : C.panelEdge}`, borderRadius: R.lg, padding: 16, display: "flex", flexDirection: "column", gap: 8, position: "relative" }}>
-                    {p.featured && <span style={{ position: "absolute", top: -10, right: 12, background: C.accent, color: C.textOnAccent, fontFamily: MONO, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", padding: "3px 10px", borderRadius: R.pill }}>{t("POPULAR")}</span>}
+                    {/* The shared pill from global.css, so the badge on the
+                        gate and the badge on the landing page's plan cards are
+                        the same object rather than two hand-rolled copies that
+                        drift. */}
+                    {p.featured && <span className="v-pill v-pill-solid v-pill-lit" style={{ position: "absolute", top: -10, right: 12 }}>{t("POPULAR")}</span>}
                     <div style={{ ...TYPE.subhead, fontSize: 15, fontWeight: 700 }}>{p.label}</div>
                     {/* The price is the one number here, so it keeps the numeric face
                         and the cadence rides alongside it in prose. */}
