@@ -23,10 +23,7 @@
 //  EVERY ANSWER HERE IS CHECKED AGAINST THE CODE
 //  This is a pricing page, so a wrong answer is a false promise rather than a
 //  typo. The trial length is TRIAL_DAYS in server/index.js. The demo-versus-
-//  live split and the voice split are PLANS and FEATURE_PLAN in React.jsx. The
-//  key-handling answer is the app's own privacy text, not a paraphrase of it —
-//  the first draft of this file said users must bring their own keys, which the
-//  code contradicts: the desk can run on the server's key too.
+//  live split and the voice split are PLANS and FEATURE_PLAN in React.jsx.
 // ============================================================
 import React from "react";
 import { C, MONO, SANS } from "./theme.js";
@@ -50,10 +47,6 @@ export default function HomeFaq({ t = (x) => x }) {
     [
       t("Does it make things up?"),
       t("Answers carry the source they came from. When the data isn't there the anchor says so instead of guessing — that refusal is the feature, not a gap in it."),
-    ],
-    [
-      t("Where do my API keys go?"),
-      t("Keys you enter yourself are kept in your own browser's localStorage and sent only to that provider. If you use the desk's own model key instead, your question goes to our backend, which forwards it to the model provider."),
     ],
     [
       t("Is any of this investment advice?"),
