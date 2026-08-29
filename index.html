@@ -4,8 +4,38 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="theme-color" content="#08090a" />
-    <title>Vantage Dashboard</title>
+    <!-- Was #08090a, which is not a colour this app uses anywhere. The palette
+         base in theme.js is #0b0e13, and this is the strip a phone paints
+         around the page, so a near-match is worse than no match: it reads as
+         the page not quite lining up with its own chrome. -->
+    <meta name="theme-color" content="#0b0e13" />
+
+    <title>Vantage — an AI news anchor for the markets</title>
+    <meta name="description" content="Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know." />
+
+    <!-- Link previews. Without these a pasted Vantage link rendered as a bare
+         grey box titled "Vantage Dashboard", which is the name of a screen
+         rather than the name of a product.
+
+         The image path is root-relative because this repo has no configured
+         production domain — no vercel.json, no netlify.toml, no CNAME, no
+         homepage field. Slack, Discord, LinkedIn and X all resolve a relative
+         og:image against the page URL; Facebook's scraper historically does
+         not. Whoever sets the domain should make these two absolute
+         (https://your-domain/og.jpg) rather than leave that to chance. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Vantage" />
+    <meta property="og:title" content="Vantage — an AI news anchor for the markets" />
+    <meta property="og:description" content="Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know." />
+    <meta property="og:image" content="/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The Vantage mark over the words: The market, on air." />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Vantage — an AI news anchor for the markets" />
+    <meta name="twitter:description" content="Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know." />
+    <meta name="twitter:image" content="/og.jpg" />
   </head>
   <body>
     <div id="root"></div>
