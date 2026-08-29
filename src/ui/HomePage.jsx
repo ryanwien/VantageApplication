@@ -38,6 +38,7 @@
 import React from "react";
 import { C, GRAD, MONO, SANS, TYPE, R, SHADOW, button } from "./theme.js";
 import VantageMark from "./VantageMark.jsx";
+import HeroPlate from "./HeroPlate.jsx";
 
 // The tape. Static numbers on purpose: this is a marketing page, and wiring it
 // to the live market would mean opening a quote subscription for a visitor who
@@ -186,7 +187,14 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: C.base, color: C.text, fontFamily: SANS }}>
+    <div style={{
+      minHeight: "100vh", background: C.base, color: C.text, fontFamily: SANS,
+      // Both are for HeroPlate: `relative` gives it something to be absolute
+      // against, `isolate` makes its z-index -1 land above this background and
+      // below every child rather than behind the page entirely.
+      position: "relative", isolation: "isolate",
+    }}>
+      <HeroPlate />
       {/* ---- nav ---- */}
       {/* No button here: the hero's CTA is the only primary action above the
           fold, which is the whole reason it reads as the thing to do. */}
