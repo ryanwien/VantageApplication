@@ -306,12 +306,16 @@ export const Z = { base: 0, rail: 20, dock: 40, header: 50, overlay: 60, modal: 
 
 // Motion: 0.2–0.25s for state, longer easings for the ambient loops. Hover
 // lifts are 2px on buttons and 4–6px on cards.
+// There was a `spring` key here, and it was a byte-for-byte copy of `ease` —
+// a token named after a curve it did not describe. Nothing imported it, so it
+// promised a spring to no one, but the next person to reach for it would have
+// got a plain ease and no way to tell. Springs live in Overlay.jsx now, where
+// Motion can actually integrate one; CSS cannot, which is why this never was.
 export const MOTION = {
   fast: "150ms",
   base: "200ms",
   slow: "250ms",
   ease: "cubic-bezier(0.4, 0, 0.2, 1)",
-  spring: "cubic-bezier(0.4, 0, 0.2, 1)",
 };
 
 // ============================================================

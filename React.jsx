@@ -37,6 +37,7 @@ const PriceChart = lazy(loadPriceChart);
 import Sparkline from "./src/ui/Sparkline.jsx";
 import RichText from "./src/ui/RichText.jsx";
 import Toggle, { ToggleGlyph } from "./src/ui/Toggle.jsx";
+import Overlay from "./src/ui/Overlay.jsx";
 import { api, ApiError, tokenStore } from "./src/api/client.js";
 import { AuthProvider, useAuth } from "./src/api/auth-context.jsx";
 import AppShell from "./src/ui/AppShell.jsx";
@@ -11169,7 +11170,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       )}
 
       {/* ===== export preview/editor: review & edit before the file downloads ===== */}
-      {exportDraft && (() => {
+      {/* The clearest case for function children: every line below dereferences
+          `exportDraft`, and closing sets it to null. As an element it would be
+          evaluated on that render and throw before the exit could start. */}
+      <Overlay open={!!exportDraft} onDismiss={() => setExportDraft(null)} label="Export preview"
+        backdrop={{ zIndex: 60, padding: 20 }}
+        panel={{ width: 620, maxWidth: "94vw", maxHeight: "88vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
+      {() => {
         const FMT = { xlsx: "Excel", docx: "Word", pptx: "PowerPoint" };
         // per-cell edit helpers for the structured draft (watchlist grid + snapshot fields)
         const setSel = (k, v) => setExportDraft(d => ({ ...d, selected: { ...d.selected, [k]: v } }));
@@ -11185,8 +11192,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         const addNews = () => setExportDraft(d => ({ ...d, news: [...d.news, { title: "", source: "", url: "" }] }));
         const inc = exportDraft.include || {};
         return (
-          <div role="dialog" aria-label="Export preview" style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setExportDraft(null)}>
-            <div id="export-modal" onClick={e => e.stopPropagation()} className="v-rise" style={{ width: 620, maxWidth: "94vw", maxHeight: "88vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
+          <>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${C.panelEdge}` }}>
                 <span style={{ ...TYPE.eyebrow, color: C.muted }}>⬇ REVIEW & EDIT <span style={{ color: C.faint, fontWeight: 600, letterSpacing: "-0.013em", textTransform: "none" }}>· before you export</span></span>
                 <button onClick={() => setExportDraft(null)} className="v-clearx" aria-label="Close the export preview" style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 14, cursor: "pointer" }}>✕</button>
@@ -11311,15 +11317,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                     style={{ marginLeft: "auto", background: C.accentPress, color: C.textOnAccent, border: "none", borderRadius: R.sm, fontFamily: SANS, fontWeight: 600, fontSize: 12, padding: "9px 18px", cursor: "pointer" }}>⬇ Download {FMT[exportDraft.format]}</button>
                 </div>
               </div>
-            </div>
-          </div>
+          </>
         );
-      })()}
+      }}
+      </Overlay>
 
       {/* ===== in-app browser: opens a broker/site inside Vantage (with a tab fallback for framed-blocked sites) ===== */}
-      {embed && (
-        <div role="dialog" aria-label="In-app browser" style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", zIndex: 60, display: "flex", flexDirection: "column", padding: 18 }} onClick={() => setEmbed(null)}>
-          <div onClick={e => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", flex: 1, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.md, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
+      {/* This one fills the screen rather than sitting in the middle of it, so
+          the backdrop drops its centring and the panel takes the space with
+          flex: 1. The scale in the entrance would fight a full-bleed frame, but
+          10px of travel on something this large is barely a shift — it reads as
+          the panel settling rather than growing. */}
+      <Overlay open={!!embed} onDismiss={() => setEmbed(null)} label="In-app browser"
+        backdrop={{ zIndex: 60, padding: 18, flexDirection: "column", alignItems: "stretch", justifyContent: "flex-start" }}
+        panel={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.md, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}>
+      {() => (
+        <>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "8px 12px", borderBottom: `1px solid ${C.panelEdge}` }}>
               {/* minWidth 0 on the row and the ellipsis on an inner span: a
                   flex item will not shrink below its content by default, so
@@ -11342,9 +11355,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 <button onClick={() => openChart(selected)} style={{ background: "rgba(255,255,255,0.07)", border: `1px solid ${C.accent}`, color: C.accentText, borderRadius: R.sm, fontFamily: SANS, fontSize: 10, fontWeight: 600, padding: "5px 10px", cursor: "pointer" }}>📈 {selected} chart (works in-frame)</button>
               </div>
             )}
-          </div>
-        </div>
+        </>
       )}
+      </Overlay>
 
       {/* ===== ticker tape ===== */}
       {/* ===== application chrome =====
@@ -12617,12 +12630,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       })()}
 
       {/* ===== setup guide: explains the setup process — what each key does, required vs optional ===== */}
-      {setupOpen && (
-        <div role="dialog" aria-label="Setup guide"
-          style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 61, padding: 16 }}
-          onClick={() => setSetupOpen(false)}>
-          <div onClick={e => e.stopPropagation()}
-            style={{ width: 520, maxWidth: "94vw", maxHeight: "90vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.lg, padding: 22, boxShadow: "0 24px 70px rgba(0,0,0,0.6)" }}>
+      <Overlay open={setupOpen} onDismiss={() => setSetupOpen(false)} label="Setup guide"
+        backdrop={{ zIndex: 61 }}
+        panel={{ width: 520, maxWidth: "94vw", maxHeight: "90vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.lg, padding: 22, boxShadow: "0 24px 70px rgba(0,0,0,0.6)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 17, letterSpacing: "-0.010em", color: C.accentText }}>⚙️ SETUP GUIDE</div>
               <button onClick={() => setSetupOpen(false)} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 12, cursor: "pointer" }}>✕</button>
@@ -12656,9 +12666,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 later
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Overlay>
 
       {/* ============================================================
            GETTING STARTED — the first thing a new account sees.
@@ -12695,10 +12703,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
            under "Getting started". The reference predates that screen; naming
            a section the user cannot find is worse than disagreeing with a PNG.
            ============================================================ */}
-      {showTutorial && (
-        <div role="dialog" aria-modal="true" aria-label={t("Getting started")}
-          style={{ position: "fixed", inset: 0, background: alpha(C.base, 0.86), display: "flex", alignItems: "center", justifyContent: "center", zIndex: Z.modal, padding: 16 }}>
-          <div className="v-rise" style={{ width: 600, maxWidth: "94vw", maxHeight: "92vh", overflowY: "auto", background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.xl, padding: 30, boxShadow: SHADOW.xl }}>
+      <Overlay open={showTutorial} label={t("Getting started")}
+        backdrop={{ background: alpha(C.base, 0.86), zIndex: Z.modal }}
+        panel={{ width: 600, maxWidth: "94vw", maxHeight: "92vh", overflowY: "auto", background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.xl, padding: 30, boxShadow: SHADOW.xl }}>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <VantageMark size={38} />
@@ -12768,9 +12775,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               </span>
               <button onClick={() => setShowTutorial(false)} style={{ ...button("quiet", "md"), color: C.muted }}>{t("Skip")}</button>
             </div>
-          </div>
-        </div>
-      )}
+      </Overlay>
 
       {/* ===== settings modal ===== */}
       {/* ============================================================
@@ -12787,7 +12792,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
            every click, which is disorienting in a modal that is meant to be a
            place you move around inside.
            ============================================================ */}
-      {showSettings && (() => {
+      {/* Children as a function, not an element: everything below reads
+          `settingsTab`, `meetStatus` and friends, and Overlay keeps the last
+          render alive through the exit. Evaluated eagerly it would run once
+          more on the way out, after the state it reads has already gone. */}
+      <Overlay open={showSettings} onDismiss={() => setShowSettings(false)} labelledBy="set-title"
+        backdrop={{ zIndex: Z.header + 1 }}
+        panelClassName="v-setwrap"
+        panel={{ width: 980, maxWidth: "100%", height: 640, maxHeight: "100%", display: "flex", flexDirection: "column", overflow: "hidden", background: C.base, border: `1px solid ${C.edge}`, borderRadius: 14, boxShadow: SHADOW.xl }}>
+      {() => {
         const serverAi = !!meetStatus?.ai?.configured;
         const aiReady = planAllows("ai") && (serverAi || aiModels.some(m => m.enabled && (isLocalModel(m) || (m.kind === "claude" ? anthropicApiKey.trim() : (m.apiKey || "").trim()))));
         const meetOn = !!(meetStatus?.zoom?.connected || meetStatus?.google?.connected);
@@ -12812,11 +12825,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         }[settingsTab];
 
         return (
-        <div role="dialog" aria-modal="true" aria-labelledby="set-title"
-          style={{ position: "fixed", inset: 0, background: "rgba(5,8,13,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: Z.header + 1 }}
-          onClick={() => setShowSettings(false)}>
-          <div onClick={e => e.stopPropagation()} className="v-rise v-setwrap"
-            style={{ width: 980, maxWidth: "100%", height: 640, maxHeight: "100%", display: "flex", flexDirection: "column", overflow: "hidden", background: C.base, border: `1px solid ${C.edge}`, borderRadius: 14, boxShadow: SHADOW.xl }}>
+          <>
 
             {/* ---- header: the title, and the one thing people open this to learn ---- */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, padding: "18px 24px", borderBottom: `1px solid ${C.edge}`, flex: "0 0 auto" }}>
@@ -13443,10 +13452,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </>
         );
-      })()}
+      }}
+      </Overlay>
       </AppShell>
     </div>
   );
