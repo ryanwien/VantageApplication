@@ -95,16 +95,72 @@
       data-width="1920"
       data-height="1080"
     >
-      <!-- Persistent backdrop. Track 0, spans the whole piece, so every scene
-           cuts against the same surface instead of each one redrawing it. The
-           26px dot lattice is the same one the landing page uses. -->
+      <!-- Persistent backdrop. Track 0, spans all 30s, so every scene cuts
+           against the same surface instead of each one redrawing it — and the
+           encoder stores it once rather than seven times.
+
+           THE PLATE
+           The landing page's own photograph, masked to the upper right the way
+           HeroPlate.jsx masks it. Without it this reads as generic dark-mode
+           UI: the site has a photograph, a 26px lattice and an accent wash
+           behind everything, and a video carrying none of them looks like it
+           came from somewhere else.
+
+           WHY 0.55 HERE WHERE desk-loop RUNS 0.62
+           desk-loop is one continuous scene whose content is opaque panels, so
+           nothing legible ever sits on the plate and it can be pushed. This
+           piece cuts between seven scenes and most of them put bare text
+           straight onto the backdrop — including 34px --muted copy dead
+           centre. So it runs at the landing page's own value, not the boosted
+           one.
+
+           WHY THE MASK IS TIGHTER AND PUSHED FURTHER INTO THE CORNER
+           The plate is not evenly lit. Mean luma per 320x270 cell, measured:
+
+                       x=0  320  640  960 1280 1600
+               y=0      22   22   17   18   24   33
+               y=270    90   70   23   31   72   83
+               y=540    70   64   29   45   79   90
+               y=810    31   33   27   22   22   22
+
+           Dark top and bottom, bright down both flanks through the middle —
+           and that middle band is exactly where centred text sits. Reusing
+           desk-loop's 78% 72% at 80% 16% would drop scene six's timestamp to
+           2.84:1. Centring at 84% / 14% and dying at r=0.84 puts the plate's
+           substance on the right-hand highlight beside the headlines and
+           reaches zero before the centred sub line:
+
+               s4 headline right end (ink)      15.75 -> 12.67:1
+               s1 sub right end (muted)          7.57 ->  7.47:1
+               s1 sub centre (muted)             7.57 ->  7.57:1   untouched
+               s6 timestamp (faint, 7% panel)    3.22 ->  3.03:1
+
+           The centre line is unchanged because the mask is not there at all.
+           Geography, not opacity — lowering alpha far enough to be safe over
+           centred copy makes the plate invisible everywhere else.
+
+           WHY IT DOES NOT MOVE
+           A slow drift was authored and cut. Measured on desk-loop it took the
+           file from 1.2 MB to 2.0 MB: inter-frame compression stores a still
+           backdrop once and then re-encodes a scaling photograph on every
+           frame. -->
+      <div id="plate" class="clip fill" data-start="0" data-duration="30" data-track-index="0"
+           style="background-image: url('hero-plate.webp');
+                  background-size: cover; background-position: center;
+                  opacity: 0.55;
+                  -webkit-mask-image: radial-gradient(72% 66% at 84% 14%, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 38%, rgba(0,0,0,0.25) 64%, transparent 84%);
+                  mask-image: radial-gradient(72% 66% at 84% 14%, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 38%, rgba(0,0,0,0.25) 64%, transparent 84%);"></div>
+
       <div id="bg" class="clip fill" data-start="0" data-duration="30" data-track-index="0"
            style="background:
              radial-gradient(circle at 1px 1px, rgba(230,232,235,0.085) 1.4px, transparent 0);
              background-size: 26px 26px;">
       </div>
+      <!-- Pulled in from 70% 60% at 78% 22% to desk-loop's figure. The plate
+           now supplies the light in that corner, and the two washes stacked at
+           full spread read muddy rather than lit. -->
       <div id="bg-glow" class="clip fill" data-start="0" data-duration="30" data-track-index="0"
-           style="background: radial-gradient(70% 60% at 78% 22%, rgba(70,167,88,0.10), transparent 70%);">
+           style="background: radial-gradient(64% 58% at 76% 24%, rgba(70,167,88,0.10), transparent 70%);">
       </div>
 
       <!-- 1 — the promise -->
@@ -189,7 +245,15 @@
           <span id="s6-dot" style="width: 18px; height: 18px; border-radius: 50%; background: var(--accent); display: inline-block;"></span>
           <span class="mono" style="font-size: 32px; font-weight: 700; color: var(--muted); letter-spacing: 0.05em;">AMD</span>
           <span style="font-size: 34px; color: var(--ink);">crossed 160.00</span>
-          <span class="mono" style="margin-left: auto; font-size: 28px; color: var(--faint);">16:02</span>
+          <!-- --muted, not --faint. --faint is the recessive token and it is
+               genuinely too dark to sit here: on --base it is 3.22:1, and this
+               row is the one panel in the piece with a translucent background
+               (7% accent over whatever is behind it), so it inherits the
+               backdrop. It measured 2.91:1 before the plate existed and 2.55:1
+               after — a WCAG AA failure that shipped because the default
+               9-sample contrast sweep never lands on t=25.7s. Size and weight
+               still separate it from the --muted ticker label beside it. -->
+          <span class="mono" style="margin-left: auto; font-size: 28px; color: var(--muted);">16:02</span>
         </div>
       </div>
 

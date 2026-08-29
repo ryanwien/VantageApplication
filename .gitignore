@@ -39,4 +39,5 @@ skills-lock.json
 # HyperFrames render artefacts — regenerable from the composition
 video/*/snapshots/
 video/*/*.mp4
+video/*/renders/
 video/*/node_modules/
