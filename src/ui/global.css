@@ -1703,20 +1703,21 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
 .v-band-toggle:hover { background: rgba(11, 14, 19, 0.82); border-color: rgba(230, 232, 235, 0.4); }
 .v-band-toggle:focus-visible { outline: 2px solid var(--v-accent); outline-offset: 3px; }
 
-/* ---------- the thirty-second tour ----------
-   Same frame vocabulary as .v-band-frame — same border, radius, shadow and
-   16:9 — because they are the same object seen twice, and a second, differently
-   dressed player would read as a second, unrelated product. The difference
-   between them is behavioural, and lives in HomeTour.jsx.
+/* ---------- the tour ----------
+   Keeps .v-band-frame's vocabulary — same border, radius, shadow and 16:9 —
+   because they present the same object and a second, differently dressed
+   frame would read as a second, unrelated product.
 
-   The one dimension that does differ is width, and it differs on purpose. The
-   band's clip is a loop of large elements and is legible at any size. This one
-   is authored at 1920 and shows a dense interface — a rail, a tape, a quote
-   table. At the band's 880px that is 46% scale and the 17px mono tape lands
-   near 8px, which is texture rather than text. 1040 is the widest the 1200
-   measure allows once its padding is paid, and takes the same tape to ~9.6px:
-   still small, but the headline, the price and the chart — the things the step
-   is actually about — are comfortably readable. */
+   It is no longer a video. What sits inside the frame is live DOM: see the
+   stage rules below and the header of HomeTour.jsx.
+
+   The width still differs from the band's on purpose. This shows a dense
+   interface — a rail, a tape, a quote table, a ledger — and 1040 is the widest
+   the 1200 measure allows once its padding is paid. Everything inside scales
+   with that number rather than being authored against it, which is the part
+   that changed: the old note here had to reason about a 1920-authored raster
+   landing at 46% and a 17px tape rendering near 8px. There is no fixed
+   authoring size any more, so there is no scale factor to lose type to. */
 .v-tour { margin-top: 88px; }
 
 .v-tour-h {
@@ -1753,90 +1754,256 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 
-.v-tour-vid,
-.v-tour-poster {
+/* ---------- the stage ----------
+   THE ONE IDEA THAT MAKES THIS WORK
+   The composition is dense — a rail, a tape, a quote table, a ledger — and
+   dense UI stops being legible the moment you let it reflow. So nothing inside
+   is sized in px. The frame is a container query and the stage's font-size is
+   a percentage of the frame's own width, which makes every `em` below a
+   fraction of the column. The whole thing scales as one object, exactly the
+   way the video did, with no transform, no resize listener and no fixed
+   pixel width to go stale.
+
+   1.5385cqw is 16px at the 1040px max-width, so the em values below read as
+   the design's own pixels at full size. The px fallback on the line above it
+   is not decoration: where container queries are unsupported, `cqw` is an
+   invalid value and the declaration is dropped, and a stage that inherits the
+   body's font-size would render this at roughly double scale. */
+.v-tour-frame { container-type: inline-size; }
+
+.v-tour-stage {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* The poster is the button, not something sitting behind one: the whole frame
-   is the target, which is 880x495 rather than the 64px disc. */
-.v-tour-play {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  display: block;
-  color: var(--v-text);
-}
-.v-tour-play:focus-visible { outline: 2px solid var(--v-accent); outline-offset: -3px; border-radius: var(--v-r-xl, 16px); }
-
-/* Sits between poster and disc. The poster frame is dark where the disc lands,
-   but it is a photograph-backed still and the disc has to survive any frame
-   this is ever repointed at. */
-.v-tour-scrim {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(closest-side at 50% 50%, rgba(11, 14, 19, 0.62), rgba(11, 14, 19, 0.28) 72%, rgba(11, 14, 19, 0.12));
-  transition: background var(--v-base-dur, 200ms) var(--v-ease);
-}
-
-.v-tour-disc {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  /* Optical centring: a triangle's visual centre of mass sits left of its
-     bounding box centre, so the box is nudged right rather than the glyph
-     being left to look like it is falling out of the circle. */
-  padding-left: 4px;
-  border-radius: 9999px;
-  border: 1px solid rgba(230, 232, 235, 0.28);
-  background: rgba(11, 14, 19, 0.66);
-  backdrop-filter: blur(6px);
-  transition: transform var(--v-base-dur, 200ms) var(--v-ease),
+  padding: 1.5em 1.5em 0;
+  font-size: 15px;
+  font-size: 1.5385cqw;
+  font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
+}
+
+/* ---- the rail ---- */
+.v-tour-rail {
+  display: flex;
+  gap: 0.375em;
+  flex: none;
+}
+.v-tour-tab {
+  border: 1px solid transparent;
+  background: none;
+  border-radius: 0.5em;
+  padding: 0.4375em 0.875em;
+  font: inherit;
+  font-size: 0.8125em;
+  font-weight: 600;
+  color: var(--v-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--v-base-dur, 200ms) var(--v-ease),
               background var(--v-base-dur, 200ms) var(--v-ease),
               border-color var(--v-base-dur, 200ms) var(--v-ease);
 }
-
-.v-tour-badge {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
+.v-tour-tab.is-on {
   color: var(--v-text);
-  border: 1px solid rgba(230, 232, 235, 0.22);
-  background: rgba(11, 14, 19, 0.66);
-  backdrop-filter: blur(6px);
-  border-radius: 9999px;
-  padding: 5px 11px;
+  background: var(--v-surface-raised);
+  border-color: var(--v-edge-strong);
+}
+.v-tour-tab:focus-visible { outline: 2px solid var(--v-accent); outline-offset: 2px; }
+
+/* ---- the card ----
+   No bottom padding and overflow hidden, so the app view below bleeds off the
+   card's bottom edge. That is what makes it read as a window onto something
+   running rather than as a screenshot pasted into a box. */
+.v-tour-card {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  margin-top: 0.875em;
+  padding: 1.625em 1.875em 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--v-edge);
+  border-bottom: 0;
+  border-radius: 0.875em 0.875em 0 0;
+  background: var(--v-surface);
+}
+.v-tour-cardh {
+  margin: 0;
+  font-size: 1.875em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--v-text);
+}
+.v-tour-cards {
+  margin: 0.4em 0 0;
+  font-size: 0.875em;
+  line-height: 1.5;
+  color: var(--v-muted);
 }
 
-.v-tour-play:hover .v-tour-disc,
-.v-tour-play:focus-visible .v-tour-disc {
-  transform: translate(-50%, -50%) scale(1.07);
+/* One track, one fill. The first cut of the video version gave each step its
+   own bar so no fill would ever need zeroing — but a bar paints an opaque
+   track, and the empty one stacked on top hid whichever was actually filling.
+   It rendered as a dead grey line for the whole run. */
+.v-tour-bar {
+  flex: none;
+  height: 0.1875em;
+  margin-top: 1em;
+  width: 14em;
+  align-self: flex-start;
+  border-radius: 0.1875em;
+  background: var(--v-edge-strong);
+  overflow: hidden;
+}
+.v-tour-barfill {
+  height: 100%;
+  width: 100%;
   background: var(--v-accent);
-  border-color: var(--v-accent);
+  transform-origin: left center;
 }
-.v-tour-play:hover .v-tour-scrim {
-  background: radial-gradient(closest-side at 50% 50%, rgba(11, 14, 19, 0.5), rgba(11, 14, 19, 0.2) 72%, rgba(11, 14, 19, 0.08));
+/* Animated only while the tour is actually advancing; parked full otherwise,
+   because a bar frozen part-way reads as a stall rather than as a pause.
+   `both` matters under reduced motion: the blanket rule collapses this to
+   0.01ms and it settles on the LAST keyframe, a complete bar. */
+.v-tour-barfill.is-running { animation: v-tourbar linear both; }
+@keyframes v-tourbar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---- the app ---- */
+.v-tour-app {
+  flex: 1;
+  min-height: 0;
+  margin-top: 1.125em;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 0.75em 0.75em 0 0;
+  border: 1px solid var(--v-edge);
+  border-bottom: 0;
+  background: var(--v-base);
 }
+.v-tour-chrome {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.5em 0.75em;
+  border-bottom: 1px solid var(--v-edge);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.6875em;
+}
+.v-tour-cmd { color: var(--v-text); flex: 1; }
+.v-tour-cmd i {
+  display: inline-block;
+  width: 0.09em;
+  height: 1em;
+  margin-left: 0.15em;
+  vertical-align: -0.12em;
+  background: var(--v-accent);
+  animation-timing-function: steps(1);
+}
+.v-tour-live { color: var(--v-accent-soft); display: inline-flex; align-items: center; gap: 0.4em; letter-spacing: 0.08em; }
+.v-tour-live i { width: 0.45em; height: 0.45em; border-radius: 50%; background: var(--v-accent-soft); }
+.v-tour-clock { color: var(--v-faint); }
+
+.v-tour-tape {
+  flex: none;
+  display: flex;
+  gap: 1.1em;
+  padding: 0.4em 0.75em;
+  border-bottom: 1px solid var(--v-edge);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.625em;
+  color: var(--v-muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.v-tour-tape b { color: var(--v-text); font-weight: 700; }
+.v-tour-tape i { font-style: normal; }
+.v-tour-tape i.up { color: var(--v-accent-soft); }
+.v-tour-tape i.dn { color: var(--v-down); }
+
+/* Every pane stays mounted and crossfades. Swapping one in would remount the
+   SVG and the ledger on every step and put the composition one render away
+   from a blank frame mid-transition. */
+.v-tour-panes { position: relative; flex: 1; min-height: 0; }
+.v-tour-paneslot {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 420ms var(--v-ease);
+}
+.v-tour-paneslot.is-on { opacity: 1; }
+
+.v-tour-pane {
+  height: 100%;
+  padding: 0.75em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+  font-size: 0.8125em;
+}
+
+/* 01 — the matches list */
+.v-tour-match {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.5em 0.7em;
+  border-radius: 0.5em;
+  border: 1px solid transparent;
+}
+.v-tour-match.is-on { background: rgba(70, 167, 88, 0.08); border-color: rgba(70, 167, 88, 0.30); }
+.v-tour-sym { font-family: 'JetBrains Mono', ui-monospace, monospace; font-weight: 700; color: var(--v-text); letter-spacing: 0.04em; }
+.v-tour-name { color: var(--v-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v-tour-key { margin-left: auto; font-family: 'JetBrains Mono', ui-monospace, monospace; color: var(--v-accent-soft); }
+
+/* 02 — the session */
+.v-tour-session { flex-direction: row; gap: 1.2em; }
+.v-tour-quote { flex: none; width: 30%; }
+.v-tour-qrow { display: flex; align-items: baseline; gap: 0.5em; }
+.v-tour-px { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 1.7em; font-weight: 700; letter-spacing: -0.02em; color: var(--v-text); }
+.v-tour-dn { font-family: 'JetBrains Mono', ui-monospace, monospace; color: var(--v-down); margin-top: 0.15em; }
+.v-tour-stats { margin: 0.9em 0 0; display: grid; gap: 0.3em; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.85em; }
+.v-tour-stats > div { display: flex; justify-content: space-between; }
+.v-tour-stats dt { color: var(--v-faint); letter-spacing: 0.06em; }
+.v-tour-stats dd { margin: 0; color: var(--v-muted); }
+.v-tour-chart { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.v-tour-chart svg { width: 100%; flex: 1; min-height: 0; display: block; }
+.v-tour-vol { flex: none; height: 22%; display: flex; align-items: flex-end; gap: 0.25em; margin-top: 0.5em; }
+.v-tour-vol span { flex: 1; background: var(--v-edge-strong); border-radius: 0.12em; }
+
+/* 03 — sources */
+.v-tour-answer { margin: 0; color: var(--v-text); line-height: 1.5; }
+.v-tour-answer-dim { color: var(--v-muted); }
+.v-tour-chips { display: flex; gap: 0.4em; flex-wrap: wrap; margin-top: 0.2em; }
+.v-tour-ledger { margin-top: auto; display: grid; gap: 0.25em; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.8em; }
+.v-tour-ledger > div { display: flex; gap: 0.8em; }
+.v-tour-verb { color: var(--v-accent-soft); letter-spacing: 0.08em; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.8em; font-weight: 700; }
+.v-tour-verb-warn { color: var(--v-warn); }
+.v-tour-path { color: var(--v-muted); }
+.v-tour-t { margin-left: auto; color: var(--v-faint); font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+/* 04 — limits */
+.v-tour-limits { justify-content: center; gap: 1.2em; }
+.v-tour-limits > div { display: flex; flex-direction: column; align-items: flex-start; gap: 0.35em; }
+
+/* 05 — alerts */
+.v-tour-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.5em 0.7em;
+  border-radius: 0.5em;
+  border: 1px solid var(--v-edge);
+  background: var(--v-surface);
+}
+.v-tour-alert.is-live { background: rgba(70, 167, 88, 0.08); border-color: rgba(70, 167, 88, 0.30); }
+.v-tour-dot { width: 0.5em; height: 0.5em; border-radius: 50%; flex: none; background: var(--v-edge-strong); }
+.v-tour-alert.is-live .v-tour-dot { background: var(--v-accent); }
 
 /* ---------- the FAQ ----------
    Narrower than the 1200px measure the rest of the page runs at. These are the
