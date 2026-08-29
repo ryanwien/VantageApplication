@@ -66,6 +66,50 @@ const DWELL = 6.5;
 
 const NOS = ["01", "02", "03"];
 
+/* ---------- the motion ----------
+   Every panel plays a short sequence and then rests. They all finish inside
+   2s, which is under a third of DWELL, and that gap is the point: a surface
+   still moving when the rail runs out reads as something that has not
+   finished loading rather than something being demonstrated. */
+
+const EASE = [0.22, 1, 0.36, 1];
+const beat = (delay, duration = 0.42) => ({ delay, duration, ease: EASE });
+
+const ELS = { div: m.div, span: m.span };
+
+// A keyframe list has nothing to say to a reader who asked for no motion, so
+// take the value it was going to end on.
+function settle(target) {
+  const out = {};
+  for (const [k, v] of Object.entries(target)) out[k] = Array.isArray(v) ? v[v.length - 1] : v;
+  return out;
+}
+
+// One beat of a panel's sequence. `play` says what the cue is:
+//
+//   "now"   animate on mount. The desktop carousel already remounts the panel
+//           whenever a tab is chosen — AnimatePresence keys it on `active` —
+//           so mounting IS the cue and there is no trigger to write.
+//   "view"  animate on scroll. The phone stacks all three panels, so mounting
+//           would play all three at once with two of them off screen.
+//   false   render finished. `initial={false}` starts motion at the end state
+//           and animates nothing, which is the right answer under reduced
+//           motion: the whole picture at once, rather than a blank frame
+//           waiting on an animation that has been silenced.
+function Beat({ play, el = "div", from, to, transition, ...rest }) {
+  const M = ELS[el];
+  if (play === "view") {
+    return (
+      <M initial={from} whileInView={to} transition={transition}
+        viewport={{ once: true, amount: 0.4 }} {...rest} />
+    );
+  }
+  return <M initial={play ? from : false} animate={play ? to : settle(to)} transition={transition} {...rest} />;
+}
+
+const RISE = { from: { opacity: 0, y: 10 }, to: { opacity: 1, y: 0 } };
+const POP = { from: { opacity: 0, scale: 0.82 }, to: { opacity: 1, scale: 1 } };
+
 /* ---------- the surfaces ----------
    Each is a fragment of a real app screen at real sizes. They are deliberately
    partial: a whole desk shrunk to fit this column would be unreadable, and an
@@ -87,8 +131,11 @@ function Frame({ children, label }) {
   );
 }
 
+// The session shape for panel 01. A shape, not data — see below.
+const SESSION = [38, 52, 44, 61, 55, 72, 64, 80, 71, 88, 76, 66, 58, 69, 62];
+
 // 01 — the command bar, mid-type, and what it returns.
-function PanelCommand() {
+function PanelCommand({ play }) {
   return (
     <Frame label="The command bar with AMD typed into it, returning a quote and a chart">
       <div style={{
@@ -97,25 +144,56 @@ function PanelCommand() {
         fontFamily: MONO, fontSize: 14, color: C.text,
       }}>
         <span style={{ color: C.faint }}>&gt;</span>
-        <span>amd</span>
+
+        {/* The ticker types itself, and it types by WIDTH rather than by fading
+            three letters up. A letter sitting at opacity 0 still takes its
+            space, so the caret would wait three characters to the right of an
+            empty prompt for text that then appears underneath it. Width in
+            `ch` is the only version where the caret advances with the typing.
+
+            Each width is held before the next rather than interpolated: a
+            smoothly widening box is a wipe, and a keystroke is not a wipe.
+            overflow:hidden is load-bearing twice over — it clips the letters
+            that have not been typed yet, and it is what allows this flex item
+            to go under its own min-content width at all. */}
+        <Beat el="span" play={play}
+          from={{ width: "0ch" }}
+          to={{ width: ["0ch", "1ch", "1ch", "2ch", "2ch", "3ch"] }}
+          transition={{
+            delay: 0.2, duration: 0.5, ease: "linear",
+            times: [0, 0.001, 0.333, 0.334, 0.666, 0.667],
+          }}
+          style={{ display: "inline-block", overflow: "hidden", whiteSpace: "nowrap" }}
+        >amd</Beat>
+
         <span className="vt-pulse" aria-hidden="true"
           style={{ width: 1.5, height: 17, background: C.accent, animationTimingFunction: "steps(1)" }} />
       </div>
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 2 }}>
+      <Beat play={play} {...RISE} transition={beat(0.82)}
+        style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 2 }}>
         <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: C.muted, letterSpacing: "0.04em" }}>AMD</span>
         <span style={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, letterSpacing: "-0.02em" }}>158.90</span>
         <span style={{ fontFamily: MONO, fontSize: 13, color: C.down }}>-0.84%</span>
-      </div>
+      </Beat>
 
       {/* A shape, not data. Flat-topped bars would read as a real chart and
-          invite somebody to check the numbers against the tape. */}
+          invite somebody to check the numbers against the tape.
+
+          They grow left to right, which means the four red ones arrive last
+          and the session turns over while you are watching it. That is the
+          whole reason the stagger runs in index order rather than outward from
+          the middle or all at once. */}
       <div aria-hidden="true" style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 62, marginTop: "auto" }}>
-        {[38, 52, 44, 61, 55, 72, 64, 80, 71, 88, 76, 66, 58, 69, 62].map((h, i) => (
-          <span key={i} style={{
-            flex: 1, height: `${h}%`, borderRadius: 2,
-            background: i > 9 ? C.down : C.accent, opacity: 0.55 + (i / 40),
-          }} />
+        {SESSION.map((h, i) => (
+          <Beat key={i} el="span" play={play}
+            from={{ scaleY: 0, opacity: 0 }}
+            to={{ scaleY: 1, opacity: 0.55 + i / 40 }}
+            transition={beat(1.02 + i * 0.035, 0.34)}
+            style={{
+              flex: 1, height: `${h}%`, borderRadius: 2, transformOrigin: "bottom",
+              background: i > 9 ? C.down : C.accent,
+            }} />
         ))}
       </div>
     </Frame>
@@ -125,63 +203,84 @@ function PanelCommand() {
 // 02 — an answer, its citation, and the refusal that makes the citation mean
 // something. Both halves matter: a product that only shows its confident
 // answers is not demonstrating honesty, it is demonstrating confidence.
-function PanelReceipts() {
+function PanelReceipts({ play }) {
   return (
     <Frame label="An answer carrying its source, and the anchor declining to answer when the data is missing">
-      <div style={{
-        background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`,
-        borderRadius: R.md, padding: 14,
-      }}>
+      <Beat play={play} {...RISE} transition={beat(0.1)}
+        style={{
+          background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`,
+          borderRadius: R.md, padding: 14,
+        }}>
         <p style={{ margin: 0, fontFamily: SANS, fontSize: 13.5, lineHeight: 1.55, color: C.textBody }}>
           Down 0.84% on light volume. Support held at 156.
         </p>
+        {/* The chips land after the sentence they belong to, one and then the
+            other. An answer and its sources arriving together is a card; an
+            answer that is then sourced is the argument this panel exists to
+            make. Only these two are lit — the sheen is the live signal, and
+            the refusal below is the one thing here that is not live. */}
         <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
-          {["quote · 16:00", "P&F · daily"].map((s) => (
-            <span key={s} style={{
-              fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.04em",
-              color: C.accentText, background: "rgba(70,167,88,0.10)",
-              border: `1px solid rgba(70,167,88,0.28)`,
-              borderRadius: R.pill, padding: "3px 8px",
-            }}>{s}</span>
+          {["quote · 16:00", "P&F · daily"].map((s, i) => (
+            <Beat key={s} el="span" play={play} {...POP} transition={beat(0.62 + i * 0.12, 0.34)}
+              className="v-pill v-pill-source v-pill-lit">{s}</Beat>
           ))}
         </div>
-      </div>
+      </Beat>
 
-      <div style={{
-        background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`,
-        borderRadius: R.md, padding: 14, marginTop: "auto",
-      }}>
+      <Beat play={play} {...RISE} transition={beat(1.0)}
+        style={{
+          background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`,
+          borderRadius: R.md, padding: 14, marginTop: "auto",
+        }}>
         <p style={{ margin: 0, fontFamily: SANS, fontSize: 13.5, lineHeight: 1.55, color: C.muted }}>
           I don't have earnings for that date — I'm not going to guess it.
         </p>
-        <span style={{
-          display: "inline-block", marginTop: 10,
-          fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.04em",
-          color: C.warn, background: "rgba(221,154,60,0.10)",
-          border: `1px solid rgba(221,154,60,0.28)`,
-          borderRadius: R.pill, padding: "3px 8px",
-        }}>no source</span>
-      </div>
+        <Beat el="span" play={play} {...POP} transition={beat(1.44, 0.34)}
+          className="v-pill v-pill-none" style={{ marginTop: 10 }}>no source</Beat>
+      </Beat>
     </Frame>
   );
 }
 
 // 03 — an alert at the moment it fires.
-function PanelAlerts() {
+const LIVE_BG = "rgba(70,167,88,0.07)";
+const LIVE_FLASH = "rgba(70,167,88,0.34)";
+
+function PanelAlerts({ play }) {
   const rows = [
     { sym: "AMD", text: "crossed 160.00", time: "16:02", live: true },
     { sym: "NVDA", text: "P&F double top", time: "15:47", live: false },
     { sym: "TSLA", text: "crossed 250.00", time: "15:12", live: false },
   ];
+  // Entrance ordered by recency, not by position. The two settled alerts come
+  // in first and the live one lands on top of them, late, and flashes — a list
+  // that fills top-down is a list loading, and an alert arriving above rows
+  // that were already sitting there is an alert firing. Nothing reflows: the
+  // rows hold their space throughout, only opacity, offset and fill move.
+  const ARRIVE = [0.52, 0.1, 0.22];
   return (
     <Frame label="Price and pattern alerts firing, newest first">
-      {rows.map((r) => (
-        <div key={r.sym} style={{
-          display: "flex", alignItems: "center", gap: 10,
-          background: r.live ? "rgba(70,167,88,0.07)" : C.surfaceRaised,
-          border: `1px solid ${r.live ? "rgba(70,167,88,0.30)" : C.edgeStrong}`,
-          borderRadius: R.md, padding: "11px 13px",
-        }}>
+      {rows.map((r, i) => (
+        <Beat key={r.sym} play={play}
+          from={{ opacity: 0, x: -10 }}
+          to={r.live
+            ? { opacity: 1, x: 0, backgroundColor: [LIVE_BG, LIVE_FLASH, LIVE_BG] }
+            : { opacity: 1, x: 0 }}
+          // The flash is the row's own fill rather than a scrim laid over it.
+          // An absolutely positioned overlay paints above the ticker and the
+          // time — briefly, but being read is this panel's entire job.
+          transition={r.live
+            ? {
+              ...beat(ARRIVE[i], 0.4),
+              backgroundColor: { delay: ARRIVE[i] + 0.22, duration: 1.25, ease: "easeOut", times: [0, 0.14, 1] },
+            }
+            : beat(ARRIVE[i], 0.4)}
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            backgroundColor: r.live ? LIVE_BG : C.surfaceRaised,
+            border: `1px solid ${r.live ? "rgba(70,167,88,0.30)" : C.edgeStrong}`,
+            borderRadius: R.md, padding: "11px 13px",
+          }}>
           <span
             className={r.live ? "vt-pulse" : undefined}
             aria-hidden="true"
@@ -193,7 +292,7 @@ function PanelAlerts() {
           <span style={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 700, color: C.muted, letterSpacing: "0.04em" }}>{r.sym}</span>
           <span style={{ fontFamily: SANS, fontSize: 13, color: r.live ? C.text : C.muted }}>{r.text}</span>
           <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 11.5, color: C.faint }}>{r.time}</span>
-        </div>
+        </Beat>
       ))}
     </Frame>
   );
@@ -217,9 +316,17 @@ function useNarrow() {
   return narrow;
 }
 
-// The phone version: every claim next to its own evidence, nothing moving.
-function Stacked({ titles, bodies, eyebrow, heading }) {
+// The phone version: every claim next to its own evidence, and no carousel.
+//
+// The panels themselves do play here — that is not a contradiction of the note
+// above, which is about a control that advances content the reader cannot see.
+// A surface that runs its sequence once, when you scroll to it, is the
+// opposite: it is only ever triggered by the reader arriving at it. Hence
+// "view" rather than "now" — mounting all three at once would play two of
+// them into an empty room.
+function Stacked({ titles, bodies, eyebrow, heading, reduce }) {
   return (
+    <LazyMotion features={domAnimation} strict>
     <section id="home-features" className="v-showcase" aria-labelledby="showcase-heading">
       <div>
         <p style={{
@@ -245,11 +352,12 @@ function Stacked({ titles, bodies, eyebrow, heading }) {
               margin: "6px 0 0", fontFamily: SANS, fontSize: 14,
               lineHeight: 1.6, color: C.muted,
             }}>{bodies[i]}</p>
-            <div style={{ marginTop: 16 }}><Panel /></div>
+            <div style={{ marginTop: 16 }}><Panel play={reduce ? false : "view"} /></div>
           </div>
         );
       })}
     </section>
+    </LazyMotion>
   );
 }
 
@@ -299,7 +407,7 @@ export default function HomeShowcase({ titles, bodies, eyebrow, heading }) {
 
   // Below the breakpoint this stops being a carousel entirely. Every hook above
   // has already run, so the two shapes swap cleanly on a resize.
-  if (narrow) return <Stacked titles={titles} bodies={bodies} eyebrow={eyebrow} heading={heading} />;
+  if (narrow) return <Stacked titles={titles} bodies={bodies} eyebrow={eyebrow} heading={heading} reduce={reduce} />;
 
   return (
     <LazyMotion features={domAnimation} strict>
@@ -383,7 +491,10 @@ export default function HomeShowcase({ titles, bodies, eyebrow, heading }) {
                            : { opacity: 0, y: -8, transition: { duration: 0.16 } }}
               transition={reduce ? { duration: 0.15 } : { type: "spring", stiffness: 380, damping: 34, mass: 0.7 }}
             >
-              <Panel />
+              {/* "now": AnimatePresence keys this on `active`, so choosing a
+                  tab remounts the panel and the sequence replays itself with
+                  no trigger to write. */}
+              <Panel play={reduce ? false : "now"} />
             </m.div>
           </AnimatePresence>
         </div>

@@ -216,23 +216,13 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
         <button onClick={onSignIn} className="v-taprow" style={{ ...navLink, marginLeft: "auto", color: C.text }}>{t("Sign in")}</button>
       </nav>
 
-      {/* How far down the page you are, drawn by the scroller rather than by a
-          scroll handler — see .v-scrollprogress in global.css. aria-hidden and
-          pointer-events:none: it is a readout of something the reader is
-          already doing, so it should be invisible to a screen reader and
-          impossible to click. Where scroll timelines are unsupported it stays
-          at scaleX(0) and is simply never seen, which is the correct outcome
-          for a decoration. */}
-      <div className="v-scrollprogress" aria-hidden="true" style={{
-        position: "fixed", top: 0, left: 0, right: 0, height: 2,
-        zIndex: 60, pointerEvents: "none",
-      }}>
-        <i style={{
-          display: "block", height: "100%", transform: "scaleX(0)",
-          background: `linear-gradient(90deg, ${C.accent}, ${C.accentSoft})`,
-        }} />
-      </div>
-
+      {/* There used to be a scroll-progress hairline pinned across the top of
+          the viewport here. It was cut on sight: it is a readout of something
+          the reader is already doing — they can see how far down they are by
+          looking — and it put a bright accent rule above a top bar whose whole
+          job is to be black. The scroll-linked machinery it demonstrated is
+          still in use on the hero itself, where it moves something worth
+          moving. */}
       <Tape />
 
       <div className="v-homewrap">
@@ -354,12 +344,17 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
                   borderRadius: R.xl, padding: 26,
                   display: "flex", flexDirection: "column", gap: 14,
                 }}>
+                  {/* The badge takes the shared pill from global.css rather
+                      than nine inline declarations, and it takes the sheen
+                      instead of vt-pulse. A badge that pulses forever is a
+                      nag — it is not reporting anything, it is asking to be
+                      looked at, repeatedly, next to a price. The sheen passes
+                      once every six seconds and says the same thing quietly.
+                      `position: absolute` is inline on purpose: it has to beat
+                      the `relative` .v-pill sets for its own sheen. */}
                   {featured && (
-                    <span className="vt-pulse" style={{
+                    <span className="v-pill v-pill-solid v-pill-lit" style={{
                       position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)",
-                      background: C.accent, color: C.textOnAccent, borderRadius: R.pill,
-                      fontFamily: MONO, fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em",
-                      padding: "3px 12px", whiteSpace: "nowrap",
                     }}>{t("POPULAR")}</span>
                   )}
                   <div>

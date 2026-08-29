@@ -757,10 +757,11 @@ html.v-scrollfx .v-scrollin.v-in  { animation: vt-fadeup 0.7s var(--v-ease) both
 html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
 
 /* ---------- scroll-LINKED motion ----------
-   Everything above plays once, on arrival, and is driven by a clock. These two
-   are driven by the scroll position itself — scrub back up and they run
-   backwards, because they are not animations that were triggered by scrolling,
-   they ARE the scrolling. That is the difference between reveal.js and this.
+   Everything above plays once, on arrival, and is driven by a clock. What is
+   below is driven by the scroll position itself — scrub back up and it runs
+   backwards, because these are not animations that were triggered by
+   scrolling, they ARE the scrolling. That is the difference between reveal.js
+   and this.
 
    Gated twice, and both gates are load-bearing.
 
@@ -769,20 +770,15 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
    layout.css.scroll-driven-animations.enabled in stable. An unsupported browser
    does not fall back — it simply never runs the animation and leaves the
    element at its from-state — so nothing here may own an element's only route
-   to being visible. Nothing does: the progress bar is decoration that starts at
-   zero width, and the hero starts fully opaque and only fades on the way out.
+   to being visible. Nothing does: the hero starts fully opaque and only fades
+   on the way out.
 
    @media (prefers-reduced-motion: no-preference), rather than trusting the
    reduce block further down this file. That block works by forcing
-   animation-duration to 0.01ms, and duration is not what advances a progress
-   timeline — the scroller is. It would not reliably stop either of these. */
+   animation-duration to 0.01ms, and duration is not what advances a scroll
+   timeline — the scroller is. It would not reliably stop this. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .v-scrollprogress > i {
-      transform-origin: 0 50%;
-      animation: v-scrollprogress linear both;
-      animation-timeline: scroll(root block);
-    }
     /* The hero is 548px of the first screen and, until now, held still while
        everything under it moved. It leaves at a different rate than the page
        does, which is the whole trick — parallax is just two speeds. `exit` is
@@ -805,11 +801,10 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
     }
   }
 }
-/* Kept outside the @supports so the keyframes are defined either way; a
-   keyframe nobody references costs nothing. Note the hero's floor is 0.3, not
-   0 — by then it is off-screen anyway, and an element whose animation can end
-   at opacity 0 is one bug away from a blank page. */
-@keyframes v-scrollprogress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* Kept outside the @supports so the keyframe is defined either way; one
+   nobody references costs nothing. Note the hero's floor is 0.3, not 0 — by
+   then it is off-screen anyway, and an element whose animation can end at
+   opacity 0 is one bug away from a blank page. */
 @keyframes v-heroexit { to { opacity: 0.3; transform: translateY(-34px); } }
 
 /* ---------- the hero, in six beats ----------
@@ -902,6 +897,145 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
 @keyframes v-aurorabloom {
   from { opacity: 0.5; filter: blur(70px); }
   to   { opacity: 1;   filter: blur(115px); }
+}
+
+/* ---------- the hero's transmission ----------
+   HeroPlate draws a ring field and a travelling ping from one source in the
+   upper right. Both live on a child of the masked layer, never on the masked
+   layer itself — a transform on the element carrying the mask takes the mask
+   with it, and the mask is the only thing keeping this off the body copy.
+
+   Amplitudes are small on purpose. The field breathes 4% over 20s, which is
+   below the threshold at which anyone watches it and above the one at which
+   the corner looks dead. The ping is the only thing here with a beat, and 9s
+   between beats is slow enough that it reads as a station idling rather than
+   as something demanding to be noticed.
+
+   Both are decoration in the strict sense — they begin and end at states the
+   layer is complete in — so the blanket prefers-reduced-motion rule above
+   collapsing them to 0.01ms leaves a finished picture, not a half-drawn one.
+   That is also why the ping is `both` rather than `forwards`: with the rule
+   applied it settles on the end keyframe, opacity 0, and the field alone is
+   what remains. A ping frozen mid-travel would be a stray ring nobody
+   could explain. */
+@keyframes v-ringfield {
+  from { transform: scale(1); }
+  to   { transform: scale(1.04); }
+}
+/* Starts inside the source and leaves. It never returns — the animation
+   restarts from scale 1, and by then it has been invisible for two thirds of
+   the cycle, so there is no snap to see. */
+@keyframes v-ringping {
+  0%   { transform: scale(0.62); opacity: 0; }
+  12%  { opacity: 0.9; }
+  70%  { opacity: 0; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+.v-ringfield { animation: v-ringfield 20s ease-in-out infinite alternate; }
+.v-ringping  { animation: v-ringping 9s var(--v-ease) infinite both; }
+
+/* ---------- and where the geography stops being true ----------
+   HeroPlate is allowed to exist because the desktop hero puts every word in
+   the left column and leaves the right one for the BroadcastCard, so a light
+   parked at 82%/18% is never behind prose. Measured at 1440: body copy
+   5.79:1 where the bare page with its dot grid is 6.36:1, against a 4.5:1
+   floor.
+
+   Below 1000px the hero collapses to one column and that sentence becomes
+   false — the headline and the body copy run the full width, straight through
+   the middle of the ring field. Measured at 377px without this rule: body copy
+   2.36:1 on rgb(52,110,83), a hard AA failure, and the headline 4.73:1 with
+   nothing but the large-text exemption keeping it legal.
+
+   The photograph this replaced had exactly the same structural problem and
+   was never caught, because a blurred image at 55% never looks like it is
+   doing anything even while it is eating a third of the contrast. Drawn light
+   is easier to measure precisely because you can see it.
+
+   So on narrow the light retreats to a wash: the field stays as texture, the
+   ping goes entirely. A single bright ring travelling across a paragraph is
+   the worst of the three by a distance — it is the brightest alpha in the
+   file and it moves, so it takes the contrast somewhere new every second and
+   there is no single worst case a reader can adapt to.
+
+   After, at the same 377px: body copy 5.44:1, headline 11.06:1, against 6.36:1
+   for the bare page with its grid. Re-measure if you touch a mask centre or an
+   alpha; the numbers above are the whole permission slip. */
+@media (max-width: 1000px) {
+  .v-plate-glow  { opacity: 0.42; }
+  .v-plate-rings { opacity: 0.30; }
+  .v-plate-ping  { display: none; }
+}
+
+/* ---------- pills ----------
+   Source chips, the refusal chip, the POPULAR badge. Three places were
+   hand-rolling the same shape inline with slightly different padding and the
+   same six declarations copied between them, so this is one family instead.
+
+   They are lit from the same corner as everything else on this page. The
+   inset highlight sits on the TOP edge and the drop shadow under the bottom,
+   which is the whole difference between a chip that is a rounded rectangle
+   with a border and one that reads as a physical token sitting on the card.
+   It is one shadow declaration; it is the cheapest depth on the page.
+
+   WHY THE SHEEN IS ON A TIMER AND NOT A HOVER
+   These are not controls. Nothing here is clickable, so hover would be a
+   promise the element cannot keep. What they are is a readout that something
+   is live, and the same argument the hero's ping makes applies at this size:
+   one slow pass every 6s reads as a station idling. Faster is a loading
+   skeleton, and this is not loading. */
+.v-pill {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 9999px;
+  padding: 3px 9px;
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  line-height: 1.55;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.v-pill-source { color: var(--v-accent-soft); background: rgba(70, 167, 88, 0.10);  border-color: rgba(70, 167, 88, 0.28); }
+.v-pill-none   { color: var(--v-warn);        background: rgba(221, 154, 60, 0.10); border-color: rgba(221, 154, 60, 0.28); }
+/* The badge is a fill, so it takes near-black type — the text token on this
+   green is 3.1:1, which is under AA for anything this small. */
+.v-pill-solid  { color: var(--v-base); background: var(--v-accent); font-weight: 700; letter-spacing: 0.1em; padding: 3px 12px; }
+
+/* The sheen passes UNDER the glyphs, so on an outline chip it is spending
+   contrast every time it crosses one. Measured on the source chip, which is
+   the tightest: #4cc38a rests at 6.72:1 and the sheen takes it to 5.43:1 at
+   0.07, 5.26:1 at 0.08, 4.93:1 at 0.10 and 4.31:1 at 0.14 — the last of which
+   is a real failure against the 4.5:1 floor, not a near miss. 0.07 keeps 0.93
+   in hand and is still plainly a pass of light on a fill this dark. */
+.v-pill-lit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 22%, rgba(255, 255, 255, 0.07) 50%, transparent 78%);
+  transform: translateX(-130%);
+  animation: v-pillsheen 6s var(--v-ease) infinite both;
+}
+/* The filled badge gets more than twice as much, and that is a measurement
+   rather than a preference. Its label is near-black on green, so lightening
+   the fill moves contrast the RIGHT way — 6.38:1 at rest, 7.20:1 under a
+   sheen that would cost an outline chip 1.8. The direction of the risk flips
+   with the polarity of the pill, so the value has to flip with it. */
+.v-pill-solid.v-pill-lit::after {
+  background: linear-gradient(100deg, transparent 22%, rgba(255, 255, 255, 0.16) 50%, transparent 78%);
+}
+/* Held off-screen for the first 62% of the cycle, so the pass is an event
+   rather than a permanent shimmer. `both` is deliberate: under reduced motion
+   the rule above collapses this to 0.01ms and it settles on the LAST
+   keyframe — off the far side, invisible — rather than parked mid-pill. */
+@keyframes v-pillsheen {
+  0%, 62% { transform: translateX(-130%); }
+  100%    { transform: translateX(130%); }
 }
 
 .vt-pulse   { animation: vt-pulse 1.1s ease-in-out infinite; }
