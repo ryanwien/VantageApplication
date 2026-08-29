@@ -1505,42 +1505,130 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
 
 /* ---------- the band ----------
    Full width without a single `vw` anywhere. This element is a sibling of
-   .v-homewrap rather than a child of it, so it simply fills the page — which
-   is the point of splitting the wrap in HomePage. The usual trick,
-   `margin-inline: calc(50% - 50vw)`, would have been 15px too wide here,
-   because `vw` counts the scrollbar and the page has one: a horizontal scroll
-   bar on a marketing page, to save one level of nesting. */
+   .v-homewrap rather than a child of it, so it simply fills the page. The
+   usual trick, `margin-inline: calc(50% - 50vw)`, measured 10px too wide here,
+   because `vw` counts the scrollbar and this page has one: a horizontal scroll
+   bar on a marketing page, to save one level of nesting.
+
+   The bleed carries a wash rather than the video now. The video moved to the
+   foreground, so the only thing that needs to span the page is the hint that
+   this is its own zone. */
 .v-band {
+  position: relative;
+  margin-top: 88px;
+  padding: 12px 0;
+  background: linear-gradient(to bottom,
+    var(--v-base) 0%,
+    rgba(23, 28, 36, 0.55) 45%,
+    rgba(23, 28, 36, 0.55) 62%,
+    var(--v-base) 100%);
+}
+
+/* The crossfade. Linear, because an eased dissolve spends most of its time
+   near one end and reads as a cut with a stutter rather than as a blend. */
+.v-band-vid { transition: opacity 0.8s linear; }
+
+/* The player. Same border, radius and shadow as the showcase panels and the
+   BroadcastCard — this is a surface from the app's own vocabulary, not a
+   YouTube embed dropped into the page. `aspect-ratio` rather than a height so
+   the box is correct before the clip has loaded and nothing reflows when it
+   does. */
+.v-band-frame {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  margin-top: 88px;
-  min-height: 360px;
-  display: flex;
-  align-items: center;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  max-width: 880px;
+  margin: 36px auto 0;
+  border: 1px solid var(--v-edge-strong);
+  border-radius: var(--v-r-xl, 16px);
+  background: var(--v-base);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 
-.v-band-media { position: absolute; inset: 0; z-index: 0; }
-
-/* The crossfade itself. Linear, because an eased dissolve spends most of its
-   time near one end and reads as a cut with a stutter rather than a blend. */
-.v-band-vid { transition: opacity 0.8s linear; }
-
-/* Two jobs, and only the first is taste. The flat layer is legibility: the
-   clip peaks at 0.3212 luminance and the copy would sit at 2.25:1 without it.
-   The gradient is what stops the band reading as a rectangle pasted onto the
-   page — it melts the top and bottom edges back into --v-base so the video
-   has no visible boundary, only a middle. */
-.v-band-scrim {
+/* WCAG 2.2.2 — anything that moves by itself for more than five seconds needs
+   a way to stop it, and this loops forever. Sits inside the frame so it cannot
+   be mistaken for a page control, and carries a real focus ring because it is
+   a real button. */
+.v-band-toggle {
   position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(to bottom,
-      var(--v-base) 0%,
-      rgba(11, 14, 19, 0.55) 22%,
-      rgba(11, 14, 19, 0.55) 78%,
-      var(--v-base) 100%),
-    rgba(11, 14, 19, 0.62);
+  right: 14px;
+  bottom: 14px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 9999px;
+  border: 1px solid rgba(230, 232, 235, 0.22);
+  background: rgba(11, 14, 19, 0.62);
+  backdrop-filter: blur(6px);
+  color: var(--v-text);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.v-band-toggle:hover { background: rgba(11, 14, 19, 0.82); border-color: rgba(230, 232, 235, 0.4); }
+.v-band-toggle:focus-visible { outline: 2px solid var(--v-accent); outline-offset: 3px; }
+
+/* ---------- the FAQ ----------
+   Narrower than the 1200px measure the rest of the page runs at. These are the
+   longest unbroken paragraphs on the page and 1200px would put them at well
+   over 100 characters a line; 760 keeps them near 75, which is where prose
+   stops being work to read. */
+.v-faq { margin-top: 88px; }
+
+.v-faq-h {
+  margin: 14px 0 0;
+  text-align: center;
+  font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: 40px;
+  letter-spacing: -0.032em;
+  line-height: 1.05;
+}
+
+.v-faq-list { max-width: 760px; margin: 34px auto 0; }
+
+.v-faq-item { border-bottom: 1px solid var(--v-edge); }
+.v-faq-item:first-child { border-top: 1px solid var(--v-edge); }
+
+.v-faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 2px;
+  cursor: pointer;
+  font-family: 'Schibsted Grotesk', -apple-system, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.010em;
+  color: var(--v-text);
+  /* Safari still paints its own triangle without this, which lands beside the
+     chevron and reads as two competing affordances. */
+  list-style: none;
+}
+.v-faq-q::-webkit-details-marker { display: none; }
+.v-faq-q:hover { color: var(--v-accent-soft); }
+.v-faq-q:focus-visible { outline: 2px solid var(--v-accent); outline-offset: 2px; border-radius: 4px; }
+
+.v-faq-chev {
+  flex: 0 0 auto;
+  color: var(--v-faint);
+  transition: transform 0.22s ease, color 0.22s ease;
+}
+.v-faq-item[open] .v-faq-chev { transform: rotate(180deg); color: var(--v-accent-soft); }
+
+.v-faq-a {
+  margin: 0;
+  padding: 0 2px 22px;
+  max-width: 66ch;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--v-muted);
 }
 
 .v-band-inner {
@@ -1605,13 +1693,19 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
   .v-showcase { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .v-showcase-h { font-size: 32px; letter-spacing: -0.028em; }
 
-  /* The band keeps its full bleed — it is the one element on the page that is
-     supposed to touch both edges, and a phone is where that reads best. Only
-     the type and the breathing room come down. */
-  .v-band { min-height: 300px; margin-top: 64px; }
+  /* The wash keeps its full bleed; the player keeps its 16:9 and simply gets
+     narrower, which is what `max-width` plus `aspect-ratio` already does. Only
+     the type and the breathing room need saying. */
+  .v-band { margin-top: 64px; }
   .v-band-inner { padding: 48px 20px; }
   .v-band-h { font-size: 32px; letter-spacing: -0.028em; }
   .v-band-sub { font-size: 15.5px; }
+  .v-band-frame { margin-top: 28px; }
+  .v-faq { margin-top: 64px; }
+  .v-faq-h { font-size: 32px; letter-spacing: -0.028em; }
+  /* The question is the tap target, so it keeps its padding while the type
+     comes down — shrinking both would put a 44px row under a thumb. */
+  .v-faq-q { font-size: 16px; gap: 14px; }
 }
 
 @media (max-width: 620px) {

@@ -41,6 +41,7 @@ import VantageMark from "./VantageMark.jsx";
 import HeroPlate from "./HeroPlate.jsx";
 import HomeShowcase from "./HomeShowcase.jsx";
 import HomeBand from "./HomeBand.jsx";
+import HomeFaq from "./HomeFaq.jsx";
 
 // The tape. Static numbers on purpose: this is a marketing page, and wiring it
 // to the live market would mean opening a quote subscription for a visitor who
@@ -391,6 +392,10 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
             {t("Every plan starts with 7 days free. Card details are entered on Stripe's page, never here — cancel before day 8 and you pay nothing. After that, plans are billed monthly and can be changed or cancelled from Settings at any time.")}
           </p>
         </section>
+
+        {/* ---- faq ---- */}
+        {/* After the prices, because that is where the questions arrive. */}
+        <HomeFaq t={t} />
 
         <footer className="v-scrollin" style={{ marginTop: 64, paddingTop: 22, paddingBottom: 48, borderTop: `1px solid ${C.edge}`, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
           <VantageMark size={20} />
