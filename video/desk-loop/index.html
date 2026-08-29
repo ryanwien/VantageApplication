@@ -57,29 +57,57 @@
       data-width="1920"
       data-height="1080"
     >
-      <!-- Backdrop spans the whole piece so nothing about it can change across
-           the loop point. The 26px lattice is the landing page's own. -->
-      <!-- The landing page's own plate, masked to the upper right exactly as
-           HeroPlate.jsx masks it. This is the piece that stops the graphic
-           reading as generic dark-mode UI: the site has a photograph, a dot
-           lattice and an accent wash behind everything, and a video that
-           carries none of them looks like it came from somewhere else.
-           Slightly stronger here (0.62 vs 0.55) because no body copy sits over
-           it — the legibility budget that constrains it on the page does not
-           apply inside a frame with nothing on top. -->
-      <div id="plate" class="clip fill" data-start="0" data-duration="12" data-track-index="0"
-           style="background-image: url('hero-plate.webp');
-                  background-size: cover; background-position: center;
-                  opacity: 0.62;
-                  -webkit-mask-image: radial-gradient(78% 72% at 80% 16%, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 38%, rgba(0,0,0,0.25) 64%, transparent 84%);
-                  mask-image: radial-gradient(78% 72% at 80% 16%, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 38%, rgba(0,0,0,0.25) 64%, transparent 84%);"></div>
+      <!-- Persistent backdrop. Track 0, spans the whole piece, so every scene
+           cuts against the same surface instead of each one redrawing it — and
+           the encoder stores it once rather than once per scene.
 
+           WHY THIS IS DRAWN AND NOT PHOTOGRAPHED
+           This slot used to hold the landing page's hero photograph, masked to
+           the upper right. It was the wrong instrument. A soft-focus plate is a
+           backdrop for a hero section, where UI cards sit on top of it and give
+           it something to be behind; alone inside a video frame there is
+           nothing on top, and 1920x1080 of blurred highlight reads as a smear
+           on the lens rather than as depth. Every part of this is now drawn.
+
+           WHAT IT DRAWS
+           Transmission rings struck from a light source in the upper right.
+           The product calls itself an anchor and its own pill says ON AIR; this
+           is that idea as geometry. They land where the plate did, so the
+           composition keeps the weight in the corner it was balanced around.
+
+           WHY repeating-radial-gradient AND NOT SVG ARCS
+           One declaration strikes evenly spaced rings to any radius, with no
+           path arithmetic to get wrong and nothing to recompute if the canvas
+           changes. Two pixels of flat colour on a flat field is also the
+           cheapest thing an inter-frame codec can be asked to hold.
+
+           WHY IT DOES NOT MOVE
+           An expanding pulse would close the loop cleanly — three 4s cycles fit
+           12s exactly, so the phase at frame 360 is the phase at frame 0. It is
+           static anyway, for the reason the plate's drift was cut: full-frame
+           motion re-encodes every pixel of every frame, and measured on this
+           composition that cost 1.2 MB -> 2.0 MB. -->
+      <div id="glow" class="clip fill" data-start="0" data-duration="12" data-track-index="0"
+           style="background: radial-gradient(58% 56% at 85% 14%, rgba(70,167,88,0.17), rgba(70,167,88,0.05) 46%, transparent 74%);"></div>
+
+      <!-- Masked so the rings die before the centre column, where every scene
+           puts its text. Same principle as the plate it replaces: geography,
+           not opacity — dimming rings far enough to be safe over centred copy
+           leaves nothing visible anywhere. -->
+      <div id="rings" class="clip fill" data-start="0" data-duration="12" data-track-index="0"
+           style="background: repeating-radial-gradient(circle at 85% 14%,
+                    transparent 0 148px,
+                    rgba(76,195,138,0.15) 148px 150px,
+                    transparent 150px 298px);
+                  -webkit-mask-image: radial-gradient(62% 58% at 85% 14%, #000 0%, #000 24%, rgba(0,0,0,0.55) 52%, rgba(0,0,0,0.18) 70%, transparent 84%);
+                  mask-image: radial-gradient(62% 58% at 85% 14%, #000 0%, #000 24%, rgba(0,0,0,0.55) 52%, rgba(0,0,0,0.18) 70%, transparent 84%);"></div>
+
+      <!-- The 26px lattice, the landing page's own. Last of the three so it
+           reads across the rings rather than under them. -->
       <div id="bg" class="clip fill" data-start="0" data-duration="12" data-track-index="0"
            style="background:
              radial-gradient(circle at 1px 1px, rgba(230,232,235,0.085) 1.4px, transparent 0);
              background-size: 26px 26px;"></div>
-      <div id="glow" class="clip fill" data-start="0" data-duration="12" data-track-index="0"
-           style="background: radial-gradient(64% 58% at 76% 24%, rgba(70,167,88,0.11), transparent 70%);"></div>
 
       <!-- ONE clip for the whole duration. Scene-style clips would hide and show
            elements at fixed times, and the framework's visibility switching is

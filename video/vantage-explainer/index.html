@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, height=1080" />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/TextPlugin.min.js"></script>
     <style>
       /* Local files, not a Google Fonts @import. Render-time network is banned
          by the determinism rules, and a webfont that fails to arrive does not
@@ -34,7 +35,8 @@
         --base: #0b0e13;
         --surface: #11151c;
         --raised: #171c24;
-        --edge: #262d38;
+        --edge: #1c222c;
+        --edge-strong: #262d38;
         --ink: #e6e8eb;
         --body: #cfd4da;
         --muted: #9aa3ae;
@@ -50,40 +52,95 @@
       /* Full-bleed children, never the root: the producer's frame compositing
          can drop a background set on the composition root and render black. */
       .fill { position: absolute; inset: 0; }
-
       .scene { position: absolute; inset: 0; display: flex; flex-direction: column;
                align-items: center; justify-content: center; }
 
-      .kicker {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 26px; font-weight: 500; letter-spacing: 0.22em;
-        text-transform: uppercase; color: var(--accent-soft);
+      /* ---------- the step rail ----------
+         A row of steps with the live one raised out of the row rather than
+         merely tinted, so it reads at a glance and at a distance. Each chip's
+         lit state is its own element faded in on cue: a single pill sliding
+         between five positions would need five measured x offsets that rot
+         silently the moment a label's text changes. */
+      .tabrail {
+        position: absolute; top: 96px; left: 0; right: 0;
+        display: flex; justify-content: center; gap: 10px;
       }
-      .head {
-        font-size: 104px; font-weight: 700; letter-spacing: -0.035em;
-        line-height: 1.02; color: var(--ink); text-align: center;
+      .tab {
+        position: relative; padding: 14px 30px; border-radius: 11px;
+        font-size: 23px; font-weight: 600; letter-spacing: -0.01em;
       }
-      .sub {
-        font-size: 34px; line-height: 1.5; color: var(--muted);
-        text-align: center; max-width: 1180px;
+      .tabbg {
+        position: absolute; inset: 0; border-radius: 11px;
+        background: var(--raised); border: 1px solid var(--edge-strong);
       }
+      .tablab { position: relative; }
 
-      .panel {
-        background: var(--surface); border: 1px solid var(--edge);
-        border-radius: 22px; padding: 40px;
-        box-shadow: 0 40px 90px rgba(0,0,0,0.5);
+      /* ---------- the card ---------- */
+      .card {
+        position: absolute; left: 180px; top: 208px; width: 1560px; height: 784px;
+        background: var(--surface); border: 1px solid var(--edge-strong);
+        border-radius: 26px; padding: 44px 52px 0;
+        /* Clips the app view's square bottom corners to the card's radius. The
+           view is meant to run off the bottom edge like a window, which needs
+           the card to own the corner rather than the view. */
+        overflow: hidden;
+        box-shadow: 0 50px 110px rgba(0,0,0,0.55);
+        display: flex; flex-direction: column;
       }
+      .card-h { font-size: 50px; font-weight: 700; letter-spacing: -0.03em; color: var(--ink); }
+      .card-sub { font-size: 25px; line-height: 1.45; color: var(--muted); max-width: 1080px; }
+
+      .bar { width: 330px; height: 7px; border-radius: 999px; background: var(--edge-strong); overflow: hidden; }
+      .barfill { width: 100%; height: 100%; border-radius: 999px;
+                 background: linear-gradient(90deg, var(--accent), var(--accent-soft)); }
+
+      /* ---------- the product view ----------
+         Clipped by the card rather than fitted inside it, so it runs past the
+         bottom edge the way a window does. A panel that stops politely above
+         the padding reads as an illustration of an app; one that is cut off
+         reads as the app. */
+      .app {
+        margin-top: 30px; flex: 1; min-height: 0;
+        border: 1px solid var(--edge); border-radius: 16px 16px 0 0;
+        background: var(--base); overflow: hidden;
+        display: flex; flex-direction: column;
+      }
+      .appbar {
+        flex: none; height: 62px; display: flex; align-items: center; gap: 18px;
+        padding: 0 22px; border-bottom: 1px solid var(--edge);
+      }
+      .cmd {
+        flex: 1; display: flex; align-items: center; gap: 13px;
+        height: 40px; padding: 0 16px; border-radius: 9px;
+        background: var(--surface); border: 1px solid var(--edge-strong);
+        font-family: "JetBrains Mono", monospace; font-size: 20px; color: var(--ink);
+      }
+      .tape {
+        flex: none; height: 46px; display: flex; align-items: center; gap: 30px;
+        padding: 0 22px; border-bottom: 1px solid var(--edge);
+        font-family: "JetBrains Mono", monospace; font-size: 17px; color: var(--muted);
+      }
+      .tape b { color: var(--ink); font-weight: 700; margin-right: 9px; }
+      .body { position: relative; flex: 1; min-height: 0; }
+      /* Every step's body occupies the same box. The framework hides the ones
+         that are not on, so they cannot push each other around. */
+      .pane { position: absolute; inset: 0; padding: 24px 26px; }
 
       .chip {
-        display: inline-block;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 20px; letter-spacing: 0.05em;
-        border-radius: 999px; padding: 9px 18px;
+        display: inline-flex; align-items: center;
+        font-family: "JetBrains Mono", monospace; font-size: 17px;
+        border-radius: 999px; padding: 8px 15px;
       }
-      .chip-src { color: var(--accent-soft); background: rgba(70,167,88,0.10);
-                  border: 1px solid rgba(70,167,88,0.35); }
-      .chip-warn { color: var(--warn); background: rgba(221,154,60,0.10);
-                   border: 1px solid rgba(221,154,60,0.35); }
+      .chip-src { color: var(--accent-soft); background: rgba(70,167,88,0.12); border: 1px solid rgba(70,167,88,0.4); }
+      .chip-warn { color: var(--warn); background: rgba(221,154,60,0.12); border: 1px solid rgba(221,154,60,0.4); }
+
+      .row {
+        display: flex; align-items: center; gap: 20px;
+        height: 56px; padding: 0 18px; border-radius: 10px;
+        background: var(--surface); border: 1px solid var(--edge);
+      }
+      .k { font-family: "JetBrains Mono", monospace; font-size: 18px; color: var(--muted); }
+      .v { font-family: "JetBrains Mono", monospace; font-size: 18px; color: var(--ink); }
     </style>
   </head>
   <body>
@@ -97,178 +154,262 @@
     >
       <!-- Persistent backdrop. Track 0, spans all 30s, so every scene cuts
            against the same surface instead of each one redrawing it — and the
-           encoder stores it once rather than seven times.
+           encoder stores it once rather than once per scene.
 
-           THE PLATE
-           The landing page's own photograph, masked to the upper right the way
-           HeroPlate.jsx masks it. Without it this reads as generic dark-mode
-           UI: the site has a photograph, a 26px lattice and an accent wash
-           behind everything, and a video carrying none of them looks like it
-           came from somewhere else.
+           WHY THIS IS DRAWN AND NOT PHOTOGRAPHED
+           This slot used to hold the landing page's hero photograph, masked to
+           the upper right. It was the wrong instrument. A soft-focus plate is a
+           backdrop for a hero section, where UI cards sit on top of it and give
+           it something to be behind; alone inside a video frame there is
+           nothing on top, and 1920x1080 of blurred highlight reads as a smear
+           on the lens rather than as depth. Every part of this is now drawn.
 
-           WHY 0.55 HERE WHERE desk-loop RUNS 0.62
-           desk-loop is one continuous scene whose content is opaque panels, so
-           nothing legible ever sits on the plate and it can be pushed. This
-           piece cuts between seven scenes and most of them put bare text
-           straight onto the backdrop — including 34px --muted copy dead
-           centre. So it runs at the landing page's own value, not the boosted
-           one.
+           WHAT IT DRAWS
+           Transmission rings struck from a light source in the upper right.
+           The product calls itself an anchor and its own pill says ON AIR; this
+           is that idea as geometry. They land where the plate did, so the
+           composition keeps the weight in the corner it was balanced around.
 
-           WHY THE MASK IS TIGHTER AND PUSHED FURTHER INTO THE CORNER
-           The plate is not evenly lit. Mean luma per 320x270 cell, measured:
-
-                       x=0  320  640  960 1280 1600
-               y=0      22   22   17   18   24   33
-               y=270    90   70   23   31   72   83
-               y=540    70   64   29   45   79   90
-               y=810    31   33   27   22   22   22
-
-           Dark top and bottom, bright down both flanks through the middle —
-           and that middle band is exactly where centred text sits. Reusing
-           desk-loop's 78% 72% at 80% 16% would drop scene six's timestamp to
-           2.84:1. Centring at 84% / 14% and dying at r=0.84 puts the plate's
-           substance on the right-hand highlight beside the headlines and
-           reaches zero before the centred sub line:
-
-               s4 headline right end (ink)      15.75 -> 12.67:1
-               s1 sub right end (muted)          7.57 ->  7.47:1
-               s1 sub centre (muted)             7.57 ->  7.57:1   untouched
-               s6 timestamp (faint, 7% panel)    3.22 ->  3.03:1
-
-           The centre line is unchanged because the mask is not there at all.
-           Geography, not opacity — lowering alpha far enough to be safe over
-           centred copy makes the plate invisible everywhere else.
+           WHY repeating-radial-gradient AND NOT SVG ARCS
+           One declaration strikes evenly spaced rings to any radius, with no
+           path arithmetic to get wrong and nothing to recompute if the canvas
+           changes. Two pixels of flat colour on a flat field is also the
+           cheapest thing an inter-frame codec can be asked to hold.
 
            WHY IT DOES NOT MOVE
-           A slow drift was authored and cut. Measured on desk-loop it took the
-           file from 1.2 MB to 2.0 MB: inter-frame compression stores a still
-           backdrop once and then re-encodes a scaling photograph on every
-           frame. -->
-      <div id="plate" class="clip fill" data-start="0" data-duration="30" data-track-index="0"
-           style="background-image: url('hero-plate.webp');
-                  background-size: cover; background-position: center;
-                  opacity: 0.55;
-                  -webkit-mask-image: radial-gradient(72% 66% at 84% 14%, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 38%, rgba(0,0,0,0.25) 64%, transparent 84%);
-                  mask-image: radial-gradient(72% 66% at 84% 14%, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 38%, rgba(0,0,0,0.25) 64%, transparent 84%);"></div>
+           Full-frame motion re-encodes every pixel of every frame. Measured on
+           desk-loop, drifting its backdrop cost 1.2 MB -> 2.0 MB. A backdrop is
+           not worth two thirds of the file. -->
+      <div id="glow" class="clip fill" data-start="0" data-duration="30" data-track-index="0"
+           style="background: radial-gradient(58% 56% at 85% 14%, rgba(70,167,88,0.17), rgba(70,167,88,0.05) 46%, transparent 74%);"></div>
+
+      <!-- Masked so the rings die before the centre column, where the card
+           sits. Same principle as the plate it replaces: geography, not
+           opacity — dimming rings far enough to be safe under the card would
+           leave nothing visible anywhere. -->
+      <div id="rings" class="clip fill" data-start="0" data-duration="30" data-track-index="0"
+           style="background: repeating-radial-gradient(circle at 85% 14%,
+                    transparent 0 148px,
+                    rgba(76,195,138,0.15) 148px 150px,
+                    transparent 150px 298px);
+                  -webkit-mask-image: radial-gradient(62% 58% at 85% 14%, #000 0%, #000 24%, rgba(0,0,0,0.55) 52%, rgba(0,0,0,0.18) 70%, transparent 84%);
+                  mask-image: radial-gradient(62% 58% at 85% 14%, #000 0%, #000 24%, rgba(0,0,0,0.55) 52%, rgba(0,0,0,0.18) 70%, transparent 84%);"></div>
 
       <div id="bg" class="clip fill" data-start="0" data-duration="30" data-track-index="0"
            style="background:
              radial-gradient(circle at 1px 1px, rgba(230,232,235,0.085) 1.4px, transparent 0);
-             background-size: 26px 26px;">
-      </div>
-      <!-- Pulled in from 70% 60% at 78% 22% to desk-loop's figure. The plate
-           now supplies the light in that corner, and the two washes stacked at
-           full spread read muddy rather than lit. -->
-      <div id="bg-glow" class="clip fill" data-start="0" data-duration="30" data-track-index="0"
-           style="background: radial-gradient(64% 58% at 76% 24%, rgba(70,167,88,0.10), transparent 70%);">
-      </div>
+             background-size: 26px 26px;"></div>
 
-      <!-- 1 — the promise -->
-      <div id="s1" class="clip scene" data-start="0" data-duration="4.6" data-track-index="1">
-        <div id="s1-head" class="head">
+      <!-- ============ 0.0 – 3.4  the title ============ -->
+      <div id="s0" class="clip scene" data-start="0" data-duration="3.4" data-track-index="1">
+        <div id="s0-head" style="font-size: 104px; font-weight: 700; letter-spacing: -0.035em;
+             line-height: 1.02; color: var(--ink); text-align: center;">
           <span>The market,</span>
           <span style="display:block; color: var(--accent-soft);">on air.</span>
         </div>
-        <div id="s1-sub" class="sub" style="margin-top: 34px;">An AI news anchor for the markets.</div>
+        <div id="s0-sub" style="margin-top: 32px; font-size: 34px; color: var(--muted);">An AI news anchor for the markets.</div>
       </div>
 
-      <!-- 2 — the input -->
-      <div id="s2" class="clip scene" data-start="4.6" data-duration="4.4" data-track-index="1">
-        <div id="s2-kick" class="kicker">Step one</div>
-        <div id="s2-head" class="head" style="margin-top: 22px; font-size: 84px;">Type a ticker.</div>
-        <div id="s2-bar" class="panel mono"
-             style="margin-top: 46px; width: 860px; display: flex; align-items: center;
-                    gap: 18px; font-size: 46px; color: var(--ink); padding: 32px 40px;
-                    background: var(--base);">
-          <span style="color: var(--faint);">&gt;</span>
-          <span>amd</span>
-          <span id="s2-caret" style="width: 4px; height: 52px; background: var(--accent); display: inline-block;"></span>
+      <!-- ============ 3.4 – 26.9  the five steps ============
+           One rail, one card, five bodies. The rail and the card frame are a
+           single clip spanning all five, so nothing about the chrome moves at a
+           step change — only the label that lights, the words, the bar and the
+           pane. That is what makes it read as one product being driven rather
+           than as five slides. -->
+      <div id="rail" class="clip tabrail" data-start="3.4" data-duration="23.5" data-track-index="1">
+        <span class="tab"><span class="tabbg" id="tb-1"></span><span class="tablab" id="tl-1">Command</span></span>
+        <span class="tab"><span class="tabbg" id="tb-2"></span><span class="tablab" id="tl-2">Session</span></span>
+        <span class="tab"><span class="tabbg" id="tb-3"></span><span class="tablab" id="tl-3">Sources</span></span>
+        <span class="tab"><span class="tabbg" id="tb-4"></span><span class="tablab" id="tl-4">Limits</span></span>
+        <span class="tab"><span class="tabbg" id="tb-5"></span><span class="tablab" id="tl-5">Alerts</span></span>
+      </div>
+
+      <div id="card" class="clip card" data-start="3.4" data-duration="23.5" data-track-index="1">
+        <!-- Heading and sub are per-step, stacked in one fixed-height box so
+             the app view below never shifts when the words change length. -->
+        <div data-layout-allow-overlap style="position: relative; height: 62px; flex: none;">
+          <div id="h-1" class="card-h" style="position:absolute; inset:0;">Type a ticker.</div>
+          <div id="h-2" class="card-h" style="position:absolute; inset:0;">Get a session.</div>
+          <div id="h-3" class="card-h" style="position:absolute; inset:0;">Every answer carries its source.</div>
+          <div id="h-4" class="card-h" style="position:absolute; inset:0;">It says so when it doesn't know.</div>
+          <div id="h-5" class="card-h" style="position:absolute; inset:0;">Alerts, the moment they fire.</div>
+        </div>
+        <div data-layout-allow-overlap style="position: relative; height: 44px; margin-top: 10px; flex: none;">
+          <div id="p-1" class="card-sub" style="position:absolute; inset:0;">Three letters. No menus, no set-up, no dashboard to configure first.</div>
+          <div id="p-2" class="card-sub" style="position:absolute; inset:0;">The last price, the day's move, and the shape of how it got there.</div>
+          <div id="p-3" class="card-sub" style="position:absolute; inset:0;">Tagged with the quote it read and the time it read it.</div>
+          <div id="p-4" class="card-sub" style="position:absolute; inset:0;">The refusal is the feature. A guess that reads well is worse than nothing.</div>
+          <div id="p-5" class="card-sub" style="position:absolute; inset:0;">Set a level once. It watches the session so you don't have to.</div>
+        </div>
+
+        <!-- ONE track and ONE fill. The first cut of this gave each step its own
+             .bar so no fill would ever need zeroing — but a .bar paints an opaque
+             track, five of them stacked, and the empty one on top hid whichever
+             was actually filling. The bar rendered as a dead grey line for the
+             whole 23.5s. Sequential fromTo tweens on a single fill re-establish
+             scaleX:0 at each step's start, which is the zeroing that was being
+             avoided, done at a frame boundary where it cannot be seen. -->
+        <div class="bar" style="margin-top: 24px; flex: none;"><div id="bf" class="barfill"></div></div>
+
+        <div class="app">
+          <!-- Chrome that never changes: the same command line and the same
+               tape are on screen for the whole 23.5s, which is what sells this
+               as one running application rather than five illustrations. -->
+          <div class="appbar">
+            <svg width="26" height="26" viewBox="0 0 32 32" style="flex:none;">
+              <rect x="0.75" y="0.75" width="30.5" height="30.5" rx="7.25" fill="#46a758" />
+              <path d="M8 10 L16 23 L24 10" fill="none" stroke="#0b0e13" stroke-width="3.1"
+                    stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="24" cy="10" r="2.8" fill="#4cc38a" />
+            </svg>
+            <div class="cmd">
+              <span style="color: var(--muted);">&gt;</span>
+              <span id="typed"></span>
+              <span id="caret" style="width:3px; height:24px; background: var(--accent); display:inline-block;"></span>
+            </div>
+            <span class="mono" style="flex:none; font-size:17px; color: var(--accent-soft); display:flex; align-items:center; gap:9px;">
+              <span id="live-dot" style="width:9px; height:9px; border-radius:50%; background: var(--accent); display:inline-block;"></span>
+              LIVE
+            </span>
+            <span class="mono" style="flex:none; font-size:17px; color: var(--muted);">16:02</span>
+          </div>
+
+          <div class="tape">
+            <span><b>AAPL</b>227.98 <span style="color:#dd6a6e;">-1.14%</span></span>
+            <span><b>MSFT</b>454.12 <span style="color:#dd6a6e;">-0.48%</span></span>
+            <span><b>NVDA</b>124.60 <span style="color:#dd6a6e;">-3.79%</span></span>
+            <span><b>AMD</b>158.90 <span style="color:#dd6a6e;">-0.84%</span></span>
+            <span><b>AMZN</b>203.34 <span style="color:#4cc38a;">+2.42%</span></span>
+            <span><b>META</b>572.34 <span style="color:#dd6a6e;">-0.84%</span></span>
+          </div>
+
+          <div class="body" data-layout-allow-overlap>
+            <!-- 1 — command -->
+            <div id="pane-1" class="pane">
+              <div class="mono" style="font-size:19px; color:var(--muted); margin-bottom:14px;">MATCHES</div>
+              <div class="row"><span class="k" style="width:96px;">AMD</span><span style="font-size:20px; color:var(--ink);">Advanced Micro Devices, Inc.</span><span class="v" style="margin-left:auto;">158.90</span></div>
+              <div class="row" style="margin-top:12px;"><span class="k" style="width:96px;">AMZN</span><span style="font-size:20px; color:var(--ink);">Amazon.com, Inc.</span><span class="v" style="margin-left:auto;">203.34</span></div>
+              <div class="row" style="margin-top:12px;"><span class="k" style="width:96px;">AMAT</span><span style="font-size:20px; color:var(--ink);">Applied Materials, Inc.</span><span class="v" style="margin-left:auto;">183.05</span></div>
+              <div class="row" style="margin-top:12px;"><span class="k" style="width:96px;">AMBA</span><span style="font-size:20px; color:var(--ink);">Ambarella, Inc.</span><span class="v" style="margin-left:auto;">62.41</span></div>
+            </div>
+
+            <!-- 2 — session -->
+            <div id="pane-2" class="pane" style="display:flex; gap:30px;">
+              <div style="flex:none; width:330px;">
+                <div style="display:flex; align-items:baseline; gap:14px;">
+                  <span class="mono" style="font-size:26px; font-weight:700; color:var(--muted);">AMD</span>
+                  <span class="mono" style="font-size:52px; font-weight:700; letter-spacing:-0.02em; color:var(--ink);">158.90</span>
+                </div>
+                <div class="mono" style="margin-top:6px; font-size:24px; color:var(--down);">-1.35 (-0.84%)</div>
+                <div style="margin-top:20px; display:grid; grid-template-columns:auto auto; gap:9px 26px; width:max-content;">
+                  <span class="k">OPEN</span><span class="v">160.42</span>
+                  <span class="k">HIGH</span><span class="v">161.08</span>
+                  <span class="k">LOW</span><span class="v">156.11</span>
+                  <span class="k">VOL</span><span class="v">38.2M</span>
+                </div>
+              </div>
+              <div style="flex:1; min-width:0;">
+                <svg viewBox="0 0 900 250" preserveAspectRatio="none" style="width:100%; height:252px; display:block;">
+                  <line x1="0" y1="20"  x2="900" y2="20"  stroke="#1c222c" stroke-width="2" />
+                  <line x1="0" y1="85"  x2="900" y2="85"  stroke="#1c222c" stroke-width="2" />
+                  <line x1="0" y1="150" x2="900" y2="150" stroke="#1c222c" stroke-width="2" />
+                  <line x1="0" y1="215" x2="900" y2="215" stroke="#1c222c" stroke-width="2" />
+                  <polyline id="spark"
+                    points="0,44 75,58 150,38 225,86 300,74 375,116 450,98 525,132 600,116 675,150 750,138 825,172 900,160"
+                    fill="none" stroke="#dd6a6e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <svg viewBox="0 0 900 60" preserveAspectRatio="none" style="width:100%; height:68px; display:block; margin-top:12px;">
+                  <g fill="#262d38">
+                    <rect x="10"  y="26" width="46" height="34" /><rect x="80"  y="18" width="46" height="42" />
+                    <rect x="150" y="34" width="46" height="26" /><rect x="220" y="10" width="46" height="50" />
+                    <rect x="290" y="30" width="46" height="30" /><rect x="360" y="22" width="46" height="38" />
+                    <rect x="430" y="38" width="46" height="22" /><rect x="500" y="14" width="46" height="46" />
+                    <rect x="570" y="32" width="46" height="28" /><rect x="640" y="24" width="46" height="36" />
+                    <rect x="710" y="40" width="46" height="20" /><rect x="780" y="20" width="46" height="40" />
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 3 — sources -->
+            <div id="pane-3" class="pane">
+              <div style="font-size:26px; line-height:1.5; color:var(--body); max-width:1180px;">
+                Down 0.84% on light volume. Support held at 156, and the close sits below
+                the 20-day for a fourth straight session.
+              </div>
+              <div style="margin-top:22px; display:flex; gap:12px;">
+                <span class="chip chip-src">quote · 16:00 ET</span>
+                <span class="chip chip-src">P&amp;F · daily</span>
+                <span class="chip chip-src">volume · 38.2M</span>
+              </div>
+              <!-- The chips say what was read; this says where from and when.
+                   A claim about sourcing that cannot be inspected is just a
+                   different kind of assertion. -->
+              <div class="mono" style="margin-top:26px; font-size:19px; color:var(--muted);">READ</div>
+              <div class="row" style="margin-top:12px;"><span class="k" style="width:230px;">last quote</span><span class="v">158.90 · 16:00:04 ET</span><span class="k" style="margin-left:auto;">delayed 15m</span></div>
+              <div class="row" style="margin-top:12px;"><span class="k" style="width:230px;">point &amp; figure</span><span class="v">3-box · 1.00 · daily</span><span class="k" style="margin-left:auto;">column O</span></div>
+              <div class="row" style="margin-top:12px;"><span class="k" style="width:230px;">20-day mean</span><span class="v">161.42</span><span class="k" style="margin-left:auto;">4 sessions below</span></div>
+            </div>
+
+            <!-- 4 — limits -->
+            <div id="pane-4" class="pane">
+              <!-- The question is shown above the refusal. A refusal on its own
+                   is a mood; a refusal to a specific question is a behaviour. -->
+              <div class="mono" style="font-size:19px; color:var(--muted);">ASKED</div>
+              <div style="margin-top:10px; font-size:24px; color:var(--ink);">What did AMD report on 12 February?</div>
+              <div class="mono" style="margin-top:26px; font-size:19px; color:var(--muted);">ANSWERED</div>
+              <div style="margin-top:10px; font-size:26px; line-height:1.5; color:var(--muted); max-width:1180px;">
+                I don't have earnings for that date — I'm not going to guess it.
+              </div>
+              <div style="margin-top:22px; display:flex; gap:14px; align-items:center;">
+                <span class="chip chip-warn">no source</span>
+                <span style="font-size:20px; color:var(--muted);">Nothing was fabricated to fill the gap.</span>
+              </div>
+            </div>
+
+            <!-- 5 — alerts -->
+            <div id="pane-5" class="pane">
+              <div class="row" style="border-color: rgba(70,167,88,0.4); background: rgba(70,167,88,0.08);">
+                <span id="al-dot" style="width:12px; height:12px; border-radius:50%; background:var(--accent); display:inline-block;"></span>
+                <span class="k" style="color:var(--ink); font-weight:700;">AMD</span>
+                <span style="font-size:21px; color:var(--ink);">crossed 160.00</span>
+                <span class="v" style="margin-left:auto; color:var(--muted);">16:02</span>
+              </div>
+              <div class="row" style="margin-top:12px;">
+                <span style="width:12px; height:12px; border-radius:50%; background:var(--edge-strong); display:inline-block;"></span>
+                <span class="k" style="color:var(--ink); font-weight:700;">NVDA</span>
+                <span style="font-size:21px; color:var(--muted);">below 125.00</span>
+                <span class="v" style="margin-left:auto; color:var(--muted);">15:47</span>
+              </div>
+              <div class="row" style="margin-top:12px;">
+                <span style="width:12px; height:12px; border-radius:50%; background:var(--edge-strong); display:inline-block;"></span>
+                <span class="k" style="color:var(--ink); font-weight:700;">AMZN</span>
+                <span style="font-size:21px; color:var(--muted);">up 2% on the session</span>
+                <span class="v" style="margin-left:auto; color:var(--muted);">15:12</span>
+              </div>
+              <div class="row" style="margin-top:12px;">
+                <span style="width:12px; height:12px; border-radius:50%; background:var(--edge-strong); display:inline-block;"></span>
+                <span class="k" style="color:var(--ink); font-weight:700;">MSFT</span>
+                <span style="font-size:21px; color:var(--muted);">P&amp;F column reversed</span>
+                <span class="v" style="margin-left:auto; color:var(--muted);">14:38</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- 3 — the answer, in numbers -->
-      <div id="s3" class="clip scene" data-start="9" data-duration="5" data-track-index="1">
-        <div id="s3-kick" class="kicker">Step two</div>
-        <div id="s3-head" class="head" style="margin-top: 22px; font-size: 84px;">Get a session.</div>
-        <div id="s3-panel" class="panel" style="margin-top: 44px; width: 980px;">
-          <div style="display: flex; align-items: baseline; gap: 22px;">
-            <span class="mono" style="font-size: 34px; font-weight: 700; color: var(--muted); letter-spacing: 0.05em;">AMD</span>
-            <span class="mono" style="font-size: 84px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink);">158.90</span>
-            <span class="mono" style="font-size: 34px; color: var(--down);">-0.84%</span>
-          </div>
-          <svg viewBox="0 0 900 200" preserveAspectRatio="none"
-               style="width: 100%; height: 200px; display: block; margin-top: 26px;">
-            <polyline id="s3-line"
-              points="0,44 75,58 150,38 225,86 300,74 375,116 450,98 525,132 600,116 675,150 750,138 825,172 900,160"
-              fill="none" stroke="#dd6a6e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </div>
-      </div>
-
-      <!-- 4 — the receipts -->
-      <div id="s4" class="clip scene" data-start="14" data-duration="5" data-track-index="1">
-        <div id="s4-head" class="head" style="font-size: 76px;">Every answer carries its source.</div>
-        <div id="s4-panel" class="panel" style="margin-top: 46px; width: 1080px; background: var(--raised);">
-          <div style="font-size: 38px; line-height: 1.45; color: var(--body);">
-            Down 0.84% on light volume. Support held at 156.
-          </div>
-          <div style="margin-top: 26px; display: flex; gap: 14px;">
-            <span class="chip chip-src">quote · 16:00</span>
-            <span class="chip chip-src">P&amp;F · daily</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 5 — the refusal, which is the actual product -->
-      <div id="s5" class="clip scene" data-start="19" data-duration="5" data-track-index="1">
-        <div id="s5-head" class="head" style="font-size: 76px;">And it says so when it doesn't know.</div>
-        <!-- 1240 rather than 1080: at 38px the refusal is ~1140px of text, so a
-             1000px measure broke it and orphaned "it." on a line of its own.
-             This is the most important sentence in the video — it is the whole
-             product claim — so it gets to sit on one line. -->
-        <div id="s5-panel" class="panel" style="margin-top: 46px; width: 1240px; background: var(--raised);">
-          <div style="font-size: 38px; line-height: 1.45; color: var(--muted); white-space: nowrap;">
-            I don't have earnings for that date — I'm not going to guess it.
-          </div>
-          <div style="margin-top: 26px;">
-            <span class="chip chip-warn">no source</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 6 — alerts -->
-      <div id="s6" class="clip scene" data-start="24" data-duration="3.4" data-track-index="1">
-        <div id="s6-head" class="head" style="font-size: 76px;">Alerts, the moment they fire.</div>
-        <div id="s6-row" class="panel" style="margin-top: 46px; width: 1080px; display: flex;
-             align-items: center; gap: 26px; padding: 30px 40px;
-             background: rgba(70,167,88,0.07); border-color: rgba(70,167,88,0.35);">
-          <span id="s6-dot" style="width: 18px; height: 18px; border-radius: 50%; background: var(--accent); display: inline-block;"></span>
-          <span class="mono" style="font-size: 32px; font-weight: 700; color: var(--muted); letter-spacing: 0.05em;">AMD</span>
-          <span style="font-size: 34px; color: var(--ink);">crossed 160.00</span>
-          <!-- --muted, not --faint. --faint is the recessive token and it is
-               genuinely too dark to sit here: on --base it is 3.22:1, and this
-               row is the one panel in the piece with a translucent background
-               (7% accent over whatever is behind it), so it inherits the
-               backdrop. It measured 2.91:1 before the plate existed and 2.55:1
-               after — a WCAG AA failure that shipped because the default
-               9-sample contrast sweep never lands on t=25.7s. Size and weight
-               still separate it from the --muted ticker label beside it. -->
-          <span class="mono" style="margin-left: auto; font-size: 28px; color: var(--muted);">16:02</span>
-        </div>
-      </div>
-
-      <!-- 7 — the mark -->
-      <div id="s7" class="clip scene" data-start="27.4" data-duration="2.6" data-track-index="1">
-        <div id="s7-mark" style="display: flex; align-items: center; gap: 26px;">
+      <!-- ============ 26.9 – 30.0  the mark ============ -->
+      <div id="s6" class="clip scene" data-start="26.9" data-duration="3.1" data-track-index="1">
+        <div id="s6-mark" style="display:flex; align-items:center; gap:26px;">
           <svg width="96" height="96" viewBox="0 0 32 32">
             <rect x="0.75" y="0.75" width="30.5" height="30.5" rx="7.25" fill="#46a758" />
             <path d="M8 10 L16 23 L24 10" fill="none" stroke="#0b0e13" stroke-width="3.1"
                   stroke-linecap="round" stroke-linejoin="round" />
             <circle cx="24" cy="10" r="2.8" fill="#4cc38a" />
           </svg>
-          <span style="font-size: 84px; font-weight: 700; letter-spacing: -0.03em; color: var(--ink);">Vantage</span>
+          <span style="font-size:84px; font-weight:700; letter-spacing:-0.03em; color:var(--ink);">Vantage</span>
         </div>
-        <div id="s7-sub" class="sub" style="margin-top: 30px; font-size: 38px;">Seven days free.</div>
+        <div id="s6-sub" style="margin-top:30px; font-size:38px; color:var(--muted);">Seven days free.</div>
       </div>
     </div>
 
@@ -281,42 +422,74 @@
       // transform plus a GSAP tween on the same property fight each other and
       // lint rejects it as gsap_css_transform_conflict.
 
-      // 1
-      tl.fromTo("#s1-head", { opacity: 0, y: 46 }, { opacity: 1, y: 0, duration: 1.1, ease: E }, 0.25);
-      tl.fromTo("#s1-sub",  { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.9, ease: E }, 0.75);
+      // ---- the title ----
+      tl.fromTo("#s0-head", { opacity: 0, y: 44 }, { opacity: 1, y: 0, duration: 1.0, ease: E }, 0.2);
+      tl.fromTo("#s0-sub",  { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.8, ease: E }, 0.6);
 
-      // 2
-      tl.fromTo("#s2-kick", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, 4.75);
-      tl.fromTo("#s2-head", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, ease: E }, 4.9);
-      tl.fromTo("#s2-bar",  { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.9, ease: E }, 5.2);
-      // Finite repeat — `repeat: -1` is banned because an endless tween has no
+      // ---- the five steps ----
+      // Each step owns a slice of one 4.7s grid, so the rail, the bar and the
+      // words cannot drift apart: all three are derived from the same number.
+      const T0 = 3.4, STEP = 4.7, N = 5;
+      const at = (i) => T0 + i * STEP;
+
+      // What the command line holds during each step. It fills in across the
+      // first two and then holds, because the whole premise is that everything
+      // downstream came from those three letters.
+      const TYPED = ["am", "amd", "amd", "amd", "amd"];
+
+      tl.fromTo("#card", { opacity: 0, y: 30 },  { opacity: 1, y: 0, duration: 0.7, ease: E }, T0);
+      tl.fromTo("#rail", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.7, ease: E }, T0);
+
+      for (let i = 0; i < N; i++) {
+        const t = at(i), n = i + 1;
+
+        // The chip lights and the label brightens together, both quickly: the
+        // rail is an index, and an index that eases is an animation asking to
+        // be watched instead of read.
+        tl.fromTo("#tb-" + n, { opacity: 0 }, { opacity: 1, duration: 0.28, ease: "power2.out" }, t);
+        tl.fromTo("#tl-" + n, { color: "#9aa3ae" }, { color: "#e6e8eb", duration: 0.28 }, t);
+        if (i > 0) {
+          tl.to("#tb-" + i, { opacity: 0, duration: 0.28, ease: "power2.out" }, t);
+          tl.to("#tl-" + i, { color: "#9aa3ae", duration: 0.28 }, t);
+        }
+
+        // The bar is the honest one: linear, exactly the length of the step, so
+        // it finishes as the step ends rather than easing to a stop early and
+        // leaving the reader waiting on a full bar.
+        // immediateRender is off after the first: a fromTo applies its from-state
+        // at creation by default, so five of them on one element would each stamp
+        // scaleX:0 and the last would win before the timeline ever ran.
+        tl.fromTo("#bf", { scaleX: 0, transformOrigin: "0% 50%" },
+                         { scaleX: 1, duration: STEP, ease: "none", immediateRender: i === 0 }, t);
+
+        // Old words leave as the new ones arrive, so the two never sit in the
+        // same box at full strength.
+        if (i > 0) {
+          tl.to("#h-" + i,    { opacity: 0, y: -18, duration: 0.34, ease: "power2.in" }, t - 0.18);
+          tl.to("#p-" + i,    { opacity: 0, y: -14, duration: 0.34, ease: "power2.in" }, t - 0.15);
+          tl.to("#pane-" + i, { opacity: 0, duration: 0.3, ease: "power2.in" }, t - 0.12);
+        }
+        tl.fromTo("#h-" + n,    { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.55, ease: E }, t + 0.08);
+        tl.fromTo("#p-" + n,    { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.55, ease: E }, t + 0.16);
+        tl.fromTo("#pane-" + n, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.6,  ease: E }, t + 0.2);
+
+        tl.set("#typed", { text: TYPED[i] }, t);
+      }
+
+      // Finite repeats — `repeat: -1` is banned because an endless tween has no
       // deterministic value at a given frame.
-      tl.fromTo("#s2-caret", { opacity: 1 }, { opacity: 0, duration: 0.45, repeat: 6, yoyo: true, ease: "steps(1)" }, 5.9);
+      tl.fromTo("#caret",    { opacity: 1 }, { opacity: 0,    duration: 0.5,  repeat: 21, yoyo: true, ease: "steps(1)" }, T0);
+      tl.fromTo("#live-dot", { opacity: 1 }, { opacity: 0.35, duration: 0.85, repeat: 12, yoyo: true, ease: "sine.inOut" }, T0);
 
-      // 3
-      tl.fromTo("#s3-kick",  { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, 9.15);
-      tl.fromTo("#s3-head",  { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, ease: E }, 9.3);
-      tl.fromTo("#s3-panel", { opacity: 0, y: 44 }, { opacity: 1, y: 0, duration: 0.9, ease: E }, 9.6);
-      // The line draws itself, the same gesture the landing page's hero card uses.
-      tl.fromTo("#s3-line", { strokeDasharray: 1600, strokeDashoffset: 1600 },
-                            { strokeDashoffset: 0, duration: 1.9, ease: "power2.out" }, 10.1);
+      // The line draws itself as its own step arrives, the same gesture the
+      // landing page's hero card uses.
+      tl.fromTo("#spark", { strokeDasharray: 1600, strokeDashoffset: 1600 },
+                          { strokeDashoffset: 0, duration: 1.8, ease: "power2.out" }, at(1) + 0.3);
+      tl.fromTo("#al-dot", { opacity: 1 }, { opacity: 0.3, duration: 0.5, repeat: 6, yoyo: true, ease: "sine.inOut" }, at(4) + 0.4);
 
-      // 4
-      tl.fromTo("#s4-head",  { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.9, ease: E }, 14.2);
-      tl.fromTo("#s4-panel", { opacity: 0, y: 44 }, { opacity: 1, y: 0, duration: 0.9, ease: E }, 14.6);
-
-      // 5
-      tl.fromTo("#s5-head",  { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.9, ease: E }, 19.2);
-      tl.fromTo("#s5-panel", { opacity: 0, y: 44 }, { opacity: 1, y: 0, duration: 0.9, ease: E }, 19.6);
-
-      // 6
-      tl.fromTo("#s6-head", { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.9, ease: E }, 24.2);
-      tl.fromTo("#s6-row",  { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.9, ease: E }, 24.5);
-      tl.fromTo("#s6-dot",  { opacity: 1 }, { opacity: 0.3, duration: 0.5, repeat: 4, yoyo: true, ease: "sine.inOut" }, 24.9);
-
-      // 7
-      tl.fromTo("#s7-mark", { opacity: 0, y: 32 }, { opacity: 1, y: 0, duration: 0.9, ease: E }, 27.6);
-      tl.fromTo("#s7-sub",  { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.8, ease: E }, 27.95);
+      // ---- the mark ----
+      tl.fromTo("#s6-mark", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.85, ease: E }, 27.1);
+      tl.fromTo("#s6-sub",  { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.75, ease: E }, 27.45);
 
       window.__timelines["main"] = tl;
     </script>
