@@ -5390,7 +5390,7 @@ function PasswordStrength({ result }) {
 //  own hooks keep new state out of the giant MarketDashboard component. Calls
 //  onAuthed(account) when the user is in.
 // ============================================================
-function AuthScreen({ onAuthed }) {
+function AuthScreen({ onAuthed, onBack }) {
   const { t } = useI18n();
   // The homepage records which button sent you here. "Start free" should land
   // on the signup form and "Sign in" on the login form — arriving instead at a
@@ -5578,6 +5578,32 @@ function AuthScreen({ onAuthed }) {
                 {useBackend ? t("Secured on the server") : t("Runs on this device")}
               </div>
             </div>
+
+            {/* The way out. Until now this screen had none: `showAuth` was a
+                one-way door, so anyone who pressed Sign in to look at the form
+                — or who landed here from a #markets deep link — could only
+                leave through the browser's back button, and on the deep-link
+                path even that returned them straight to the gate.
+
+                It is quiet on purpose. The two things worth doing on this
+                screen are logging in and creating an account, and a third
+                control competing with them would be the loudest possible way
+                to say "you probably want to leave". */}
+            {onBack && (
+              <button type="button" onClick={onBack} className="v-taprow"
+                style={{
+                  marginLeft: "auto", alignSelf: "flex-start",
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  background: "transparent", border: "none", padding: "4px 2px",
+                  cursor: "pointer", fontFamily: SANS, fontSize: 13, color: C.faint,
+                }}>
+                <svg width="13" height="11" viewBox="0 0 13 11" aria-hidden="true" fill="none">
+                  <path d="M5.2 1 L1 5.5 L5.2 10 M1 5.5 H12.4" stroke="currentColor"
+                    strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {t("Home")}
+              </button>
+            )}
           </div>
         </div>
 
@@ -13549,6 +13575,20 @@ export default function App() {
     setShowAuth(true);
   };
 
+  // Leaving the gate has to clear the deep link as well as the flag. showAuth
+  // is seeded from the hash, so somebody who arrived on #markets, backed out
+  // to the marketing page and then refreshed would land straight back on the
+  // form they had just left — a Home button that only works until you reload
+  // is worse than none.
+  const leaveAuth = () => {
+    try {
+      if ((window.location.hash || "").replace(/^#\/?/, "")) {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+    } catch { /* history is unavailable in some embedded contexts; the flag still clears */ }
+    setShowAuth(false);
+  };
+
   const signIn = (a) => { saveAccount(a); setAccount(a); };
   const signOut = () => {
     // best-effort backend logout; local state always clears
@@ -13686,7 +13726,7 @@ export default function App() {
           : <MarketDashboard account={account} onSignOut={signOut} onChangePlan={changePlan}
               billingCfg={billingCfg} billingBusy={billingBusy} onStartPlanChange={startPlanChange} />
         : showAuth
-          ? <AuthScreen onAuthed={signIn} />
+          ? <AuthScreen onAuthed={signIn} onBack={leaveAuth} />
           : <HomePage plans={PLANS} t={t} onStart={(planId) => goAuth("up", planId)} onSignIn={() => goAuth("in")} />}
     </I18nContext.Provider>
   );

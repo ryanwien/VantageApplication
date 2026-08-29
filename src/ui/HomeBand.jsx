@@ -2,102 +2,62 @@
 //  HomeBand.jsx — the beat between the demo and the price list.
 //
 //  WHAT IS PLAYING
-//  A motion graphic of the desk working: a ticker typed, the quote resolving,
-//  the sparkline drawing, the answer arriving with its sources, an alert
-//  firing, then everything clearing. Authored in HyperFrames as HTML and
-//  rendered to MP4 — not generated footage.
+//  The desk working, on a twelve-second loop: a ticker typed, the quote
+//  resolving, the sparkline drawing, the answer arriving with its sources, an
+//  alert firing, then everything clearing back to an empty command bar.
 //
-//  WHY AUTHORED FOOTAGE REPLACED THE GENERATED KIND
-//  This slot used to hold an AI-generated broadcast studio. It was atmosphere:
-//  it looked like a stock library, said nothing about the product, and could
-//  not be made to loop. Three measurements decided it.
+//  WHAT THIS USED TO BE
+//  An mp4. Before that, an AI-generated broadcast studio, which was replaced
+//  because it looked like a stock library, said nothing about the product, and
+//  could not be made to loop — a model cannot be asked to end exactly where it
+//  began. The authored clip that replaced it could, and measured a 59.73 dB
+//  loop seam against the generated version's 35.87.
 //
-//    loop seam (PSNR of first frame against last, higher = more identical)
-//      generated studio   35.87 dB   visibly different frames
-//      authored graphic   59.73 dB   identical bar compression noise
+//  This is the end of that argument rather than another round of it. The seam
+//  is not 59.73 dB now, it is not a number at all: there is no encode, no
+//  first frame and no last frame to compare. A CSS animation on a twelve
+//  second cycle returns to its own start because that is what a cycle is.
 //
-//    weight   2.31 MB → 1.02 MB
-//    subject  a room nobody works in → the product doing the thing it claims
+//  WHAT WENT WITH IT
+//  777 kB of mp4 and 31 kB of poster, and every line of machinery they needed:
+//  an IntersectionObserver to defer the fetch, preload="none", an explicit
+//  load() to win a race against resource selection, a play()/pause() effect,
+//  and a poster deliberately lifted from 6.4s because frame 0 is an empty
+//  command bar and under reduced motion the poster WAS the entire piece.
 //
-//  A model cannot be asked to end exactly where it began. An authored timeline
-//  can, because frame 0 and frame 360 are both just the resting state, so the
-//  loop is closed by construction rather than concealed.
-//
-//  WHICH IS WHY THIS FILE IS HALF THE SIZE IT WAS
-//  The previous version ran two copies of the clip and cross faded them, so
-//  the generated seam happened underneath a 0.8s dissolve. That machinery —
-//  a second video, a `front` index, a timeupdate handler, an opacity
-//  transition — existed only to hide a defect that no longer exists. It is
-//  gone. `<video loop>` is now simply true.
+//  That last problem is worth reading twice, because it is the one this
+//  rewrite could most easily have got wrong. The blanket reduced-motion rule
+//  in global.css collapses animations to 0.01ms, and an element that animates
+//  from hidden to shown to cleared would land on its LAST keyframe — cleared.
+//  A reader who asked for less motion would get an empty desk. So the
+//  animations live inside @media (prefers-reduced-motion: no-preference) and
+//  the base state below is the finished picture: typed, quoted, drawn,
+//  answered, alerted. Motion is added to a complete thing rather than being
+//  the only route to it.
 //
 //  WHY THE PAUSE BUTTON STAYED
 //  WCAG 2.2.2: anything that moves by itself for more than five seconds needs
-//  a mechanism to stop it, and this loops forever. That was true of the studio
-//  clip and is true of this one.
-//
-//  WHY THE POSTER IS NOT FRAME 0
-//  Frame 0 is the resting state — an empty command bar. It is the honest
-//  first frame but a poor still, and under prefers-reduced-motion the poster
-//  is the ENTIRE piece. So the poster is lifted from 6.4s, where the quote,
-//  the answer, its sources and the alert are all on screen. The cost is one
-//  cut when playback starts; the gain is that a reader who never sees motion
-//  still sees the product.
-//
-//  WHAT IT COSTS AND WHEN
-//  1.02 MB, and nothing is fetched until an IntersectionObserver says the
-//  section is within 300px: `preload="none"`, no `src` before that, paused on
-//  leaving. Scroll past and you pay for the 33 kB poster alone.
+//  a mechanism to stop it, and this loops forever. It sets a class that pauses
+//  the animations where they stand — `animation-play-state: paused` holds the
+//  current frame, which is what a pause should do. Under reduced motion
+//  nothing is moving, so global.css hides the button rather than offering to
+//  stop something that is already stopped.
 // ============================================================
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useReducedMotion } from "motion/react";
-import { C } from "./theme.js";
+import React, { useCallback, useState } from "react";
+import { C, MONO, SANS } from "./theme.js";
 
-const SRC = "/desk-loop.mp4";
-const POSTER = "/desk-poster.jpg";
+// A shape, not data. Flat-topped bars and a plausible line would read as a
+// real session and invite somebody to check it against the tape at the top of
+// the page, which shows a different day.
+const SPARK = [26, 31, 22, 40, 34, 52, 45, 60, 53, 68, 62, 78, 72, 84];
+const POINTS = SPARK.map((y, i) => `${(i / (SPARK.length - 1)) * 420},${y}`).join(" ");
 
 export default function HomeBand({ t = (x) => x }) {
-  const reduce = useReducedMotion();
-  const [near, setNear] = useState(false);
   const [playing, setPlaying] = useState(true);
-  const wrap = useRef(null);
-  const vid = useRef(null);
-
-  useEffect(() => {
-    const el = wrap.current;
-    if (!el || reduce || typeof IntersectionObserver === "undefined") return undefined;
-    const io = new IntersectionObserver(([e]) => setNear(e.isIntersecting), { rootMargin: "300px 0px" });
-    io.observe(el);
-    return () => io.disconnect();
-  }, [reduce]);
-
-  // `preload="none"` means React assigning `src` does NOT start a fetch, and
-  // calling play() before the element has run resource selection silently does
-  // nothing — no error, no rejected promise, just a video that never starts.
-  // One explicit load() turns that race into a sequence. Declared before the
-  // play effect so it runs first on the render where `near` flips.
-  useEffect(() => {
-    if (reduce || !near) return;
-    const v = vid.current;
-    if (v && v.readyState === 0) v.load();
-  }, [near, reduce]);
-
-  useEffect(() => {
-    if (reduce) return;
-    const v = vid.current;
-    if (!v) return;
-    if (near && playing) v.play().catch(() => {});   // refused autoplay leaves the poster up
-    else v.pause();
-  }, [near, playing, reduce]);
-
-  const toggle = useCallback(() => setPlaying((p) => !p), []);
-
-  const fill = {
-    position: "absolute", inset: 0, width: "100%", height: "100%",
-    objectFit: "cover", display: "block",
-  };
+  const toggle = useCallback(() => setPlaying(p => !p), []);
 
   return (
-    <section ref={wrap} className="v-band" aria-labelledby="band-line">
+    <section className="v-band" aria-labelledby="band-line">
       <div className="v-band-inner">
         <span className="v-band-pill">
           <span className="vt-pulse" aria-hidden="true"
@@ -110,39 +70,77 @@ export default function HomeBand({ t = (x) => x }) {
         </p>
 
         <div className="v-band-frame">
-          {/* The whole picture under reduced motion, and what shows while the
-              clip loads or if autoplay is refused. */}
-          <img src={POSTER} alt="" aria-hidden="true" style={fill} />
+          {/* aria-hidden, unlike the tour: that one IS the content of its
+              section and is reachable step by step from a rail. This is
+              decoration beside a headline that already says the same thing,
+              and every string in it is repeated in the prose above and in the
+              showcase below. Announcing it would read the same three claims a
+              third time. */}
+          <div className={"v-band-stage" + (playing ? "" : " is-paused")} aria-hidden="true">
+            <div className="v-band-desk">
 
-          {!reduce && (
-            <video
-              ref={vid}
-              src={near ? SRC : undefined}
-              poster={POSTER}
-              loop
-              muted
-              playsInline
-              preload="none"
-              aria-hidden="true"
-              style={fill}
-            />
-          )}
+              {/* the command bar */}
+              <div className="v-band-cmd">
+                <span className="v-band-caretrow">
+                  <span className="v-band-prompt">&gt;</span>
+                  <span className="v-band-typed">amd</span>
+                  <span className="v-band-caret" />
+                </span>
+                <span className="v-band-clock">16:02</span>
+              </div>
 
-          {!reduce && (
-            <button type="button" onClick={toggle} className="v-band-toggle"
-              aria-label={playing ? t("Pause the loop") : t("Play the loop")}>
-              {playing ? (
-                <svg width="13" height="14" viewBox="0 0 13 14" aria-hidden="true">
-                  <rect x="1" y="1" width="3.6" height="12" rx="1.1" fill="currentColor" />
-                  <rect x="8.4" y="1" width="3.6" height="12" rx="1.1" fill="currentColor" />
+              {/* the quote */}
+              <div className="v-band-quote">
+                <span className="v-band-sym">AMD</span>
+                <span className="v-band-px">158.90</span>
+                <span className="v-band-dn">−0.84%</span>
+              </div>
+
+              {/* the session */}
+              <div className="v-band-spark">
+                <svg viewBox="0 0 420 96" preserveAspectRatio="none">
+                  <polyline
+                    className="v-band-line"
+                    points={POINTS}
+                    fill="none" stroke={C.down} strokeWidth="2.5"
+                    strokeLinecap="round" strokeLinejoin="round"
+                    vectorEffect="non-scaling-stroke"
+                  />
                 </svg>
-              ) : (
-                <svg width="13" height="14" viewBox="0 0 13 14" aria-hidden="true">
-                  <path d="M2 1.6 L12 7 L2 12.4 Z" fill="currentColor" />
-                </svg>
-              )}
-            </button>
-          )}
+              </div>
+
+              {/* the answer, and what it read to get there */}
+              <div className="v-band-answer">
+                <p>{t("Down 0.84% on light volume. Support held at 156.")}</p>
+                <span className="v-band-chips">
+                  <span className="v-pill v-pill-source v-band-chip1">quote · 16:00</span>
+                  <span className="v-pill v-pill-source v-band-chip2">P&amp;F · daily</span>
+                </span>
+              </div>
+
+              {/* the alert, arriving on its own */}
+              <div className="v-band-alert">
+                <span className="v-band-adot" />
+                <b>{t("Alert fired")}</b>
+                <span style={{ fontFamily: MONO }}>NVDA &lt; 126.00</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" onClick={toggle} className="v-band-toggle"
+            aria-label={playing ? t("Pause the loop") : t("Play the loop")}
+            style={{ fontFamily: SANS }}>
+            {playing ? (
+              <svg width="13" height="14" viewBox="0 0 13 14" aria-hidden="true">
+                <rect x="1" y="1" width="3.6" height="12" rx="1.1" fill="currentColor" />
+                <rect x="8.4" y="1" width="3.6" height="12" rx="1.1" fill="currentColor" />
+              </svg>
+            ) : (
+              <svg width="13" height="14" viewBox="0 0 13 14" aria-hidden="true">
+                <path d="M2 1.6 L12 7 L2 12.4 Z" fill="currentColor" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
     </section>
