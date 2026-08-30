@@ -34,6 +34,7 @@ import { routeTyped, smallTalkKind } from "./src/desk/route.js";
 // on screen for no frames at all.
 const loadPriceChart = () => import("./src/ui/PriceChart.jsx");
 const PriceChart = lazy(loadPriceChart);
+import ChunkBoundary from "./src/ui/ChunkBoundary.jsx";
 import Sparkline from "./src/ui/Sparkline.jsx";
 import RichText from "./src/ui/RichText.jsx";
 import Toggle, { ToggleGlyph } from "./src/ui/Toggle.jsx";
@@ -68,10 +69,38 @@ import {
   COOL_OPTIONS,
 } from "./src/games/overheat.js";
 import { LESSONS as STOCK_LESSONS } from "./src/games/school.js";
-import StockSchool from "./src/ui/StockSchool.jsx";
-import TickerMatch from "./src/ui/TickerMatch.jsx";
+// The three game PANELS are chunks of their own, on the same reasoning and the
+// same pattern as the price chart above. Together they are the largest thing in
+// this bundle that most sessions never open: they render only inside the games
+// room, behind a deliberate choice to play something, and nobody arriving at the
+// desk to look at a quote is waiting for them on purpose.
+//
+// Only the panels move. Their round DATA stays imported at the top, because the
+// dashboard's own state machine seeds and scores from it — the reducer needs to
+// know the answer to a round before the screen that draws it exists.
+//
+// Loaders are named so they can be warmed on idle, exactly as loadPriceChart is:
+// React.lazy resolves from the module cache, so a warmed chunk means the
+// fallback is normally on screen for no frames at all.
+const loadStockSchool = () => import("./src/ui/StockSchool.jsx");
+const loadTickerMatch = () => import("./src/ui/TickerMatch.jsx");
+const loadBullOrBear = () => import("./src/ui/BullOrBear.jsx");
+const StockSchool = lazy(loadStockSchool);
+const TickerMatch = lazy(loadTickerMatch);
+const BullOrBear = lazy(loadBullOrBear);
+// Panel-shaped, not an empty box: the price chart's fallback can be a bare div
+// because it fills a slot that already has a height, and a game panel does not
+// — an empty fallback would collapse the games room and then shove it open
+// again. The height is the shortest a game screen gets, so the panel cannot
+// grow into place. A shuttle rather than a spinner, because fetching a chunk is
+// work of unknown length and that is the desk's word for it.
+const GAME_FALLBACK = (
+  <div className="v-gamepanel" aria-busy="true"
+    style={{ background: C.base, minHeight: 380, display: "grid", placeItems: "center" }}>
+    <Shuttle width={22} height={12} color={C.accent} />
+  </div>
+);
 import { ROUNDS as TICKER_ROUNDS, ROUND_SECONDS as TICKER_SECONDS, answerIndex as tickerAnswer, award as tickerAward } from "./src/games/ticker.js";
-import BullOrBear from "./src/ui/BullOrBear.jsx";
 import { ROUNDS as BULLBEAR_ROUNDS, ROUND_SECONDS as BB_SECONDS, isRight as bbRight, award as bbAward } from "./src/games/bullbear.js";
 import Waveform from "./src/ui/Waveform.jsx";
 import VantageMark from "./src/ui/VantageMark.jsx";
@@ -1983,6 +2012,21 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
   propsRef.current = { talking, mood, crew, env, cue, busy, onAction, onCue };
   const ch = character || CHARACTERS[0];
 
+  // Whether the canvas is currently showing a caption — TEACHING…, OPENING
+  // BELL, ON BREAK. The name plate reads this and gets out of the way, because
+  // the two of them are both lower-thirds and they were sharing one band: the
+  // plate sits bottom-left and the caption is centred on the desk front, and
+  // measured on a 215px panel they genuinely intersected, "Sterling" running
+  // under the "TEACHING…" pill. Broadcast never stacks two supers; the newer
+  // one takes the band and the other steps out.
+  //
+  // It is state rather than a ref because the plate is DOM and has to re-render
+  // to fade, and it is written from the draw loop ONLY on the frame the answer
+  // changes — a setState per frame would re-render this component sixty times a
+  // second for a boolean that flips a handful of times a session.
+  const [captionUp, setCaptionUp] = useState(false);
+  const captionUpRef = useRef(false);
+
   useEffect(() => {
     const cvs = cvsRef.current;
     if (!cvs) return;
@@ -3551,6 +3595,16 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       else if (busy === "work") { cap = "ANALYZING…"; capA = s.busyAmt; }
       else if (busy === "teach") { cap = "TEACHING…"; capA = s.busyAmt; }
       else if (busy === "present") { cap = "PRESENTING…"; capA = s.busyAmt; }
+      // Publish it to the DOM name plate, on the frame it changes and no other.
+      // 0.06 rather than 0: the caption fades in and out on its own envelope, so
+      // the plate should step aside once the caption is actually legible and
+      // come back once it has genuinely gone, not on the first and last frame
+      // of a fade where nothing is visible either way.
+      const capVisible = !!cap && capA > 0.06;
+      if (capVisible !== captionUpRef.current) {
+        captionUpRef.current = capVisible;
+        setCaptionUp(capVisible);
+      }
       if (cap) {
         // The caption used to sit at the top of the frame, centred — which is
         // the one band of this set that is already spoken for: the station
@@ -3597,7 +3651,14 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
     // backing store is DPR-multiplied, so filling a 268px column upscales from
     // 380 real pixels — sharper than the unframed form, not softer.
     return (
-      <div style={{ position: "relative", borderRadius: R.md, overflow: "hidden", background: C.base, lineHeight: 0 }}>
+      // v-anchorframe makes this a size container, which is what lets the two
+      // overlays below be sized as a FRACTION of the portrait instead of in
+      // fixed pixels. They were in pixels, and the canvas is authored at 190
+      // units and scaled by CSS to whatever the column is — so the chrome kept
+      // its size while the set shrank, and on a 215px panel the status pill
+      // measured 92 of the frame's 190 units against 60 at the width it was
+      // drawn for. Half the frame, sitting on the set. See .v-anchorframe.
+      <div className="v-anchorframe" style={{ position: "relative", borderRadius: R.md, overflow: "hidden", background: C.base, lineHeight: 0 }}>
         <canvas ref={cvsRef} style={{ width: "100%", height: "auto", display: "block" }} aria-label={`Desk anchor: ${ch.name}`} />
         {/* ===== the status readout =====
             Four states, not two. This said "On air" or "Standing by" and
@@ -3644,10 +3705,12 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
           }[state];
           const tone = { onair: C.accentText, listening: C.live, thinking: C.accentText, standby: C.muted }[state];
           return (
-            <span className="v-deskstate" role="status" style={{
-              position: "absolute", top: 10, right: 10, pointerEvents: "none",
+            // Position, size and padding all live in .v-anchorstatus now, in
+            // container units — an inline fontSize or padding here would win
+            // against them and put the pill straight back where it was.
+            <span className="v-deskstate v-anchorstatus" role="status" style={{
               background: "rgba(11,14,19,0.85)", color: tone,
-              fontFamily: SANS, fontSize: 11.5, fontWeight: 600, padding: "4px 10px", borderRadius: 20,
+              fontFamily: SANS, fontWeight: 600,
               transition: `color ${MOTION.base} ${MOTION.ease}`,
             }}>
               <span className="v-deskstate-mark">{mark}</span>
@@ -3665,10 +3728,9 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
             reference stacks both on the left, which leaves the other side of a
             330px frame empty and reads as a column of chrome. The README puts
             the status top-right, and that is the arrangement kept here. */}
-        <span style={{
-          position: "absolute", bottom: 10, left: 10, pointerEvents: "none",
+        <span className="v-anchorname" data-caption={captionUp ? "up" : undefined} style={{
           background: "rgba(11,14,19,0.85)", color: C.text,
-          fontFamily: SANS, fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 6,
+          fontFamily: SANS, fontWeight: 700,
         }}>{ch.name}</span>
       </div>
     );
@@ -10516,6 +10578,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     return () => clearTimeout(id);
   }, []);
 
+  // The games' chunks, warmed the same way but LATER and only once the desk has
+  // been quiet for a while. The chart is on the page and certain to be needed;
+  // a game is a choice most sessions never make, so its chunk should never
+  // compete with anything the desk is actually doing. Warming it at all is what
+  // keeps the fallback off the screen for the sessions that do choose one.
+  useEffect(() => {
+    const warm = () => { loadStockSchool(); loadTickerMatch(); loadBullOrBear(); };
+    if (window.requestIdleCallback) {
+      const id = window.requestIdleCallback(warm, { timeout: 8000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = setTimeout(warm, 4000);
+    return () => clearTimeout(id);
+  }, []);
+
   // While a click-driven smooth scroll is travelling it crosses every section in
   // between, and the scroll-spy below would flicker the nav through each one. This
   // suppresses the spy until the animation settles.
@@ -10911,6 +10988,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     // ---- Stock School: its own two screens, in src/ui/StockSchool.jsx ----
     if (gameMode === "school") {
       return shell(null, null, null, (
+        <ChunkBoundary label="Stock School">
+        <Suspense fallback={GAME_FALLBACK}>
         <StockSchool
           lessons={STOCK_LESSONS}
           step={gameStep}
@@ -10933,6 +11012,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           onClose={closeGame}
           t={t}
         />
+        </Suspense>
+        </ChunkBoundary>
       ), true);
     }
 
@@ -10944,6 +11025,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // block for any it does not.
       const row = round ? getRow(round.symbol) : null;
       return shell(null, null, null, (
+        <ChunkBoundary label="Ticker Match">
+        <Suspense fallback={GAME_FALLBACK}>
         <TickerMatch
           rounds={TICKER_ROUNDS}
           step={gameStep}
@@ -10961,12 +11044,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           onClose={closeGame}
           t={t}
         />
+        </Suspense>
+        </ChunkBoundary>
       ), true);
     }
 
     // ---- Bull or Bear: its own screens, in src/ui/BullOrBear.jsx ----
     if (gameMode === "bullbear") {
       return shell(null, null, null, (
+        <ChunkBoundary label="Bull or Bear">
+        <Suspense fallback={GAME_FALLBACK}>
         <BullOrBear
           rounds={BULLBEAR_ROUNDS}
           step={gameStep}
@@ -10983,6 +11070,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           onClose={closeGame}
           t={t}
         />
+        </Suspense>
+        </ChunkBoundary>
       ), true);
     }
 
@@ -11912,7 +12001,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                     you have, with who you would get either side of them. The
                     picker shows its outcome, which is the whole point the
                     handoff makes about this panel. */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                {/* Wraps. The roster is three fixed avatars and the link beside
+                    it is whiteSpace:nowrap, so nothing in this row could give:
+                    below about 250px of card the two of them simply ran past
+                    the right edge and "Voice & settings" was cut off mid-word.
+                    Wrapping drops the link onto its own line instead, which is
+                    the one outcome where both stay whole. */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                   <AnchorRoster characterId={characterId} onPick={setCharacterId} />
                   {/* The rest of the roster, the sets and the voice engine live
                       one click away rather than crowding this card. */}

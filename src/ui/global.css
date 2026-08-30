@@ -3426,6 +3426,47 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
    The mark keeps a fixed box so the label beside it cannot shift as the state
    changes, and the label is a flap because a status that swaps by fading reads
    as a thing loading rather than a thing switching. */
+/* ---------- the anchor's overlay chrome, sized to the portrait ----------
+   The canvas is authored in a fixed 190x230 space and scaled by CSS to fill
+   whatever column it is given. The two overlays on top of it — the status pill
+   and the name plate — were in fixed pixels, so as the column narrowed the SET
+   shrank and the CHROME did not. Measured on a 215px panel the status pill came
+   to 92 of the frame's 190 units against 60 at the width it was drawn for:
+   half the frame, laid over the set, with the name plate running under the
+   caption on the desk front.
+
+   So the frame is a size container and the chrome is a fraction of it. cqw is
+   percent-of-container-width, and the numbers below are the original pixel
+   values over the ~330px column they were drawn for, which makes the portrait
+   look identical at every size instead of only at one. The floor keeps the
+   labels legible when the column is genuinely small and the ceiling stops the
+   chrome inflating on a wide one — inside that range the proportions hold. */
+.v-anchorframe { container-type: inline-size; }
+
+.v-anchorstatus,
+.v-anchorname {
+  position: absolute;
+  pointer-events: none;
+  padding: 1.21cqw 3.03cqw;
+  white-space: nowrap;
+}
+.v-anchorstatus {
+  top: 3.03cqw; right: 3.03cqw;
+  font-size: clamp(9px, 3.48cqw, 13px);
+  border-radius: 6.06cqw;
+}
+.v-anchorname {
+  bottom: 3.03cqw; left: 3.03cqw;
+  font-size: clamp(9px, 3.64cqw, 13.5px);
+  border-radius: 1.82cqw;
+  transition: opacity var(--v-base-dur) var(--v-ease);
+}
+/* Two lower-thirds, one band. When the canvas raises a caption on the desk
+   front the plate steps out of the way rather than being read through it —
+   which is what broadcast does, and the only thing that stays correct for a
+   name this file does not choose and a caption it may not have measured. */
+.v-anchorname[data-caption="up"] { opacity: 0; }
+
 .v-deskstate { display: inline-flex; align-items: center; gap: 7px; }
 .v-deskstate-mark { width: 14px; height: 12px; display: inline-flex; align-items: center; justify-content: flex-start; flex: none; }
 
