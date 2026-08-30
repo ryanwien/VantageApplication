@@ -1691,6 +1691,39 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
     var(--v-base) 100%);
 }
 
+/* ---------- the band's floor ----------
+   The band centres an 880px column on a full-bleed section, so a wide monitor
+   leaves several hundred pixels of bare page either side of the headline —
+   which on a page this drawn reads as unfinished, not as restraint. So the
+   hero's dot lattice continues here: the same dot at the same cell, the studio
+   floor running under the whole set instead of existing only where the light
+   is.
+
+   Two masks, intersected. The fixed-size radial one cuts a hole where the
+   eyebrow, the headline and the frame sit — dots behind body copy is the one
+   thing HeroPlate's geography exists to prevent — and because the hole is in
+   px while the section is fluid, the lattice only appears once a viewport is
+   wide enough to have flanks at all; on a laptop the hole IS the section and
+   nothing renders. The linear one fades the lattice out before the section's
+   own top and bottom edges, so it never hard-stops against the background
+   gradient. */
+.v-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, rgba(230,232,235,0.085) 1.4px, transparent 0);
+  background-size: 26px 26px;
+  -webkit-mask-image:
+    radial-gradient(980px 470px at 50% 46%, transparent 0 72%, #000 100%),
+    linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    radial-gradient(980px 470px at 50% 46%, transparent 0 72%, #000 100%),
+    linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
+  mask-composite: intersect;
+}
+
 /* The player. Same border, radius and shadow as the showcase panels and the
    BroadcastCard — this is a surface from the app's own vocabulary, not a
    YouTube embed dropped into the page. `aspect-ratio` rather than a height so
