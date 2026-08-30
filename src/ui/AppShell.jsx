@@ -124,8 +124,11 @@ function NavItem({ item, active, onSelect }) {
 }
 
 // ---------- account menu ----------
-function AccountMenu({ account, plan, onSignIn, onSignOut, onOpenSettings, onOpenPlans }) {
-  const [open, setOpen] = useState(false);
+// `open` is the host's, not this component's. It used to hold its own boolean,
+// which is why it could be showing at the same time as the collapsed nav
+// drawer — two header panels, two owners, no one deciding between them. See
+// headerPanel in AppShell.
+function AccountMenu({ account, plan, open, setOpen, onSignIn, onSignOut, onOpenSettings, onOpenPlans }) {
   const ref = useRef(null);
 
   // Close on outside click and on Escape. Both are required for a menu to feel
@@ -159,7 +162,7 @@ function AccountMenu({ account, plan, onSignIn, onSignOut, onOpenSettings, onOpe
           for anyone who cannot see the initial. */}
       <button
         id="tour-settings"
-        onClick={() => setOpen(o => !o)}
+        onClick={() => setOpen(!open)}
         aria-haspopup="menu" aria-expanded={open}
         aria-label={`Account — ${name}`}
         title={name}
@@ -367,15 +370,29 @@ export default function AppShell({
   children,
 }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [mobileNav, setMobileNav] = useState(false);
+
+  // ===== one owner for the header's two panels =====
+  // The account menu and the collapsed nav drawer both hang off this bar, and
+  // they held a boolean each — so nothing prevented both being open at once.
+  // They are not layers that stack: the menu is absolutely positioned at
+  // Z.overlay and the drawer is a sticky sheet at Z.header - 1, so opening the
+  // second one simply painted the menu over the drawer's section list, hiding
+  // half the navigation behind a panel that had nothing to do with it.
+  //
+  // They are alternatives — two answers to "what is this bar for right now" —
+  // so one value holds the answer and opening either closes the other.
+  const [headerPanel, setHeaderPanel] = useState(null); // "account" | "nav" | null
+  const mobileNav = headerPanel === "nav";
+  const closePanels = useCallback(() => setHeaderPanel(null), []);
 
   // The drawer dismisses like every other transient surface: Escape closes it.
   useEffect(() => {
     if (!mobileNav) return;
-    const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); setMobileNav(false); } };
+    const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); closePanels(); } };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [mobileNav]);
+  }, [mobileNav, closePanels]);
+
 
   // The palette trigger lives in the host's command bar, not this header — but
   // the palette itself stays here where the commands are.
@@ -412,10 +429,14 @@ export default function AppShell({
   }, [sections]);
   const collapsed = narrow || cramped;
 
+  // Widening the window takes the hamburger away. Without this the drawer it
+  // opened would still be on screen with nothing left to close it.
+  useEffect(() => { if (!collapsed && mobileNav) closePanels(); }, [collapsed, mobileNav, closePanels]);
+
   const go = useCallback((item) => {
-    setMobileNav(false);
+    closePanels();
     onNavigate?.(item);
-  }, [onNavigate]);
+  }, [onNavigate, closePanels]);
 
   // Sections are commands too — so the palette can reach every destination without the
   // host having to restate them.
@@ -478,12 +499,15 @@ export default function AppShell({
 
           <AccountMenu
             account={account} plan={plan}
+            open={headerPanel === "account"}
+            setOpen={(v) => setHeaderPanel(v ? "account" : null)}
             onSignIn={onSignIn} onSignOut={onSignOut}
             onOpenSettings={onOpenSettings} onOpenPlans={onOpenPlans}
           />
 
           {collapsed && (
-            <button onClick={() => setMobileNav(o => !o)} aria-label="Menu" className="v-tap" aria-expanded={mobileNav}
+            <button onClick={() => setHeaderPanel(p => (p === "nav" ? null : "nav"))}
+              aria-label="Menu" className="v-tap" aria-expanded={mobileNav}
               style={{ ...button("ghost", "sm"), padding: "7px 10px" }}>
               {mobileNav ? "✕" : "☰"}
             </button>

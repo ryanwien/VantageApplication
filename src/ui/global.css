@@ -1620,6 +1620,20 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
   border-radius: 2px;
   overflow: hidden;
 }
+/* The rail is a CSS animation and not a Motion tween, and the reason is the
+   pause. A tween has to be told what value to hold at, which means reading the
+   current one first; an animation just stops. `animation-play-state: paused`
+   holds the exact frame it is on — the same mechanism the band's pause button
+   uses — so a reader whose pointer is resting here sees the countdown stop
+   where it stood, not jump.
+
+   Three pictures, and they are genuinely different things:
+     · not selected            — empty.
+     · selected, no countdown  — full. Reduced motion, a phone, or a reader who
+                                 has taken the wheel: nothing is counting down,
+                                 so the bar is a selection mark, not a clock.
+     · selected, counting      — filling, or held mid-fill.
+   Collapsing the last two is what made a paused section look finished. */
 .v-showcase-fill {
   display: block;
   width: 100%;
@@ -1627,7 +1641,25 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
   background: var(--v-accent);
   transform-origin: left center;
   will-change: transform;
+  transform: scaleX(0);
 }
+.v-showcase-tab[aria-selected="true"] .v-showcase-fill { transform: scaleX(1); }
+
+/* --v-dwell is set inline from the DWELL constant in HomeShowcase.jsx, so the
+   bar and the timer it draws cannot drift apart.
+
+   is-timed is absent under reduced motion, which is what keeps the blanket
+   `animation-duration: 0.01ms` rule near the top of this file away from it:
+   there is no animation to collapse, and the selected rail takes the full-bar
+   rule above instead of snapping through a countdown nobody asked for. */
+.v-showcase.is-timed .v-showcase-tab[aria-selected="true"] .v-showcase-fill {
+  transform: scaleX(0);
+  animation: v-showcase-fill var(--v-dwell, 6.5s) linear forwards;
+}
+.v-showcase.is-held .v-showcase-tab[aria-selected="true"] .v-showcase-fill {
+  animation-play-state: paused;
+}
+@keyframes v-showcase-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 .v-homeplans {
   display: grid;

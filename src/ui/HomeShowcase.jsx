@@ -368,10 +368,25 @@ export default function HomeShowcase({ titles, bodies, eyebrow, heading }) {
   // Set once, never unset. See the header: the reader asked to drive.
   const [driving, setDriving] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [hovered, setHovered] = useState(false);
+  // Two flags rather than one, because the tablist and the panel are separate
+  // grid children: moving the pointer from one to the other must not read as a
+  // leave. They are also the only two things here you could be reading — the
+  // handlers used to sit on the <section>, which is full-width and 625px tall,
+  // so a pointer parked in the margin beside the text paused the whole section
+  // while resting on nothing.
+  const [overTabs, setOverTabs] = useState(false);
+  const [overPanel, setOverPanel] = useState(false);
   const ref = useRef(null);
 
-  const running = !reduce && !narrow && !driving && visible && !hovered;
+  // These were one boolean, and that was the bug. `running` meant both "no
+  // countdown exists" (reduced motion, a phone, a reader driving) and "the
+  // countdown is paused" (hover, off screen) — so a paused rail drew itself
+  // with the no-countdown picture, which is a FULL bar. Hovering anywhere over
+  // the section snapped the rail from wherever it was to 100% and stopped the
+  // advance, and the section then sat there looking finished and broken.
+  const timed = !reduce && !narrow && !driving;   // is there a countdown at all?
+  const running = timed && visible && !overTabs && !overPanel;  // is it ticking?
+  const held = timed && !running;                 // ...or paused mid-count?
 
   useEffect(() => {
     const el = ref.current;
@@ -383,10 +398,25 @@ export default function HomeShowcase({ titles, bodies, eyebrow, heading }) {
     return () => io.disconnect();
   }, []);
 
+  // A pause has to resume, not restart. The rail holds its frame (see
+  // .v-showcase-fill in global.css), so the timer behind it has to hold its
+  // remaining time too — otherwise a reader who brushes the section at 6.4s
+  // gets a full bar sitting above another 6.5 seconds of waiting.
+  const spentRef = useRef(0);   // ms this panel has already been held for
+  const markRef = useRef(0);    // when the current run started
+
+  // Declared BEFORE the timer effect on purpose. React runs every cleanup
+  // before any effect, in declaration order, so on an `active` change the
+  // timer's cleanup banks its elapsed time first and this then clears it —
+  // which is what starts each panel on a fresh clock.
+  useEffect(() => { spentRef.current = 0; }, [active]);
+
   useEffect(() => {
     if (!running) return undefined;
-    const id = setTimeout(() => setActive((i) => (i + 1) % PANELS.length), DWELL * 1000);
-    return () => clearTimeout(id);
+    markRef.current = Date.now();
+    const id = setTimeout(() => setActive((i) => (i + 1) % PANELS.length),
+      Math.max(0, DWELL * 1000 - spentRef.current));
+    return () => { clearTimeout(id); spentRef.current += Date.now() - markRef.current; };
   }, [running, active]);
 
   const pick = useCallback((i) => { setDriving(true); setActive(i); }, []);
@@ -414,9 +444,8 @@ export default function HomeShowcase({ titles, bodies, eyebrow, heading }) {
       <section
         ref={ref}
         id="home-features"
-        className="v-showcase"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        className={"v-showcase" + (timed ? " is-timed" : "") + (held ? " is-held" : "")}
+        style={{ "--v-dwell": `${DWELL}s` }}
         aria-labelledby="showcase-heading"
       >
         <div>
@@ -426,7 +455,8 @@ export default function HomeShowcase({ titles, bodies, eyebrow, heading }) {
           }}>{eyebrow}</p>
           <h2 id="showcase-heading" className="v-scrollin v-showcase-h">{heading}</h2>
 
-          <div role="tablist" aria-orientation="vertical" onKeyDown={onKey} style={{ marginTop: 26 }}>
+          <div role="tablist" aria-orientation="vertical" onKeyDown={onKey} style={{ marginTop: 26 }}
+            onMouseEnter={() => setOverTabs(true)} onMouseLeave={() => setOverTabs(false)}>
             {titles.map((title, i) => {
               const on = i === active;
               return (
@@ -443,17 +473,15 @@ export default function HomeShowcase({ titles, bodies, eyebrow, heading }) {
                 >
                   {/* The rail: a hairline that fills while this feature holds.
                       It is also the only thing telling a reader the section
-                      moves on its own, which is worth saying out loud. */}
+                      moves on its own, which is worth saying out loud.
+
+                      The fill is drawn entirely in CSS off `aria-selected` and
+                      the section's is-timed/is-held classes — see global.css.
+                      Keying it on `active` is what restarts the countdown when
+                      a panel takes over: a fresh element runs its animation
+                      from the top, and there is no from-value to compute. */}
                   <span aria-hidden="true" className="v-showcase-rail">
-                    <m.span
-                      key={`${i}-${active}-${running}`}
-                      className="v-showcase-fill"
-                      initial={{ scaleX: on ? (running ? 0 : 1) : 0 }}
-                      animate={{ scaleX: on ? 1 : 0 }}
-                      transition={on && running
-                        ? { duration: DWELL, ease: "linear" }
-                        : { duration: 0.25 }}
-                    />
+                    <span key={active} className="v-showcase-fill" />
                   </span>
 
                   <span style={{
@@ -481,7 +509,8 @@ export default function HomeShowcase({ titles, bodies, eyebrow, heading }) {
           </div>
         </div>
 
-        <div id="showcase-panel" role="tabpanel" aria-labelledby={`showcase-tab-${active}`}>
+        <div id="showcase-panel" role="tabpanel" aria-labelledby={`showcase-tab-${active}`}
+          onMouseEnter={() => setOverPanel(true)} onMouseLeave={() => setOverPanel(false)}>
           <AnimatePresence mode="wait" initial={false}>
             <m.div
               key={active}
