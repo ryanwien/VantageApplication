@@ -115,13 +115,22 @@ function BroadcastCard({ t }) {
           <span style={{ fontFamily: MONO, fontSize: 14, color: C.down }}>−0.84%</span>
         </div>
 
-        {/* the session, drawing itself in */}
+        {/* the session, plotted rather than shown: a head rides the line's tip
+            for the full 2.6s and lands as the final print. pathLength=1 replaces
+            the handoff's dasharray-1400 constant, which was 3× this path's real
+            length — the old draw finished in the first ~0.7s and idled the rest
+            of its own animation. overflow is visible so the print can sit half
+            on the card's live edge instead of arriving pre-guillotined. */}
         <svg viewBox="0 0 420 96" preserveAspectRatio="none" role="img" aria-label={t("AMD session, down 0.84%")}
-          style={{ width: "100%", height: 96, display: "block", marginTop: 12 }}>
+          style={{ width: "100%", height: 96, display: "block", marginTop: 12, overflow: "visible" }}>
           <polyline
             points="0,26 34,32 68,22 102,44 136,38 170,58 204,50 238,66 272,58 306,74 340,68 374,84 420,78"
+            pathLength="1"
             fill="none" stroke={C.down} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            style={{ strokeDasharray: 1400, animation: "vt-draw 2.6s var(--v-ease) both" }} />
+            style={{ strokeDasharray: 1, strokeDashoffset: 1, animation: "v-drawin 2.6s var(--v-ease) forwards" }} />
+          <g className="v-tapehead" aria-hidden="true">
+            <circle className="v-tapedot" r="3" fill={C.down} />
+          </g>
         </svg>
 
         <div style={{ borderTop: `1px solid ${C.edge}`, margin: "16px 0 14px" }} />
@@ -199,7 +208,10 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
           fold, which is the whole reason it reads as the thing to do. */}
       <nav className="v-homenav" aria-label={t("Main")}>
         <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <VantageMark size={26} />
+          {/* The one mark that ignites: its V plots itself and the dot strikes at
+              ~0.6s — the same frame the hero's lamp begins its flicker (55% of
+              v-heroignite's 1.1s). The mark comes on air; the studio answers. */}
+          <VantageMark size={26} ignite />
           <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 17, letterSpacing: "-0.015em" }}>Vantage</span>
         </span>
         {/* Product and Data are the same link. Both scroll to #home-features —

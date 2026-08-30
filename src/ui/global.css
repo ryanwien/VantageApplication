@@ -871,6 +871,80 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
   100% { transform: scaleX(1); }
 }
 
+/* ---------- the mark comes on air ----------
+   The logo performing its own description, once, at arrival: VantageMark.jsx
+   calls the glyph "a V drawn as a price line, with a dot at its right
+   terminus", so on the landing page the line PLOTS — down the left arm, up
+   the right — and the dot strikes on the frame the stroke reaches it, one ink
+   blip radiating from the strike. The draw's ease arrives with speed still in
+   it (an accelerating tail, not the house ease's soft landing) because the
+   dot's pop is the impact that absorbs it. The dot lands at ~0.6s, which is
+   the same frame the hero's lamp begins its flicker (55% of v-heroignite's
+   1.1s) — the mark comes on air, and the studio answers. Waits are baked into
+   keyframe percentages and base states are the finished mark, for the same
+   two reasons as the ignition above. */
+.v-markdraw { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.v-markdot  { transform-box: fill-box; transform-origin: center; }
+.v-markblip { opacity: 0; transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .v-markdraw { animation: v-markdraw 0.6s cubic-bezier(0.4, 0, 0.7, 0.8) both; }
+  .v-markdot  { animation: v-markdot 0.85s var(--v-ease) both; }
+  .v-markblip { animation: v-markblip 1.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+}
+@keyframes v-markdraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes v-markdot {
+  0%, 70% { opacity: 0; transform: scale(0); }
+  82% { opacity: 1; transform: scale(1.45); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes v-markblip {
+  /* scale caps at 2.8: the ring's reach is r 7.84 from (24,10), which stays
+     inside the 32-unit tile — the svg clips, and a clipped blip reads broken. */
+  0%, 35% { opacity: 0; transform: scale(0.8); }
+  42% { opacity: 0.5; }
+  100% { opacity: 0; transform: scale(2.8); }
+}
+
+/* ---------- the hero tape's plotter head ----------
+   A head rides the session line's tip while it draws. The dash reveal and
+   offset-distance are both linear in arc length, so the same duration and
+   ease keep the head exactly on the tip the whole way — then it lands at the
+   card's live edge as the final print and swells once, the period on the
+   session's sentence. Engines without CSS motion paths hold the head at the
+   print and reveal it on arrival instead; the reduced-motion base state is
+   the finished plot with the print already resting. */
+.v-tapehead { transform: translate(420px, 78px); }
+.v-tapedot  { transform-box: fill-box; transform-origin: center; }
+@supports (offset-path: path("M0 0 L8 8")) {
+  .v-tapehead {
+    transform: none;
+    offset-path: path("M0 26 L34 32 L68 22 L102 44 L136 38 L170 58 L204 50 L238 66 L272 58 L306 74 L340 68 L374 84 L420 78");
+    offset-rotate: 0deg;
+    offset-distance: 100%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .v-tapehead { animation: v-tapeplot 2.6s var(--v-ease) both; }
+    .v-tapedot  { animation: v-tapeprint 3s var(--v-ease) both; }
+  }
+}
+@supports not (offset-path: path("M0 0 L8 8")) {
+  @media (prefers-reduced-motion: no-preference) {
+    .v-tapehead { animation: v-tapearrive 3s steps(1, end) both; }
+  }
+}
+@keyframes v-tapeplot { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes v-tapeprint {
+  /* 86.7% of 3s = 2.6s — the swell begins the frame the ride ends. */
+  0%, 86.7% { transform: scale(1); }
+  92% { transform: scale(1.8); }
+  100% { transform: scale(1); }
+}
+@keyframes v-tapearrive {
+  0% { opacity: 0; }
+  86.7% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
 /* A light travels across each line just after it lands. Guarded on
    background-clip because the mechanism is a gradient painted through the
    glyphs with the text itself transparent — where that is unsupported, a

@@ -39,6 +39,16 @@
 //  The canvas twin lives in React.jsx (drawVantageMark) for the exporters and
 //  the broadcast scenes, which cannot render React — if the geometry below
 //  changes, change that too.
+//
+//  IGNITE
+//  `ignite` makes the mark perform its own description once, at mount: the V
+//  plots like the price line it claims to be, and the dot strikes the frame
+//  the stroke reaches its terminus, with one ink blip radiating from the
+//  strike. Only the landing page's nav asks for it — a logo that redrew on
+//  every desk mount would be noise, so everywhere else stays still. The
+//  choreography lives in global.css (.v-markdraw / .v-markdot / .v-markblip);
+//  static base states mean a reader who asked for less motion, or a consumer
+//  that never sets the prop, sees the finished mark and nothing else.
 // ============================================================
 
 import React from "react";
@@ -50,7 +60,7 @@ const INK = "#0b0e13";    // near-black glyph, 6.3:1 on the tile
 const DOT = "#4cc38a";    // accent light — the redesign's on-air colour
 
 export default function VantageMark({
-  size = 26, tile = TILE, edge = EDGE, ink = INK, dot = DOT, radius = 8, title,
+  size = 26, tile = TILE, edge = EDGE, ink = INK, dot = DOT, radius = 8, title, ignite = false,
 }) {
   return (
     <svg
@@ -67,12 +77,20 @@ export default function VantageMark({
           fill={tile} stroke={edge} strokeWidth="1.5"
         />
       )}
+      {/* pathLength=1 normalises the draw so the CSS dash constants hold if the
+          arms ever move — the same trick .v-spark-line documents in global.css. */}
       <path
         d="M8 10 L16 23 L24 10"
         fill="none" stroke={ink} strokeWidth="3.1"
         strokeLinecap="round" strokeLinejoin="round"
+        className={ignite ? "v-markdraw" : undefined} pathLength={ignite ? 1 : undefined}
       />
-      <circle cx="24" cy="10" r="2.8" fill={dot} />
+      <circle cx="24" cy="10" r="2.8" fill={dot} className={ignite ? "v-markdot" : undefined} />
+      {/* The blip is drawn in ink, not lime — the dot stays the mark's only lime,
+          and a ring of the glyph's own material reads as the glyph radiating. */}
+      {ignite && (
+        <circle cx="24" cy="10" r="2.8" fill="none" stroke={ink} strokeWidth="1.2" className="v-markblip" />
+      )}
     </svg>
   );
 }
