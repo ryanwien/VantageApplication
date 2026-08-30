@@ -235,7 +235,14 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
               ones read as something being said. */}
           <div>
             <span className="v-herostep" style={{ "--i": 0, display: "inline-flex", alignItems: "center", gap: 9 }}>
-              <span className="vt-pulse" aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent }} />
+              {/* The lamp. It strikes AFTER its label lands — two hard steps,
+                  because lamps strike, they do not ease — and one ring leaves
+                  it. Both run once, at load; the pulse it settles into is the
+                  live-state idiom the dot already had. */}
+              <span className="v-heroignite" aria-hidden="true">
+                <span className="v-heroping" />
+                <span className="vt-pulse" style={{ display: "block", width: 6, height: 6, borderRadius: "50%", background: C.accent }} />
+              </span>
               <span style={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 500, letterSpacing: "2px", textTransform: "uppercase", color: C.accentText }}>
                 {t("An AI news anchor for the markets")}
               </span>
