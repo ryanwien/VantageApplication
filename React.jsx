@@ -5603,14 +5603,14 @@ function AuthScreen({ onAuthed, onBack }) {
           background; here every word is inside an opaque card, so the source
           can go directly behind it. See the AuthPlate header. */}
       <AuthPlate />
-      <div className="v-rise" style={{ width: step === "plan" ? 880 : 428, maxWidth: "96vw", background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.xl, boxShadow: SHADOW.xl, overflow: "hidden" }}>
+      <div className="v-rise" style={{ width: step === "plan" ? 880 : 428, maxWidth: "96vw", background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.xl, boxShadow: SHADOW.xl, overflow: "hidden", transition: "width 0.35s var(--v-ease)" }}>
 
         {/* header / brand — the gradient mark is the same one the app header uses,
             so the gate reads as the front door of this product rather than a
             generic login screen. */}
         <div style={{ padding: "24px 28px 18px", borderBottom: `1px solid ${C.edge}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-            <VantageMark size={34} />
+            <VantageMark size={34} ignite />
             <div>
               {/* "Vantage", the way the homepage and the app header both set it.
                   This said VANTAGE in uppercase gradient text at weight 510 —
@@ -5653,7 +5653,10 @@ function AuthScreen({ onAuthed, onBack }) {
           </div>
         </div>
 
-        <div style={{ padding: "20px 26px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* Keyed on the step: changing panes remounts the column, which replays
+            the v-authstep print — the one entrance, caused by the press that
+            asked for the pane. Field values live in state, so nothing is lost. */}
+        <div key={step} className="v-authstep" style={{ padding: "20px 26px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
 
           {/* ---------- WELCOME ---------- */}
           {step === "welcome" && (<>
@@ -5668,7 +5671,7 @@ function AuthScreen({ onAuthed, onBack }) {
                 : " It takes a moment and works entirely on this device — nothing leaves your browser."}
             </div>
             {socialBlock}
-            <button style={primaryBtn()} onClick={() => go("signup")}>{t("Create account")}</button>
+            <button className="v-primary" style={primaryBtn()} onClick={() => go("signup")}>{t("Create account")}</button>
             {/* A real ghost, not a primary with its fill painted out. */}
             <button style={{ ...button("ghost", "lg", { full: true }), color: C.text }} onClick={() => go("login")}>{t("Log in")}</button>
           </>)}
@@ -5698,7 +5701,7 @@ function AuthScreen({ onAuthed, onBack }) {
                   invalid={!!loginPwErr} onBlur={() => touch("password")} />
               </AuthField>
 
-              <button type="submit" style={primaryBtn({ opacity: busy ? 0.6 : 1 })} disabled={busy}>
+              <button type="submit" className="v-primary" style={primaryBtn({ opacity: busy ? 0.6 : 1 })} disabled={busy}>
                 {busy ? "Signing in…" : "Log in"}
               </button>
 
@@ -5760,7 +5763,7 @@ function AuthScreen({ onAuthed, onBack }) {
                   invalid={!!confirmErr} onBlur={() => touch("confirm")} />
               </AuthField>
 
-              <button type="submit" style={primaryBtn()}>Continue → choose a plan</button>
+              <button type="submit" className="v-primary" style={primaryBtn()}>Continue → choose a plan</button>
 
               {socialProviders.google && (
                 <div style={{ ...TYPE.caption, fontSize: 11, color: C.faint, textAlign: "center" }}>
@@ -5806,7 +5809,7 @@ function AuthScreen({ onAuthed, onBack }) {
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
               <button style={{ ...primaryBtn(), background: "transparent", color: C.text, border: `1px solid ${C.panelEdge}`, width: "auto", flex: "0 0 auto", padding: "12px 18px" }} onClick={() => setStep("signup")}>← Back</button>
-              <button style={primaryBtn()} onClick={() => { setErr(""); setStep("legal"); }}>Continue</button>
+              <button className="v-primary" style={primaryBtn()} onClick={() => { setErr(""); setStep("legal"); }}>Continue</button>
             </div>
           </>)}
 
@@ -5847,7 +5850,7 @@ function AuthScreen({ onAuthed, onBack }) {
                   ("Trading Floor" is half again as long as "Pro Desk") and every
                   translation of it is longer than the English. Two lines is the
                   right answer at this width, so let it have two lines. */}
-              <button style={primaryBtn({ opacity: !agree || busy ? 0.6 : 1, minWidth: 0, whiteSpace: "normal", lineHeight: 1.3, textAlign: "center" })} disabled={!agree || busy} onClick={doSignup}>{busy ? "Creating…" : `Agree & create ${planLabel(plan)} account`}</button>
+              <button className="v-primary" style={primaryBtn({ opacity: !agree || busy ? 0.6 : 1, minWidth: 0, whiteSpace: "normal", lineHeight: 1.3, textAlign: "center" })} disabled={!agree || busy} onClick={doSignup}>{busy ? "Creating…" : `Agree & create ${planLabel(plan)} account`}</button>
             </div>
           </>)}
 
@@ -5884,7 +5887,7 @@ function TrialEndedScreen({ account, onCheckout, onSignOut, busy, error }) {
             and dressing it differently would read as an interstitial. */}
         <div style={{ padding: "24px 28px 18px", borderBottom: `1px solid ${C.edge}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-            <VantageMark size={34} />
+            <VantageMark size={34} ignite />
             <div>
               <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20, letterSpacing: "-0.018em", color: C.text }}>Vantage</div>
               <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, marginTop: 3, display: "flex", alignItems: "center", gap: 6 }}>
@@ -5940,7 +5943,7 @@ function TrialEndedScreen({ account, onCheckout, onSignOut, busy, error }) {
             })}
           </div>
 
-          <button onClick={() => onCheckout(plan)} disabled={!!busy}
+          <button onClick={() => onCheckout(plan)} disabled={!!busy} className="v-primary"
             style={{ ...button("primary", "lg", { full: true }), opacity: busy ? 0.6 : 1 }}>
             {busy ? "…" : t("Continue on {plan}").replace("{plan}", planLabel(plan))}
           </button>

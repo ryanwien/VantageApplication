@@ -666,6 +666,36 @@ a:hover { text-decoration: underline; }
 /* Every enabled button presses in — universal tactility for one rule. */
 button:not(:disabled):active { transform: scale(0.97); }
 
+/* ---------- the primary pill's material ----------
+   button("primary") in theme.js paints the sheen gradient at rest, so every
+   primary in the product gets its depth from the recipe. This class is the
+   half inline styles cannot do: on hover the pill lifts onto the accent-hover
+   shadow and one band of light crosses it — caused by the pointer's arrival,
+   never a loop. The landing CTA keeps its looping vt-sheen; a marketing
+   surface may idle glamorously, a working pill answers only to the hand.
+   Press drops the lift before the universal scale detent, so the pill goes
+   DOWN under the finger instead of hovering through its own click. */
+.v-primary { position: relative; overflow: hidden; }
+.v-primary::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 25%, rgba(255, 255, 255, 0.16) 50%, transparent 75%);
+  transform: translateX(-101%); pointer-events: none;
+}
+.v-primary:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(70, 167, 88, 0.3); }
+.v-primary:not(:disabled):active { transform: translateY(0) scale(0.97); box-shadow: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .v-primary:not(:disabled):hover::after { animation: v-primarysweep 0.7s var(--v-ease); }
+}
+@keyframes v-primarysweep { from { transform: translateX(-101%); } to { transform: translateX(101%); } }
+
+/* ---------- the gate's steps print in ----------
+   The auth card's panes (welcome / log in / sign up / plan / legal) are keyed
+   on the step, so each arrival replays this — motion caused by the visitor's
+   own press, in the doorway's light dialect. The card's width change out to
+   the plan spread transitions for the same reason (inline, on the card). */
+.v-authstep { animation: v-authstep 0.32s var(--v-ease) both; }
+@keyframes v-authstep { from { opacity: 0; transform: translateY(7px); } }
+
 /* Session lines draw themselves in: the sparkline in a watchlist row and the
    big tape chart both. pathLength="1" is what makes one keyframe serve both —
    it normalises the path to a length of 1, so the dash covers it exactly

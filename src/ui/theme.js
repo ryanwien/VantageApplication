@@ -335,8 +335,14 @@ export function button(variant = "ghost", size = "md", opts = {}) {
   };
   const variants = {
     // THE chromatic element: green fill, near-black label. One per screen — that
-    // discipline is the whole point of the redesign.
-    primary: { background: C.accent, color: C.textOnAccent, border: "1px solid transparent", fontWeight: 600 },
+    // discipline is the whole point of the redesign. The fill is the sheen
+    // gradient parked at rest rather than flat accent paint: at 220% size only
+    // its accent→hover span is in the window, so the pill reads as the accent
+    // with a lit right edge — depth without a second colour. The landing CTA
+    // and the games hand-rolled exactly this (GRAD.sheen + vt-sheen) while
+    // every recipe button stayed flat; now the material is the recipe's.
+    // Hover physics live in global.css (.v-primary) — inline styles can't :hover.
+    primary: { background: GRAD.sheen, backgroundSize: "220% auto", color: C.textOnAccent, border: "1px solid transparent", fontWeight: 600 },
     // The neutral filled button — an inset surface, not a white wash.
     solid: { background: C.surfaceRaised, color: C.text, border: `1px solid ${C.edge}`, fontWeight: 500 },
     ghost: { background: "transparent", color: active ? C.text : C.muted, border: `1px solid ${active ? C.edgeStrong : C.edge}`, fontWeight: 500 },
