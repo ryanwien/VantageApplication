@@ -10006,7 +10006,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       const known = (q.match(/\b[A-Z]{1,5}\b/g) || [])
         .find(c => !CAPS_STOP.has(c) && (demoMkt[c] || watchlist.includes(c)));
       const askSym = dollar ? resolveSym(dollar[1]) : aliasFromText(q) || (known ? resolveSym(known) : null);
-      if (askSym) askSymRef.current[chatTurnRef.current] = askSym;
+      if (askSym) {
+        askSymRef.current[chatTurnRef.current] = askSym;
+        // An alias can resolve to a symbol the demo market has never dealt —
+        // seed its tape now so the session panel has bars to draw.
+        if (!live && !demoMkt[askSym]) ensureDemoSymbol(askSym);
+      }
     }
     askCancelRef.current = false;   // a new question clears any previous stop
     stopSpeak();
@@ -11205,35 +11210,66 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // ---------- the session, riding the answer ----------
   // Everything else the desk produces already rides the conversation (see
   // deskPanels above); the session was the one answer that still lived only in
-  // the workbench below. Ask about a symbol and the answer now carries it:
-  // the quote, the day's move, and the same sparkline the watchlist draws —
-  // prev close dotted — with the full chart one press away. The ticker pins
-  // the workbench to it, which is the arrow the reader used to draw themselves.
+  // the workbench below. Ask about a symbol and the answer now carries the
+  // real thing — the same recharts session the workbench draws, prev close
+  // dashed, with the quote above it and the stats row under it. Not a
+  // thumbnail of the chart: the chart. The y-domain and prev-close-on-axis
+  // rules are the workbench's own (see yDomain above for why prev close only
+  // sometimes gets a vote), applied to the asked symbol's tape.
   const sessionCard = (sym) => {
     const r = getRow(sym);
     if (!r || r.price == null) return null;
+    const bars = live ? (liveTape[sym] || []) : (demoMkt[sym] ? demoMkt[sym].bars.slice(0, demoMkt[sym].cursor + 1) : []);
+    const ys = bars.map(d => d.price).filter(Number.isFinite);
+    let yDom = ["auto", "auto"], pcOnAxis = false;
+    if (ys.length) {
+      let lo = Math.min(...ys), hi = Math.max(...ys);
+      const pc = r.prevClose;
+      if (Number.isFinite(pc)) {
+        const reach = Math.max((hi - lo) * 2, Math.abs(hi) * 0.0025);
+        if (pc >= lo - reach && pc <= hi + reach) { lo = Math.min(lo, pc); hi = Math.max(hi, pc); }
+      }
+      if (hi - lo < 1e-6) { const p = Math.max(0.02, Math.abs(lo) * 0.004); lo -= p; hi += p; }
+      else { const p = (hi - lo) * 0.12; lo -= p; hi += p; }
+      yDom = [+lo.toFixed(2), +hi.toFixed(2)];
+      pcOnAxis = Number.isFinite(r.prevClose) && r.prevClose >= yDom[0] && r.prevClose <= yDom[1];
+    }
+    const tone = dirColorN(r.chg);
+    const chgLine = `${r.chg > 0 ? "+" : ""}${fmt(r.chg)} · ${pct(r.chgPct)}`;
     return (
-      <div style={{
-        display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
-        background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`,
-        borderRadius: R.md, padding: "10px 14px",
-      }}>
-        <button onClick={() => setSelected(sym)} title={`Pin ${sym} on the workbench`}
-          style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: SANS, fontSize: 13.5, fontWeight: 700, color: C.text }}>
-          {sym}
-        </button>
-        <span style={{ fontFamily: MONO, fontSize: 15, fontWeight: 700, color: C.text }}>{fmt(r.price)}</span>
-        <span style={{ fontFamily: MONO, fontSize: 12.5, color: dirColorN(r.chg) }}>{pct(r.chgPct)}</span>
-        {/* minWidth 0 + hidden overflow, same as the watchlist rows: the SVG
-            is fixed-width, so a tight row clips its ends instead of letting
-            it collide with the numbers beside it. */}
-        <span aria-hidden="true" style={{ color: C.faint, flex: 1, minWidth: 0, display: "flex", justifyContent: "center", overflow: "hidden" }}>
-          <Sparkline data={getCloses(sym)} width={150} height={30} color={dirColorN(r.chg)} refValue={r.prevClose} />
-        </span>
-        <button onClick={() => openChart(sym)}
-          style={{ background: "transparent", border: "none", color: C.accent, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0 }}>
-          {t("Full chart")} →
-        </button>
+      <div style={{ background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`, borderRadius: R.md, padding: "12px 14px" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+          <button onClick={() => setSelected(sym)} title={`Pin ${sym} on the workbench`}
+            style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: SANS, fontSize: 15, fontWeight: 700, color: C.text }}>
+            {sym}
+          </button>
+          <span style={{ fontFamily: MONO, fontSize: 19, fontWeight: 700, letterSpacing: "-0.02em", color: C.text }}>{fmt(r.price)}</span>
+          <span style={{ fontFamily: MONO, fontSize: 12.5, color: tone }}>{chgLine}</span>
+          <button onClick={() => openChart(sym)}
+            style={{ marginLeft: "auto", background: "transparent", border: "none", color: C.accent, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0 }}>
+            {t("Full chart")} →
+          </button>
+        </div>
+        {bars.length > 1 && (
+          <div style={{ height: 190, marginTop: 10 }}>
+            {/* Same-box fallback as the workbench: nothing moves when the
+                recharts chunk arrives. */}
+            <Suspense fallback={<div aria-busy="true" style={{ height: "100%" }} />}>
+              <PriceChart
+                chartPlot={bars} accent={tone} yDomain={yDom} selected={sym} smaN={20} fmt={fmt}
+                prevCloseOnAxis={pcOnAxis} prevClose={r.prevClose}
+                chartDrawKey={sym} fillId={`fillArea-chat-${sym}`}
+              />
+            </Suspense>
+          </div>
+        )}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 18px", marginTop: 10, fontFamily: MONO, fontSize: 12, borderTop: `1px solid ${C.edge}`, paddingTop: 10 }}>
+          {[[t("Open"), r.open], [t("High"), r.high], [t("Low"), r.low], [t("Prev close"), r.prevClose]].map(([k, v]) =>
+            Number.isFinite(v) ? (
+              <span key={k} style={{ color: C.muted }}>{k} <b style={{ color: C.text }}>{fmt(v)}</b></span>
+            ) : null)}
+          <span style={{ color: C.muted }}>{t("Change")} <b style={{ color: tone }}>{chgLine}</b></span>
+        </div>
       </div>
     );
   };

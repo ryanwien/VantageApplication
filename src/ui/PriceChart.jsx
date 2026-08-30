@@ -23,12 +23,17 @@ import { C, MONO, R } from "./theme.js";
 export default function PriceChart({
   comparePlot, chartPlot, accent, yDomain, chartVs, selected, smaN, fmt,
   prevCloseOnAxis, prevClose, sessionHL, chartSMA, chartDrawKey,
+  // Unique per instance when more than one chart is on the page — SVG
+  // gradient ids are document-global, so two charts both defining #fillArea
+  // would share whichever one the browser finds first, and a red workbench
+  // could paint its fill under a green session card in the conversation.
+  fillId = "fillArea",
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={comparePlot || chartPlot} margin={{ top: 8, right: 6, bottom: 0, left: 0 }}>
         <defs>
-          <linearGradient id="fillArea" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={accent} stopOpacity={0.28} />
             <stop offset="100%" stopColor={accent} stopOpacity={0} />
           </linearGradient>
@@ -67,8 +72,8 @@ export default function PriceChart({
         {/* pathLength=1 + .v-chartdraw is the draw-on; recharts' own
             isAnimationActive stays off because it replays on every
             data change, and this tape changes every few seconds. */}
-        {!comparePlot && <Area key={`price-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="price" stroke={accent} strokeWidth={1.8} fill="url(#fillArea)" isAnimationActive={false} dot={false} />}
-        {comparePlot && <Area key={`base-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="base" stroke={accent} strokeWidth={1.8} fill="url(#fillArea)" isAnimationActive={false} dot={false} />}
+        {!comparePlot && <Area key={`price-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="price" stroke={accent} strokeWidth={1.8} fill={`url(#${fillId})`} isAnimationActive={false} dot={false} />}
+        {comparePlot && <Area key={`base-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="base" stroke={accent} strokeWidth={1.8} fill={`url(#${fillId})`} isAnimationActive={false} dot={false} />}
         {/* the comparison line owns purple — every other hue here has a meaning already */}
         {comparePlot && <Area key={`vs-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="vs" stroke="#C08BFF" strokeWidth={1.5} fill="transparent" isAnimationActive={false} dot={false} />}
       </AreaChart>
