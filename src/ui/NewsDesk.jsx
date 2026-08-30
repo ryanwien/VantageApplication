@@ -43,6 +43,7 @@ import Waveform from "./Waveform.jsx";
 import VideoFrame, { ytId, ytThumb, ytThumbIsReal } from "./VideoFrame.jsx";
 import { clock, relAge } from "../lib/time.js";
 import useSpeechProgress from "./useSpeechProgress.js";
+import { Flap, Roll, Shuttle, printIn } from "./DeskMotion.jsx";
 import { toneOf, toneLabel, wireTone, categoryOf, sourceColor, sourceOf, ageOf, spanLabel } from "../news/news.js";
 
 
@@ -50,9 +51,15 @@ const railLabel = { ...TYPE.eyebrowSm, fontSize: 10, color: C.faint, letterSpaci
 const metaMono = { fontFamily: MONO, fontSize: 10.5, color: C.faint };
 const HEAD_PAD = "14px 22px";
 
-// The story cards enter in sequence. 60ms is the handoff's stagger; the cap
-// stops the twelfth card arriving most of a second after the first.
-const enter = (i) => ({ animation: `vt-fadeup 0.5s var(--v-ease) ${Math.min(i * 0.06, 0.5)}s both` });
+// The story cards PRINT in sequence — they do not rise. This panel used
+// vt-fadeup, which is the landing page's gesture: a thing travelling up into
+// place to present itself. But this is a desk, and more to the point it is a
+// WIRE. Stories do not float onto a news desk; they come off a machine, and
+// the desk's arrival primitive is a wipe from the top edge that reveals a card
+// exactly where it already is (see v-print in global.css). Sixty milliseconds
+// apart is the handoff's stagger; clamping the index at eight stops the
+// twelfth story arriving most of a second after the first.
+const enter = (i) => printIn(Math.min(i, 8), { step: 60, radius: R.lg });
 
 // ---------- the row of metadata every story wears ----------
 // Source, age, category, tone — in that order on both screens, because the
@@ -105,7 +112,7 @@ function StoryCard({ item, href, index, primary, onAir, speaking, onRead, onAsk 
   const readLabel = onAir && speaking ? "Stop" : "Read on air";
 
   return (
-    <div className="v-lift v-storycard" style={{
+    <div className="v-lift v-storycard v-print" style={{
       position: "relative",
       background: C.surface,
       border: `1px solid ${onAir ? C.accent : primary ? C.edgeStrong : C.edge}`,
@@ -145,23 +152,34 @@ function StoryCard({ item, href, index, primary, onAir, speaking, onRead, onAsk 
 
 // ---------- the story on air ----------
 
+// The band is chrome and content in one, and the two move differently. The
+// chrome — the state, the position in the queue, the clock — STAYS mounted for
+// the whole bulletin and swaps its values in place: a flap for the state, wheels
+// for the position, because those are values being replaced. The story panel
+// below it is a different story each time, so it re-prints: the tape advancing.
+const AIR_STATE = [
+  { key: "onair", label: <span style={{ color: C.live }}>On air</span> },
+  { key: "read", label: <span style={{ color: C.muted }}>Just read</span> },
+];
+
 function OnAir({ item, href, index, total, speaking, means, progressRef, onNext, onStop }) {
   const source = sourceOf(item, href);
   const hue = sourceColor(source);
   const { frac, elapsedSec, totalSec } = useSpeechProgress(progressRef, `story:${index}`);
 
   return (
-    <div style={{ borderBottom: `1px solid ${C.edge}`, background: C.base }}>
+    <div className="v-print" style={{ borderBottom: `1px solid ${C.edge}`, background: C.base, ...printIn(0, { radius: 0 }) }}>
       <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "14px 22px", borderBottom: `1px solid ${C.edge}`, flexWrap: "wrap" }}>
         {/* The waveform is mounted only while sound is actually coming out —
             a meter that animates over silence teaches you to stop believing
             it. When the read ends the block stays, holding the translation,
             and says so instead. */}
         {speaking && <Waveform height={15} width={3} gap={2.5} />}
-        <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: speaking ? C.live : C.muted }}>
-          {speaking ? "On air" : "Just read"}
+        <Flap value={speaking ? "onair" : "read"} items={AIR_STATE}
+          style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600 }} />
+        <span style={{ fontFamily: SANS, fontSize: 12, color: C.faint }}>
+          story <Roll value={index + 1} /> of <Roll value={total} />
         </span>
-        <span style={{ fontFamily: SANS, fontSize: 12, color: C.faint }}>story {index + 1} of {total}</span>
         <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 12 }}>
           {/* The total half of this clock only exists on the studio voice,
               which is a real audio element with a real duration. Browser
@@ -177,16 +195,26 @@ function OnAir({ item, href, index, total, speaking, means, progressRef, onNext,
         </span>
       </div>
 
-      <div style={{ padding: "18px 22px 20px" }}>
+      {/* Keyed on the story, so the panel re-prints as the bulletin walks the
+          queue. A new story arriving with the old one's wipe already spent
+          would just have its text substituted underneath you, which is the one
+          thing a desk should never do quietly. */}
+      <div key={index} className="v-print" style={{ padding: "18px 22px 20px", ...printIn(0, { radius: 0 }) }}>
         <StoryMeta item={item} source={source} hue={hue} showCategory={false} />
         <div style={{ fontFamily: SANS, fontSize: 17, fontWeight: 700, lineHeight: 1.45, letterSpacing: "-0.01em", marginTop: 10, textWrap: "pretty" }}>
           {item.title}
         </div>
 
+        {/* The head rides the fill's right edge (v-readfill in global.css), so
+            the position it marks is the fill's own end rather than a second
+            number that could drift out of step. overflow is NOT hidden here:
+            the head is wider than the 3px track and hangs over both sides of
+            it on purpose — a clipped read head is a square cap. */}
         <div role="progressbar" aria-valuenow={Math.round(frac * 100)} aria-valuemin={0} aria-valuemax={100}
           aria-label="How far through this story the desk has read"
-          style={{ height: 3, borderRadius: 2, background: C.surface, marginTop: 16, overflow: "hidden" }}>
-          <div style={{ width: `${frac * 100}%`, height: "100%", background: C.accent, transition: "width 250ms linear" }} />
+          style={{ height: 3, borderRadius: 2, background: C.surface, marginTop: 16 }}>
+          <div className={speaking ? "v-readfill is-live" : "v-readfill"}
+            style={{ width: `${frac * 100}%`, background: C.accent, transition: "width 250ms linear" }} />
         </div>
 
         {/* The desk's own words about somebody else's — C.textBody, the one
@@ -434,7 +462,10 @@ export default function NewsDesk({
             one piece of it that never got wired to the header. */}
         {items.length > 0 && (
           <span style={{ color: C.faint, fontFamily: MONO, fontSize: 11.5 }}>
-            {[`${items.length} ${items.length === 1 ? "story" : "stories"}`, span].filter(Boolean).join(" · ")}
+            {/* The count is on wheels. A refresh that turns eight stories into
+                eleven is a value being replaced, and the desk's answer to that
+                is a mechanism, not a substitution you have to notice. */}
+            <Roll value={items.length} /> {items.length === 1 ? "story" : "stories"}{span ? ` · ${span}` : ""}
           </span>
         )}
 
@@ -458,8 +489,12 @@ export default function NewsDesk({
               {airAuto ? "Stop the bulletin" : "Read all on air"}
             </button>
           )}
+          {/* A search of the wire takes as long as it takes, and the desk's
+              primitive for exactly that is the shuttle — a bar scanning its
+              track, mounted only while the search is genuinely running. */}
           <button onClick={onLoad} disabled={busy} className="v-outline"
-            style={{ ...button(hasContent ? "ghost" : "solid", "sm", { disabled: busy }), borderColor: hasContent ? C.edgeStrong : C.edge }}>
+            style={{ ...button(hasContent ? "ghost" : "solid", "sm", { disabled: busy }), borderColor: hasContent ? C.edgeStrong : C.edge, display: "inline-flex", alignItems: "center", gap: 8 }}>
+            {busy && <Shuttle />}
             {busy ? "Searching…" : hasContent ? "Refresh" : `Load ${subject || "news"} →`}
           </button>
           {onClose && (
@@ -485,7 +520,12 @@ export default function NewsDesk({
                   bullish share against everything else, which cannot
                   distinguish a quiet wire from a bearish one — and those are
                   the two readings that matter most. */}
-              <span aria-hidden="true" style={{ flex: "1 1 120px", minWidth: 84, display: "flex", height: 8, borderRadius: 4, overflow: "hidden", background: C.surface, border: `1px solid ${C.edge}` }}>
+              {/* Keyed on the wire's contents so the meter charges when a NEW
+                  wire lands and holds still when you filter the one already in
+                  hand — a gauge that re-swept every time you pressed a chip
+                  would be reporting an arrival that did not happen. */}
+              <span key={wireKey} aria-hidden="true" className="v-wirecharge"
+                style={{ flex: "1 1 120px", minWidth: 84, display: "flex", height: 8, borderRadius: 4, overflow: "hidden", background: C.surface, border: `1px solid ${C.edge}` }}>
                 {tones.bull > 0 && <span style={{ width: `${(tones.bull / items.length) * 100}%`, background: `linear-gradient(90deg, ${FIELD.youMeter[0]}, ${FIELD.youMeter[1]})` }} />}
                 {tones.quiet > 0 && <span style={{ flex: 1, background: C.edge }} />}
                 {tones.bear > 0 && <span style={{ width: `${(tones.bear / items.length) * 100}%`, background: C.down }} />}
@@ -494,7 +534,10 @@ export default function NewsDesk({
                   version could not be read. They are buttons as well as
                   labels: the count and the filter for it are the same fact. */}
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
-                {[["bull", `▲ ${tones.bull} bullish`, C.up], ["quiet", `${tones.quiet} neutral`, C.faint], ["bear", `▼ ${tones.bear} bearish`, C.down]].map(([id, label, color]) => (
+                {/* The counts are on wheels for the same reason the header's
+                    is: three bullish becoming five is the wire changing its
+                    mind, and it should be visible that it did. */}
+                {[["bull", "▲ ", tones.bull, " bullish", C.up], ["quiet", "", tones.quiet, " neutral", C.faint], ["bear", "▼ ", tones.bear, " bearish", C.down]].map(([id, glyph, count, word, color]) => (
                   <button key={id} onClick={() => setToneFilter(f => (f === id ? null : id))} aria-pressed={toneFilter === id}
                     title={toneFilter === id ? "Show every tone" : `Show only the ${id === "quiet" ? "unscored" : id === "bull" ? "bullish" : "bearish"} headlines`}
                     style={{
@@ -503,7 +546,7 @@ export default function NewsDesk({
                       border: `1px solid ${toneFilter === id ? C.accentEdge : "transparent"}`,
                       borderRadius: R.pill, padding: "2px 8px", cursor: "pointer",
                     }}>
-                    {label}
+                    {glyph}<Roll value={count} />{word}
                   </button>
                 ))}
               </span>

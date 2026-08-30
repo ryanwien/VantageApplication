@@ -38,6 +38,7 @@ import React, { useState, useEffect } from "react";
 import { C, MONO, SANS, TYPE, R, segmentTrack, segmentItem } from "./theme.js";
 import DeskIcon from "./DeskIcon.jsx";
 import Waveform from "./Waveform.jsx";
+import { Shuttle, printIn } from "./DeskMotion.jsx";
 import { relAge } from "../lib/time.js";
 import { ratingText, ratingTitle, runtimeText, genreOfDetails, catalogHeading, catalogSource } from "../movies/movies.js";
 
@@ -83,7 +84,13 @@ function TitleCard({ item, rank, index, open, onOpen, archive }) {
   const rating = ratingText(item.rating);
   const meta = [item.year, item.genre].filter(Boolean).join(" · ");
   return (
-    <div style={{ animation: `vt-fadeup 0.5s var(--v-ease) ${Math.min(0.04 + index * 0.06, 0.5)}s both` }}>
+    // The shelf PRINTS. These were rising into place on vt-fadeup, which is the
+    // landing page's gesture for a thing presenting itself; a catalogue landing
+    // on a working surface should be revealed where it already is, top edge
+    // down, the way every other arrival on this desk is. Six posters developing
+    // in sequence is also simply the better picture — a shelf filling rather
+    // than a block of artwork appearing.
+    <div className="v-print" style={printIn(index, { base: 40, radius: 0 })}>
       <button onClick={onOpen} className="v-poster"
         title={archive ? `Play ${item.title} in the desk` : `${open ? "Close" : "Read"} the summary of ${item.title}`}
         style={{
@@ -124,7 +131,7 @@ function Summary({ item, heading, rank, speaking, details, onTrailer, onWatchOn,
   const line = [item.year, runtimeText(details?.runtime), genreOfDetails(details?.genres) || item.genre].filter(Boolean).join(" · ");
 
   return (
-    <div style={{ borderTop: `1px solid ${C.edge}`, padding: "20px 22px" }}>
+    <div className="v-print" style={{ borderTop: `1px solid ${C.edge}`, padding: "20px 22px", ...printIn(0, { radius: 0 }) }}>
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {/* Gated on there being a path at all — beside a paragraph, a poster is
             decoration, and an empty frame is worse than no frame. Once there IS
@@ -233,7 +240,11 @@ export default function MoviesDesk({
       {/* ---- body ---- */}
       {catalog.loading ? (
         <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "18px 22px" }}>
-          <span className="v-pulse" aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, flexShrink: 0 }} />
+          {/* A shuttle, not a pulsing dot. A pulse says "live"; a catalogue
+              being fetched is not live, it is WORK of unknown length, and the
+              desk has a primitive that says exactly that — a bar scanning its
+              track. Mounted only for the length of the fetch, as before. */}
+          <Shuttle width={16} height={12} color={C.accent} />
           {/* "Pulling Netflix — movies on the desk", the reference's line, works
               because Netflix is a brand and "movies" says what we are taking
               from it. The other two lists are named for what they ARE, and the
@@ -272,8 +283,12 @@ export default function MoviesDesk({
             </div>
           </div>
 
+          {/* Keyed on the title, so opening a second film re-prints the panel
+              instead of swapping the words underneath the one already open —
+              which, at this size, is a paragraph silently becoming a different
+              paragraph. */}
           {pick && !archive && (
-            <Summary item={pick} heading={name.toUpperCase()} rank={pickIndex >= 0 ? pickIndex + 1 : null}
+            <Summary key={pick.archiveId || pick.id} item={pick} heading={name.toUpperCase()} rank={pickIndex >= 0 ? pickIndex + 1 : null}
               speaking={speaking} details={pickDetails} serviceName={catalog.service?.name}
               onTrailer={onTrailer ? () => onTrailer(pick) : null}
               onWatchOn={onWatchOn && catalog.service ? () => onWatchOn(pick) : null}

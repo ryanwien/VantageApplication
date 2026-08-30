@@ -2986,6 +2986,11 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
    a small lift on a big object reads as a wobble. */
 .v-poster { transition: transform 0.22s var(--v-ease), border-color 0.22s var(--v-ease); }
 .v-poster:hover { transform: translateY(-4px); border-color: var(--v-accent) !important; }
+/* The press was missing entirely: the biggest target on the desk answered a
+   pointer by floating and answered a CLICK with nothing. It sets back down and
+   goes a shade under, on the mechanism curve — a card pushed, not a card
+   presenting itself. */
+.v-poster:active { transform: translateY(-1px) scale(0.985); transition-timing-function: var(--v-detent); }
 
 /* The card's verb is a link, not a button, so it answers a pointer the way a
    link does. */
@@ -3225,6 +3230,65 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
    quarter-second of nothing before each card snapped in, which is a worse
    picture than the animation they turned off. */
 @media (prefers-reduced-motion: reduce) { .v-print { animation-delay: 0ms !important; } }
+
+/* ---------- the wire tone meter, charging ----------
+   A gauge does not appear already reading; it sweeps to its reading. When a
+   wire lands the tone bar wipes open from the left, so the three segments are
+   uncovered in the order they are stacked — bullish, then quiet, then bearish
+   — which is the reading itself, left to right.
+
+   The clip sits on the track rather than a scaleX on each segment: the
+   segments are flex children sized by percentage, and scaling one
+   horizontally would shrink it out of the row instead of uncovering it. The
+   `round` keeps the track's own pill ends for the length of the wipe — a
+   clip-path with no radius squares the corners off while it runs.
+
+   Mounted with the wire's contents as its key, so it charges when a NEW wire
+   arrives and holds still when you filter the one already in hand. */
+.v-wirecharge { animation: v-wirecharge 620ms var(--v-detent) both; }
+@keyframes v-wirecharge {
+  from { clip-path: inset(0 100% 0 0 round 4px); }
+  to   { clip-path: inset(0 0 0 0 round 4px); }
+}
+
+/* ---------- the read head ----------
+   Where the desk has got to in the script. The fill already says how far; the
+   head says something is DOING it — a point of light parked on the leading
+   edge, which is the plotter head that draws the landing page's tape, moved
+   onto a working readout.
+
+   It is a child of the fill, pinned to the fill's own right edge, so there is
+   no second position to keep in sync and it inherits the fill's transition for
+   free: the bar advances, the head goes with it.
+
+   Lit only while sound is actually coming out. On a finished read it stays
+   parked where the read stopped, dimmed — a mark of how far, not a claim that
+   anything is still running. */
+.v-readfill { position: relative; height: 100%; border-radius: 2px; }
+.v-readfill::after {
+  content: ""; position: absolute; right: -3px; top: 50%;
+  width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%;
+  background: var(--v-accent); opacity: 0.5;
+  transition: box-shadow var(--v-base-dur) var(--v-ease), opacity var(--v-base-dur) var(--v-ease);
+}
+.v-readfill.is-live::after {
+  opacity: 1;
+  box-shadow: 0 0 0 3px rgba(70, 167, 88, 0.18), 0 0 10px 2px rgba(70, 167, 88, 0.45);
+}
+
+/* ---------- the play hit ----------
+   The poster's 62px circle is the only control on the video desk with real
+   size to it, and it had no press at all: the picture simply changed under
+   your finger. It grows a shade under the pointer and goes DOWN when pressed,
+   because that is the physics of a button you push, and the detent curve stops
+   dead rather than easing out of rest.
+
+   The translate is repeated in every state on purpose — the element's own
+   inline transform centres it on the frame, so a bare `scale()` here would
+   discard the centring and throw the circle into the corner mid-press. */
+.v-playhit { transition: transform 160ms var(--v-detent), box-shadow 160ms var(--v-ease); }
+.v-playhit:hover { transform: translate(-50%, -50%) scale(1.06); }
+.v-playhit:active { transform: translate(-50%, -50%) scale(0.94); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5) !important; }
 
 /* ---------- the anchor's status readout ----------
    Four states, not two. `talking` and everything-else was the whole vocabulary,

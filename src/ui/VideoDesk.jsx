@@ -37,6 +37,7 @@ import React, { useState, useEffect } from "react";
 import { C, MONO, SANS, TYPE, R } from "./theme.js";
 import VideoFrame, { ytThumb } from "./VideoFrame.jsx";
 import Waveform from "./Waveform.jsx";
+import { Shuttle, printIn } from "./DeskMotion.jsx";
 import useSpeechProgress from "./useSpeechProgress.js";
 import { clock, chapterSpans, chapterAt, relAge, compactCount, monogram } from "../video/video.js";
 
@@ -79,7 +80,7 @@ function Poster({ video, durationSec, onPlay }) {
           behind a green disc. 74px is the first centre that clears a chip row
           ending at 39 with a 31px radius below it, and on the reference's
           804-wide frame 22% is 99px, so nothing there moves. */}
-      <button onClick={onPlay} aria-label={`Play ${video.title}`}
+      <button onClick={onPlay} aria-label={`Play ${video.title}`} className="v-playhit"
         style={{
           position: "absolute", left: "50%", top: "max(22%, 74px)", transform: "translate(-50%, -50%)",
           width: 62, height: 62, borderRadius: "50%", border: "none", cursor: "pointer",
@@ -194,7 +195,11 @@ export default function VideoDesk({
             // does not leave the next one posterless.
             ? <Poster key={video.id} video={video} durationSec={durationSec} onPlay={() => setAt(0)} />
             : (
-              <div style={{ borderRadius: R.lg, overflow: "hidden", border: `1px solid ${C.edge}`, boxShadow: FRAME_SHADOW }}>
+              // The frame prints where the poster was. Pressing play is the
+              // biggest thing that happens on this panel and it used to be a
+              // substitution — one picture replaced by another between frames,
+              // which reads as a glitch rather than as a machine responding.
+              <div className="v-print" style={{ borderRadius: R.lg, overflow: "hidden", border: `1px solid ${C.edge}`, boxShadow: FRAME_SHADOW, ...printIn(0, { radius: R.lg }) }}>
                 {/* keyed on the second: remounting the frame IS the seek */}
                 <VideoFrame key={at} id={video.id} title={video.title} start={at} autoStart />
               </div>
@@ -213,9 +218,16 @@ export default function VideoDesk({
               <span style={{ color: C.faint, fontFamily: MONO, fontSize: 11.5 }}>
                 {[relAge(video.publishedAt), video.views != null ? `${compactCount(video.views)} views` : ""].filter(Boolean).join(" · ")}
               </span>
+              {/* This button used to bounce a live waveform at you while
+                  nothing was playing and nothing was running — the exact thing
+                  Waveform.jsx says never to do, on the surface that says it
+                  loudest. The shape still marks it as the control that talks,
+                  so it keeps the silhouette and stands STILL; and while the
+                  summary is genuinely being written the mark is a shuttle,
+                  because that is work of unknown length rather than sound. */}
               <button onClick={onSummarize} disabled={running} className="v-onair"
                 style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(70,167,88,0.1)", border: `1px solid ${C.accent}`, borderRadius: R.sm, color: C.accentText, fontFamily: SANS, fontWeight: 700, fontSize: 12.5, padding: "7px 14px", cursor: running ? "default" : "pointer" }}>
-                <Waveform />
+                {running ? <Shuttle width={16} height={12} /> : <Waveform still />}
                 {running ? "Summarizing…" : "Summarize on air"}
               </button>
             </div>
@@ -227,7 +239,11 @@ export default function VideoDesk({
               description names nothing the desk follows, the rail says so
               rather than filling with the symbols the video is "probably"
               about. */}
-          <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+          {/* The rail prints rather than rises. vt-fadeup is the landing
+              page's gesture — content travelling up into place to present
+              itself — and this is a working rail on a desk: it should be
+              revealed where it already is. Same stagger, different physics. */}
+          <div className="v-print" style={printIn(0, { radius: 0 })}>
             <div style={railLabel}>TICKERS MENTIONED</div>
             {mentions.length === 0 ? (
               <div style={{ fontFamily: SANS, fontSize: 11.5, color: C.faint, marginTop: 9, lineHeight: 1.45 }}>
@@ -269,7 +285,7 @@ export default function VideoDesk({
           </div>
 
           {queue.length > 0 && (
-            <div style={{ animation: "vt-fadeup 0.5s var(--v-ease) 0.1s both" }}>
+            <div className="v-print" style={printIn(0, { base: 100, radius: 0 })}>
               <div style={railLabel}>UP NEXT</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 9 }}>
                 {queue.map(q => (
@@ -291,7 +307,7 @@ export default function VideoDesk({
             </div>
           )}
 
-          <div style={{ marginTop: "auto", animation: "vt-fadeup 0.5s var(--v-ease) 0.18s both" }}>
+          <div className="v-print" style={{ marginTop: "auto", ...printIn(0, { base: 180, radius: 0 }) }}>
             <div style={{ background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.md, padding: 12 }}>
               <div style={railLabel}>SOURCE</div>
               <div style={{ color: C.muted, fontFamily: SANS, fontSize: 11.5, lineHeight: 1.45, marginTop: 7 }}>
@@ -360,7 +376,7 @@ function SummaryOnAir({ durationSec, progressRef, speechKey, onStop }) {
 
 function VideoSummary({ video, summary, durationSec, speaking, progressRef, speechKey, onSeek, onLoad, onStopRead }) {
   return (
-    <div style={{ borderTop: `1px solid ${C.edge}` }}>
+    <div className="v-print" style={{ borderTop: `1px solid ${C.edge}`, ...printIn(0, { radius: 0 }) }}>
       {speaking && (
         <SummaryOnAir durationSec={durationSec} progressRef={progressRef} speechKey={speechKey} onStop={onStopRead} />
       )}
@@ -369,16 +385,22 @@ function VideoSummary({ video, summary, durationSec, speaking, progressRef, spee
       <div style={{ color: C.faint, fontFamily: SANS, fontSize: 12.5, marginTop: 4 }}>{video.channel} &#183; YouTube</div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
+        {/* The digest prints line by line. These arrive together the instant
+            the model answers, and a block of six sentences appearing whole is
+            the one moment on this panel where you cannot tell whether anything
+            happened. Fifty-five milliseconds apart is the desk's arrival
+            stagger everywhere else. */}
         {summary.rows.map((r, i) => {
           const line = <span style={{ color: C.textBody, fontFamily: SANS, fontSize: 14, lineHeight: 1.55 }}>{r.text}</span>;
+          const printed = printIn(i, { radius: 0 });
           // A row is only a link when there is a real second to send you to.
           // Without chapters there is no timestamp, so the row is a sentence —
           // not a button that looks like it goes somewhere and lands on 0:02.
           return r.start == null ? (
-            <div key={i} style={{ display: "flex", gap: 12 }}>{line}</div>
+            <div key={i} className="v-print" style={{ display: "flex", gap: 12, ...printed }}>{line}</div>
           ) : (
-            <button key={i} onClick={() => onSeek(r.start)}
-              style={{ display: "flex", gap: 12, width: "100%", textAlign: "left", background: "transparent", border: "none", padding: 0, cursor: "pointer" }}>
+            <button key={i} onClick={() => onSeek(r.start)} className="v-print"
+              style={{ display: "flex", gap: 12, width: "100%", textAlign: "left", background: "transparent", border: "none", padding: 0, cursor: "pointer", ...printed }}>
               <span style={{ color: C.accentText, fontFamily: MONO, fontSize: 11, width: 42, flexShrink: 0, paddingTop: 2 }}>{clock(r.start)}</span>
               {line}
             </button>
