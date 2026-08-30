@@ -449,6 +449,14 @@ export default function AppShell({
     // Transparent, not C.base: the body already paints the base colour (global.css),
     // and an opaque background here would hide the aurora layer below.
     <div style={{ position: "relative", minHeight: "100vh", background: "transparent", color: C.text, fontFamily: SANS }}>
+      {/* The floor the desk stands on — graph paper under a vignette, drawn
+          across the whole viewport rather than the aurora's top 460px, so the
+          space around and below the column reads as room rather than as the
+          page having ended. Static; see .v-deskfloor. It goes first so the
+          aurora's colour field lies over it, and both sit under <main>, which
+          is positioned and later in the DOM. */}
+      <div className="v-deskfloor" aria-hidden="true" />
+
       {/* Decorative colour field across the top of the page. Deliberately a
           sibling of the content rather than a wrapper: .v-aurora clips to its own
           box, and wrapping the dashboard would cut off the desk's absolutely

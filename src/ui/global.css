@@ -314,6 +314,50 @@ a:hover { text-decoration: underline; }
    The parent needs `position: relative` (set here) and clips the blobs itself;
    `inset: -40%` keeps their blurred edges outside the frame so the wash reaches
    the corners without a visible seam. */
+/* ---------- the desk floor ----------
+   The page ran out of content and then simply stopped. The aurora is 460px
+   tall and fixed to the top, so everything below it is flat base colour to the
+   bottom of the viewport — and on a wide screen that is a great deal of
+   nothing on either side of the column and underneath it. It is not a layout
+   fault; the desk really is as wide as its content. But an unlit floor reads
+   as the page having ENDED rather than as room around a working surface, which
+   is the opposite of what a desk should say about the space around it.
+
+   So the floor gets drawn: graph paper at 46px — the same field the games'
+   summary screens already stand on, so this is the product's one grid rather
+   than a second one — under a vignette that lets the far corners fall away, so
+   the column reads as the lit part of a room.
+
+   The grid is masked and the vignette is not, which is why they are two
+   pseudo-elements rather than two background layers on one. A mask applies to
+   an element's whole rendering, pseudo-children included, so a single masked
+   box would have eaten the corners of exactly the thing whose job is to darken
+   them. The mask's job is to end the grid before the viewport edge does: a
+   field that stops at a hard boundary draws a line, and on a near-black
+   surface a line is all an edge needs.
+
+   Static, deliberately. This is the desk, and the desk does not run ambient
+   loops — the aurora above it is the one drifting thing on this surface, and
+   it was here first. */
+.v-deskfloor { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.v-deskfloor::before,
+.v-deskfloor::after { content: ""; position: absolute; inset: 0; }
+.v-deskfloor::before {
+  /* 0.016, not more. Over the #0b0e13 base that is about four levels of grey,
+     which is exactly the weight of the games' grid this is matching — and on a
+     near-black surface four levels is a field you feel and eight is a field
+     you read. It was 0.032 first and the floor looked like squared paper. */
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(125% 105% at 50% 38%, #000 36%, transparent 88%);
+  mask-image: radial-gradient(125% 105% at 50% 38%, #000 36%, transparent 88%);
+}
+.v-deskfloor::after {
+  background: radial-gradient(135% 100% at 50% 40%, transparent 42%, rgba(0, 0, 0, 0.45));
+}
+
 .v-aurora { position: relative; isolation: isolate; overflow: hidden; }
 
 .v-aurora > * { position: relative; z-index: 1; }
@@ -651,6 +695,30 @@ a:hover { text-decoration: underline; }
 .v-toggle input:focus-visible + span {
   box-shadow: 0 0 0 2px rgba(70, 167, 88, 0.45);
 }
+
+/* The knob's throw. --v-detent is the mechanism curve — it leaves fast and
+   stops dead, where the browser's default eases out of rest at both ends, which
+   is how light moves and not how a switch does. The travel itself is a variable
+   set by the component (--tx), so the press can compose with it: hold the
+   switch and the knob squashes to a slightly wider oval, and lets go into the
+   throw. transform rather than `left` keeps all of it off the layout path, on a
+   control that appears in every settings row in the product.
+
+   Both are declared with @property, and that is not decoration either. An
+   UNregistered custom property has no type, so nothing can interpolate it: a
+   transform assembled out of bare var()s changes discretely, and the throw
+   would snap however long the transition said it was. Registering gives them a
+   type, which is what lets the two variables themselves be transitioned — so
+   the travel and the squash animate independently and compose into one
+   transform. Where @property is unavailable the knob still lands in the right
+   place; it simply arrives instantly. */
+@property --tx { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --sq { syntax: "<number>"; inherits: false; initial-value: 1; }
+.v-toggleknob {
+  transform: translateX(var(--tx, 0px)) scaleX(var(--sq, 1));
+  transition: --tx 180ms var(--v-detent), --sq 180ms var(--v-detent), background 150ms var(--v-ease);
+}
+.v-toggle:active .v-toggleknob { --sq: 1.24; }
 
 /* ---------- the "alive" layer: quote ticks, menus, presses ----------
    Every animation here is state-change feedback, not decoration — and all of
@@ -2327,14 +2395,35 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
 
 /* Every pane stays mounted and crossfades. Swapping one in would remount the
    SVG and the ledger on every step and put the composition one render away
-   from a blank frame mid-transition. */
+   from a blank frame mid-transition. That stays exactly as it was.
+
+   What the crossfade lacked was a DIRECTION. Five panes dissolving into one
+   another read as five unrelated pictures of five unrelated products; these
+   are five STEPS, in the order you would do them, and a dissolve is the one
+   transition that cannot say so. So the stack also pushes: any pane before the
+   current one sits a little to the left, any after it a little to the right,
+   and the current one at rest. Advancing moves everything left, going back
+   moves everything right, and the wrap from the fifth step to the first reads
+   as the rewind it genuinely is — all of it falling out of the arithmetic,
+   with no direction to track in state and no way for it to disagree with the
+   rail.
+
+   Only the SIGN of that difference matters, never its size — the two panes
+   actually visible during a transition are always adjacent in time — so the
+   component sets each slot's transform to -7%, 0 or 7% directly.
+
+   It sets the TRANSFORM, not a custom property the transform reads. That looked
+   like a style preference and is the whole thing working: an unregistered
+   custom property has no type, so it cannot be interpolated, and a transform
+   built out of one changes DISCRETELY — the push snapped, getAnimations() came
+   back empty, and the transition here was decorative. */
 .v-tour-panes { position: relative; flex: 1; min-height: 0; }
 .v-tour-paneslot {
   position: absolute;
   inset: 0;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 420ms var(--v-ease);
+  transition: opacity 420ms var(--v-ease), transform 420ms var(--v-ease);
 }
 .v-tour-paneslot.is-on { opacity: 1; }
 

@@ -325,10 +325,21 @@ export default function HomeTour({ t = (x) => x }) {
               {/* Every pane stays mounted and is crossfaded, rather than one
                   being swapped in. Swapping remounts the SVG and the ledger on
                   every step, and it would put the whole composition one render
-                  away from a blank frame mid-transition. */}
+                  away from a blank frame mid-transition.
+
+                  The stack also PUSHES, so the crossfade has a direction: a
+                  pane behind the current step waits to its left, one ahead of
+                  it waits to its right. Advancing moves every pane left, going
+                  back moves them right, and the wrap from the fifth step to the
+                  first reads as the rewind it genuinely is. It falls out of the
+                  two indices, so there is no direction held in state that could
+                  fall out of step with the rail — and only the SIGN is used,
+                  because the two panes visible during a transition are always
+                  adjacent in time. */}
               <div className="v-tour-panes">
                 {PANES.map((Pane, i) => (
-                  <div key={i} className={"v-tour-paneslot" + (i === step ? " is-on" : "")} aria-hidden={i !== step}>
+                  <div key={i} className={"v-tour-paneslot" + (i === step ? " is-on" : "")}
+                    style={{ transform: `translateX(${Math.sign(i - step) * 7}%)` }} aria-hidden={i !== step}>
                     <Pane />
                   </div>
                 ))}
