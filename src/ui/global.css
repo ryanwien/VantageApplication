@@ -1096,16 +1096,17 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
 
    Hover lifts the tile off its card; press turns it accent. Green here means
    "this is the one you just chose", which is a thing worth saying, said only
-   while it is true. !important because the resting values are inline. */
+   while it is true. !important because the resting values are inline.
+
+   The press used to switch to accent in one step. It WIPES now — see "the
+   verb cards, pressed" at the foot of this file, which owns the press colour
+   along with the wipe that carries it. What is left here is hover and the
+   disabled floor. */
 .v-verbcard:hover .v-verbtile {
   background: var(--v-edge-strong) !important;
   color: var(--v-text) !important;
 }
-.v-verbcard:active .v-verbtile,
-.v-verbcard:focus-visible .v-verbtile {
-  background: var(--v-accent) !important;
-  color: var(--v-base) !important;
-}
+.v-verbtile { transition: background var(--v-fast) var(--v-ease), color var(--v-fast) var(--v-ease); }
 .v-verbcard:disabled .v-verbtile { background: var(--v-surface-raised) !important; color: var(--v-faint) !important; }
 
 /* ---------- game room ----------
@@ -2869,3 +2870,157 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
    Two columns need 392 of grid, so they stay paired down to a 436px panel and
    stack below it, which is a phone and nothing else. */
 .v-bbcalls { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+
+/* ============================================================
+   THE DESK'S MOTION LANGUAGE — equipment, not light
+   ============================================================
+   The landing page moves like LIGHT: a glow with rings radiating out of it, a
+   ping crossing them, a sheen sweeping a pill, a twelve-second story that
+   plays whether or not anybody is watching. That is the right language for a
+   page whose job is to be looked at.
+
+   The desk has no audience. It has an operator, and it is a working surface,
+   so it moves like EQUIPMENT: flaps, detents, wipes and shuttles. Hard edges
+   rather than soft ones, and — the rule that actually separates the two —
+   motion here is CAUSED. Nothing moves unless you did something or the state
+   genuinely changed, and every movement names which. Ambient loops are the one
+   thing forbidden: Waveform.jsx already puts it best, that a meter which
+   animates while nothing is playing teaches you to stop believing it.
+
+   Four primitives, and each says one thing:
+     · flap     — a value was replaced by another value
+     · shuttle  — something is running, and nobody knows for how long
+     · print    — this arrived
+     · detent   — you pressed that
+
+   --v-detent is their curve. It is not --v-ease: the standard material curve
+   eases out of rest, which is how light behaves. A flap and a switch leave
+   fast and stop dead, which is how a mechanism behaves. */
+:root { --v-detent: cubic-bezier(0.55, 0, 0.1, 1); }
+
+/* ---------- flap ----------
+   A split-flap cell. The outgoing label rolls up and out of the clip while the
+   incoming one rolls up into it, with no crossfade — opacity is the light
+   language, and a departure board does not dissolve.
+
+   Every label is rendered and stacked in one grid cell, with only the current
+   one visible. That is what fixes the box to the width of the LONGEST label in
+   whatever language is loaded, with no measuring: the readout stops resizing
+   as it changes, which was its own small jitter, and a translation that runs
+   longer than the English cannot clip. */
+.v-flap { display: inline-grid; overflow: hidden; vertical-align: bottom; line-height: 1.2; }
+.v-flap > * { grid-area: 1 / 1; white-space: nowrap; visibility: hidden; }
+.v-flap > .is-on, .v-flap > .is-off { visibility: visible; }
+/* Sized by the incoming value when there is no fixed set of labels to stack —
+   a ticker can be anything, so the box follows it. */
+.v-flap-loose { position: relative; }
+.v-flap-loose > .is-off { position: absolute; inset: 0 auto auto 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .v-flap > .is-on  { animation: v-flap-in  260ms var(--v-detent) both; }
+  .v-flap > .is-off { animation: v-flap-out 260ms var(--v-detent) both; }
+}
+/* 104%, not 100%: a descender clears the clip a shade after the baseline does. */
+@keyframes v-flap-in  { from { transform: translateY(104%); } to { transform: translateY(0); } }
+@keyframes v-flap-out { from { transform: translateY(0); } to { transform: translateY(-104%); } }
+
+/* ---------- shuttle ----------
+   Work of unknown length. A spinner says the same thing, but a spinner is a
+   loop and this file's whole argument is that loops belong to the marketing
+   page — so the desk gets a bar traversing a track and coming back, which is
+   the gesture a machine makes when it is scanning rather than thinking.
+
+   It only ever mounts while something is genuinely running, so under reduced
+   motion the bar resting at the left of its track is still an honest mark. */
+.v-shuttle { position: relative; display: inline-block; overflow: hidden; flex: none; }
+.v-shuttle > i { position: absolute; top: 50%; left: 0; width: 40%; height: 2px; margin-top: -1px; border-radius: 1px; background: currentColor; }
+@media (prefers-reduced-motion: no-preference) {
+  .v-shuttle > i { animation: v-shuttle 820ms cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+}
+/* 150% of a bar that is 40% of the track lands its right edge exactly on the
+   track's right edge. */
+@keyframes v-shuttle { from { transform: translateX(0); } to { transform: translateX(150%); } }
+
+/* ---------- print ----------
+   Arrival. The landing page brings things up from below (v-rise, vt-fadeup);
+   this wipes them in from the top edge WITHOUT moving them, so a card is
+   revealed where it already is rather than travelling to get there. Content
+   that slides in has to be read twice — once as it arrives and once where it
+   lands. A working surface should only ask for the second read. */
+@keyframes v-print {
+  from { clip-path: inset(0 0 100% 0 round var(--v-print-r, 12px)); }
+  to   { clip-path: inset(0 0 0 0 round var(--v-print-r, 12px)); }
+}
+.v-print { animation: v-print 420ms var(--v-detent) both; }
+/* The blanket reduce rule collapses duration but NOT delay, and these are
+   staggered — so without this a reader who asked for less motion would watch a
+   quarter-second of nothing before each card snapped in, which is a worse
+   picture than the animation they turned off. */
+@media (prefers-reduced-motion: reduce) { .v-print { animation-delay: 0ms !important; } }
+
+/* ---------- the anchor's status readout ----------
+   Four states, not two. `talking` and everything-else was the whole vocabulary,
+   and three of the four are already tracked by the desk: it knows when the mic
+   is open and when an answer is in flight, and said neither.
+
+   The mark keeps a fixed box so the label beside it cannot shift as the state
+   changes, and the label is a flap because a status that swaps by fading reads
+   as a thing loading rather than a thing switching. */
+.v-deskstate { display: inline-flex; align-items: center; gap: 7px; }
+.v-deskstate-mark { width: 14px; height: 12px; display: inline-flex; align-items: center; justify-content: flex-start; flex: none; }
+
+/* ---------- the composer, working ----------
+   Where the desk says it is thinking. It used to say so with the word THINKING
+   pulsing in the corner of a header the desk does not even render — and a
+   pulse is an ambient loop, which is the marketing page's idiom for "look at
+   me", not a working surface's for "this is running".
+
+   It belongs on the composer because that is where your eye already is: you
+   pressed Ask half a second ago and you have not looked away yet.
+
+   One pseudo-element rather than a track and a segment, because a percentage
+   translate on a pseudo resolves against the pseudo's own width, not its
+   parent's — so the segment is a background sized to a third of the bar and
+   the position is what travels. */
+.cmdbar.is-working::after {
+  content: ""; position: absolute; left: 12px; right: 12px; bottom: -1px; height: 2px;
+  border-radius: 2px; pointer-events: none;
+  background-image: linear-gradient(90deg, transparent, var(--v-accent-text) 24%, var(--v-accent-text) 76%, transparent);
+  background-size: 32% 100%;
+  background-repeat: no-repeat;
+  background-position: 0% 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cmdbar.is-working::after { animation: v-deskwork 1200ms cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+}
+@keyframes v-deskwork { from { background-position: 0% 0; } to { background-position: 100% 0; } }
+
+/* ---------- the verb cards, pressed ----------
+   These carried .v-lift, which floats a card 2px UP under the pointer. That is
+   the landing page's gesture — a thing presenting itself — and it is the wrong
+   physics for a control: a button you push goes down. Hover states the border
+   and the surface; the press is a detent.
+
+   The tile's accent no longer switches on, it WIPES across on a hard left
+   edge, which is the same move as the flap turned on its side. The icon flips
+   at 100ms because the wipe reaches the middle of a 40px tile at about there,
+   so the glyph changes colour under the edge that is covering it rather than
+   ahead of it. */
+.v-verbcard { transition: transform 140ms var(--v-detent), border-color var(--v-fast) var(--v-ease), background var(--v-fast) var(--v-ease); }
+.v-verbcard:hover:not(:disabled) { border-color: var(--v-edge-strong) !important; background: var(--v-surface-raised) !important; }
+.v-verbcard:active:not(:disabled) { transform: translateY(1px); }
+
+.v-verbtile { position: relative; overflow: hidden; }
+.v-verbtile > * { position: relative; z-index: 1; }
+.v-verbtile::after {
+  content: ""; position: absolute; inset: 0; z-index: 0;
+  background: var(--v-accent);
+  transform: scaleX(0); transform-origin: left center;
+  transition: transform 200ms var(--v-detent);
+}
+.v-verbcard:active:not(:disabled) .v-verbtile::after,
+.v-verbcard:focus-visible .v-verbtile::after { transform: scaleX(1); }
+.v-verbcard:active:not(:disabled) .v-verbtile,
+.v-verbcard:focus-visible .v-verbtile {
+  color: var(--v-base) !important;
+  transition-delay: 100ms;
+}

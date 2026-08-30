@@ -29,6 +29,7 @@ import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from
 import { C, MONO, SANS, TYPE, R, SP, SHADOW, MOTION, button } from "./theme.js";
 import RichText from "./RichText.jsx";
 import Waveform from "./Waveform.jsx";
+import { Shuttle } from "./DeskMotion.jsx";
 import VantageMark from "./VantageMark.jsx";
 
 // Green text, not a filled chip. Three bordered pills under every answer turned
@@ -463,7 +464,15 @@ export default function ChatAssistant({
             </span>
           )}
           <div style={{ flex: 1 }} />
-          {busy && <span style={{ ...TYPE.eyebrowSm, color: C.accentText }} className="v-pulse">THINKING</span>}
+          {/* Steady text with a shuttle beside it, not a pulsing word. A pulse
+              is a loop with nothing to report; the shuttle only exists while
+              something is genuinely running, and it is the same mark the
+              anchor's status readout uses for the same state. */}
+          {busy && (
+            <span style={{ ...TYPE.eyebrowSm, color: C.accentText, display: "inline-flex", alignItems: "center", gap: 7 }}>
+              <Shuttle width={14} height={10} />THINKING
+            </span>
+          )}
           {messages.length > 0 && onClear && (
             <button onClick={onClear} title="Clear conversation"
               style={{ ...button("quiet", "sm"), padding: "4px 8px", fontSize: 11 }}>
@@ -541,8 +550,19 @@ export default function ChatAssistant({
             the first on its own. The controls land right — where a send button
             belongs — and Clear is pushed back to the left by its own auto
             margin, away from Ask. */}
+        {/* is-working draws a shuttling rail along the bar's bottom edge while
+            an answer is in flight. The desk announced this with the word
+            THINKING pulsing in a panel header — which the desk does not even
+            render, since it mounts this compact — so from here the only sign
+            anything was happening was the send button turning into Stop.
+
+            A pulse is also the wrong idiom for it: pulsing is an ambient loop,
+            the landing page's way of asking to be looked at. A bar traversing
+            a track is a machine reporting that it is running, and it belongs
+            on the composer because that is where the reader's eye already is
+            half a second after they pressed Ask. */}
         <div
-          className="cmdbar"
+          className={"cmdbar" + (busy ? " is-working" : "")}
           style={{
             position: "relative",
             display: "flex", alignItems: "flex-end", gap: tight ? 8 : 12,

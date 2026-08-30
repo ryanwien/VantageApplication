@@ -50,6 +50,10 @@ import { ytDurationSec, parseChapters, chapterMentions, relAge, summaryRows } fr
 import { newestFirst, sourceOf } from "./src/news/news.js";
 import { clock } from "./src/lib/time.js";
 import useSpeechProgress from "./src/ui/useSpeechProgress.js";
+// The desk's motion vocabulary — flap, shuttle, print. Deliberately NOT the
+// landing page's: see the header of DeskMotion.jsx for why a working surface
+// and a marketing page should not move the same way.
+import { Flap, Shuttle, printIn } from "./src/ui/DeskMotion.jsx";
 import MoviesDesk from "./src/ui/MoviesDesk.jsx";
 import { shape as shapeTitle, genreMap } from "./src/movies/movies.js";
 // Overheat's rules and, more to the point, its arithmetic. `settle` and
@@ -1972,7 +1976,7 @@ const AnchorRoster = React.memo(function AnchorRoster({ characterId, onPick }) {
 });
 
 // ---- DeskAnchor: the animated anchor character, procedural and reactive to props ----
-function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speechRef, crew, env, cue, busy, onAction, onCue, framed }) {
+function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyserRef, speechRef, crew, env, cue, busy, onAction, onCue, framed }) {
   const { t } = useI18n();
   const cvsRef = useRef(null);
   const propsRef = useRef({ talking, mood, crew, env, cue, busy, onAction, onCue });
@@ -3551,25 +3555,67 @@ function DeskAnchor({ talking, mood, speakerLabel, character, analyserRef, speec
     return (
       <div style={{ position: "relative", borderRadius: R.md, overflow: "hidden", background: C.base, lineHeight: 0 }}>
         <canvas ref={cvsRef} style={{ width: "100%", height: "auto", display: "block" }} aria-label={`Desk anchor: ${ch.name}`} />
-        <span style={{
-          position: "absolute", top: 10, right: 10, pointerEvents: "none",
-          display: "flex", alignItems: "center", gap: 6,
-          background: "rgba(11,14,19,0.85)", color: talking ? C.accentText : C.muted,
-          fontFamily: SANS, fontSize: 11.5, fontWeight: 600, padding: "4px 10px", borderRadius: 20,
-        }}>
-          {/* On air is a waveform, standing by is a dot.
-              The handoff names vt-bars for exactly this — "'On air' waveform
-              bars", 0.9s, 0.15s stagger — and the animation, its stagger rules
-              and all, has been sitting in global.css used only by the
-              marketing page. A dot says "something is on". Bars say sound is
-              coming out, which is the thing that is actually happening. */}
-          {talking ? (
-            <Waveform height={10} width={2} gap={2} color={C.accentText} />
-          ) : (
-            <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: C.faint }} />
-          )}
-          {talking ? t("On air") : t("Standing by")}
-        </span>
+        {/* ===== the status readout =====
+            Four states, not two. This said "On air" or "Standing by" and
+            nothing else, while the desk was already tracking two more: the mic
+            being open, and an answer being in flight. Both were invisible from
+            the one panel whose entire job is to say what the presenter is
+            doing, so asking a question left the anchor reading "Standing by"
+            for the whole time it was working on the answer.
+
+            Each state carries its own mark, and the marks say DIRECTION as
+            well as activity. Sound coming out is the waveform; sound going in
+            is a microphone — the same glyph as the button in the composer you
+            pressed to open it, which is the strongest cue available. It has to
+            be the shape that says this and not the colour, because there is no
+            broadcast red in this system to reach for: theme.js moved on-air
+            from coral to green on purpose, "on air is a positive state", so
+            output and input are both grow.light and a colour split would have
+            to invent a semantic the palette does not have.
+
+            Thinking is a shuttle — a bar scanning a track — because the desk
+            does not know how long it will be. Standing by is a still dot, and
+            it stays still: a pulsing "nothing is happening" is the exact lie
+            Waveform.jsx exists to argue against.
+
+            The label flaps rather than fading. A status that dissolves reads
+            as a thing loading; one that rolls over reads as a thing switching,
+            which is what actually happened. Every label is stacked in the flap
+            so the pill is as wide as the longest of them in whatever language
+            is loaded — this used to resize between "On air" and "Standing by"
+            every time the anchor drew breath. */}
+        {(() => {
+          const state = talking ? "onair" : listening ? "listening" : busy ? "thinking" : "standby";
+          const mark = {
+            onair: <Waveform height={10} width={2} gap={2} color={C.accentText} />,
+            listening: (
+              <svg width="10" height="13" viewBox="0 0 24 24" fill="none" stroke={C.live} strokeWidth="2.4"
+                strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="9" y="2" width="6" height="12" rx="3" />
+                <path d="M5 10v1a7 7 0 0 0 14 0v-1" />
+              </svg>
+            ),
+            thinking: <Shuttle width={14} height={12} color={C.accentText} />,
+            standby: <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: C.faint }} />,
+          }[state];
+          const tone = { onair: C.accentText, listening: C.live, thinking: C.accentText, standby: C.muted }[state];
+          return (
+            <span className="v-deskstate" role="status" style={{
+              position: "absolute", top: 10, right: 10, pointerEvents: "none",
+              background: "rgba(11,14,19,0.85)", color: tone,
+              fontFamily: SANS, fontSize: 11.5, fontWeight: 600, padding: "4px 10px", borderRadius: 20,
+              transition: `color ${MOTION.base} ${MOTION.ease}`,
+            }}>
+              <span className="v-deskstate-mark">{mark}</span>
+              <Flap value={state} items={[
+                { key: "standby", label: t("Standing by") },
+                { key: "listening", label: t("Listening") },
+                { key: "thinking", label: t("Thinking") },
+                { key: "onair", label: t("On air") },
+              ]} />
+            </span>
+          );
+        })()}
         {/* Who this is, named on the portrait rather than in a caption under
             it. The status pill and the name take opposite corners: the
             reference stacks both on the left, which leaves the other side of a
@@ -11692,6 +11738,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 <DeskAnchor
                   framed
                   talking={speakingId != null}
+                  /* The mic being open is a fact about the presenter, and this
+                     panel is where the presenter's state is reported. It was
+                     only ever visible on the mic button at the other end of
+                     the row. */
+                  listening={listening}
                   mood={selectedRow?.chgPct}
                   speakerLabel={aiModels.find(m => m.id === speakingId)?.label}
                   character={CHARACTERS.find(c => c.id === characterId)}
@@ -11955,8 +12006,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 goes when the desk stops being empty. */}
             {!gameOn && !deskHasResult && chatThread.length === 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.panelEdge}` }}>
-                <div style={{ ...TYPE.eyebrowSm, color: C.faint }}>
-                  {t("ON THE DESK")} <span aria-hidden="true">/</span> <span style={{ color: C.accentText }}>{selected}</span>
+                {/* The symbol flaps when it changes. Picking a row in the
+                    watchlist rewrites this line and all four hints under it,
+                    and a value that is simply different on the next paint
+                    leaves the reader to notice on their own; a value that
+                    rolls over is the desk saying it followed you.
+
+                    No `items` here — a ticker is an open set, so the box takes
+                    the width of whatever is arriving. At three or four
+                    characters the snap is not visible. */}
+                <div style={{ ...TYPE.eyebrowSm, color: C.faint, display: "flex", alignItems: "center", gap: 6 }}>
+                  {t("ON THE DESK")} <span aria-hidden="true">/</span>
+                  <Flap value={selected} style={{ color: C.accentText }} />
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 10 }}>
                   {[
@@ -11964,12 +12025,25 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                     ["portfolio", t("Portfolio on desk"), t("positions and P&L"), () => setDeskPortfolio(true), false, false],
                     ["calendar", t("Calendar on desk"), t("your events and market earnings"), () => setDeskCalendar(true), false, false],
                     ["chart", t("Full chart"), t("the full {sym} chart").replace("{sym}", selected), () => openChart(selected), false],
-                  ].map(([icon, label, hint, run, off]) => (
-                    <button key={icon} onClick={run} disabled={off} className="v-lift v-verbcard"
+                  ].map(([icon, label, hint, run, off], i) => (
+                    /* v-print, not v-lift. The four cards WIPE in from their
+                       top edge, staggered in reading order, and they do not
+                       move while they do it — a card that slides into place
+                       has to be read twice, once on the way and once where it
+                       lands, and an empty desk is already asking the reader to
+                       take in four new things.
+
+                       v-lift went with it: it floated the card 2px up under
+                       the pointer, which is a thing presenting itself. These
+                       are controls. A control you push goes down, so the press
+                       is a detent and the tile's accent wipes across rather
+                       than switching on. See global.css. */
+                    <button key={icon} onClick={run} disabled={off} className="v-verbcard v-print"
                       style={{
                         display: "flex", alignItems: "center", gap: 14, textAlign: "left",
                         background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.lg,
                         padding: 14, cursor: off ? "default" : "pointer", opacity: off ? 0.6 : 1,
+                        ...printIn(i, { radius: R.lg }),
                       }}>
                       {/* A tile, not a bare emoji. An emoji cannot take a colour
                           — the old markup set color:accentText on one and nothing
@@ -11982,11 +12056,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                           are four peers — and it spent the screen's accent on a
                           state rather than on an action. The green is the press
                           now: it means "this is the one you just chose". */}
+                      {/* The transition moved to global.css beside the wipe it
+                          has to cooperate with. An inline `transition`
+                          shorthand also sets transition-delay: 0s inline, and
+                          inline beats a stylesheet — so the 100ms delay that
+                          holds the icon's colour until the wipe has reached it
+                          could never have taken effect from here. */}
                       <span aria-hidden="true" className="v-verbtile" style={{
                         width: 40, height: 40, flexShrink: 0, borderRadius: R.md,
                         display: "grid", placeItems: "center",
                         background: C.surfaceRaised, color: C.muted,
-                        transition: `background ${MOTION.fast} ${MOTION.ease}, color ${MOTION.fast} ${MOTION.ease}`,
                       }}>
                         <DeskIcon name={icon} />
                       </span>
