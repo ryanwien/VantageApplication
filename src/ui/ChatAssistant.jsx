@@ -230,6 +230,35 @@ function Working() {
   );
 }
 
+// ---------- the draft, echoed ----------
+// What you are typing, shown in the seat it will take. The composer is where
+// your fingers are, but the conversation is where the question is going — so
+// the thread shows the message forming in place: an outline while it is
+// provisional, in the sent question's exact geometry, so pressing Ask moves
+// nothing. The bubble only solidifies. The caret is the same mark the desk
+// wears while its own text is still arriving.
+//
+// aria-hidden, because the textarea is already announcing this text and the
+// thread is a live region — an un-hidden echo would read every keystroke twice.
+function Draft({ text }) {
+  return (
+    <div className="v-print" aria-hidden="true"
+      style={{ display: "flex", justifyContent: "flex-end", "--v-print-r": `${R.xl - 2}px` }}>
+      <div style={{
+        maxWidth: "60%", minWidth: 0,
+        background: "transparent", border: `1px dashed ${C.edgeStrong}`, color: C.muted,
+        borderRadius: `${R.xl - 2}px ${R.xl - 2}px 4px ${R.xl - 2}px`,
+        padding: "13px 20px",
+        fontFamily: SANS, fontSize: 15.5, lineHeight: 1.5,
+        whiteSpace: "pre-wrap", wordBreak: "break-word",
+      }}>
+        {text}
+        <span className="v-pulse" style={{ color: C.accentText, marginLeft: 2 }}>▋</span>
+      </div>
+    </div>
+  );
+}
+
 // A suggestion is either a plain string, or {label, value} when the text worth
 // sending to the model is longer than the text worth putting on a chip
 // ("Summarize AMD today" on the chip; "…— price action and why" to the model).
@@ -358,6 +387,13 @@ export default function ChatAssistant({
     setAtBottom(pinned);
     if (pinned) setUnread(false);
   }, []);
+
+  // Typing grows the echoed draft at the thread's tail; keep it in view while
+  // the view is pinned there. Not smooth — it tracks keystrokes.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el && pinnedRef.current && draft) el.scrollTop = el.scrollHeight;
+  }, [draft]);
 
   // ---- how much room the composer row actually has ----
   //
@@ -494,7 +530,7 @@ export default function ChatAssistant({
           for were the half that was cut off. Roomy drops the cap entirely and
           lets the PAGE scroll — one scrollbar instead of two, and the game is as
           tall as it is. */}
-      {(!compact || messages.length > 0 || attachments) && (
+      {(!compact || messages.length > 0 || attachments || draft.trim()) && (
       <div style={{ position: "relative", flex: compact ? "0 1 auto" : 1, minHeight: 0, display: "flex", maxHeight: compact ? (roomy ? "none" : "clamp(280px, 62vh, 760px)") : undefined }}>
         <div
           ref={scrollRef} onScroll={onScroll}
@@ -509,6 +545,9 @@ export default function ChatAssistant({
                   onSpeak={onSpeak} speaking={speakingId === m.id}
                 />
               ))}
+          {/* The echo sits where the next user bubble will mount — after the
+              thread, before the attachments — so send is a swap, not a move. */}
+          {draft.trim() ? <Draft text={draft} /> : null}
           {attachments}
         </div>
 
