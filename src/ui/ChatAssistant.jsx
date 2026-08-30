@@ -154,7 +154,7 @@ function Bubble({ msg, onRetry, onSpeak, speaking, anchorName }) {
         {speaking && !isAction ? <OnAir who={anchorName} /> : null}
 
         {msg.status === "running" && !msg.text
-          ? <TypingDots />
+          ? <Working />
           : isAction
             ? <span style={{ whiteSpace: "pre-wrap" }}>{msg.text}</span>
             : <RichText text={msg.text} />}
@@ -218,19 +218,14 @@ function safeHost(url) {
   try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
 }
 
-// Three dots, staggered. Communicates "thinking" before any token has arrived.
-function TypingDots() {
+// The pre-token state. Three staggered dots said this before, which is the
+// chat app's idiom; the desk's one mark for work of unknown length is the
+// shuttle, and this is the same running state the status pill and the composer
+// rail are already reporting — one mark, wherever it shows.
+function Working() {
   return (
-    <span style={{ display: "inline-flex", gap: 4, alignItems: "center", padding: "2px 0" }} aria-label="Assistant is typing">
-      {[0, 1, 2].map(i => (
-        <span
-          key={i}
-          style={{
-            width: 6, height: 6, borderRadius: "50%", background: C.accent,
-            animation: `v-pulse 1.1s ease-in-out ${i * 0.18}s infinite`,
-          }}
-        />
-      ))}
+    <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 0" }}>
+      <Shuttle width={26} height={12} color={C.accent} title="Assistant is typing" />
     </span>
   );
 }

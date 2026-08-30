@@ -11591,7 +11591,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       {/* Sans, not mono, and no "live feed:" prefix — this is a sentence to a
           person, not a line in a log. Amber when the feed is merely busy and
           we are already handling it; red only when something is actually
-          broken and the numbers are not coming. */}
+          broken and the numbers are not coming. The amber state wears the
+          shuttle because "handling it" is work in flight; the red dot holds
+          still, because broken is not running. */}
       {live && liveErr && (
         <div role="status" style={{
           display: "flex", alignItems: "center", gap: 9, padding: "8px 20px",
@@ -11599,8 +11601,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           background: liveErr.soft ? C.warnSoft : C.dangerSoft,
           borderBottom: `1px solid ${C.edge}`,
         }}>
-          <span aria-hidden="true" className={liveErr.soft ? "v-pulse" : undefined}
-            style={{ width: 7, height: 7, borderRadius: "50%", background: "currentColor", flex: "0 0 auto" }} />
+          {liveErr.soft
+            ? <Shuttle width={14} height={12} />
+            : <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: "50%", background: "currentColor", flex: "0 0 auto" }} />}
           {liveErr.text}
         </div>
       )}
@@ -11629,7 +11632,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                     ))}
                     <button onClick={() => { setShowExportMenu(false); generateWrittenReport(); }} disabled={reportBusy} className="v-row"
                       style={{ display: "flex", alignItems: "center", gap: 9, textAlign: "left", background: "transparent", borderTop: `1px solid ${C.edge}`, borderLeft: "none", borderRight: "none", borderBottom: "none", color: C.accentText, fontFamily: SANS, fontSize: 12.5, padding: "9px 12px", cursor: "pointer" }}>
-                      <span aria-hidden="true" className={reportBusy ? "v-pulse" : undefined} style={{ display: "grid", placeItems: "center" }}><DeskIcon name="pen" size={16} /></span>
+                      <span aria-hidden="true" style={{ display: "grid", placeItems: "center" }}>{reportBusy ? <Shuttle width={14} height={12} /> : <DeskIcon name="pen" size={16} />}</span>
                       {reportBusy ? t("writing…") : t("write analyst report")}
                     </button>
                   </div>
