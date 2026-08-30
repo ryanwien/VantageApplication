@@ -53,7 +53,7 @@ import useSpeechProgress from "./src/ui/useSpeechProgress.js";
 // The desk's motion vocabulary — flap, shuttle, print. Deliberately NOT the
 // landing page's: see the header of DeskMotion.jsx for why a working surface
 // and a marketing page should not move the same way.
-import { Flap, Shuttle, printIn } from "./src/ui/DeskMotion.jsx";
+import { Flap, Shuttle, Roll, printIn } from "./src/ui/DeskMotion.jsx";
 import MoviesDesk from "./src/ui/MoviesDesk.jsx";
 import { shape as shapeTitle, genreMap } from "./src/movies/movies.js";
 // Overheat's rules and, more to the point, its arithmetic. `settle` and
@@ -12479,10 +12479,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               ].map(([label, val, isChg]) => (
                 <span key={label} style={{ color: C.muted }}>
                   {label}{" "}
+                  {/* Odometer wheels, not swapped text: a symbol switch or a
+                      live tick ROLLS every figure to its successor. The value
+                      string is unchanged — Roll holds its non-digits still. */}
                   <b style={{ fontFamily: MONO, fontWeight: 500, color: isChg ? dirColorN(val) : C.text }}>
-                    {isChg
+                    <Roll value={isChg
                       ? `${prefDirGlyph(val > 0 ? "up" : val < 0 ? "down" : "flat") ? prefDirGlyph(val > 0 ? "up" : val < 0 ? "down" : "flat") + " " : ""}${val == null ? "—" : `${val >= 0 ? "+" : ""}${fmt(val)}`} · ${pct(selectedRow?.chgPct)}`
-                      : fmt(val)}
+                      : fmt(val)} />
                   </b>
                 </span>
               ))}
@@ -12509,16 +12512,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                     stated twice above — in the change figure and in the chart's
                     own colour — and a third telling costs the one thing this
                     control is for: where in the day's span the last trade sits. */}
+                {/* Galvanometer physics on a retune: fill, thumb and the prev-
+                    close pip share one overshooting curve, so the needle sweeps
+                    past the new reading and clicks back. Fill and thumb animate
+                    between identical percentages with the same curve, which is
+                    what keeps the fill's edge glued to the thumb mid-flight. */}
                 <div style={{ position: "relative", height: 6, background: C.grid, borderRadius: 3, margin: "18px 0 10px" }}>
-                  <div style={{ position: "absolute", left: 0, top: 0, height: 6, width: at(price), borderRadius: 3, background: `linear-gradient(90deg, ${C.edgeStrong}, #3a424e)`, transition: "width 0.5s ease" }} />
+                  <div style={{ position: "absolute", left: 0, top: 0, height: 6, width: at(price), borderRadius: 3, background: `linear-gradient(90deg, ${C.edgeStrong}, #3a424e)`, transition: "width 0.6s cubic-bezier(0.3, 1.4, 0.45, 1)" }} />
                   {prevClose != null && prevClose >= low && prevClose <= high && (
-                    <div style={{ position: "absolute", top: -3, bottom: -3, width: 2, borderRadius: 1, background: C.faint, left: at(prevClose) }} />
+                    <div style={{ position: "absolute", top: -3, bottom: -3, width: 2, borderRadius: 1, background: C.faint, left: at(prevClose), transition: "left 0.6s cubic-bezier(0.3, 1.4, 0.45, 1)" }} />
                   )}
-                  <span style={{ position: "absolute", top: -4, left: at(price), transform: "translateX(-50%)", width: 14, height: 14, borderRadius: "50%", background: C.text, border: `3px solid ${C.panel}`, boxSizing: "border-box", transition: "left 0.5s ease" }} />
+                  <span style={{ position: "absolute", top: -4, left: at(price), transform: "translateX(-50%)", width: 14, height: 14, borderRadius: "50%", background: C.text, border: `3px solid ${C.panel}`, boxSizing: "border-box", transition: "left 0.6s cubic-bezier(0.3, 1.4, 0.45, 1)" }} />
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontFamily: MONO, fontSize: 12.5, color: C.muted }}>
-                  <span>{fmt(low)}</span>
-                  <span>{fmt(high)}</span>
+                  <span><Roll value={fmt(low)} /></span>
+                  <span><Roll value={fmt(high)} /></span>
                 </div>
               </div>
             );
@@ -12529,8 +12537,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
             <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
               <div style={panelHead({ divider: false, pad: "18px 20px 14px" })}>{t("P&F signals")}</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10, padding: "0 20px 18px" }}>
-                {Object.entries(pnfSignals).map(([sym, p]) => (
-                  <div key={sym} style={{ background: C.surfaceRaised, borderRadius: 9, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+                {/* Each card lands as a stamp, in arrival order — a pattern on
+                    the board is an event the desk records, not content that
+                    loads. */}
+                {Object.entries(pnfSignals).map(([sym, p], i) => (
+                  <div key={sym} className="v-stamp" style={{ background: C.surfaceRaised, borderRadius: 9, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10, animationDelay: `${i * 55}ms` }}>
                     <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 2, flexShrink: 0, background: p.side === "bull" ? dirColorN(1) : dirColorN(-1) }} />
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: C.text }}>{sym}</div>

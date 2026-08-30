@@ -97,6 +97,50 @@ export function Flap({ value, items, className = "", style }) {
   );
 }
 
+// ---------- roll ----------
+// An odometer readout. Each digit is a wheel of ten cells that TRAVELS to the
+// digit it should show, so a replaced value rolls to its successor the way a
+// mechanical counter does — the flap's cousin for numbers, where digits share
+// one mechanism instead of swapping whole labels. Non-digits (the sign, the
+// point, a separator, a glyph) hold still: the mechanism only exists for the
+// wheels. The wheels ripple from the right with a small per-wheel delay,
+// which is where the gearing shows.
+//
+// The ghost keeps the flow honest: a hidden copy of the digit sits in normal
+// flow to give the wheel its width, height and baseline, and the moving cells
+// are absolutely positioned over it — so the readout aligns like text
+// because, to layout, it IS text. The clip lives on that absolute window, not
+// on the inline-block itself, which is what keeps the baseline: an
+// inline-block that clips its own overflow trades its text baseline for its
+// bottom edge. Screen readers get the plain value once; the mechanism is
+// hidden from them wholesale.
+const WHEEL = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+export function Roll({ value, className = "", style }) {
+  const text = String(value ?? "");
+  const chars = text.split("");
+  return (
+    <span className={`v-roll ${className}`.trim()} style={style}>
+      <span className="v-sr-only">{text}</span>
+      <span aria-hidden="true">
+        {chars.map((ch, i) =>
+          /\d/.test(ch) ? (
+            <span key={i} className="v-rolldigit" style={{ "--d": ch, "--rd": `${(chars.length - 1 - i) * 28}ms` }}>
+              <span className="v-rollghost">{ch}</span>
+              <span className="v-rollwin">
+                {WHEEL.map(d => (
+                  <span key={d} className="v-rollcell" style={{ "--i": d }}>{d}</span>
+                ))}
+              </span>
+            </span>
+          ) : (
+            <span key={i}>{ch}</span>
+          )
+        )}
+      </span>
+    </span>
+  );
+}
+
 // ---------- shuttle ----------
 // Work of unknown length. A spinner would say the same thing, but a spinner is
 // a loop, and loops are what the landing page uses to attract attention; the

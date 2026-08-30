@@ -3152,6 +3152,46 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
 @keyframes v-flap-in  { from { transform: translateY(104%); } to { transform: translateY(0); } }
 @keyframes v-flap-out { from { transform: translateY(0); } to { transform: translateY(-104%); } }
 
+/* ---------- roll ----------
+   The odometer readout (DeskMotion.jsx → Roll). Each wheel: a hidden in-flow
+   ghost supplies width, height and baseline — to layout, the readout is text —
+   and ten absolutely positioned cells ride over it, each translated (i − d)
+   wheel-heights, so the whole column slides when --d changes. The curve
+   overshoots a fraction — a wheel passes its detent and clicks back, so the
+   neighbouring digit peeks through the slit — and the wheels ripple
+   right-to-left by 28ms, which is the gearing. Both the transition and its
+   delay sit behind the motion gate: the blanket reduce rule collapses
+   transition durations but never delays, so an ungated delay would make a
+   reduce reader's value arrive late instead of instantly. */
+.v-roll { white-space: nowrap; }
+.v-rolldigit { position: relative; display: inline-block; }
+.v-rollghost { visibility: hidden; }
+.v-rollwin { position: absolute; inset: 0; overflow: hidden; }
+.v-rollcell {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  transform: translateY(calc((var(--i) - var(--d)) * 100%));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .v-rollcell {
+    transition: transform 0.55s cubic-bezier(0.3, 1.28, 0.45, 1);
+    transition-delay: var(--rd, 0ms);
+  }
+}
+
+/* ---------- stamp ----------
+   A signal card lands like a stamp: slightly proud of the surface, pressed
+   flat. For events the board RECORDS — a P&F pattern fired — where a wipe
+   would say "loaded" and this says "happened". Staggered by arrival order;
+   the delay zero-out mirrors v-print's, for the same reason. */
+.v-stamp { animation: v-stamp 340ms var(--v-detent) both; }
+@keyframes v-stamp {
+  0% { opacity: 0; transform: scale(1.12); }
+  55% { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .v-stamp { animation-delay: 0ms !important; } }
+
 /* ---------- shuttle ----------
    Work of unknown length. A spinner says the same thing, but a spinner is a
    loop and this file's whole argument is that loops belong to the marketing
