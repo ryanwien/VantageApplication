@@ -2021,6 +2021,9 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       // Falling edge of speech: the beat where a person closes their mouth
       // and swallows before the next thing.
       settle: 0, wasTalking: false,
+      // The broadcast, as a place. `onAir` is the eased envelope the studio's
+      // lights answer to; `push` is the camera's own, much slower driver.
+      onAir: 0, push: 0,
       // True while the eyes are away from the lens and owe it a return.
       returning: false,
     };
@@ -2036,7 +2039,7 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
     const env = (p) => Math.sin(Math.min(1, Math.max(0, p)) * Math.PI);
 
     // ---- procedural environments (furthest layer, unaffected by entrance fade) ----
-    const drawEnv = (env, t, moodCol, m) => {
+    const drawEnv = (env, t, moodCol, m, onAir = 0) => {
       if (!env || env === "studio") return;
       ctx.save();
       if (env === "newsroom") {
@@ -2062,6 +2065,13 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         const logoW = ctx.measureText("VANTAGE").width;
         ctx.fillStyle = "rgba(255,255,255,0.10)"; ctx.fillRect(10, 13, logoW + 26, 17);
         drawVantageMark(ctx, 13, 15, 13);
+        // The mark's dot IS the on-air light, by the brand's own definition —
+        // while the anchor reads, the station bug's dot burns as the tally.
+        if (onAir > 0.02) {
+          const tg = ctx.createRadialGradient(22.8, 19.1, 0.5, 22.8, 19.1, 7);
+          tg.addColorStop(0, alpha(C.up, 0.75 * onAir)); tg.addColorStop(1, alpha(C.up, 0));
+          ctx.fillStyle = tg; ctx.beginPath(); ctx.arc(22.8, 19.1, 7, 0, Math.PI * 2); ctx.fill();
+        }
         ctx.fillStyle = C.textStrong; ctx.textBaseline = "middle"; ctx.fillText("VANTAGE", 30, 22); ctx.textBaseline = "alphabetic";
         // rim lights
         ctx.fillStyle = "rgba(232,235,242,0.03)";
@@ -2311,6 +2321,15 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       const busy = (!TK && !s.action) ? (propsRef.current.busy || null) : null; // "work" | "present" | null
       s.busyAmt += ((busy ? 1 : 0) - s.busyAmt) * Math.min(1, dt / 220);
 
+      // --- the studio goes live ---
+      // Lights answer speech in about half a second; the camera is an
+      // operator, not a lamp, so it creeps in over several seconds of
+      // reading and eases back home once the read ends. Under reduced
+      // motion the push stays parked — a lit studio is a state, a
+      // travelling camera is motion.
+      s.onAir += ((TK ? 1 : 0) - s.onAir) * Math.min(1, dt / 480);
+      s.push += ((TK && !reduced ? 1 : 0) - s.push) * Math.min(1, dt / (TK ? 5600 : 1500));
+
       // --- idle action scheduler (only while quiet AND not heads-down on a task) ---
       if (!TK && !s.action && !busy && !reduced) {
         s.nextActionIn -= dt;
@@ -2559,7 +2578,16 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       const surprised = act === "react";
 
       ctx.clearRect(0, 0, W, H);
-      drawEnv(propsRef.current.env, t, moodCol, m);
+      // ---- camera 1: the push-in ----
+      // While the anchor reads, the camera creeps toward the face — 4% over
+      // roughly ten seconds, centred between the eyes — and pulls back out
+      // when the read ends. The whole set rides it, environment included: a
+      // camera is a place you stand, not a layer effect.
+      ctx.save();
+      const zoom = 1 + s.push * 0.04;
+      ctx.translate((W / 2) * (1 - zoom), 78 * (1 - zoom));
+      ctx.scale(zoom, zoom);
+      drawEnv(propsRef.current.env, t, moodCol, m, s.onAir);
       ctx.save();
       // entrance: rise + fade
       ctx.globalAlpha = s.enter;
@@ -3497,6 +3525,22 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       }
 
       ctx.restore(); // end entrance transform
+
+      // ---- the studio lights, keyed to the read ----
+      // On air, a warm key comes up from the anchor's upper left and the
+      // frame's edges fall off a step — a studio going live, not a filter.
+      // Painted inside the camera transform, so the push and the lamps agree.
+      if (s.onAir > 0.01) {
+        const key = ctx.createRadialGradient(cx - 34, 44, 8, cx - 34, 44, 170);
+        key.addColorStop(0, `rgba(255,240,214,${0.13 * s.onAir})`);
+        key.addColorStop(1, "rgba(255,240,214,0)");
+        ctx.fillStyle = key; ctx.fillRect(0, 0, W, H);
+        const vig = ctx.createRadialGradient(cx, 92, 60, cx, 92, 190);
+        vig.addColorStop(0, "rgba(0,0,0,0)");
+        vig.addColorStop(1, `rgba(0,0,0,${0.2 * s.onAir})`);
+        ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+      }
+      ctx.restore(); // end camera
 
       // ---- scene caption for a scheduled moment (bell / meal / break) or a sustained task (work / present) ----
       let cap = null, capA = 0;
@@ -8544,20 +8588,24 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     }
   };
 
-  const [showExportMenu, setShowExportMenu] = useState(false);
-  const [showMoreMenu, setShowMoreMenu] = useState(false); // AI-desk header "⋯ More" dropdown (games / ambient / music)
+  // The AI-desk header's ONE utility menu: exports on top, then the desk's
+  // toggles (games / ambient / music). Export and More used to be two
+  // side-by-side dropdowns; two chrome buttons for five actions was clutter,
+  // and "consolidated so the row stays uncluttered" was already More's stated
+  // reason to exist — this finishes the thought.
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
-  // Export/More behave like real menus: any press outside their wrapper — or
-  // Escape — dismisses them, same as the account menu in the header.
+  // Behaves like a real menu: any press outside its wrapper — or Escape —
+  // dismisses it, same as the account menu in the header.
   useEffect(() => {
-    if (!showExportMenu && !showMoreMenu) return;
-    const closeAll = () => { setShowExportMenu(false); setShowMoreMenu(false); };
+    if (!showMoreMenu) return;
+    const closeAll = () => setShowMoreMenu(false);
     const onDown = (e) => { if (!e.target.closest?.("[data-deskmenu]")) closeAll(); };
     const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); closeAll(); } };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
-  }, [showExportMenu, showMoreMenu]);
+  }, [showMoreMenu]);
   // Both menus hang from `right: 0`, and the desk panel clips its children —
   // overflow: hidden on the panel is what rounds its corners. When the toolbar
   // wraps at a narrow width the buttons land at the panel's LEFT edge, and a
@@ -11712,39 +11760,33 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           <div className="v-deskhead" style={{ borderBottom: `1px solid ${C.panelEdge}` }}>
             <h2 className="v-deskhead-title" style={{ margin: 0, fontFamily: SANS, fontSize: 19, fontWeight: 700, letterSpacing: "-0.012em", color: C.text }}>{t("AI Desk")}</h2>
             <span className="v-deskhead-tools">
-              {/* visible export menu (Excel / Word / PowerPoint / report), all generated inside Vantage */}
+              {/* ONE utility menu — exports (Excel / Word / PowerPoint /
+                  report, all generated inside Vantage) on top, the desk's
+                  toggles below. It keeps the tour-export id: the tour step
+                  spotlights this button when it talks about exporting, and the
+                  exports are the first thing the open menu shows. */}
               <span data-deskmenu="" style={{ position: "relative" }}>
-                <button id="tour-export" className="v-taprow" onClick={() => { setShowExportMenu(v => !v); setShowMoreMenu(false); }} aria-label="Export a document"
-                  title="Export as Excel, Word, or PowerPoint"
-                  style={deskBtn(showExportMenu)} {...deskBtnHover(showExportMenu)}>
-                  <DeskIcon name="download" size={15} /> {t("Export")} <span aria-hidden="true">▾</span>
-                </button>
-                {showExportMenu && (
-                  <div ref={clampMenu} className="v-rise" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", width: "max-content", maxWidth: "calc(100vw - 46px)", minWidth: 150, overflow: "hidden" }}>
-                    {exportMsg && <div style={{ fontFamily: MONO, fontSize: 12, color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted, padding: "6px 10px", borderBottom: `1px solid ${C.panelEdge}` }}>{exportMsg}</div>}
-                    {[["xlsx", "sheet", "Excel (.xlsx)"], ["docx", "report", "Word (.docx)"], ["pptx", "deck", "PowerPoint (.pptx)"]].map(([fmt, mark, label]) => (
-                      <button key={fmt} onClick={() => { setShowExportMenu(false); openExportPreview(fmt); }} className="v-row"
-                        style={{ display: "flex", alignItems: "center", gap: 9, textAlign: "left", background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 12.5, padding: "9px 12px", cursor: "pointer" }}>
-                        <span aria-hidden="true" style={{ color: C.faint, display: "grid", placeItems: "center" }}><DeskIcon name={mark} size={16} /></span>{label}
-                      </button>
-                    ))}
-                    <button onClick={() => { setShowExportMenu(false); generateWrittenReport(); }} disabled={reportBusy} className="v-row"
-                      style={{ display: "flex", alignItems: "center", gap: 9, textAlign: "left", background: "transparent", borderTop: `1px solid ${C.edge}`, borderLeft: "none", borderRight: "none", borderBottom: "none", color: C.accentText, fontFamily: SANS, fontSize: 12.5, padding: "9px 12px", cursor: "pointer" }}>
-                      <span aria-hidden="true" style={{ display: "grid", placeItems: "center" }}>{reportBusy ? <Shuttle width={14} height={12} /> : <DeskIcon name="pen" size={16} />}</span>
-                      {reportBusy ? t("writing…") : t("write analyst report")}
-                    </button>
-                  </div>
-                )}
-              </span>
-              {/* consolidated "More" menu: games + ambient + music, so the row stays uncluttered */}
-              <span data-deskmenu="" style={{ position: "relative" }}>
-                <button className="v-taprow" onClick={() => { setShowMoreMenu(v => !v); setShowExportMenu(false); }} aria-label="More — games, ambient sound and music"
-                  title="Games, ambient sound and music"
+                <button id="tour-export" className="v-taprow" onClick={() => setShowMoreMenu(v => !v)} aria-label="More — export, games, ambient sound and music"
+                  title="Export as Excel, Word or PowerPoint · games, ambient sound and music"
                   style={deskBtn(showMoreMenu || gameOn || ambienceOn || musicOn)} {...deskBtnHover(showMoreMenu || gameOn || ambienceOn || musicOn)}>
                   {t("More")} <span aria-hidden="true">▾</span>
                 </button>
                 {showMoreMenu && (
                   <div ref={clampMenu} className="v-rise" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 30, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column", width: "max-content", maxWidth: "calc(100vw - 46px)", minWidth: 258, overflow: "hidden" }}>
+                    <div aria-hidden="true" style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", color: C.faint, padding: "10px 12px 4px" }}>{t("EXPORT")}</div>
+                    {exportMsg && <div style={{ fontFamily: MONO, fontSize: 12, color: exportMsg.startsWith("✗") ? C.down : exportMsg.startsWith("✓") ? C.up : C.muted, padding: "6px 10px", borderBottom: `1px solid ${C.panelEdge}` }}>{exportMsg}</div>}
+                    {[["xlsx", "sheet", "Excel (.xlsx)"], ["docx", "report", "Word (.docx)"], ["pptx", "deck", "PowerPoint (.pptx)"]].map(([fmt, mark, label]) => (
+                      <button key={fmt} onClick={() => { setShowMoreMenu(false); openExportPreview(fmt); }} className="v-row"
+                        style={{ display: "flex", alignItems: "center", gap: 9, textAlign: "left", background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 12.5, padding: "9px 12px", cursor: "pointer" }}>
+                        <span aria-hidden="true" style={{ color: C.faint, display: "grid", placeItems: "center" }}><DeskIcon name={mark} size={16} /></span>{label}
+                      </button>
+                    ))}
+                    <button onClick={() => { setShowMoreMenu(false); generateWrittenReport(); }} disabled={reportBusy} className="v-row"
+                      style={{ display: "flex", alignItems: "center", gap: 9, textAlign: "left", background: "transparent", borderTop: `1px solid ${C.edge}`, borderLeft: "none", borderRight: "none", borderBottom: "none", color: C.accentText, fontFamily: SANS, fontSize: 12.5, padding: "9px 12px", cursor: "pointer" }}>
+                      <span aria-hidden="true" style={{ display: "grid", placeItems: "center" }}>{reportBusy ? <Shuttle width={14} height={12} /> : <DeskIcon name="pen" size={16} />}</span>
+                      {reportBusy ? t("writing…") : t("write analyst report")}
+                    </button>
+                    <div aria-hidden="true" style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "1.5px", color: C.faint, padding: "10px 12px 4px", borderTop: `1px solid ${C.panelEdge}` }}>{t("ON THE DESK")}</div>
                     {[
                       { key: "games", icon: "games", label: t("Games"), sub: t("learn how stocks work"), active: gameOn, onClick: () => { setShowMoreMenu(false); gameOn ? closeGame() : openGames(); } },
                       { key: "ambient", icon: "headphones", label: t("Ambient sound"), sub: t("waves, jungle, space hum…"), active: ambienceOn, onClick: () => setAmbienceOn(v => !v) },
