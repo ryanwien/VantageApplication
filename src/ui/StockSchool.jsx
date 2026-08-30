@@ -177,13 +177,19 @@ export default function StockSchool({
         </div>
 
         <div style={{ padding: "24px 22px" }}>
-          <div style={{ fontSize: 19, fontWeight: 700, lineHeight: 1.4, textWrap: "pretty" }}>{lesson.q}</div>
+          <div style={{ fontSize: 19, fontWeight: 700, lineHeight: 1.4, textWrap: "pretty", animation: "vt-fadeup 0.4s var(--v-ease) both" }}>{lesson.q}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
             {(lesson.choices || []).map((c, i) => {
               const right = i === lesson.answer, chosen = choice === i;
               const lit = revealed && right, wrong = revealed && chosen && !right;
               return (
-                <button key={i} disabled={revealed} onClick={() => onAnswer?.(i)} className={revealed ? undefined : "v-answer"}
+                <button key={i} disabled={revealed} onClick={() => onAnswer?.(i)}
+                  // The class swap IS the reveal: v-answer (study, hover nudge)
+                  // gives way to the staged verdict animations in global.css.
+                  // Their keyframes bake a ~0.36s comma before judging and end
+                  // on exactly the values painted inline below, so state stays
+                  // instant, only the paint performs.
+                  className={revealed ? (lit ? "v-quizlit" : wrong ? "v-quizwrong" : "v-quizdim") : "v-answer"}
                   style={{
                     display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
                     background: lit ? "rgba(70,167,88,0.1)" : C.surface,
@@ -191,16 +197,13 @@ export default function StockSchool({
                     borderRadius: R.lg, padding: "14px 16px",
                     opacity: revealed && !lit && !wrong ? 0.45 : 1,
                     cursor: revealed ? "default" : "pointer",
-                    // The entrance is dropped once the answer is in, and that
-                    // is load-bearing rather than tidy: vt-fadeup ends on
-                    // `opacity: 1` and runs with fill-mode `both`, so while it
-                    // is still attached the animation's final keyframe OUTRANKS
-                    // the inline style — a CSS animation sits above inline
-                    // styles in the cascade — and the dim on the rows that were
-                    // not the answer silently never applied.
-                    animation: revealed ? "none" : `vt-fadeup 0.5s var(--v-ease) ${0.06 + i * 0.08}s both`,
+                    // The entrance must be dropped once the answer is in — an
+                    // inline `animation` outranks the class animation entirely,
+                    // so leaving it (or "none") here would silence the verdict.
+                    // `undefined` clears the property and lets the class speak.
+                    animation: revealed ? undefined : `vt-fadeup 0.5s var(--v-ease) ${0.06 + i * 0.08}s both`,
                   }}>
-                  <span aria-hidden="true" style={{
+                  <span aria-hidden="true" className={lit ? "v-quizmark-lit" : wrong ? "v-quizmark-x" : undefined} style={{
                     width: 26, height: 26, borderRadius: R.xs, display: "grid", placeItems: "center", flexShrink: 0,
                     background: lit ? "#14261b" : C.surfaceRaised,
                     border: `1px solid ${lit ? "#234a2f" : wrong ? C.down : C.edgeStrong}`,
@@ -214,7 +217,7 @@ export default function StockSchool({
                     ? { fontFamily: MONO, fontSize: 16, fontWeight: 700, color: lit ? C.accentText : C.text }
                     : { fontFamily: SANS, fontSize: 14, lineHeight: 1.45, color: lit ? C.accentText : C.text }}>{c}</span>
                   {lit && (
-                    <span style={{ marginLeft: "auto", color: C.accentText, fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap" }}>
+                    <span className="v-quizlate" style={{ marginLeft: "auto", color: C.accentText, fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap" }}>
                       {choice === lesson.answer
                         ? t("Correct · +{n}").replace("{n}", String(POINTS_PER_ANSWER))
                         : t("The answer")}
@@ -226,7 +229,7 @@ export default function StockSchool({
           </div>
 
           {revealed && (
-            <div style={{ display: "flex", alignItems: "center", gap: 14, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "14px 16px", marginTop: 16, flexWrap: "wrap" }}>
+            <div className="v-quizlate" style={{ display: "flex", alignItems: "center", gap: 14, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "14px 16px", marginTop: 16, flexWrap: "wrap" }}>
               <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: R.xs, background: C.surfaceRaised, display: "grid", placeItems: "center", color: C.accentText, fontFamily: MONO, fontSize: 13, flexShrink: 0 }}>i</span>
               <span style={{ color: C.muted, fontSize: 13, lineHeight: 1.45, flex: "1 1 240px", minWidth: 0 }}>{lesson.explain}</span>
               <button onClick={onNext} className="vt-sheen" style={{ ...sheen, marginLeft: "auto", fontSize: 13, padding: "10px 20px", whiteSpace: "nowrap" }}>
@@ -265,8 +268,10 @@ export default function StockSchool({
             <span style={{ color: C.faint, fontSize: 12.5 }}>· {lesson.title}</span>
           </div>
           <div aria-hidden="true" style={{ display: "flex", gap: 4, marginTop: 8 }}>
+            {/* The segment that just became yours fills instead of snapping —
+                caused by the advance, finished before you have read the title. */}
             {lessons.map((_, i) => (
-              <span key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? C.accent : C.edge }} />
+              <span key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? C.accent : C.edge, transition: "background 0.3s var(--v-ease)" }} />
             ))}
           </div>
         </div>
@@ -274,8 +279,9 @@ export default function StockSchool({
           <div style={railLabel}>{t("SCORE")}</div>
           {/* The COUNT is the stored truth; the points are it times twenty, so
               the "+20" on the quiz can never disagree with the total it lands
-              in. */}
-          <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.2 }}>{points(score)}</div>
+              in. Keyed on the value: a score that just changed pops in fresh —
+              the answer caused it — and an unchanged one sits still. */}
+          <div key={points(score)} className="v-pop" style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.2 }}>{points(score)}</div>
         </div>
         <div style={{ width: 120, flexShrink: 0, textAlign: "right" }}>
           <div style={railLabel}>{t("TIME")}</div>
