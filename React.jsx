@@ -6394,6 +6394,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   }, 0);
   const chatTurnRef = useRef(0);   // monotonic id source for question/answer turns
   const askSymRef = useRef({});    // turn number → the symbol that turn asked about; its answer carries the session
+  const [hiddenSessions, setHiddenSessions] = useState({});  // turn → true once its session card is put away
   const deskSeqRef = useRef(0);    // separate id source for desk-authored receipts
   const seededRef = useRef(false);
   if (!seededRef.current) {
@@ -11216,7 +11217,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // thumbnail of the chart: the chart. The y-domain and prev-close-on-axis
   // rules are the workbench's own (see yDomain above for why prev close only
   // sometimes gets a vote), applied to the asked symbol's tape.
-  const sessionCard = (sym) => {
+  const sessionCard = (sym, turn) => {
     const r = getRow(sym);
     if (!r || r.price == null) return null;
     const bars = live ? (liveTape[sym] || []) : (demoMkt[sym] ? demoMkt[sym].bars.slice(0, demoMkt[sym].cursor + 1) : []);
@@ -11248,6 +11249,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           <button onClick={() => openChart(sym)}
             style={{ marginLeft: "auto", background: "transparent", border: "none", color: C.accent, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0 }}>
             {t("Full chart")} →
+          </button>
+          {/* Put-away, same ✕ idiom as the compare pill. Per turn, not per
+              symbol: closing this card must not close the one under an
+              earlier answer about the same stock. */}
+          <button onClick={() => setHiddenSessions(h => ({ ...h, [turn]: true }))}
+            className="v-tap v-clearx" aria-label={`Dismiss the ${sym} chart`} title="Dismiss"
+            style={{ background: "transparent", border: "none", color: C.muted, fontFamily: SANS, fontSize: 12, lineHeight: 1, padding: "2px 4px", cursor: "pointer" }}>
+            ✕
           </button>
         </div>
         {bars.length > 1 && (
@@ -11945,11 +11954,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                  error bubbles too, on purpose — the models being down is no
                  reason to withhold the session the desk already has. */
               messages={(() => {
-                let pending = null;
+                let pending = null, pendingTurn = null;
                 return chatThread.map(m => {
-                  if (m.role === "user") { pending = askSymRef.current[m.id.slice(1)] || null; return m; }
+                  if (m.role === "user") {
+                    pendingTurn = m.id.slice(1);
+                    pending = (!hiddenSessions[pendingTurn] && askSymRef.current[pendingTurn]) || null;
+                    return m;
+                  }
                   if (pending && m.role === "assistant" && m.kind !== "action") {
-                    const widget = sessionCard(pending);
+                    const widget = sessionCard(pending, pendingTurn);
                     pending = null;
                     if (widget) return { ...m, widget };
                   }
