@@ -6393,6 +6393,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     return hit && prefixes.includes(hit[1]) ? Math.max(max, +hit[2]) : max;
   }, 0);
   const chatTurnRef = useRef(0);   // monotonic id source for question/answer turns
+  const askSymRef = useRef({});    // turn number → the symbol that turn asked about; its answer carries the session
   const deskSeqRef = useRef(0);    // separate id source for desk-authored receipts
   const seededRef = useRef(false);
   if (!seededRef.current) {
@@ -9994,6 +9995,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     // overwriting the previous answer.
     chatTurnRef.current += 1;
     setChatThread(t => [...t, { id: `u${chatTurnRef.current}`, role: "user", text: q }]);
+    // Which symbol is this question about? Confident hits only — a $-prefixed
+    // ticker, a company alias, or capitals the desk already knows — because a
+    // wrong guess pins a session under an answer about something else. The
+    // workbench below already switches when a symbol is asked about; this is
+    // what lets the ANSWER carry that session too (see the ChatAssistant
+    // messages mapping), instead of describing a chart two screens away.
+    {
+      const dollar = q.match(/\$([A-Za-z]{1,5})\b/);
+      const known = (q.match(/\b[A-Z]{1,5}\b/g) || [])
+        .find(c => !CAPS_STOP.has(c) && (demoMkt[c] || watchlist.includes(c)));
+      const askSym = dollar ? resolveSym(dollar[1]) : aliasFromText(q) || (known ? resolveSym(known) : null);
+      if (askSym) askSymRef.current[chatTurnRef.current] = askSym;
+    }
     askCancelRef.current = false;   // a new question clears any previous stop
     stopSpeak();
     // Prime browser TTS INSIDE this click/Enter gesture: speaking a silent utterance now grants the
@@ -11188,6 +11202,42 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   ].filter(Boolean);
   const deskAttachments = deskPanels.length ? <>{deskPanels}</> : null;
 
+  // ---------- the session, riding the answer ----------
+  // Everything else the desk produces already rides the conversation (see
+  // deskPanels above); the session was the one answer that still lived only in
+  // the workbench below. Ask about a symbol and the answer now carries it:
+  // the quote, the day's move, and the same sparkline the watchlist draws —
+  // prev close dotted — with the full chart one press away. The ticker pins
+  // the workbench to it, which is the arrow the reader used to draw themselves.
+  const sessionCard = (sym) => {
+    const r = getRow(sym);
+    if (!r || r.price == null) return null;
+    return (
+      <div style={{
+        display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+        background: C.surfaceRaised, border: `1px solid ${C.edgeStrong}`,
+        borderRadius: R.md, padding: "10px 14px",
+      }}>
+        <button onClick={() => setSelected(sym)} title={`Pin ${sym} on the workbench`}
+          style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: SANS, fontSize: 13.5, fontWeight: 700, color: C.text }}>
+          {sym}
+        </button>
+        <span style={{ fontFamily: MONO, fontSize: 15, fontWeight: 700, color: C.text }}>{fmt(r.price)}</span>
+        <span style={{ fontFamily: MONO, fontSize: 12.5, color: dirColorN(r.chg) }}>{pct(r.chgPct)}</span>
+        {/* minWidth 0 + hidden overflow, same as the watchlist rows: the SVG
+            is fixed-width, so a tight row clips its ends instead of letting
+            it collide with the numbers beside it. */}
+        <span aria-hidden="true" style={{ color: C.faint, flex: 1, minWidth: 0, display: "flex", justifyContent: "center", overflow: "hidden" }}>
+          <Sparkline data={getCloses(sym)} width={150} height={30} color={dirColorN(r.chg)} refValue={r.prevClose} />
+        </span>
+        <button onClick={() => openChart(sym)}
+          style={{ background: "transparent", border: "none", color: C.accent, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, cursor: "pointer", padding: 0 }}>
+          {t("Full chart")} →
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div onClickCapture={handleUiClick} style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: SANS }}>
       <style>{`
@@ -11851,7 +11901,25 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               embedded
               compact
               roomy={gameOn}
-              messages={chatThread}
+              /* A turn that asked about a symbol gets the session pinned under
+                 its answer — the first assistant bubble after the question
+                 that is an answer rather than an action receipt. Attached at
+                 render, not stored in the thread: the card keeps drawing the
+                 live quote, and the thread state stays plain data. It rides
+                 error bubbles too, on purpose — the models being down is no
+                 reason to withhold the session the desk already has. */
+              messages={(() => {
+                let pending = null;
+                return chatThread.map(m => {
+                  if (m.role === "user") { pending = askSymRef.current[m.id.slice(1)] || null; return m; }
+                  if (pending && m.role === "assistant" && m.kind !== "action") {
+                    const widget = sessionCard(pending);
+                    pending = null;
+                    if (widget) return { ...m, widget };
+                  }
+                  return m;
+                });
+              })()}
               attachments={deskAttachments}
               /* ===== the merged input =====
                  This box is the desk's only input now. It owns its text so the
