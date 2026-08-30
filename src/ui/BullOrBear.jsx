@@ -202,12 +202,15 @@ export default function BullOrBear({
             {correct ? t("CALLED IT") : choice == null ? t("OUT OF TIME") : t("WRONG CALL")}
           </span>
         ) : (
-          <span style={{
+          // Keyed on the threshold, not on the second: crossing into the last
+          // five remounts the pill, so it flinches exactly once at the
+          // crossing rather than every tick.
+          <span key={left <= 5 ? "hot" : "cool"} className={left <= 5 ? "v-clockhot" : undefined} style={{
             display: "flex", alignItems: "center", gap: 7, background: C.surface, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5,
             border: `1px solid ${left <= 5 ? C.down : C.edge}`,
             color: left <= 5 ? C.down : C.muted,
           }}>
-            <span aria-hidden="true" className="v-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: left <= 5 ? C.down : C.accent }} />
+            <span aria-hidden="true" className={left <= 5 ? "v-pulse-tight" : "v-pulse"} style={{ width: 6, height: 6, borderRadius: "50%", background: left <= 5 ? C.down : C.accent }} />
             {countdown(left)}
           </span>
         )}
@@ -228,23 +231,30 @@ export default function BullOrBear({
           </div>
           <div aria-hidden="true" style={{ display: "flex", gap: 4, marginTop: 8 }}>
             {rounds.map((_, i) => (
+              // A pip going green is a round being banked. It used to switch
+              // colour between frames; now it fills, which is the only motion
+              // on this strip and the one it was missing.
               <span key={i} style={{
                 flex: 1, height: 4, borderRadius: 2,
                 background: i < step || (i === step && answered) ? C.up : i === step ? C.accent : C.edge,
+                transition: "background 0.3s var(--v-ease)",
               }} />
             ))}
           </div>
         </div>
-        <div style={{ width: 120, flexShrink: 0, background: C.surface, border: `1px solid ${answered && correct ? C.accent : C.edgeStrong}`, borderRadius: R.lg, padding: "8px 12px", textAlign: "center" }}>
+        <div style={{ width: 120, flexShrink: 0, background: C.surface, border: `1px solid ${answered && correct ? C.accent : C.edgeStrong}`, borderRadius: R.lg, padding: "8px 12px", textAlign: "center", transition: "border-color 0.3s var(--v-ease)" }}>
           <div style={railLabel}>{t("SCORE")}</div>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 5 }}>
-            <span style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: answered && correct ? C.accentText : C.text }}>{points}</span>
-            {answered && paid?.points > 0 && <span style={{ fontFamily: MONO, fontSize: 11, color: C.accentText }}>+{paid.points}</span>}
+            {/* Keyed on the value, so a score that changed re-mounts and pops.
+                A number that simply becomes a bigger number is the one event
+                in a game nobody notices. */}
+            <span key={points} className="v-pop" style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: answered && correct ? C.accentText : C.text }}>{points}</span>
+            {answered && paid?.points > 0 && <span className="v-quizlate" style={{ display: "inline-block", fontFamily: MONO, fontSize: 11, color: C.accentText }}>+{paid.points}</span>}
           </div>
         </div>
         <div style={{ width: 120, flexShrink: 0, textAlign: "right" }}>
           <div style={railLabel}>{t("CALLED RIGHT")}</div>
-          <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: awards.length ? C.accentText : FIELD.quinary }}>
+          <div key={`${called}/${awards.length}`} className={awards.length ? "v-pop" : undefined} style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: awards.length ? C.accentText : FIELD.quinary }}>
             {awards.length ? `${called}/${awards.length}` : "—"}
           </div>
         </div>
@@ -271,9 +281,18 @@ export default function BullOrBear({
               <svg viewBox={`0 0 ${SPARK_W} ${SPARK_H}`} preserveAspectRatio="none" aria-hidden="true" style={{ width: SPARK_W, height: SPARK_H, flexShrink: 0 }}>
                 <polyline points={line} fill="none" stroke={C.faint} strokeWidth="1.5"
                   strokeDasharray={answered ? undefined : 1400} className={answered ? undefined : "vt-draw"} />
+                {/* THE gap is the answer to the round, so it draws on the beat
+                    the verdict lands rather than on the click frame. 0.36s is
+                    the same comma the rows hold — the stillness before the
+                    result — and it means the eye watches the price travel
+                    INSTEAD of catching it already arrived. Its delay is gated
+                    behind the motion query because the blanket reduce rule
+                    collapses durations but never delays, and an ungated one
+                    would hand a reduce reader a third of a second of blank
+                    sparkline and then a line. */}
                 {gap && (
                   <polyline points={gap} fill="none" stroke={up ? C.up : C.down} strokeWidth="2"
-                    strokeDasharray={1400} className="vt-draw" style={{ animationDuration: "1.2s" }} />
+                    strokeDasharray={1400} className="vt-draw v-gapdraw" style={{ animationDuration: "1.2s" }} />
                 )}
               </svg>
               <span style={{ marginLeft: "auto", fontSize: 12, color: answered ? (up ? C.up : C.down) : FIELD.quinary }}>
@@ -292,7 +311,13 @@ export default function BullOrBear({
               const lit = answered && ((i === 0) === !!round.bullish);
               return (
                 <button key={c.key} disabled={answered} onClick={() => pick(i)}
-                  className={answered ? undefined : i === 0 ? "v-callup" : "v-calldown"}
+                  // Staged in the same three beats as Ticker Match and the
+                  // quiz: a ~0.36s comma where nothing is judged yet, then the
+                  // right call lights, a wrong call lands red with a dying
+                  // shake, and a call that was neither dims out of it.
+                  className={answered
+                    ? (lit ? "v-quizlit" : mine ? "v-quizwrong" : "v-quizdim")
+                    : i === 0 ? "v-callup" : "v-calldown"}
                   style={{
                     display: "block", width: "100%", textAlign: "left",
                     background: lit ? "rgba(70,167,88,0.1)" : C.surface,
@@ -300,23 +325,28 @@ export default function BullOrBear({
                     borderRadius: R.lg, padding: 18,
                     opacity: answered && !lit && !mine ? 0.45 : 1,
                     cursor: answered ? "default" : "pointer",
-                    // Dropped on reveal: vt-fadeup ends on opacity 1 with
-                    // fill-mode `both`, and an animation outranks an inline
-                    // style — the dim above would silently never apply.
-                    animation: answered ? "none" : `vt-fadeup 0.5s var(--v-ease) ${0.1 + i * 0.08}s both`,
+                    // `undefined`, never "none". An inline animation outranks a
+                    // CLASS animation entirely, so the string would silence the
+                    // reveal above — where it was needed only to stop
+                    // vt-fadeup's fill-mode `both` pinning opacity at 1 and
+                    // swallowing the dim.
+                    animation: answered ? undefined : `vt-fadeup 0.5s var(--v-ease) ${0.1 + i * 0.08}s both`,
                   }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <span aria-hidden="true" style={{ width: 38, height: 38, borderRadius: 10, background: c.tile, display: "grid", placeItems: "center", color: c.tone, fontSize: 15, flexShrink: 0 }}>{c.glyph}</span>
                     <span style={{ minWidth: 0 }}>
                       <span style={{ display: "block", fontWeight: 700, fontSize: 16, color: c.tone }}>{c.name}</span>
-                      <span style={{ display: "block", fontSize: 12.5, marginTop: 1, fontWeight: answered && mine ? 600 : 400, color: answered && mine ? (correct ? C.accentText : C.down) : C.faint }}>
+                      {/* The row's own verdict on you, arriving after the row
+                          has been judged — keyed so it re-runs per round. */}
+                      <span key={answered ? "said" : "asking"} className={answered && mine ? "v-quizlate" : undefined}
+                        style={{ display: "block", fontSize: 12.5, marginTop: 1, fontWeight: answered && mine ? 600 : 400, color: answered && mine ? (correct ? C.accentText : C.down) : C.faint }}>
                         {answered && mine ? (correct ? t("your call · correct") : t("your call · wrong")) : c.sub}
                       </span>
                     </span>
                     <span style={{ marginLeft: "auto", paddingLeft: 10, whiteSpace: "nowrap" }}>
                       {!answered && <span style={{ color: FIELD.quinary, fontFamily: MONO, fontSize: 11 }}>{c.key} {t("key")}</span>}
-                      {answered && lit && paid?.points > 0 && <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: C.accentText }}>+{paid.points}</span>}
-                      {answered && lit && !paid?.points && <span style={{ fontFamily: MONO, fontSize: 12, color: C.accentText }}>{t("the answer")}</span>}
+                      {answered && lit && paid?.points > 0 && <span className="v-quizlate" style={{ display: "inline-block", fontFamily: MONO, fontSize: 13, fontWeight: 700, color: C.accentText }}>+{paid.points}</span>}
+                      {answered && lit && !paid?.points && <span className="v-quizlate" style={{ display: "inline-block", fontFamily: MONO, fontSize: 12, color: C.accentText }}>{t("the answer")}</span>}
                     </span>
                   </span>
                 </button>
@@ -325,7 +355,9 @@ export default function BullOrBear({
           </div>
 
           {answered ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 14, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "14px 16px", marginTop: 16, flexWrap: "wrap", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+            // The why waits for the verdict. It used to rise into place on the
+            // click frame, on top of the answer it is explaining.
+            <div className="v-quizlate" style={{ display: "flex", alignItems: "center", gap: 14, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "14px 16px", marginTop: 16, flexWrap: "wrap" }}>
               <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: R.xs, background: C.surfaceRaised, display: "grid", placeItems: "center", color: C.accentText, fontFamily: MONO, fontSize: 13, flexShrink: 0 }}>i</span>
               <span style={{ color: C.muted, fontSize: 13, lineHeight: 1.45, flex: "1 1 240px", minWidth: 0 }}>{round.why}</span>
               <button onClick={onNext} className="vt-sheen" style={{ ...sheen, marginLeft: "auto", fontSize: 13, padding: "10px 20px", whiteSpace: "nowrap" }}>

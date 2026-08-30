@@ -3067,6 +3067,45 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
   100% { opacity: 1; transform: translateY(0); }
 }
 
+/* ---------- the clock, tightening ----------
+   Ticker Match and Bull or Bear answer a call with exactly the classes above —
+   their own headers say the two games are one skeleton so that learning either
+   teaches the other, and a verdict that lands differently in each would be the
+   first place that stops being true. Two beats belong to the games alone, and
+   this is the pair.
+
+   Under five seconds the countdown pill already turned red, which is a colour
+   change you can miss entirely while you are reading a headline. It now
+   FLINCHES once as it crosses — a single caused event on the mechanism curve,
+   keyed on the threshold so it fires at the crossing and never again — and the
+   dot beside it runs at better than twice its rate for as long as the round
+   stays short.
+
+   A pulse that loops is banned three inches up this file, on the desk. It is
+   right here: a clock genuinely IS running, so the loop is reporting something
+   true, and a game is the one surface in this product allowed to perform at
+   you rather than report to you. */
+.v-clockhot { animation: v-clockhot 420ms var(--v-detent) both; }
+@keyframes v-clockhot {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+.v-pulse-tight { animation: v-pulse 0.62s ease-in-out infinite; }
+
+/* Bull or Bear's gap line is the ANSWER to the round — where the price went
+   after the headline — so it draws on the beat the verdict lands rather than
+   on the click frame, and the eye watches the price travel instead of finding
+   it already arrived. 0.36s is the same comma the rows hold.
+
+   Gated, because the blanket reduce rule collapses animation durations but
+   never delays: ungated, a reader who asked for less motion would get a third
+   of a second of empty sparkline and then a line, which is a worse picture
+   than the animation they turned off. */
+@media (prefers-reduced-motion: no-preference) {
+  .v-gapdraw { animation-delay: 0.36s; }
+}
+
 /* A syllabus row is a jump, so it has to answer a pointer. The current row
    already carries the accent border and just brightens. */
 .v-syllabus { transition: background var(--v-fast) var(--v-ease); }

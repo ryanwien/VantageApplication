@@ -210,12 +210,15 @@ export default function TickerMatch({
             {correct ? t("CORRECT") : choice == null ? t("OUT OF TIME") : t("WRONG")}
           </span>
         ) : (
-          <span style={{
+          // Keyed on the threshold, not on the second: crossing into the last
+          // five remounts the pill, so it flinches exactly once at the
+          // crossing rather than every tick.
+          <span key={left <= 5 ? "hot" : "cool"} className={left <= 5 ? "v-clockhot" : undefined} style={{
             display: "flex", alignItems: "center", gap: 7, background: C.surface, borderRadius: 20, padding: "4px 11px", fontFamily: MONO, fontSize: 11.5,
             border: `1px solid ${left <= 5 ? C.down : C.edge}`,
             color: left <= 5 ? C.down : C.muted,
           }}>
-            <span aria-hidden="true" className="v-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: left <= 5 ? C.down : C.accent }} />
+            <span aria-hidden="true" className={left <= 5 ? "v-pulse-tight" : "v-pulse"} style={{ width: 6, height: 6, borderRadius: "50%", background: left <= 5 ? C.down : C.accent }} />
             {countdown(left)}
           </span>
         )}
@@ -241,25 +244,32 @@ export default function TickerMatch({
               runs ahead of the number. */}
           <div aria-hidden="true" style={{ display: "flex", gap: 4, marginTop: 8 }}>
             {rounds.map((_, i) => (
+              // A pip going green is a round being banked. It used to switch
+              // colour between frames; now it fills, which is the only motion
+              // on this strip and the one it was missing.
               <span key={i} style={{
                 flex: 1, height: 4, borderRadius: 2,
                 background: i < step || (i === step && answered) ? C.up : i === step ? C.accent : C.edge,
+                transition: "background 0.3s var(--v-ease)",
               }} />
             ))}
           </div>
         </div>
-        <div style={{ width: 120, flexShrink: 0, background: C.surface, border: `1px solid ${answered && correct ? C.accent : C.edgeStrong}`, borderRadius: R.lg, padding: "8px 12px", textAlign: "center" }}>
+        <div style={{ width: 120, flexShrink: 0, background: C.surface, border: `1px solid ${answered && correct ? C.accent : C.edgeStrong}`, borderRadius: R.lg, padding: "8px 12px", textAlign: "center", transition: "border-color 0.3s var(--v-ease)" }}>
           <div style={railLabel}>{t("SCORE")}</div>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 5 }}>
-            <span style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: answered && correct ? C.accentText : C.text }}>{points}</span>
+            {/* Keyed on the value, so a score that changed re-mounts and pops.
+                A number that simply becomes a bigger number is the one event
+                in a game nobody notices. */}
+            <span key={points} className="v-pop" style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: answered && correct ? C.accentText : C.text }}>{points}</span>
             {answered && paid?.points > 0 && (
-              <span style={{ fontFamily: MONO, fontSize: 11, color: C.accentText }}>+{paid.points}</span>
+              <span className="v-quizlate" style={{ display: "inline-block", fontFamily: MONO, fontSize: 11, color: C.accentText }}>+{paid.points}</span>
             )}
           </div>
         </div>
         <div style={{ width: 120, flexShrink: 0, textAlign: "right" }}>
           <div style={railLabel}>{t("STREAK")}</div>
-          <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: run > 0 ? C.accentText : FIELD.quinary }}>
+          <div key={run} className={run > 0 ? "v-pop" : undefined} style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: run > 0 ? C.accentText : FIELD.quinary }}>
             {run > 0 ? `×${run}` : "—"}
           </div>
         </div>
@@ -312,7 +322,15 @@ export default function TickerMatch({
               const isRight = i === right, chosen = choice === i;
               const lit = answered && isRight, wrong = answered && chosen && !isRight;
               return (
-                <button key={o.sym} disabled={answered} onClick={() => pick(i)} className={answered ? undefined : "v-answer"}
+                <button key={o.sym} disabled={answered} onClick={() => pick(i)}
+                  // The reveal is staged, in the same three beats and with the
+                  // same classes as Stock School's quiz: for about a third of a
+                  // second the marks print in neutral gray — the paper truth,
+                  // before judgment — and only then does the verdict light, the
+                  // wrong row shake, and the rows that were neither dim out of
+                  // the argument. The two games and the lesson now land a call
+                  // identically, which is the promise this file's header makes.
+                  className={answered ? (lit ? "v-quizlit" : wrong ? "v-quizwrong" : "v-quizdim") : "v-answer"}
                   style={{
                     display: "flex", alignItems: "center", gap: 14, width: "100%", textAlign: "left",
                     background: lit ? "rgba(70,167,88,0.1)" : C.surface,
@@ -320,24 +338,28 @@ export default function TickerMatch({
                     borderRadius: R.lg, padding: "15px 18px",
                     opacity: answered && !lit && !wrong ? 0.45 : 1,
                     cursor: answered ? "default" : "pointer",
-                    // Dropped on reveal on purpose: vt-fadeup ends on opacity 1
-                    // and runs with fill-mode `both`, and an animation outranks
-                    // an inline style — while it stays attached the dim above
-                    // silently never applies.
-                    animation: answered ? "none" : `vt-fadeup 0.5s var(--v-ease) ${0.08 + i * 0.08}s both`,
+                    // `undefined`, never "none". An inline animation property
+                    // outranks a CLASS animation entirely, so the string would
+                    // silence the reveal above — where it used to be needed to
+                    // stop vt-fadeup's fill-mode `both` pinning opacity at 1
+                    // and swallowing the dim.
+                    animation: answered ? undefined : `vt-fadeup 0.5s var(--v-ease) ${0.08 + i * 0.08}s both`,
                   }}>
-                  <span aria-hidden="true" style={{
-                    width: 26, height: 26, borderRadius: R.xs, display: "grid", placeItems: "center", flexShrink: 0,
-                    background: lit ? "#14261b" : C.surfaceRaised,
-                    border: `1px solid ${lit ? "#234a2f" : wrong ? C.down : C.edgeStrong}`,
-                    color: lit ? C.accentText : wrong ? C.down : C.faint,
-                    fontFamily: MONO, fontSize: lit || wrong ? 12 : 11,
-                  }}>{lit ? "✓" : wrong ? "✕" : KEYS[i]}</span>
+                  <span aria-hidden="true" className={lit ? "v-quizmark-lit" : wrong ? "v-quizmark-x" : undefined}
+                    style={{
+                      width: 26, height: 26, borderRadius: R.xs, display: "grid", placeItems: "center", flexShrink: 0,
+                      background: lit ? "#14261b" : C.surfaceRaised,
+                      border: `1px solid ${lit ? "#234a2f" : wrong ? C.down : C.edgeStrong}`,
+                      color: lit ? C.accentText : wrong ? C.down : C.faint,
+                      fontFamily: MONO, fontSize: lit || wrong ? 12 : 11,
+                    }}>{lit ? "✓" : wrong ? "✕" : KEYS[i]}</span>
                   <span style={{ fontFamily: MONO, fontSize: 19, fontWeight: 700, letterSpacing: "1px", color: lit ? C.accentText : C.text }}>{o.sym}</span>
                   <span style={{ marginLeft: "auto", textAlign: "right", paddingLeft: 10 }}>
                     {!answered && <span style={{ fontFamily: MONO, fontSize: 11, color: FIELD.quinary }}>{t("press {k}").replace("{k}", KEYS[i])}</span>}
+                    {/* The words arrive after the verdict has landed, not with
+                        it — the row goes green, and THEN it is told why. */}
                     {lit && (
-                      <span style={{ color: C.accentText, fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap" }}>
+                      <span className="v-quizlate" style={{ display: "inline-block", color: C.accentText, fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap" }}>
                         {correct ? t("Correct · +{n}").replace("{n}", String(paid.points)) : t("The answer")}
                       </span>
                     )}
@@ -349,7 +371,7 @@ export default function TickerMatch({
                         company, and it is always true. The specific reasons
                         are facts worth teaching and live in the round data. */}
                     {answered && !isRight && (
-                      <span style={{ color: C.faint, fontSize: 12 }}>{o.why || t("not this company's symbol")}</span>
+                      <span className="v-quizlate" style={{ display: "inline-block", color: C.faint, fontSize: 12 }}>{o.why || t("not this company's symbol")}</span>
                     )}
                   </span>
                 </button>
@@ -358,7 +380,9 @@ export default function TickerMatch({
           </div>
 
           {answered ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 14, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "14px 16px", marginTop: 16, flexWrap: "wrap", animation: "vt-fadeup 0.5s var(--v-ease) both" }}>
+            // The teaching waits for the verdict. It used to rise into place
+            // on the click frame, on top of the answer it is explaining.
+            <div className="v-quizlate" style={{ display: "flex", alignItems: "center", gap: 14, background: C.surfaceAlt, border: `1px solid ${C.edge}`, borderRadius: R.lg, padding: "14px 16px", marginTop: 16, flexWrap: "wrap" }}>
               <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: R.xs, background: C.surfaceRaised, display: "grid", placeItems: "center", color: C.accentText, fontFamily: MONO, fontSize: 13, flexShrink: 0 }}>i</span>
               <span style={{ color: C.muted, fontSize: 13, lineHeight: 1.45, flex: "1 1 240px", minWidth: 0 }}>{round.teach}</span>
               <button onClick={onNext} className="vt-sheen" style={{ ...sheen, marginLeft: "auto", fontSize: 13, padding: "10px 20px", whiteSpace: "nowrap" }}>
