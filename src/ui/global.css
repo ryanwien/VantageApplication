@@ -1630,9 +1630,9 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
 
    Three pictures, and they are genuinely different things:
      · not selected            — empty.
-     · selected, no countdown  — full. Reduced motion, a phone, or a reader who
-                                 has taken the wheel: nothing is counting down,
-                                 so the bar is a selection mark, not a clock.
+     · selected, no countdown  — full. Reduced motion or a phone: nothing is
+                                 counting down, so the bar is a selection
+                                 mark, not a clock.
      · selected, counting      — filling, or held mid-fill.
    Collapsing the last two is what made a paused section look finished. */
 .v-showcase-fill {

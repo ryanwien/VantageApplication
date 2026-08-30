@@ -26,8 +26,11 @@
 //  earns attention, which is the entire trick of the reference this was built
 //  against. But an auto-advancing thing that cannot be stopped is a hostile
 //  thing, so:
-//    - the first click hands control over permanently. No "resumes after 10s"
-//      games; the reader asked to drive, so they drive.
+//    - a click aims the tour rather than ending it. The chosen panel starts a
+//      fresh clock, and the pointer that clicked is already resting on the
+//      tablist, which pauses that clock — so control lasts exactly as long as
+//      the reader's attention is actually here, and the tour resumes when
+//      they leave instead of dying.
 //    - hovering pauses, because a reader with the pointer resting on a panel
 //      is reading it.
 //    - it does not run while off screen. An IntersectionObserver gates the
@@ -123,7 +126,14 @@ function Frame({ children, label }) {
       style={{
         background: C.surface, border: `1px solid ${C.edgeStrong}`,
         borderRadius: R.xl, padding: 18, boxShadow: SHADOW.xl,
-        minHeight: 260, display: "flex", flexDirection: "column", gap: 12,
+        // flex: 1 is what lets the desktop panel column stretch this card to
+        // the height of the claims beside it — a 260px card floating over
+        // 300px of bare page read as a widget someone forgot to finish, not
+        // as a surface. Each panel composes its own vertical story into the
+        // room: whatever belongs at the foot (the chart, the refusal) already
+        // rides a margin-top auto there. On the phone the parent is a plain
+        // block, where flex: 1 is a no-op and minHeight does the sizing.
+        minHeight: 260, flex: 1, display: "flex", flexDirection: "column", gap: 12,
       }}
     >
       {children}
@@ -365,8 +375,6 @@ export default function HomeShowcase({ titles, bodies, eyebrow, heading }) {
   const reduce = useReducedMotion();
   const narrow = useNarrow();
   const [active, setActive] = useState(0);
-  // Set once, never unset. See the header: the reader asked to drive.
-  const [driving, setDriving] = useState(false);
   const [visible, setVisible] = useState(false);
   // Two flags rather than one, because the tablist and the panel are separate
   // grid children: moving the pointer from one to the other must not read as a
@@ -379,12 +387,12 @@ export default function HomeShowcase({ titles, bodies, eyebrow, heading }) {
   const ref = useRef(null);
 
   // These were one boolean, and that was the bug. `running` meant both "no
-  // countdown exists" (reduced motion, a phone, a reader driving) and "the
+  // countdown exists" (reduced motion, a phone) and "the
   // countdown is paused" (hover, off screen) — so a paused rail drew itself
   // with the no-countdown picture, which is a FULL bar. Hovering anywhere over
   // the section snapped the rail from wherever it was to 100% and stopped the
   // advance, and the section then sat there looking finished and broken.
-  const timed = !reduce && !narrow && !driving;   // is there a countdown at all?
+  const timed = !reduce && !narrow;               // is there a countdown at all?
   const running = timed && visible && !overTabs && !overPanel;  // is it ticking?
   const held = timed && !running;                 // ...or paused mid-count?
 
@@ -419,7 +427,13 @@ export default function HomeShowcase({ titles, bodies, eyebrow, heading }) {
     return () => { clearTimeout(id); spentRef.current += Date.now() - markRef.current; };
   }, [running, active]);
 
-  const pick = useCallback((i) => { setDriving(true); setActive(i); }, []);
+  // A click aims the tour. It used to END it — a `driving` flag, set once and
+  // never unset — which left the rail full and the section frozen for good
+  // after one tap, and frozen-for-good is indistinguishable from broken.
+  // Control does not need a kill switch here: the chosen panel gets a fresh
+  // clock, and the pointer that chose it is resting on the tablist, which
+  // holds that clock for exactly as long as it stays.
+  const pick = useCallback((i) => setActive(i), []);
 
   // Arrow keys move between features once the list has focus — the tablist
   // pattern, because that is what this is.
@@ -509,11 +523,16 @@ export default function HomeShowcase({ titles, bodies, eyebrow, heading }) {
           </div>
         </div>
 
+        {/* alignSelf stretch, against the section grid's align-items: start —
+            the panel keeps pace with the column of claims it is illustrating,
+            and the two flex wrappers pass that height down to the Frame. */}
         <div id="showcase-panel" role="tabpanel" aria-labelledby={`showcase-tab-${active}`}
+          style={{ alignSelf: "stretch", display: "flex", flexDirection: "column" }}
           onMouseEnter={() => setOverPanel(true)} onMouseLeave={() => setOverPanel(false)}>
           <AnimatePresence mode="wait" initial={false}>
             <m.div
               key={active}
+              style={{ flex: 1, display: "flex", flexDirection: "column" }}
               initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
               animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
               exit={reduce ? { opacity: 0, transition: { duration: 0.12 } }

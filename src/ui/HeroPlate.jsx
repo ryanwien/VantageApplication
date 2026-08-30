@@ -174,7 +174,14 @@ const LAYER = {
 // keeping it off the text. Masking the parent and transforming the child means
 // the rings travel and the boundary does not.
 const LIT = { ...LAYER, WebkitMaskImage: TOP_MASK, maskImage: TOP_MASK };
-const MASKED = { position: "absolute", inset: 0, WebkitMaskImage: RING_MASK, maskImage: RING_MASK };
+// overflow: hidden is load-bearing, not tidiness. The child these wrap is
+// inset: 0 — viewport-wide — and the ping scales it to 2.1×, which is ~4150px
+// on a 2000px screen. A mask hides the paint out there but not the GEOMETRY:
+// a transformed child still extends its ancestors' scrollable overflow, so
+// without the clip the whole page grows a horizontal scrollbar that scrolls
+// 400px of nothing. Everything visible lives well inside the mask, so the
+// clip costs no pixels.
+const MASKED = { position: "absolute", inset: 0, overflow: "hidden", WebkitMaskImage: RING_MASK, maskImage: RING_MASK };
 const INNER = { position: "absolute", inset: 0, transformOrigin: SRC };
 
 export default function HeroPlate() {
@@ -229,7 +236,9 @@ export default function HeroPlate() {
 const A_SRC = "50% 46%";
 const A_LAYER = { position: "absolute", inset: 0, zIndex: -1, pointerEvents: "none" };
 const A_RING_MASK = ringMask(A_SRC, 74, 72);
-const A_MASKED = { position: "absolute", inset: 0, WebkitMaskImage: A_RING_MASK, maskImage: A_RING_MASK };
+// Same clip as MASKED above, same reason: the auth ping scales past the
+// viewport too, and geometry does not care which page it is on.
+const A_MASKED = { position: "absolute", inset: 0, overflow: "hidden", WebkitMaskImage: A_RING_MASK, maskImage: A_RING_MASK };
 const A_INNER = { position: "absolute", inset: 0, transformOrigin: A_SRC };
 
 // The landing grid fades on the vertical only, because that page continues
