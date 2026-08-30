@@ -1,0 +1,20 @@
+{
+  "category": "logo-reveal",
+  "duration_s": 6,
+  "fps": 30,
+  "canvas": { "w": 1920, "h": 1080, "aspect": "16:9" },
+  "style": "Dark broadcast studio. The house brand exactly: near-black #0b0e13 stage, one green accent, mono for data, grotesk for identity. The landing page's LIGHT motion language (glow, ring ping, sheen) — this is a marketing asset, so light is the correct dialect. Elegant, caused, no idle wobble.",
+  "palette": ["#0b0e13", "#11151c", "#1c222c", "#e6e8eb", "#9aa3ae", "#5b6470", "#46a758", "#4cc38a", "#dd6a6e"],
+  "font": "Schibsted Grotesk (identity) + JetBrains Mono (data), embedded woff2 from the desk-loop project",
+  "beats": [1.2, 2.4, 3.9],
+  "export": "none — live Studio preview is the deliverable per the user's standing NOT-video constraint; no mp4 is rendered",
+  "asset_needs": [],
+  "block": null,
+  "customize": {},
+  "content": {
+    "logo": "drawn in-composition: the app's rounded-square V mark as SVG (draw-on), plus the VANTAGE wordmark",
+    "tagline": "The market, on air.",
+    "url": null
+  },
+  "shot_brief": "A ticker tape streams LEFT through a dark studio (the current; market data in the dark — hook inside 0.5s). One print — AMD, green — lands center and STOPS: the stop is the cause. On its landing frame the ON AIR lamp ignites with a broadcast flicker (two hard steps, not a fade) and a single ring pings outward. A 0.4s dramatic comma. Then the V mark draws on (SVG stroke) and the VANTAGE wordmark waterfall-enters letter by letter beside it, the tagline 'The market, on air.' fades up beneath with an accent underline sweep, and the lockup holds composed and still to the end. One dominant motif: ignition — the tape causes the lamp, the lamp causes the identity."
+}
