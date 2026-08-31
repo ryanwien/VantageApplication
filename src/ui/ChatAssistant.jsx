@@ -442,16 +442,23 @@ export default function ChatAssistant({
   useEffect(() => {
     const el = composerRef.current;
     if (!el || typeof ResizeObserver === "undefined") return;
+    let raf = 0;
     const ro = new ResizeObserver(([e]) => {
       const w = e.contentRect.width;
       // The wrap changes the row's HEIGHT, not its width, so this cannot
       // oscillate — but an 8px dead band either side of the threshold keeps a
       // drag-resize from setting state on every frame it spends near it.
       setTight(prev => (w < TIGHT - (prev ? 0 : 8) ? true : w > TIGHT + (prev ? 8 : 0) ? false : prev));
-      autosize();   // height follows width; see above
+      // Height follows width — but autosize WRITES style.height, and writing
+      // layout inside a ResizeObserver callback is the documented way to earn
+      // "loop completed with undelivered notifications": the write resizes the
+      // very row being observed, so the observation re-enters itself. The dead
+      // band above stops the WIDTH oscillating; it says nothing about this.
+      // Next frame instead, coalesced, so a drag-resize sizes the box once.
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; autosize(); });
     });
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => { ro.disconnect(); if (raf) cancelAnimationFrame(raf); };
   }, [autosize]);
 
   const submit = useCallback(() => {

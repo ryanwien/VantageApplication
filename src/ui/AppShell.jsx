@@ -418,14 +418,40 @@ export default function AppShell({
       const wrap = navWrapRef.current;
       if (wrap) setCramped(wrap.scrollWidth > wrap.clientWidth + 1);
     };
-    measure();
+    // MEASURE ON THE NEXT FRAME, NEVER INSIDE THE DELIVERY
+    // This callback sets state; the re-render adds or removes the hamburger;
+    // that changes the width of the flex:1 wrap this observer is watching; the
+    // observer fires again — and all of it happens inside a single delivery
+    // cycle. That is precisely what the browser reports as "ResizeObserver loop
+    // completed with undelivered notifications": not a crash, but a resize the
+    // browser gave up on delivering because the callback kept invalidating the
+    // layout it had just been handed.
+    //
+    // Deferring to the next frame closes the cycle before the layout it causes,
+    // so the second measurement arrives as an ordinary observation rather than
+    // as re-entry. The rAF handle also coalesces: a drag-resize delivers a
+    // burst of entries and this measures once for the frame, which is all the
+    // fidelity a header collapse needs.
+    //
+    // Only the OBSERVER defers. A window resize does not arrive inside a
+    // delivery, so there is nothing to re-enter and nothing to gain by waiting
+    // a frame — and a frame is not always 16ms. Under a throttled compositor it
+    // can be seconds, and a header that takes seconds to notice the window got
+    // narrower is a worse bug than the warning this is fixing.
+    let raf = 0;
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; measure(); }); };
+    measure();                                    // mount: nothing to re-enter yet
     window.addEventListener("resize", measure);
     let ro;
     if (typeof ResizeObserver !== "undefined" && navWrapRef.current) {
-      ro = new ResizeObserver(measure);
+      ro = new ResizeObserver(schedule);
       ro.observe(navWrapRef.current);
     }
-    return () => { window.removeEventListener("resize", measure); ro?.disconnect(); };
+    return () => {
+      window.removeEventListener("resize", measure);
+      ro?.disconnect();
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, [sections]);
   const collapsed = narrow || cramped;
 
