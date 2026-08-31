@@ -8801,6 +8801,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     // would otherwise leave you sitting in whichever set, with whichever
     // anchor, it happened to be part-way through showing you.
     const startedAs = characterId, startedIn = envId;
+    // The chart's three switches persist to localStorage exactly as the anchor
+    // does not, so leaving them flipped would be the demo redecorating somebody
+    // else's desk. Captured here so the finally can undo them on any exit.
+    const chartWas = { sma: chartSMA, hl: chartHL, mode: chartMode };
     const wait = (ms) => new Promise((res) => {
       const start = performance.now();
       const tick = () => (demoAbortRef.current ? res("abort") : performance.now() - start >= ms ? res("ok") : setTimeout(tick, 90));
@@ -8881,16 +8885,42 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         await wait(4600); if (!alive()) return;
       }
 
-      say("I can pull up a full interactive chart, right inside Vantage.");
-      await wait(1600); if (!alive()) return;
-      openChart("NVDA"); completeMission("nav");
-      // 5000, not 3800. The frame now spends its first second or so behind the
-      // cover while the widget draws itself, and the old hold was chosen when
-      // that second was white and counted as part of the beat. Holding the same
-      // 3800 would show a loading card for a quarter of it and a chart for the
-      // rest, which is a demo of a spinner.
-      await wait(5000); if (!alive()) return;
-      setEmbed(null);
+      // OUR CHART, NOT SOMEBODY ELSE'S
+      // This beat used to open TradingView in an iframe, and most of it was spent
+      // watching a third party boot. The widget paints its own white page, gives
+      // the parent nothing to say when it is ready — no message, no child frames,
+      // no subresources the parent can see — and during testing it stopped
+      // rendering altogether and stayed grey past ten seconds. A demo cannot be
+      // built on a frame nobody can observe, and the cover that hides the white
+      // is a bound on the damage rather than a fix.
+      //
+      // The desk already has a chart, it is ours, and the things it does are the
+      // things the sentence was claiming. So the beat drives it instead of
+      // replacing it: three changes, in view, each one a control the reader will
+      // find on that panel a second later — which is the difference between
+      // being shown a feature and being shown where it lives.
+      //
+      // The line runs underneath, sayFully so it cannot be cut, and the switches
+      // land one per clause as it says them.
+      // Re-asserted before every switch rather than once at the top. The chart
+      // sits about 1,900px down the desk, so the beat is invisible unless the
+      // page is moved to it — and moved ONCE it did not stay: measured, the view
+      // was back at the anchor three seconds later. Something on the desk scrolls
+      // while the answer above is still settling. Winning the last word before
+      // each change costs nothing and does not depend on knowing which.
+      const showChart = () => document.getElementById("app-chart-panel")?.scrollIntoView({ block: "center" });
+      showChart();
+      const chartLine = sayFully("And the chart is mine to drive. A moving average, the session's high and low, and the same tape again as a point-and-figure grid.");
+      if ((await wait(1500)) === "abort") return;
+      showChart(); setChartSMA(true);
+      if ((await wait(1900)) === "abort") return;
+      showChart(); setChartHL(true);
+      if ((await wait(2100)) === "abort") return;
+      showChart(); setChartMode("pnf");
+      if ((await chartLine) === "abort") return;
+      if ((await wait(1400)) === "abort") return;
+      setChartSMA(chartWas.sma); setChartHL(chartWas.hl); setChartMode(chartWas.mode);
+      if ((await wait(600)) === "abort") return;
 
       say("And I run a live trading day. Here's the opening bell.");
       await wait(1400); if (!alive()) return;
@@ -8992,6 +9022,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       }
     } finally {
       setCharacterId(startedAs); setEnvId(startedIn);
+      setChartSMA(chartWas.sma); setChartHL(chartWas.hl); setChartMode(chartWas.mode);
       demoAbortRef.current = false;
       setDemoRunning(false);
     }
@@ -12818,7 +12849,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 
         {/* --- chart + stats --- */}
         <div className="v-dash-col v-dash-main">
-          <div style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: 20 }}>
+          {/* Named so the demo can bring it into view before it drives it.
+              Same convention as app-calendar-panel. */}
+          <div id="app-chart-panel" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, padding: 20 }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
               <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 24, letterSpacing: "-0.015em" }}>{selected}</span>
               {selectedRow?.name && <span className="v-coname" style={{ color: C.muted, fontSize: 14 }}>{selectedRow.name}</span>}
