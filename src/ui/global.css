@@ -1304,11 +1304,24 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
    movement for a P&F column yet" centres itself and would collapse onto the
    caption — and that floor belongs to the empty state itself, not to the box.
    Put it here and it becomes dead space under every short chart: measured, a
-   ten-by-thirteen session drew 194px of grid inside a 240px floor. */
-.v-chartbox.is-pnf { height: auto; }
+   ten-by-thirteen session drew 194px of grid inside a 240px floor.
+
+   --pnf-maxh is the other half of that, and it is a HEIGHT because the ratio
+   only ever lets you choose one: a P&F grid is roughly square, so a card 1600px
+   wide cannot be filled across without going 1,300px down. This is the room the
+   picture is allowed down the page; the width follows from the data's own
+   shape, and PnFChart carries the arithmetic and the second cap (one box never
+   exceeds 32px, or a short session would be blown up into icons). 440 is what
+   the fixed height here used to be — it was the right number all along for a
+   wide session and the wrong INSTRUMENT, because as a height it starved the
+   tall ones instead of capping them. */
+.v-chartbox.is-pnf { height: auto; --pnf-maxh: 440px; }
 
 @media (max-width: 860px) {
   .v-chartbox { height: 200px; }
+  /* Same 260 the old fixed height used on a phone, doing the job it was
+     actually suited for. */
+  .v-chartbox.is-pnf { --pnf-maxh: 260px; }
 }
 
 /* The company's full name is the one droppable item in the chart header on a
@@ -2646,6 +2659,93 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
   /* The question is the tap target, so it keeps its padding while the type
      comes down — shrinking both would put a 44px row under a thumb. */
   .v-faq-q { font-size: 16px; gap: 14px; }
+}
+
+/* ---------- the tour, once the scale model stops being legible ----------
+   ITS OWN BREAKPOINT, BECAUSE IT IS A STRUCTURAL CHANGE AND NOT A TYPE TWEAK
+   Everything inside the stage is `em` off a container-query font-size, which is
+   the right answer for a dense picture and the wrong one for a control. Scaled
+   down far enough it stops being small and starts being unusable: measured at a
+   313px viewport the frame is 271px, 1.5385cqw resolves to 4.14px, and the five
+   rail tabs — real buttons, the only way to drive the thing — come out 17.5 to
+   24.4 wide by 10 tall carrying 3.36px labels. The step headline lands at 7.8px
+   and its description at 3.6px. That is not a small tour, it is a picture of
+   one.
+
+   900px is where the rail's label crosses 11px (frame 860, label 10.75) and the
+   tab box crosses the 24px floor a little below it. Above that the scale model
+   is honest and it keeps its 16:9; below it the frame gives up the fixed ratio,
+   the stage goes static, and the rail and the card's copy leave the em world
+   for real pixels. Not the 1000px block above: that one only takes type down a
+   step, and at 1000 the scaled tour still reads fine.
+
+   The APP KEEPS SCALING. It is the one thing here that genuinely is a picture —
+   a chrome bar, a tape and five dense panes, exactly what the video used to be
+   — so it gets its own font-size in the same cqw and everything under it stays
+   in em off that. max() puts a floor under it: 1.5385cqw is 12.6px at the
+   breakpoint (continuous with the wide design, so nothing jumps at 900) and
+   holds at 10px once the column is too narrow to carry more. Below the floor
+   the mock stops shrinking and starts being CROPPED by the card, which is the
+   right trade — a legible crop beats an illegible whole. */
+@media (max-width: 900px) {
+  .v-tour-frame { aspect-ratio: auto; }
+  .v-tour-stage {
+    position: static;
+    padding: 16px 14px 0;
+    font-size: 16px;
+  }
+
+  /* Three tabs then two, centred. 44 and not the 24px floor because these are
+     the section's primary control and they are chips, not text in a row — a
+     wrapped pair sits against its neighbour with no gutter to steal. */
+  .v-tour-rail { flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .v-tour-tab {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 12px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  .v-tour-card {
+    flex: none;
+    margin-top: 14px;
+    padding: 16px 14px 0;
+    border-radius: 12px 12px 0 0;
+  }
+  .v-tour-cardh { font-size: 25px; }
+  .v-tour-cards { font-size: 14px; margin-top: 6px; }
+  .v-tour-bar { width: 100%; height: 3px; margin-top: 14px; }
+
+  /* The bleed survives the switch. Wide, the app runs to the card's bottom
+     edge and the card to the frame's, so the panes are cut by the frame — that
+     is what makes it a window onto something running instead of a screenshot
+     pasted into a box. Static and auto-height there is nothing to overflow, so
+     the negative margin does it explicitly: the card's height stops 1.4em
+     short of the app's and overflow:hidden takes the rest. */
+  .v-tour-app {
+    flex: none;
+    margin-top: 14px;
+    margin-bottom: -1.4em;
+    aspect-ratio: 16 / 10;
+    border-radius: 10px 10px 0 0;
+    font-size: max(10px, 1.5385cqw);
+  }
+}
+
+/* One sentence or the other, never both. "Hover to hold a step" is a true
+   description of this component and a lie on a phone, where there is no hover
+   to rest and the only way to hold a step is the tap that also hands control
+   over for good. Two whole sentences rather than a swapped clause, so each one
+   reaches t() as something a translator can actually read. `hover: none` and
+   not `any-hover`: a touchscreen laptop with a mouse plugged in reports hover
+   on both, and hover genuinely works there — it is the phone that needs the
+   other line. */
+.v-ptr-coarse { display: none; }
+@media (hover: none) {
+  .v-ptr-fine { display: none; }
+  .v-ptr-coarse { display: inline; }
 }
 
 @media (max-width: 620px) {

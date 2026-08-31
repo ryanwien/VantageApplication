@@ -263,8 +263,15 @@ export default function HomeTour({ t = (x) => x }) {
 
       <h2 id="tour-heading" className="v-scrollin v-tour-h">{t("Five steps, end to end.")}</h2>
 
+      {/* Two sentences, one shown — global.css carries why, and why they are
+          whole sentences rather than a swapped clause. */}
       <p className="v-scrollin v-tour-sub" style={{ fontFamily: SANS }}>
-        {t("Everything above, in the order you would actually do it. It runs on its own — hover to hold a step, or pick one.")}
+        <span className="v-ptr-fine">
+          {t("Everything above, in the order you would actually do it. It runs on its own — hover to hold a step, or pick one.")}
+        </span>
+        <span className="v-ptr-coarse">
+          {t("Everything above, in the order you would actually do it. It runs on its own — tap a step to take it over.")}
+        </span>
       </p>
 
       <div

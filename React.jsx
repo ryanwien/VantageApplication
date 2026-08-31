@@ -6100,7 +6100,10 @@ function TrialEndedScreen({ account, onCheckout, onSignOut, busy, error }) {
 // Pure presentational: columns/boxSize come from src/pnf/pnf.js. Renders the last
 // 48 columns as an X/O box grid with price labels in a right gutter.
 function PnFChart({ columns, boxSize, up, down }) {
-  const CELL = 14, GUTTER = 56, MAXC = 48, MAXR = 28;
+  // CELL is the AUTHORING unit, not the rendered one — the geometry below is
+  // written in it and the whole grid is then scaled as one picture. MAXCELL is
+  // the ceiling on how big a rendered box may get; see the return.
+  const CELL = 14, MAXCELL = 32, GUTTER = 56, MAXC = 48, MAXR = 28;
   const cols = columns.slice(-MAXC);
   // Price window clamped to the last MAXR boxes of recent action: a single
   // outlier column (bad tick, halt gap) would otherwise set the scale and
@@ -6140,27 +6143,45 @@ function PnFChart({ columns, boxSize, up, down }) {
     // 6px vertical margin on the viewBox: the outermost gridline labels centre on the
     // SVG's edges, so without it the bottom label's baseline (edge + 3.5) clips in half.
     //
-    // NATURAL SIZE, NOT A STRETCH TO FIT.
-    // This was width:100%/height:100% inside a box of fixed height, which hands
-    // the scale to whichever axis runs out first — and which axis that is depends
-    // entirely on the data. A session that has made six columns and moved
-    // twenty-seven boxes is a PORTRAIT: measured, a 140x390 viewBox in a 237x260
-    // box fitted by height and drew 93px of chart in 237px of room, at 8.7px per
-    // cell, with 60% of the width empty. The same code on a wide, shallow session
-    // wastes the height instead. Neither is a size anybody chose.
+    // ONE PICTURE, SCALED — WITH BOTH CAPS THE RATIO CANNOT SUPPLY
+    // This was width:100%/height:100% in a box of fixed height, which hands the
+    // scale to whichever axis runs out first — and which axis that is depends on
+    // the data. A session of six columns over twenty-seven boxes is a PORTRAIT:
+    // measured, a 140x390 viewBox in a 237x260 box fitted by height and drew 93px
+    // of chart in 237px of room, at 8.7px per cell, 60% of the width empty.
     //
-    // So the width and height attributes give it an intrinsic size in the CELL
-    // units the geometry above is already written in: one box is 14px, always,
-    // whatever the session did and whatever the viewport is. max-width with an
-    // auto height is the responsive-SVG idiom — it scales DOWN to fit a column
-    // too narrow for it and never up, because a point-and-figure grid blown up to
-    // 40px cells is not a bigger chart, just a coarser one. MAXC and MAXR already
-    // bound the intrinsic size at 728x404, so nothing here can run away.
+    // Pinning it to its intrinsic 14px per cell fixed that and broke the other
+    // end. A grid is a picture and pictures are meant to fill their frame: on a
+    // 1600px desk card a fourteen-column session drew a 252px postage stamp with
+    // 1,300px of nothing beside it. So it scales, and TWO caps decide how far,
+    // because the aspect ratio can only ever give one of them:
+    //
+    //   --pnf-maxh  how tall the picture may get. This is the one that binds on a
+    //               wide card, and it has to: the grid is roughly square, so
+    //               filling 1600px of width would mean 1,320px of height. The
+    //               chart is bounded by the room it has DOWN the page, and the
+    //               width follows from the ratio.
+    //   MAXCELL     how big one box may get. This is the one that binds on a
+    //               short session, where the height cap would otherwise allow a
+    //               six-by-six grid at 64px cells. Past ~32px a box stops reading
+    //               as a box in a grid and starts reading as an icon.
+    //
+    // The smaller wins — but never below the authored size, which is what the
+    // outer max() is for and it is not decoration. A height cap applied to a
+    // PORTRAIT does not cap it, it CRUSHES it: measured, six columns over
+    // twenty-seven boxes against the phone's 260 came out 93x260 at 9.3px per
+    // cell, smaller than the 14 it was drawn at. A ceiling that can push down on
+    // something already under it is not a ceiling. Below the authored size the
+    // only thing allowed to shrink it is the column, via width:100%, which is
+    // how it still fits a phone.
     <svg
       viewBox={`0 -6 ${w} ${h + 12}`}
       width={w} height={h + 12}
       preserveAspectRatio="xMidYMid meet"
-      style={{ display: "block", margin: "0 auto", maxWidth: "100%", height: "auto" }}
+      style={{
+        display: "block", margin: "0 auto", width: "100%", height: "auto",
+        maxWidth: `max(${w}px, min(calc(var(--pnf-maxh, 440px) * ${(w / (h + 12)).toFixed(4)}), ${Math.round(w * (MAXCELL / CELL))}px))`,
+      }}
     >
       {kids}
     </svg>
