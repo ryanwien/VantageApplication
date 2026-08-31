@@ -2093,9 +2093,9 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       // Falling edge of speech: the beat where a person closes their mouth
       // and swallows before the next thing.
       settle: 0, wasTalking: false,
-      // The broadcast, as a place. `onAir` is the eased envelope the studio's
-      // lights answer to; `push` is the camera's own, much slower driver.
-      onAir: 0, push: 0,
+      // The broadcast, as a place. `push` is the camera's slow driver, and now
+      // the only one — the studio's lights stopped answering the read.
+      push: 0,
       // True while the eyes are away from the lens and owe it a return.
       returning: false,
     };
@@ -2159,8 +2159,8 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         drawVantageMark(ctx, 13, 15, 13);
         // THE STATION BUG DOES NOT REACT TO THE ANCHOR
         // The mark's dot used to burn as a tally light while the anchor read:
-        // a green radial at 75% alpha over the logo's dot, ramped by the same
-        // eased onAir envelope as the rest of the on-air treatment. It was a
+        // a green radial at 75% alpha over the logo's dot, ramped by the eased
+        // on-air envelope that used to drive the studio's lights. It was a
         // nice idea about broadcast and the wrong thing on this set. A station
         // ident is furniture — it is the one element in frame that is supposed
         // to be identical in every shot — and an ident that lights up whenever
@@ -2420,13 +2420,12 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       const busy = (!TK && !s.action) ? (propsRef.current.busy || null) : null; // "work" | "present" | null
       s.busyAmt += ((busy ? 1 : 0) - s.busyAmt) * Math.min(1, dt / 220);
 
-      // --- the studio goes live ---
-      // Lights answer speech in about half a second; the camera is an
-      // operator, not a lamp, so it creeps in over several seconds of
-      // reading and eases back home once the read ends. Under reduced
-      // motion the push stays parked — a lit studio is a state, a
-      // travelling camera is motion.
-      s.onAir += ((TK ? 1 : 0) - s.onAir) * Math.min(1, dt / 480);
+      // --- the camera goes live ---
+      // The half-second lighting envelope that used to sit above this line is
+      // gone with the lamps it drove. The camera is an operator, not a lamp, so
+      // it creeps in over several seconds of reading and eases back home once
+      // the read ends. Under reduced motion the push stays parked — it is the
+      // one on-air cue that is motion rather than state.
       s.push += ((TK && !reduced ? 1 : 0) - s.push) * Math.min(1, dt / (TK ? 5600 : 1500));
 
       // --- idle action scheduler (only while quiet AND not heads-down on a task) ---
@@ -3641,40 +3640,34 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
 
       ctx.restore(); // end entrance transform
 
-      // ---- the studio lights, keyed to the read ----
-      // On air, a warm key comes up from the anchor's upper left and the
-      // frame's edges fall off a step — a studio going live, not a filter.
-      // Painted inside the camera transform, so the push and the lamps agree.
+      // ---- NO LAMP ANSWERS THE READ ----
+      // There is nothing here now, and the empty space is the point: three
+      // separate effects used to fire on this line, each one a full-frame paint
+      // gated on the anchor speaking, and all three were reported as the frame
+      // "going white" or "animating" when he talked.
       //
-      // THE WARM KEY IS GONE. THE FALLOFF DOES THE JOB ON ITS OWN.
-      // It was rgba(255,240,214,0.13) painted source-over across the frame —
-      // the definition of the filter the note above swears it is not: a cream
-      // sheet 170px wide on a 190px frame, added to the wall, the suit and the
-      // face alike, drawn LAST so it sat over everything, and gated on s.onAir
-      // so it existed for exactly as long as the anchor was speaking. That is
-      // the white hue that appeared when he talked, and it is why looking for
-      // it in a still frame found nothing — it is not in the still frame.
+      // First a warm key — rgba(255,240,214,0.13), source-over, a cream sheet
+      // 170px wide on a 190px frame, drawn LAST so it sat over the wall, the
+      // suit and the face alike. Blending it was tried and is worth recording,
+      // because the idea is right and the operator is not: soft-light's shadow
+      // term LIFTS blacks by design. Its D(Cb) sends a 0.08 backdrop to 0.25,
+      // so the wall still went up 7.3 in luminance and DOWN 0.115 in
+      // saturation — the same wash through a different door. Overlay is the
+      // same story with a near-white source. No full-frame gradient can light a
+      // subject without lighting the room behind it; that wants geometry this
+      // canvas does not have.
       //
-      // Blending it was tried first and is worth recording, because the idea is
-      // right and the operator is not: soft-light's shadow term LIFTS blacks by
-      // design. Its D(Cb) sends a 0.08 backdrop to 0.25, so the wall still went
-      // up 7.3 in luminance and DOWN 0.115 in saturation — the same wash, via a
-      // different door. Overlay is the same story with a near-white source,
-      // because 2·Cb·Cs on a dark backdrop is still a multiplication upward.
-      // No full-frame gradient can light a subject without lighting the room
-      // behind it; that needs geometry this canvas does not have.
+      // Then a falloff, kept on the argument that darkening cannot add a cast.
+      // True, and beside the point. It still moved: measured over the station
+      // ident it took that corner down about 5% every time the anchor opened
+      // his mouth, which is the same complaint in the other direction. A set is
+      // not supposed to breathe with the person standing on it.
       //
-      // So the read is signalled by what is left, and there is plenty of it:
-      // the edges fall off, the camera pushes in 4%, the station bug's dot
-      // burns as the tally, and the pill flaps to "On air". Darkening cannot
-      // add a cast, which is the whole reason the falloff survives and the key
-      // does not.
-      if (s.onAir > 0.01) {
-        const vig = ctx.createRadialGradient(cx, 92, 60, cx, 92, 190);
-        vig.addColorStop(0, "rgba(0,0,0,0)");
-        vig.addColorStop(1, `rgba(0,0,0,${0.2 * s.onAir})`);
-        ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
-      }
+      // What signals the read is what always actually signalled it: the mouth
+      // moves, the pill flaps to "On air", and the camera creeps in 4% over
+      // five and a half seconds — an operator leaning in, not a lamp switching.
+      // That last one is motion rather than grade, it is slow enough to read as
+      // intent, and it is the only one of the four that was never reported.
       ctx.restore(); // end camera
 
       // ---- scene caption for a scheduled moment (bell / meal / break) or a sustained task (work / present) ----
