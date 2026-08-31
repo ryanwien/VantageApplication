@@ -3617,10 +3617,33 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
   padding: 1.21cqw 3.03cqw;
   white-space: nowrap;
 }
+/* BOTH CHIPS LIVE ON THE DESK FRONT, AND THAT IS A SET DECISION, NOT A TASTE ONE
+   The pill was top-right, which the handoff asked for and which is where a
+   broadcast bug belongs — on a set that has nothing there. These sets do. The
+   top of the frame is the WALL, and a wall is exactly where eighteen
+   procedurally-drawn rooms hang things: measured, the newsroom's monitor, the
+   podcast's ON AIR sign, the trading floor's overhead ticker board, all four
+   server racks and the space station's planet each ran into the pill's
+   x 123-184, y 6-18. Five out of the five sets that were checked. Moving the
+   furniture fixes one room at a time and loses the artwork's own geometry
+   doing it — an overhead board that starts a fifth of the way down is not
+   overhead any more.
+
+   The desk front is the one full-width band that is empty in EVERY set, and it
+   is empty by construction rather than by luck: environments are drawn behind
+   the desk, and the desk's own props rest ON the surface, above y=196. The
+   canvas caption already knows this — it moved down here for the same reason,
+   and its note says so. So the two chips take the two ends of that band, the
+   name on the left and the state on the right, and no room has to be redrawn
+   around them. */
 .v-anchorstatus {
-  top: 3.03cqw; right: 3.03cqw;
+  bottom: 3.03cqw; right: 3.03cqw;
   font-size: clamp(9px, 3.48cqw, 13px);
   border-radius: 6.06cqw;
+  /* No transition here on purpose: the pill carries an inline one for its
+     colour, and an inline declaration outranks any rule in this file that is
+     not !important, so a transition written here would simply be discarded.
+     The pill's fade is declared alongside its colour, at the call site. */
 }
 .v-anchorname {
   bottom: 3.03cqw; left: 3.03cqw;
@@ -3628,11 +3651,15 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
   border-radius: 1.82cqw;
   transition: opacity var(--v-base-dur) var(--v-ease);
 }
-/* Two lower-thirds, one band. When the canvas raises a caption on the desk
-   front the plate steps out of the way rather than being read through it —
-   which is what broadcast does, and the only thing that stays correct for a
-   name this file does not choose and a caption it may not have measured. */
-.v-anchorname[data-caption="up"] { opacity: 0; }
+/* Three lower-thirds, one band. When the canvas raises a caption on the desk
+   front, BOTH chips step out of the way rather than being read through — which
+   is what broadcast does, and the only thing that stays correct for a name this
+   file does not choose and a caption it may not have measured. The pill needs
+   it now for the same reason the plate always did: the caption is centred and
+   "BREAKFAST BREAK" measures ~108 of 190 units, so it reaches x 41-149 and runs
+   into a chip at either end. */
+.v-anchorname[data-caption="up"],
+.v-anchorstatus[data-caption="up"] { opacity: 0; }
 
 .v-deskstate { display: inline-flex; align-items: center; gap: 7px; }
 .v-deskstate-mark { width: 14px; height: 12px; display: inline-flex; align-items: center; justify-content: flex-start; flex: none; }

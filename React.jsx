@@ -2111,17 +2111,24 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
     const env = (p) => Math.sin(Math.min(1, Math.max(0, p)) * Math.PI);
 
     // ---- procedural environments (furthest layer, unaffected by entrance fade) ----
-    // THE DOM CHROME IS ON THIS CANVAS, AND SETS HAVE TO DRESS AROUND IT
+    // THE DOM CHROME IS ON THIS CANVAS, AND IT IS NO LONGER ON THE WALL
     // The status pill and the name plate are real elements positioned over the
     // frame, so from a set's point of view they are furniture it cannot see.
-    // Measured in these units the pill occupies x 123–184, y 6–18 (top right)
-    // and the plate x 6–43, y 220–224 (bottom left). Two sets were furnishing
-    // straight into the pill — the newsroom's wall monitor and the podcast's
-    // ON AIR sign — and the pill sat on top of them, which is what it looked
-    // like: a chip dropped on a screen, not a graphic over a set.
-    // CHROME_TOP is the first row on the RIGHT-HAND side a set may put anything
-    // solid into. Anything to the left of CHROME_X is clear all the way up.
-    const CHROME_TOP = 22, CHROME_X = 120;
+    // The pill used to sit top-right and every set that furnishes a wall ran
+    // into it: measured against its x 123-184, y 6-18, the newsroom's monitor,
+    // the podcast's ON AIR sign, the trading floor's overhead ticker board, all
+    // four server racks and the space station's planet all collided. Five for
+    // five. Each was moved out of the way, and each move cost the artwork its
+    // own geometry — an overhead board that starts a fifth of the way down is
+    // not overhead any more — while still only fixing one room at a time.
+    //
+    // The pill now sits on the desk front beside the name plate, so those moves
+    // are all reverted and the sets are back to the sizes and positions they
+    // were drawn at. Nothing here has to dress around the chrome any more: the
+    // desk front is empty in EVERY set by construction, because environments
+    // are drawn behind the desk and the desk's own props rest on the surface
+    // above y=196. See .v-anchorstatus in global.css, and the caption block
+    // below, which moved down here first and for the same reason.
     const drawEnv = (env, t, moodCol, m, onAir = 0) => {
       if (!env || env === "studio") return;
       ctx.save();
@@ -2134,12 +2141,9 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         // a lit one. See the glow above.
         ctx.fillStyle = "rgba(150,185,255,0.07)";
         ctx.fillRect(0, 40, W, 3); ctx.fillRect(0, 46, W, 1);
-        // wall screen, upper right, live mood chart — top edge at CHROME_TOP so
-        // the status pill sits in the wall above it rather than on its bezel.
-        // It keeps its bottom at the accent band, so it loses height, not
-        // position; the sparkline is centred on y=34 and is untouched by that.
-        ctx.fillStyle = "#080C13"; ctx.fillRect(128, CHROME_TOP, 54, 46 - CHROME_TOP);
-        ctx.strokeStyle = "#1D2433"; ctx.lineWidth = 1; ctx.strokeRect(128, CHROME_TOP, 54, 46 - CHROME_TOP);
+        // wall screen, upper right, live mood chart
+        ctx.fillStyle = "#080C13"; ctx.fillRect(128, 10, 54, 36);
+        ctx.strokeStyle = "#1D2433"; ctx.lineWidth = 1; ctx.strokeRect(128, 10, 54, 36);
         ctx.strokeStyle = moodCol; ctx.globalAlpha = 0.5; ctx.lineWidth = 1.2;
         ctx.beginPath();
         for (let i = 0; i <= 10; i++) {
@@ -2167,10 +2171,10 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       } else if (env === "floor") {
         ctx.fillStyle = "#0B0F17"; ctx.fillRect(0, 0, W, H);
         // overhead ticker board with crawling dashes
-        ctx.fillStyle = "#080B12"; ctx.fillRect(0, CHROME_TOP, W, 14);
+        ctx.fillStyle = "#080B12"; ctx.fillRect(0, 8, W, 14);
         ctx.fillStyle = C.amber; ctx.globalAlpha = 0.45;
         const off = reduced ? 0 : (t / 30) % 24;
-        for (let x = -24; x < W + 24; x += 24) ctx.fillRect(x - off, CHROME_TOP + 4, 12, 5);
+        for (let x = -24; x < W + 24; x += 24) ctx.fillRect(x - off, 12, 12, 5);
         ctx.globalAlpha = 1;
         // receding rows of workstations, screens flipping green/red
         for (let row = 0; row < 2; row++) {
@@ -2212,10 +2216,10 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         ctx.fillStyle = "#0A0D13"; ctx.fillRect(0, 0, W, H);
         for (let rack = 0; rack < 4; rack++) {
           const rx = 10 + rack * 46;
-          ctx.fillStyle = "#0F141E"; ctx.fillRect(rx, CHROME_TOP, 36, 150);
-          ctx.strokeStyle = "#1A2130"; ctx.lineWidth = 1; ctx.strokeRect(rx, CHROME_TOP, 36, 150);
+          ctx.fillStyle = "#0F141E"; ctx.fillRect(rx, 12, 36, 150);
+          ctx.strokeStyle = "#1A2130"; ctx.lineWidth = 1; ctx.strokeRect(rx, 12, 36, 150);
           for (let u = 0; u < 12; u++) {
-            const uy = CHROME_TOP + 6 + u * 12;
+            const uy = 18 + u * 12;
             ctx.fillStyle = "#121826"; ctx.fillRect(rx + 3, uy, 30, 8);
             const led = reduced ? 0.5 : Math.sin(rack * 5.1 + u * 3.3 + t / (300 + u * 40));
             ctx.fillStyle = led > 0.3 ? alpha(C.up, 0.8) : led < -0.5 ? alpha(C.down, 0.7) : alpha(C.faint, 0.5);
@@ -2226,9 +2230,9 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#05060D"); g.addColorStop(1, "#0A0E1A");
         ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
         for (let i = 0; i < 40; i++) { const sx = (i * 47) % W, sy = (i * 71) % H; const tw = !reduced && Math.sin(t / 500 + i * 1.7) > 0.6 ? 0.9 : 0.3; ctx.fillStyle = `rgba(232,235,242,${tw})`; ctx.fillRect(sx, sy, 1.3, 1.3); }
-        const pg = ctx.createRadialGradient(150, 48, 4, 150, 48, 26); pg.addColorStop(0, "#C77B4A"); pg.addColorStop(1, "#5A2E1A");
-        ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(150, 48, 22, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = "rgba(255,196,120,0.4)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(150, 48, 30, 8, -0.4, 0, Math.PI * 2); ctx.stroke();
+        const pg = ctx.createRadialGradient(150, 34, 4, 150, 34, 26); pg.addColorStop(0, "#C77B4A"); pg.addColorStop(1, "#5A2E1A");
+        ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(150, 34, 22, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "rgba(255,196,120,0.4)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(150, 34, 30, 8, -0.4, 0, Math.PI * 2); ctx.stroke();
         const eg = ctx.createLinearGradient(0, 180, 0, H); eg.addColorStop(0, "#1E6FB0"); eg.addColorStop(1, "#0B2A4A");
         ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(W / 2, 300, 150, Math.PI, 0); ctx.fill();
         ctx.strokeStyle = "rgba(120,140,170,0.15)"; ctx.lineWidth = 8; ctx.strokeRect(4, 4, W - 8, H - 8);
@@ -2259,10 +2263,8 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         ctx.fillStyle = "#1C1714";
         for (let ry = 0; ry < H; ry += 20) for (let rx = 0; rx < W; rx += 20) { ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx + 10, ry + 10); ctx.lineTo(rx, ry + 20); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(rx + 20, ry); ctx.lineTo(rx + 10, ry + 10); ctx.lineTo(rx + 20, ry + 20); ctx.closePath(); ctx.fill(); }
         const on = reduced || Math.sin(t / 700) > -0.3;
-        // Shifted left to end at CHROME_X: the sign ran to 132 and the status
-        // pill starts at 123, so the pill was clipping its right-hand end.
-        ctx.fillStyle = on ? "#D0121F" : "rgba(208,18,31,0.28)"; ctx.fillRect(CHROME_X - 74, 10, 74, 16);
-        ctx.fillStyle = on ? "#fff" : "rgba(255,255,255,0.4)"; ctx.font = "bold 9px monospace"; ctx.fillText("ON AIR", CHROME_X - 58, 22);
+        ctx.fillStyle = on ? "#D0121F" : "rgba(208,18,31,0.28)"; ctx.fillRect(58, 10, 74, 16);
+        ctx.fillStyle = on ? "#fff" : "rgba(255,255,255,0.4)"; ctx.font = "bold 9px monospace"; ctx.fillText("ON AIR", 74, 22);
       } else if (env === "reef") {
         const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#0A3A55"); g.addColorStop(1, "#062435");
         ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
@@ -3790,11 +3792,23 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
             // Position, size and padding all live in .v-anchorstatus now, in
             // container units — an inline fontSize or padding here would win
             // against them and put the pill straight back where it was.
-            <span className="v-deskstate v-anchorstatus" role="status" style={{
-              background: "rgba(11,14,19,0.85)", color: tone,
-              fontFamily: SANS, fontWeight: 600,
-              transition: `color ${MOTION.base} ${MOTION.ease}`,
-            }}>
+            //
+            // data-caption for the same reason the name plate carries it: both
+            // chips now sit on the desk front, and the canvas raises its own
+            // caption across the middle of that band.
+            //
+            // opacity is in the inline transition rather than in the stylesheet
+            // BECAUSE of the rule above. An inline `transition` replaces the
+            // whole property, so the fade cannot be declared next to the rule
+            // that triggers it — written in global.css it would be silently
+            // dropped and the chip would blink instead of fading.
+            <span className="v-deskstate v-anchorstatus" role="status"
+              data-caption={captionUp ? "up" : undefined}
+              style={{
+                background: "rgba(11,14,19,0.85)", color: tone,
+                fontFamily: SANS, fontWeight: 600,
+                transition: `color ${MOTION.base} ${MOTION.ease}, opacity ${MOTION.base} ${MOTION.ease}`,
+              }}>
               <span className="v-deskstate-mark">{mark}</span>
               <Flap value={state} items={[
                 { key: "standby", label: t("Standing by") },
