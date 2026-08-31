@@ -75,7 +75,7 @@ export default function PriceChart({
         {!comparePlot && <Area key={`price-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="price" stroke={accent} strokeWidth={1.8} fill={`url(#${fillId})`} isAnimationActive={false} dot={false} />}
         {comparePlot && <Area key={`base-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="base" stroke={accent} strokeWidth={1.8} fill={`url(#${fillId})`} isAnimationActive={false} dot={false} />}
         {/* the comparison line owns purple — every other hue here has a meaning already */}
-        {comparePlot && <Area key={`vs-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="vs" stroke="#C08BFF" strokeWidth={1.5} fill="transparent" isAnimationActive={false} dot={false} />}
+        {comparePlot && <Area key={`vs-${chartDrawKey}`} className="v-chartdraw" pathLength={1} type="monotone" dataKey="vs" stroke={C.compare} strokeWidth={1.5} fill="transparent" isAnimationActive={false} dot={false} />}
       </AreaChart>
     </ResponsiveContainer>
   );

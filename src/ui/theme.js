@@ -149,6 +149,16 @@ export const C = {
 
   // --- status ---
   info: grow.light,
+  // The compare overlay's line. Not a brand colour and deliberately outside the
+  // green/red axis: a second symbol laid over the chart is neither good news nor
+  // bad, and drawing it in either would say something the data does not.
+  //
+  // Named for the same reason downEdge is. This was the literal #C08BFF written
+  // out three times in two files — the line in PriceChart, and the label and the
+  // chevron on the chip that names it. Those three are a LEGEND: the chip is
+  // only telling the truth while its purple is the line's purple, and three
+  // copies is three chances for one of them to be edited alone.
+  compare: "#C08BFF",
   warn: alarm.warning,
   warnSoft: alarm.warningSoft,
   danger: alarm.negative,

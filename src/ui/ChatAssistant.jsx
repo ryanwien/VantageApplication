@@ -36,10 +36,16 @@ import VantageMark from "./VantageMark.jsx";
 // a ten-turn thread into a wall of controls; as text they sit in the provenance
 // line and only the colour says they are live. Underlined on hover and on
 // keyboard focus — the part hover-only affordances always forget.
+//
+// Being words is what makes the target a line box and nothing else — 28.8 by
+// 19.8 for "Copy", at every width and on every pointer. v-tapline is the
+// invisible 32px hit area that buys back the 24px floor without turning them
+// back into chips; global.css carries why it is 32 and not the house's 44.
 function MsgAction({ label, onClick, active, title }) {
   const [hot, setHot] = useState(false);
   return (
     <button
+      className="v-tapline"
       onClick={onClick} title={title || label}
       onMouseEnter={() => setHot(true)} onMouseLeave={() => setHot(false)}
       onFocus={() => setHot(true)} onBlur={() => setHot(false)}
@@ -647,10 +653,18 @@ export default function ChatAssistant({
               pseudo pins left/right to 0 and grows height alone, and height
               was never what failed here.
 
+              v-clearx is the one that fits, and it was missed: a pseudo that
+              grows BOTH axes, so it answers the width without costing the
+              field a pixel. Which matters, because v-tap is gated on a coarse
+              pointer and on a mouse this still measures 18.9 wide — under the
+              24 floor for the touchscreen laptop that reports a fine pointer
+              the whole time a mouse is plugged in. Its 30 needs no second
+              thought here: the next control along the row is 70.9px away.
+
               The auto margin is layout, not targeting: once the row wraps,
               Clear belongs at the far end of the control line, away from Ask. */}
           {compact && messages.length > 0 && onClear && (
-            <button onClick={onClear} aria-label="Clear conversation" title="Clear conversation" className="v-tap"
+            <button onClick={onClear} aria-label="Clear conversation" title="Clear conversation" className="v-tap v-clearx"
               style={{
                 background: "transparent", border: "none", color: C.faint, cursor: "pointer",
                 fontSize: 14, padding: "6px 4px", flexShrink: 0,

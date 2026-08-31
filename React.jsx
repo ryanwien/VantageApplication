@@ -432,16 +432,36 @@ async function finnhubSearch(query) {
 }
 
 // ---------- desk anchors: parameterized procedural characters ----------
+//
+// WARDROBE: NOBODY WEARS WHITE ON CAMERA
+// The shirt is one filled wedge running from the collar to the desk — the
+// largest single area of the portrait after the suit — and these were drawn at
+// #E8EBF2 and #F2E8EC. Measured as relative luminance against the face each one
+// frames: Sterling's shirt came to 0.830 against 0.432 of skin, so the brightest
+// object in a portrait was his shirt, by 92%. Moss was 213% over, Vega 171%.
+// Against a set that sits at 0.016 they did not read as white cotton; they read
+// as a blown highlight with a head above it, and the eye went there first.
+//
+// This is the oldest note in the wardrobe department's book and it applies here
+// for the literal reason: no bright white, wear light grey or light blue. The
+// over-bright garments are pulled to about 0.50 — dimmed in LINEAR light with
+// the channel ratios kept, so each keeps its own cast (Sterling's cool blue,
+// Vega's pink, Moss's cream) and only the level moves. That still leaves a
+// dress shirt more than thirty times its suit, which is what makes it read as
+// a white shirt; it just stops out-shouting the face.
+//
+// Nova is the exception and stays light: white IS the costume on a spacesuit.
+// It comes down out of clipping (0.798 to 0.56) rather than to the rule.
 const CHARACTERS = [
-  { id: "sterling", name: "Sterling", skin: "#D9A57E", hairColor: "#2A2118", hair: "short", suit: "#1B2231", shirt: "#E8EBF2", tieBase: true, accessory: "headset" },
-  { id: "vega", name: "Vega", skin: "#C68863", hairColor: "#3B2417", hair: "long", suit: "#2A2133", shirt: "#F2E8EC", tieBase: false, accessory: "earpiece", earrings: true },
-  { id: "kwan", name: "Kwan", skin: "#E8C39E", hairColor: "#151515", hair: "short", suit: "#232A24", shirt: "#E8EBF2", tieBase: true, accessory: "headset", glasses: true },
-  { id: "moss", name: "Moss", skin: "#B97F5C", hairColor: "#9A9A9A", hair: "bald", beard: true, suit: "#2E2A20", shirt: "#EFEAD9", tieBase: true, accessory: "earpiece" },
+  { id: "sterling", name: "Sterling", skin: "#D9A57E", hairColor: "#2A2118", hair: "short", suit: "#1B2231", shirt: "#B9BCC1", tieBase: true, accessory: "headset" },
+  { id: "vega", name: "Vega", skin: "#C68863", hairColor: "#3B2417", hair: "long", suit: "#2A2133", shirt: "#C2BABD", tieBase: false, accessory: "earpiece", earrings: true },
+  { id: "kwan", name: "Kwan", skin: "#E8C39E", hairColor: "#151515", hair: "short", suit: "#232A24", shirt: "#B9BCC1", tieBase: true, accessory: "headset", glasses: true },
+  { id: "moss", name: "Moss", skin: "#B97F5C", hairColor: "#9A9A9A", hair: "bald", beard: true, suit: "#2E2A20", shirt: "#C0BCAE", tieBase: true, accessory: "earpiece" },
   { id: "tick3r", name: "TICK-3R", robot: true, suit: "#20262F" },
   { id: "pax", name: "Pax", skin: "#D9A57E", hairColor: "#241A12", hair: "short", suit: "#241C33", shirt: "#141821", tieBase: false, accessory: "headset", hat: "podcast" },
-  { id: "sir-gaine", name: "Sir Gaine", skin: "#D9A57E", hairColor: "#2A2118", hair: "short", suit: "#3A414D", shirt: "#C9D2E4", tieBase: false, hat: "knight" },
+  { id: "sir-gaine", name: "Sir Gaine", skin: "#D9A57E", hairColor: "#2A2118", hair: "short", suit: "#3A414D", shirt: "#B4BCCC", tieBase: false, hat: "knight" },
   { id: "mordo", name: "Mordo", skin: "#C68863", hairColor: "#C9C4B8", hair: "short", beard: true, suit: "#2A1E44", shirt: "#3A2A66", tieBase: false, hat: "wizard" },
-  { id: "nova", name: "Nova", skin: "#C68863", hairColor: "#1A1A1A", hair: "short", suit: "#E4E7EE", shirt: "#C7CEDB", tieBase: false, hat: "astronaut" },
+  { id: "nova", name: "Nova", skin: "#C68863", hairColor: "#1A1A1A", hair: "short", suit: "#C3C5CB", shirt: "#A8AEB9", tieBase: false, hat: "astronaut" },
   { id: "marina", name: "Marina", skin: "#E8C39E", hairColor: "#1FA9A0", hair: "long", suit: "#186A72", shirt: "#2FD3C6", tieBase: false, earrings: true, hat: "mermaid" },
   { id: "aurora", name: "Aurora", skin: "#E8C6A8", hairColor: "#6B3B1F", hair: "long", suit: "#7A2E5A", shirt: "#E9A8C8", tieBase: false, earrings: true, hat: "crown" },
   { id: "diana", name: "Diana", skin: "#C68863", hairColor: "#1A1512", hair: "long", suit: "#2E5A3A", shirt: "#C9A24B", tieBase: false, earrings: true, hat: "amazon" },
@@ -454,8 +474,8 @@ const CHARACTERS = [
   { id: "lilith", name: "Lilith", skin: "#CFC9CE", hairColor: "#0A0A0A", hair: "long", suit: "#14121A", shirt: "#3A0E14", tieBase: false, earrings: true, hat: "horror" },
   { id: "colt", name: "Colt", skin: "#C68863", hairColor: "#3B2417", hair: "short", beard: true, suit: "#5A3A24", shirt: "#8A5A34", tieBase: false, hat: "cowboy" },
   { id: "dakota", name: "Dakota", skin: "#D9A57E", hairColor: "#5A3A1E", hair: "long", suit: "#5A3A24", shirt: "#8A5A34", tieBase: false, earrings: true, hat: "cowboy" },
-  { id: "marlowe", name: "Marlowe", skin: "#B9A9A0", hairColor: "#20201F", hair: "short", suit: "#2E2E30", shirt: "#D8D8D8", tieBase: true, hat: "noir" },
-  { id: "vivienne", name: "Vivienne", skin: "#CDB8AE", hairColor: "#20201F", hair: "long", suit: "#2E2E30", shirt: "#D8D8D8", tieBase: false, earrings: true, hat: "noir" },
+  { id: "marlowe", name: "Marlowe", skin: "#B9A9A0", hairColor: "#20201F", hair: "short", suit: "#2E2E30", shirt: "#BCBCBC", tieBase: true, hat: "noir" },
+  { id: "vivienne", name: "Vivienne", skin: "#CDB8AE", hairColor: "#20201F", hair: "long", suit: "#2E2E30", shirt: "#BCBCBC", tieBase: false, earrings: true, hat: "noir" },
 ];
 
 // What Vantage is, in the product's own words. One constant, because two places
@@ -5185,7 +5205,11 @@ function AppCalendar({ extra = [] }) {
     .slice(0, 5);
   const jump = (key) => { const [y, m] = String(key).split("-").map(Number); setYm({ y, m: m - 1 }); setSel(key); };
   const pretty = (key) => { const [y, m, d] = key.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" }); };
-  const navBtn = { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, padding: "2px 9px", cursor: "pointer" };
+  // 10px of side padding rather than 9: a "‹" is 3.6px wide at 12px SANS, and
+  // the 9 put these at 23.6 — four tenths of a pixel under the 24 floor, which
+  // is a fail all the same. The row is space-between with 61.8px of air on
+  // either side of the month, so the extra pixel each comes out of whitespace.
+  const navBtn = { background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 12, padding: "2px 10px", cursor: "pointer" };
 
   return (
     <div style={{ padding: 14, display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-start" }}>
@@ -5193,8 +5217,14 @@ function AppCalendar({ extra = [] }) {
       <div style={{ flex: "1 1 300px", maxWidth: 420, minWidth: "min(236px, 100%)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <button onClick={() => shift(-1)} aria-label="Previous month" className="v-tap" style={navBtn}>‹</button>
+          {/* "August 2026" is not a caption — it jumps the grid back to today,
+              which is the only way back after paging away. Unpadded it was the
+              13px line box and nothing more: 19.5 tall. minHeight rather than a
+              pseudo because the row is already 24 (the chevrons set it), so
+              this costs no layout at all — it just stops the one control in the
+              row that was not filling it. */}
           <button onClick={() => { setYm({ y: now.getFullYear(), m: now.getMonth() }); setSel(todayKey); }} title="Jump to today"
-            style={{ background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{CAL_MON[ym.m]} {ym.y}</button>
+            style={{ background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 13, fontWeight: 600, cursor: "pointer", minHeight: 24 }}>{CAL_MON[ym.m]} {ym.y}</button>
           <button onClick={() => shift(1)} aria-label="Next month" className="v-tap" style={navBtn}>›</button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
@@ -6109,7 +6139,29 @@ function PnFChart({ columns, boxSize, up, down }) {
   return (
     // 6px vertical margin on the viewBox: the outermost gridline labels centre on the
     // SVG's edges, so without it the bottom label's baseline (edge + 3.5) clips in half.
-    <svg viewBox={`0 -6 ${w} ${h + 12}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%", display: "block" }}>
+    //
+    // NATURAL SIZE, NOT A STRETCH TO FIT.
+    // This was width:100%/height:100% inside a box of fixed height, which hands
+    // the scale to whichever axis runs out first — and which axis that is depends
+    // entirely on the data. A session that has made six columns and moved
+    // twenty-seven boxes is a PORTRAIT: measured, a 140x390 viewBox in a 237x260
+    // box fitted by height and drew 93px of chart in 237px of room, at 8.7px per
+    // cell, with 60% of the width empty. The same code on a wide, shallow session
+    // wastes the height instead. Neither is a size anybody chose.
+    //
+    // So the width and height attributes give it an intrinsic size in the CELL
+    // units the geometry above is already written in: one box is 14px, always,
+    // whatever the session did and whatever the viewport is. max-width with an
+    // auto height is the responsive-SVG idiom — it scales DOWN to fit a column
+    // too narrow for it and never up, because a point-and-figure grid blown up to
+    // 40px cells is not a bigger chart, just a coarser one. MAXC and MAXR already
+    // bound the intrinsic size at 728x404, so nothing here can run away.
+    <svg
+      viewBox={`0 -6 ${w} ${h + 12}`}
+      width={w} height={h + 12}
+      preserveAspectRatio="xMidYMid meet"
+      style={{ display: "block", margin: "0 auto", maxWidth: "100%", height: "auto" }}
+    >
       {kids}
     </svg>
   );
@@ -11719,8 +11771,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         <div className="tape-track" style={{ display: "inline-block", padding: "10px 0" }}>
           {/* Each entry charts its symbol — the tape already pauses on hover, so
               it reads as navigation, not just decoration. */}
+          {/* v-taprow as well as v-tap: the glyphs measure 18.8 tall and v-tap
+              only fires on a coarse pointer, so on a mouse — and on the
+              touchscreen laptop that reports a fine pointer with a mouse
+              attached — every symbol on the tape was under the 24px floor.
+              The pseudo is free here: the track already reserves 10px of
+              padding above and below, the strip is 44 tall, and left/right: 0
+              pins the target to the symbol's own width so it cannot reach the
+              next one across the 36px gutter. */}
           {tape.map((r, i) => (
-            <button key={i} onClick={() => setSelected(r.sym)} title={`Chart ${r.sym}`} className="v-tap"
+            <button key={i} onClick={() => setSelected(r.sym)} title={`Chart ${r.sym}`} className="v-tap v-taprow"
               // The duplicate half exists only so the loop is seamless — hide it
               // from the tab order and from assistive tech so each symbol is
               // offered exactly once. It stays clickable with the mouse.
@@ -11897,19 +11957,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               </span>
               {/* language rides last, keeping Export + More as an adjacent pair; it switches the whole UI, but above all the anchor's spoken answers
 
-                  The globe sits BESIDE the select, not inside it. An <option>
-                  renders as text on every platform, so the mark it used to
-                  carry could only ever be an emoji — and it was pinned to the
-                  English option, which meant the one language that did not
-                  need naming was the only one that got the icon. Out here it
-                  labels the control whatever language is showing. */}
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: C.muted }}>
-                <DeskIcon name="globe" size={15} />
-                <select id="tour-lang" value={lang} onChange={e => setLang(e.target.value)} aria-label={t("Language")} title={t("Language")}
-                  style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontWeight: 500, fontSize: 13, padding: "6px 8px", cursor: "pointer" }}>
-                  {LANGS.map(l => <option key={l.code} value={l.code} style={{ background: C.surface, color: C.text }}>{l.label}</option>)}
-                </select>
-              </span>
+                  No globe. It was added to label the control in whatever
+                  language was showing — but the control already says "English",
+                  and every value in the list is its own language's word for
+                  itself. The icon named a thing that was naming itself, and it
+                  was doing it in the 6px between two bordered controls: at that
+                  size and spacing the row read as three items where there are
+                  two, and the globe looked wedged rather than placed. A select
+                  whose current value is the label does not need a second one. */}
+              <select id="tour-lang" value={lang} onChange={e => setLang(e.target.value)} aria-label={t("Language")} title={t("Language")}
+                style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontWeight: 500, fontSize: 13, padding: "6px 8px", cursor: "pointer" }}>
+                {LANGS.map(l => <option key={l.code} value={l.code} style={{ background: C.surface, color: C.text }}>{l.label}</option>)}
+              </select>
             </span>
           </div>
 
@@ -12041,7 +12100,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                       <span aria-hidden="true" style={{ color: reading ? C.down : C.accent, fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
                         {reading ? "■" : "▶"}
                       </span>
-                      <span style={{ flex: 1, minWidth: 0, fontFamily: SANS, fontSize: 13, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {/* Wraps rather than ellipsing. Measured on a 313px card
+                          the label had 124px and wanted 162, so the panel's one
+                          headline action read "Read the last answ…" — and it is
+                          a sentence, not a filename: the tail is where the verb
+                          lands. Two lines cost the row 18px on a narrow card and
+                          nothing at all on a wide one, where it still fits on
+                          one. lineHeight is set because the default 1.65 from
+                          the panel would open a visible gap between them. */}
+                      <span style={{ flex: 1, minWidth: 0, fontFamily: SANS, fontSize: 13, lineHeight: 1.35, color: C.muted }}>
                         {reading ? t("Stop reading") : t("Read the last answer aloud")}
                       </span>
                       <span style={{ fontFamily: MONO, fontSize: 11, color: C.faint, flexShrink: 0 }}>{speechRate.toFixed(2)}×</span>
@@ -12491,13 +12558,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                     "Compare", which is a strange word for "off". So the empty
                     option is the placeholder it always was — shown only while
                     nothing is picked — and the ✕ is how you leave. */}
-                <div style={{ ...pill(!!chartVs, { tone: "neutral", pad: 0 }), gap: 0, fontSize: 12.5 }}>
+                <div className="v-splitchip" style={{ ...pill(!!chartVs, { tone: "neutral", pad: 0 }), gap: 0, fontSize: 12.5 }}>
                   <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
                     <select value={chartVs || ""} onChange={e => setChartVs(e.target.value || null)} aria-label={t("Compare with")}
                       title={t("Overlay another symbol — both plotted as % change")}
                       style={{ appearance: "none", WebkitAppearance: "none", background: "transparent", border: "none", borderRadius: 20,
                         fontFamily: SANS, fontSize: 12.5, cursor: "pointer", padding: "5px 25px 5px 12px",
-                        color: chartVs ? "#C08BFF" : C.muted }}>
+                        color: chartVs ? C.compare : C.muted }}>
                     {/* A placeholder only exists while there is nothing to place.
                         chartVs leads the list so a symbol dropped from the
                         watchlist mid-comparison still names itself here, rather
@@ -12509,12 +12576,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                     </select>
                     <svg width="9" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"
                       style={{ position: "absolute", right: 10, pointerEvents: "none" }}>
-                      <path d="M1 1l4 4 4-4" stroke={chartVs ? "#C08BFF" : C.faint} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M1 1l4 4 4-4" stroke={chartVs ? C.compare : C.faint} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </span>
                   {chartVs && (
                     <button onClick={() => setChartVs(null)} className="v-tap v-clearx" aria-label={t("Stop comparing")} title={t("Stop comparing")}
-                      style={{ alignSelf: "stretch", background: "transparent", border: "none", borderLeft: `1px solid ${C.edge}`,
+                      // no background here on purpose — .v-splitchip owns it, so
+                      // the focus-visible rule can actually reach this button
+                      style={{ alignSelf: "stretch", border: "none", borderLeft: `1px solid ${C.edge}`,
                         color: C.muted, fontFamily: SANS, fontSize: 11, lineHeight: 1, padding: "5px 11px", cursor: "pointer" }}>
                       ✕
                     </button>
@@ -12548,7 +12617,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                     </div>
                   </div>
                 ) : (
-                  <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: C.faint, fontFamily: MONO, fontSize: 12, textAlign: "center", padding: "0 24px" }}>
+                  /* This one carries the floor, because it is the state that
+                     needs one: the box is height:auto for P&F so the grid can
+                     be its own size, and three centred lines with nothing
+                     holding them apart would sit on the caption below. */
+                  <div style={{ height: "100%", minHeight: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: C.faint, fontFamily: MONO, fontSize: 12, textAlign: "center", padding: "0 24px" }}>
                     <div>{t("not enough movement for a P&F column yet")}</div>
                     {pnfWarmup && (
                       <>

@@ -1288,16 +1288,27 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
    Heights live here rather than inline so they can respond. P&F needs more room
    than the line chart because it stacks discrete boxes. */
 .v-chartbox { height: 300px; }
-.v-chartbox.is-pnf { height: 440px; }
 
-/* On a phone the P&F art is width-bound: preserveAspectRatio="meet" scales it to
-   whichever axis runs out first, and at 375px that is always the horizontal one.
-   Measured, the 440px box rendered 314px of columns and left 92px of dead space
-   below them. A shorter box crops nothing — it stops reserving height the
-   artwork was never going to fill. */
+/* P&F takes its height from the artwork instead of declaring one.
+   It used to be a fixed 440 (260 on a phone), which is a guess about the shape
+   of a picture the DATA draws: a six-column, twenty-seven-box session is a tall
+   narrow thing and a forty-column, six-box one is a wide flat thing, and a fixed
+   box starves one of them whichever number you pick. The 260 was chosen against
+   a wide session — the note here used to say the art "is width-bound at 375px"
+   — and on a portrait session it fitted by height instead and drew 8.7px cells
+   in 60% of the width. The grid now renders at its intrinsic 14px per cell (see
+   PnFChart) and this box is whatever tall that comes to, so neither axis can be
+   starved and there is no dead space in either.
+
+   No floor here. The state that needs one is the OTHER state — "not enough
+   movement for a P&F column yet" centres itself and would collapse onto the
+   caption — and that floor belongs to the empty state itself, not to the box.
+   Put it here and it becomes dead space under every short chart: measured, a
+   ten-by-thirteen session drew 194px of grid inside a 240px floor. */
+.v-chartbox.is-pnf { height: auto; }
+
 @media (max-width: 860px) {
   .v-chartbox { height: 200px; }
-  .v-chartbox.is-pnf { height: 260px; }
 }
 
 /* The company's full name is the one droppable item in the chart header on a
@@ -2901,6 +2912,62 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
   left: 0; right: 0; top: 50%; transform: translateY(-50%);
   height: 44px;
 }
+
+/* ---------- the same bare text button, in a row that wraps ----------
+   Copy / Read aloud / Try again under every answer. Deliberately words rather
+   than chips (three bordered pills per turn is a wall of controls), which
+   leaves each one a line box: 28.8 by 19.8 for "Copy". Nothing about that is
+   conditional — it is 19.8 on a phone too, because these carry no target rule
+   at all, and they are the only way to stop a reading or re-ask a bad answer.
+
+   Not v-taprow's 44, and the reason is the row WRAPS. Measured at 313: the
+   actions break onto two lines at a pitch of 35.8 — a 19.8 line plus the row's
+   own 16px gap — with "Copy" sitting directly above "Try again" in the same
+   70-to-99 column. Two 44px phantoms on a 35.8 pitch overlap by 8.2px, and the
+   later sibling paints over the earlier one, so a tap four pixels under Copy
+   would fire Try again: a wasted model call that also throws away the answer
+   you were about to copy. 32 clears the 24x24 floor and leaves 3.8px of gutter
+   between the two lines.
+
+   Always on, for every pointer — same reason as .v-clearx. The device that
+   most needs this is the touchscreen laptop, and it reports a FINE pointer the
+   whole time a mouse is plugged in. Nothing here is gated behind coarse. */
+.v-tapline { position: relative; }
+.v-tapline::after {
+  content: ""; position: absolute;
+  left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  height: 32px;
+}
+
+/* ---------- one chip, two controls, one focus ring ----------
+   The compare chip is a single pill — one border, one background, one 20px
+   radius — with two focusable things inside it: the symbol select and the ✕
+   that stops comparing. The app-wide `:focus-visible` ring lands on whichever
+   of those has focus, and measured on the chart the select runs x34 to x132.5
+   inside a chip that runs 33 to 165.5. So focusing it drew a green rectangle
+   around 74% of the pill and cut the ✕ off outside it — the chip looked like
+   two objects that had drifted together, and the ring's own corners (the
+   global rule forces --v-r-sm) did not match the pill's.
+
+   The ring belongs to the object, so it goes on the chip. `:has()` rather than
+   `:focus-within`, because focus-within also fires for a mouse click and the
+   house ring is keyboard-only — switching would put rings on the screen for
+   people who never asked for one. The segment keeps its own feedback: the
+   select is already telling you (its label is the compare line's purple), and
+   the ✕ takes a background, which is what says WHICH half of the chip is live
+   while the ring says the chip is. */
+.v-splitchip:has(:focus-visible) {
+  outline: 2px solid var(--v-accent);
+  outline-offset: 2px;
+}
+.v-splitchip :focus-visible { outline: none; }
+/* The transparent lives here rather than on the element, and that is the whole
+   reason the focus rule below works: an inline `background` outranks any
+   stylesheet declaration that is not !important, so a button carrying
+   background:"transparent" in its style prop can never be given one by a class.
+   Both are in CSS now, and the ordinary cascade settles it. */
+.v-splitchip button { background: transparent; }
+.v-splitchip button:focus-visible { background: var(--v-surface-raised); }
 
 /* ---------- the games' own 44px floor ----------
    "Touch targets: minimum 44px" is a stated token in the games handoff, and on
