@@ -8887,7 +8887,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       }
       if ((await roster) === "abort") return;
       setCharacterId(startedAs); setEnvId(startedIn);
-      if ((await wait(1100)) === "abort") return;
+      if ((await wait(500)) === "abort") return;
 
       if (aiReady()) {
         // THE CLOSE IS THE ARGUMENT, NOT A RECAP
@@ -8913,12 +8913,34 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         //                                      visit and one you keep
         // Then the handoff, kept concrete, because a reason is easier to
         // believe when the next thing you read is a sentence you could type.
+        //
+        // 150 AND NOT 500: THESE ARE SENTENCES, NOT SLIDES
+        // The gaps here were 500ms of explicit wait, and measured on the real
+        // speech events — start and end, not when speak() was called — that
+        // came out as 0.66 seconds of silence between every one of the four,
+        // with 1.64 before the first. A sentence boundary inside a spoken
+        // paragraph is about two tenths of a second; two thirds of a second is
+        // the sound of somebody losing their thread, and it happened four
+        // times in a row, at the exact moment the demo is trying to make an
+        // argument.
+        //
+        // The rest of the demo does not have this problem, because its pauses
+        // are covering something: a chart being drawn, an embed opening, the
+        // bell. Those beats measure 0.58 and 0.84 and they read as scene
+        // changes. The close is covering nothing — it is four sentences of one
+        // paragraph, and it has to sound like one.
+        //
+        // 150 rather than 0 because speak() defers 60ms and the engine adds
+        // roughly 40 of its own, so an unwaited beat lands at 0.08-0.10 and
+        // runs the sentences together. 150 puts the seam at about a quarter of
+        // a second, which is a breath. The paragraph break before the close
+        // stays longer on purpose — it is a new movement, not a new sentence.
         if ((await sayFully("So — why keep this open. Reading a chart is a skill. Asking a question isn't, and that is the whole difference.")) === "abort") return;
-        if ((await wait(500)) === "abort") return;
+        if ((await wait(150)) === "abort") return;
         if ((await sayFully("You can act on what I tell you, too, because every answer carries the source I read and the time I read it. And when I don't know something, I say so instead of guessing.")) === "abort") return;
-        if ((await wait(500)) === "abort") return;
+        if ((await wait(150)) === "abort") return;
         if ((await sayFully("Then I keep watching after you look away. Set one alert and I'll call it the moment it fires.")) === "abort") return;
-        if ((await wait(500)) === "abort") return;
+        if ((await wait(150)) === "abort") return;
         say("Your turn — ask me why a stock moved, put two of them side by side, or have me write the whole thing up as a report.");
         await wait(1200);
       } else {
