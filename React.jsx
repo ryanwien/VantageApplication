@@ -2167,10 +2167,10 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       } else if (env === "floor") {
         ctx.fillStyle = "#0B0F17"; ctx.fillRect(0, 0, W, H);
         // overhead ticker board with crawling dashes
-        ctx.fillStyle = "#080B12"; ctx.fillRect(0, 8, W, 14);
+        ctx.fillStyle = "#080B12"; ctx.fillRect(0, CHROME_TOP, W, 14);
         ctx.fillStyle = C.amber; ctx.globalAlpha = 0.45;
         const off = reduced ? 0 : (t / 30) % 24;
-        for (let x = -24; x < W + 24; x += 24) ctx.fillRect(x - off, 12, 12, 5);
+        for (let x = -24; x < W + 24; x += 24) ctx.fillRect(x - off, CHROME_TOP + 4, 12, 5);
         ctx.globalAlpha = 1;
         // receding rows of workstations, screens flipping green/red
         for (let row = 0; row < 2; row++) {
@@ -2212,10 +2212,10 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         ctx.fillStyle = "#0A0D13"; ctx.fillRect(0, 0, W, H);
         for (let rack = 0; rack < 4; rack++) {
           const rx = 10 + rack * 46;
-          ctx.fillStyle = "#0F141E"; ctx.fillRect(rx, 12, 36, 150);
-          ctx.strokeStyle = "#1A2130"; ctx.lineWidth = 1; ctx.strokeRect(rx, 12, 36, 150);
+          ctx.fillStyle = "#0F141E"; ctx.fillRect(rx, CHROME_TOP, 36, 150);
+          ctx.strokeStyle = "#1A2130"; ctx.lineWidth = 1; ctx.strokeRect(rx, CHROME_TOP, 36, 150);
           for (let u = 0; u < 12; u++) {
-            const uy = 18 + u * 12;
+            const uy = CHROME_TOP + 6 + u * 12;
             ctx.fillStyle = "#121826"; ctx.fillRect(rx + 3, uy, 30, 8);
             const led = reduced ? 0.5 : Math.sin(rack * 5.1 + u * 3.3 + t / (300 + u * 40));
             ctx.fillStyle = led > 0.3 ? alpha(C.up, 0.8) : led < -0.5 ? alpha(C.down, 0.7) : alpha(C.faint, 0.5);
@@ -2226,9 +2226,9 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#05060D"); g.addColorStop(1, "#0A0E1A");
         ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
         for (let i = 0; i < 40; i++) { const sx = (i * 47) % W, sy = (i * 71) % H; const tw = !reduced && Math.sin(t / 500 + i * 1.7) > 0.6 ? 0.9 : 0.3; ctx.fillStyle = `rgba(232,235,242,${tw})`; ctx.fillRect(sx, sy, 1.3, 1.3); }
-        const pg = ctx.createRadialGradient(150, 34, 4, 150, 34, 26); pg.addColorStop(0, "#C77B4A"); pg.addColorStop(1, "#5A2E1A");
-        ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(150, 34, 22, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = "rgba(255,196,120,0.4)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(150, 34, 30, 8, -0.4, 0, Math.PI * 2); ctx.stroke();
+        const pg = ctx.createRadialGradient(150, 48, 4, 150, 48, 26); pg.addColorStop(0, "#C77B4A"); pg.addColorStop(1, "#5A2E1A");
+        ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(150, 48, 22, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "rgba(255,196,120,0.4)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(150, 48, 30, 8, -0.4, 0, Math.PI * 2); ctx.stroke();
         const eg = ctx.createLinearGradient(0, 180, 0, H); eg.addColorStop(0, "#1E6FB0"); eg.addColorStop(1, "#0B2A4A");
         ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(W / 2, 300, 150, Math.PI, 0); ctx.fill();
         ctx.strokeStyle = "rgba(120,140,170,0.15)"; ctx.lineWidth = 8; ctx.strokeRect(4, 4, W - 8, H - 8);
@@ -8745,10 +8745,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     demoAbortRef.current = false;
     setDemoRunning(true);
     setShowTutorial(false);
-    // Read BEFORE the try so the finally can put it back on any exit — the
+    // Read BEFORE the try so the finally can put them back on any exit — the
     // abort path included. Stopping the demo halfway through the roster beat
-    // would otherwise leave you sitting with whichever anchor it was mid-swap.
-    const startedAs = characterId;
+    // would otherwise leave you sitting in whichever set, with whichever
+    // anchor, it happened to be part-way through showing you.
+    const startedAs = characterId, startedIn = envId;
     const wait = (ms) => new Promise((res) => {
       const start = performance.now();
       const tick = () => (demoAbortRef.current ? res("abort") : performance.now() - start >= ms ? res("ok") : setTimeout(tick, 90));
@@ -8840,26 +8841,39 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       triggerAnchor("bell"); completeMission("bell");
       await wait(3000); if (!alive()) return;
 
-      // THE ROSTER, SHOWN RATHER THAN MENTIONED
+      // THE ROSTER AND THE SETS, SHOWN RATHER THAN MENTIONED
       // Straight after the bell, because the bell is the one beat where the
       // anchor is performing rather than reporting — it is the moment the
-      // question "who is this?" is actually live. Three swaps and not one: a
-      // second newsreader says there IS another, the robot says they are not
-      // all people, and the astronaut says the roster is not only newsreaders.
+      // question "who is this, and where are they?" is actually live.
+      //
+      // The anchor and the set change TOGETHER, as three pairs rather than two
+      // lists. Twenty-two anchors and eighteen sets demonstrated separately is
+      // a features list read aloud; demonstrated as pairs it is three places
+      // the desk can be, and each pair carries its own small joke — the robot
+      // is in the server room, the astronaut is in space, and the second
+      // newsreader is on the trading floor because that is where the news is.
+      // A pair is also the honest unit: nobody picks an anchor without picking
+      // a room, so showing one at a time shows a thing that never happens.
+      //
       // Each swap fires that character's signature sting through the effect on
       // characterId, so the beat is audible as well as visible.
       //
-      // It lands back where it started, and the finally puts it back too. A
-      // demo that quietly leaves your anchor changed has made a choice on your
-      // behalf; this one is a demonstration, not a preference.
-      say("And I'm not the only one at this desk. You pick who reads it to you.");
-      await wait(2000); if (!alive()) return;
-      for (const id of ["vega", "tick3r", "nova"].filter(id => id !== startedAs)) {
-        setCharacterId(id);
-        if ((await wait(1500)) === "abort") return;
+      // The line runs UNDER the sequence rather than before it — sayFully so
+      // it cannot be cut, started and not awaited so the swaps have something
+      // to happen during, and awaited at the end so the pictures and the
+      // sentence finish together. It lands back where it started, and the
+      // finally puts both back too: a demo that quietly leaves your anchor and
+      // your set changed has made two choices on your behalf, and this is a
+      // demonstration, not a preference.
+      const roster = sayFully("And I'm not the only one at this desk. You pick who reads it to you — and the room they read it from.");
+      if ((await wait(1500)) === "abort") return;
+      for (const [who, where] of [["vega", "floor"], ["tick3r", "server"], ["nova", "space"]]) {
+        setCharacterId(who); setEnvId(where);
+        if ((await wait(1700)) === "abort") return;
       }
-      setCharacterId(startedAs);
-      await wait(1100); if (!alive()) return;
+      if ((await roster) === "abort") return;
+      setCharacterId(startedAs); setEnvId(startedIn);
+      if ((await wait(1100)) === "abort") return;
 
       if (aiReady()) {
         // THE CLOSE IS THE ARGUMENT, NOT A RECAP
@@ -8899,7 +8913,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         if (alive()) setSetupOpen(true);
       }
     } finally {
-      setCharacterId(startedAs);
+      setCharacterId(startedAs); setEnvId(startedIn);
       demoAbortRef.current = false;
       setDemoRunning(false);
     }
