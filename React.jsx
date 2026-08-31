@@ -7284,7 +7284,30 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     if (speakingId == null || voiceEngine !== "browser") return;
     const iv = setInterval(() => {
       const ss = window.speechSynthesis;
-      if (ss && !ss.speaking && !ss.pending) { speechMouthRef.current = null; setSpeakingId(null); }
+      if (!ss || ss.speaking || ss.pending) return;
+      // A STREAMED ANSWER IS SILENT BETWEEN ITS SENTENCES, AND THAT IS NOT STUCK
+      // The streamer speaks each sentence the moment it is written, so when the
+      // model is writing slower than the voice reads, the synth genuinely runs
+      // dry between one sentence and the next — nothing speaking, nothing
+      // queued, more of the answer still on its way. That is the exact state
+      // this watchdog was built to kill, and killing it there is wrong twice
+      // over: the anchor drops out of "On air" mid-answer and flickers back,
+      // and anything waiting on speakingId to mean "the desk has finished" is
+      // told it has, when it has not.
+      //
+      // Which is not hypothetical. The demo waits on this to know when to move
+      // off the ask beat, and measured, it moved on after ONE sentence of a
+      // three-sentence answer — the price, and then the chart beat cutting off
+      // the reasons. It only shows up when the model streams slower than the
+      // voice reads, which is why it survived several clean runs first.
+      //
+      // Bounded by the request, not by hope: the id is cleared by stopSpeak()
+      // on any failure or cancel, and done is set when the stream ends, so a
+      // model that hangs is still resolved by the ask's own timeout and abort.
+      const st = streamRef.current;
+      if (st.id && !st.done) return;
+      speechMouthRef.current = null;
+      setSpeakingId(null);
     }, 800);
     return () => clearInterval(iv);
   }, [speakingId, voiceEngine]);
@@ -8983,9 +9006,31 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       showChart(); setChartMode("pnf");
       if ((await chartLine) === "abort") return;
       if ((await wait(1400)) === "abort") return;
+      // PUTTING THE TOGGLES BACK IS NOT ALLOWED TO THROW THE PAGE
+      // The P&F grid is a taller box than the line chart — 440 against 300, and
+      // 260 against 200 on a phone — so restoring the mode SHORTENS the
+      // document by up to 140px in one frame. Land that while the viewer is
+      // near the bottom and the browser has nowhere to put the scroll position:
+      // it clamps, and the page appears to jump upward on its own, which is
+      // exactly how it was reported. Nothing called scrollIntoView; the floor
+      // moved. Re-framing the chart AFTER the shrink has settled turns a lurch
+      // into no movement at all, which is what a housekeeping step should look
+      // like.
       setChartSMA(chartWas.sma); setChartHL(chartWas.hl); setChartMode(chartWas.mode);
-      if ((await wait(600)) === "abort") return;
+      if ((await wait(300)) === "abort") return;   // let the panel actually shrink
+      showChart();
+      if ((await wait(300)) === "abort") return;
 
+      // AND NOW GO BACK, ON PURPOSE
+      // The bell and the roster that follows it are the two beats you have to
+      // SEE the anchor for — he stands up and rings a bell, then he is three
+      // different people in three different rooms. Both were playing about two
+      // thousand pixels above the viewport, because the chart beat had left the
+      // page down at the chart and nothing brought it back. The move up is not
+      // the bug; the bug was that it used to happen by accident, during the
+      // restore above, and not happen at all when it was needed.
+      const showAnchor = () => document.querySelector(".v-anchorframe")?.scrollIntoView({ block: "center" });
+      showAnchor();
       say("And I run a live trading day. Here's the opening bell.");
       await wait(1400); if (!alive()) return;
       triggerAnchor("bell"); completeMission("bell");
