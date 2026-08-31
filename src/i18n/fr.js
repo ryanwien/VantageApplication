@@ -351,8 +351,8 @@ export default {
   "Read a headline, call it up or down.": "Lisez un titre, dites si ça monte ou descend.",
   "Replay anytime from Settings → Getting started": "À revoir quand vous voulez depuis Réglages → Premiers pas",
   "Set it up": "La configurer",
-  "Set it up (keys & options)": "La configurer (clés et options)",
-  "Setup guide": "Guide de configuration",
+  
+  
   "Show missions": "Voir les missions",
   "Sit back — I'll chart a stock, ask a question, ring the bell.": "Installez-vous — je trace un graphique, pose une question, sonne la cloche.",
   "Six hands-on tasks that check off as you do them.": "Six tâches pratiques qui se cochent au fur et à mesure.",
@@ -364,7 +364,7 @@ export default {
   "Try the missions": "Essayer les missions",
   "Bulls against Bears — checkmate, or win on the clock.": "Taureaux contre ours — mat, ou gagnez au temps.",
   "Watch me demo it": "Regarder la démo",
-  "What each key does and where to get it.": "Ce que fait chaque clé et où l'obtenir.",
+  
   "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "Votre desk de marché IA — un présentateur animé qui trace des graphiques, répond à voix haute, lit les actualités et passe même des bandes-annonces. Choisissez comment l'apprendre :",
   "games": "jeux",
   // --- settings: the plain-language sidebar ---

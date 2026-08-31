@@ -707,16 +707,6 @@ const MISSIONS = [
   { id: "export", label: "Export a report", hint: "“download excel”" },
 ];
 
-// Setup guide shown in onboarding. Every provider key lives on the server, so
-// this is a tour of what the desk can do — there is nothing to paste.
-const SETUP_STEPS = [
-  { icon: "🤖", name: "AI desk answers", need: "server-provided", req: true, what: "Answers stream from the model desk this server hosts — no key, no account with a model vendor.", how: "Nothing to set up. The status board in Settings → START shows it live." },
-  { icon: "📈", name: "Live market prices", need: "server-provided", what: "Swaps the demo random-walk market for real-time quotes.", how: "Settings → DATA → switch to LIVE." },
-  { icon: "🎬", name: "Streaming catalog", need: "server-provided", what: "Real Netflix / Disney+ / Hulu libraries and in-desk trailers.", how: "Ask \"what's on netflix\" — on whenever the server provides it." },
-  { icon: "📰", name: "Real video results", need: "server-provided", what: "Real, playable YouTube results instead of AI guesses.", how: "Ask \"show videos of …\" — on whenever the server provides it." },
-  { icon: "🎙️", name: "Studio voice", need: "optional", what: "The browser voice works instantly; the studio voice sounds broadcast-grade.", how: "Settings → VOICE → ELEVENLABS." },
-];
-
 // friendly label for a calendar event's start time
 function fmtEventTime(ev) {
   if (!ev?.start) return "";
@@ -6991,7 +6981,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   const [demoRunning, setDemoRunning] = useState(false);
   const demoAbortRef = useRef(false);
   const [missionsOpen, setMissionsOpen] = useState(false);
-  const [setupOpen, setSetupOpen] = useState(false);
   // is at least one AI model usable right now? drives the tour/demo when nothing's set up yet
   // The desk is on if THIS server holds a model key, or if the user brought one
   // of their own. A server-held key is the normal path now — the browser never
@@ -11362,11 +11351,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     const onKey = (e) => {
       if (e.key !== "Escape") return;
       // Ordered by what the user actually sees on top (z-index), not by hand:
-      // tour 70 > setup 61 > export/embed/tutorial 60 > missions 55 >
+      // tour 70 > export/embed/tutorial 60 > missions 55 >
       // settings 51. Exactly one surface closes per press.
       const stack = [
         [tourMode, endSpotlight],
-        [setupOpen, () => setSetupOpen(false)],
         [exportDraft, () => setExportDraft(null)],
         [embed, () => setEmbed(null)],
         [showTutorial, () => setShowTutorial(false)],
@@ -11377,7 +11365,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [tourMode, endSpotlight, exportDraft, setupOpen, showSettings, missionsOpen, embed, showTutorial]);
+  }, [tourMode, endSpotlight, exportDraft, showSettings, missionsOpen, embed, showTutorial]);
 
   // Extra palette entries beyond the nav destinations, which AppShell adds itself.
   const shellCommands = useMemo(() => [
@@ -13634,45 +13622,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         );
       })()}
 
-      {/* ===== setup guide: explains the setup process — what each key does, required vs optional ===== */}
-      <Overlay open={setupOpen} onDismiss={() => setSetupOpen(false)} label="Setup guide"
-        backdrop={{ zIndex: 61 }}
-        panel={{ width: 520, maxWidth: "94vw", maxHeight: "90vh", overflowY: "auto", background: C.panel, border: `1px solid ${C.accent}`, borderRadius: R.lg, padding: 22, boxShadow: "0 24px 70px rgba(0,0,0,0.6)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 17, letterSpacing: "-0.010em", color: C.accentText }}>⚙️ SETUP GUIDE</div>
-              <button onClick={() => setSetupOpen(false)} style={{ background: "transparent", border: "none", color: C.faint, fontFamily: SANS, fontSize: 12, cursor: "pointer" }}>✕</button>
-            </div>
-            <div style={{ fontFamily: SANS, fontSize: 13, lineHeight: 1.7, color: C.text, marginTop: 10 }}>
-              Vantage works right now — <b style={{ color: C.text }}>there are no keys to paste</b>. Every provider is wired up on the server, so this is just what the desk can do and where to find it.
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
-              {SETUP_STEPS.map((s, i) => (
-                <div key={i} style={{ background: C.surfaceRaised, border: `1px solid ${s.req ? C.accent : C.panelEdge}`, borderRadius: R.md, padding: "12px 14px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 20, lineHeight: 1 }}>{s.icon}</span>
-                    <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 14, color: C.text }}>{s.name}</span>
-                    <span style={{ marginLeft: "auto", fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: s.req ? C.textOnAccent : C.faint, background: s.req ? C.accent : "transparent", border: `1px solid ${s.req ? C.accent : C.panelEdge}`, borderRadius: 999, padding: "2px 8px" }}>{s.need.toUpperCase()}</span>
-                  </div>
-                  <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: C.muted, marginTop: 7 }}>{s.what}</div>
-                  <div style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.6, color: C.text, marginTop: 5 }}>
-                    <span style={{ color: C.faint }}>How: </span>{s.how}{" "}
-                    {s.url && <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: C.accentText }}>{s.link}</a>}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-              <button onClick={() => { setSetupOpen(false); setSettingsTab("quick"); setShowSettings(true); }}
-                style={{ flex: 1, minWidth: 180, background: C.accentPress, border: "none", color: C.textOnAccent, borderRadius: 5, fontFamily: SANS, fontSize: 12, fontWeight: 600, padding: "10px 0", cursor: "pointer" }}>
-                Open Settings →
-              </button>
-              <button onClick={() => setSetupOpen(false)}
-                style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: 5, fontFamily: SANS, fontSize: 12, padding: "10px 18px", cursor: "pointer" }}>
-                later
-              </button>
-            </div>
-      </Overlay>
-
       {/* ============================================================
            GETTING STARTED — the first thing a new account sees.
 
@@ -13746,8 +13695,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 helped. The plan gate says so itself, in the reply, at the
                 moment it applies.
 
-                The "Set it up (keys & options)" row below is still the way in
-                for anyone who does want to paste one. */}
+                There is no setup row below any more either. It offered to
+                explain "what each key does and where to get it" on a desk whose
+                own guide opened by saying there are no keys to paste, and it
+                was the last place in the product that asked. */}
 
             {/* THE ORDER IS THE RECOMMENDATION, AND ONE THING CARRIES IT
                 First row, filled button and accent tile are the same decision
@@ -13769,7 +13720,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 { icon: "play", title: t("Watch me demo it"), desc: t("Sit back — I'll chart a stock, ask a question, ring the bell."), cta: t("Play demo"), primary: true, on: runDemo },
                 { icon: "spotlight", title: t("Take the guided tour"), desc: t("I'll spotlight each part of the screen, step by step."), cta: t("Start tour"), on: launchSpotlight },
                 { icon: "missions", title: t("Try the missions"), desc: t("Six hands-on tasks that check off as you do them."), cta: t("Show missions"), on: launchMissions },
-                { icon: "settings", title: t("Set it up (keys & options)"), desc: t("What each key does and where to get it."), cta: t("Setup guide"), on: () => { setShowTutorial(false); setSetupOpen(true); } },
               ].map((o) => (
                 // The whole row is the target, and the button inside it is a
                 // label rather than a second control — nesting a real <button>
