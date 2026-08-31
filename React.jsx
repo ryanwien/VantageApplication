@@ -8418,6 +8418,43 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 
   // in-app browser panel: open a broker/site INSIDE Vantage (many brokers block framing → fallback to a tab)
   const [embed, setEmbed] = useState(null); // { url, title, trusted } | null
+  // THE FRAME IS COVERED UNTIL IT HAS DRAWN, BECAUSE WHAT IT DRAWS FIRST IS WHITE
+  // TradingView's widget paints its own white page and then boots the chart into
+  // it, and it boots AFTER load: measured, the iframe's load event fires 27ms
+  // after insertion and the frame is still solid white seconds later. The widget
+  // posts nothing to the parent to say when it is ready, so there is no signal to
+  // wait for — only evidence that the obvious one is worthless. The element's own
+  // background is already dark and cannot help either, because the iframe's
+  // DOCUMENT paints over it.
+  //
+  // So load starts a clock rather than ending one: it is the earliest honest
+  // moment, and the settle after it is what the widget spends drawing. The cap is
+  // not a fallback for slowness, it is the guarantee that a widget which never
+  // settles — a blocked frame, an error page — cannot leave a cover up for ever.
+  //
+  // WHAT THIS DOES NOT FIX, HONESTLY
+  // A timer is not a readiness signal and cannot be made into one. Everything
+  // observable was tried: the widget posts no message to the parent, its
+  // contentWindow.length stays 0, and the parent's resource timeline sees only
+  // the /widgetembed/ document itself and none of the subresources the chart is
+  // built from. Measured in a session where TradingView was slow, the frame was
+  // still its own grey ten seconds in and never finished at all. So this removes
+  // the white on OPEN, which is the part that is ours and the part that shows up
+  // in the demo; it cannot promise the frame has drawn by the time it is shown.
+  // The header stays live under the cover for exactly that case — "open in new
+  // tab" is the way out of a widget that is not coming.
+  //
+  // 2200 and not 1100: 1100 was tried and measured too short — the reveal landed
+  // on TradingView's own grey. This is the number the widget wanted on a warm
+  // cache here, not a guess.
+  const [embedReady, setEmbedReady] = useState(false);
+  const embedSettleRef = useRef(null);
+  useEffect(() => {
+    if (!embed) return undefined;
+    setEmbedReady(false);
+    const cap = setTimeout(() => setEmbedReady(true), 6000);
+    return () => { clearTimeout(cap); clearTimeout(embedSettleRef.current); };
+  }, [embed?.url]);
   // brokers block iframe embedding (X-Frame-Options), so opening them in-panel just shows "refused to
   // connect" — route those straight to a new tab, and reserve the in-app panel for embeddable sites.
   const NO_EMBED = ["robinhood.com", "fidelity.com", "schwab.com", "webull.com", "tdameritrade.com", "etrade.com", "vanguard.com", "coinbase.com", "netflix.com", "disneyplus.com", "hulu.com"];
@@ -8847,7 +8884,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       say("I can pull up a full interactive chart, right inside Vantage.");
       await wait(1600); if (!alive()) return;
       openChart("NVDA"); completeMission("nav");
-      await wait(3800); if (!alive()) return;
+      // 5000, not 3800. The frame now spends its first second or so behind the
+      // cover while the widget draws itself, and the old hold was chosen when
+      // that second was white and counted as part of the beat. Holding the same
+      // 3800 would show a loading card for a quarter of it and a chart for the
+      // rest, which is a demo of a spinner.
+      await wait(5000); if (!alive()) return;
       setEmbed(null);
 
       say("And I run a live trading day. Here's the opening bell.");
@@ -11974,8 +12016,23 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 <button onClick={() => setEmbed(null)} style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontSize: 11, padding: "6px 12px", cursor: "pointer" }}>✕ close</button>
               </span>
             </div>
-            <iframe title={embed.title} src={embed.url} style={{ flex: 1, width: "100%", border: "none", background: embed.trusted ? C.base : "#fff" }}
-              allow="clipboard-write; fullscreen" referrerPolicy="no-referrer-when-downgrade" />
+            {/* The cover sits in a relative box with the frame rather than over
+                the whole panel, so the header stays live — you can still close
+                or open-in-new-tab while the widget is drawing itself. */}
+            <div style={{ position: "relative", flex: 1, minHeight: 0, display: "flex" }}>
+              <iframe title={embed.title} src={embed.url}
+                onLoad={() => { clearTimeout(embedSettleRef.current); embedSettleRef.current = setTimeout(() => setEmbedReady(true), 2200); }}
+                style={{ flex: 1, width: "100%", border: "none", background: embed.trusted ? C.base : "#fff",
+                         opacity: embedReady ? 1 : 0, transition: `opacity ${MOTION.base} ${MOTION.ease}` }}
+                allow="clipboard-write; fullscreen" referrerPolicy="no-referrer-when-downgrade" />
+              {!embedReady && (
+                <div aria-hidden="true" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center",
+                  justifyContent: "center", gap: 10, background: C.base, color: C.faint, fontFamily: MONO, fontSize: 12 }}>
+                  <Shuttle width={14} height={12} color={C.accentText} />
+                  {embed.title}
+                </div>
+              )}
+            </div>
             {!embed.trusted && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "6px 12px", fontFamily: SANS, fontSize: 10, color: C.faint, borderTop: `1px solid ${C.panelEdge}`, lineHeight: 1.5, flexWrap: "wrap" }}>
                 <span>Blank? Brokers (Robinhood, Fidelity…) block embedding — use <b style={{ color: C.muted }}>open in new tab ↗</b>, or view the live chart in-app:</span>
