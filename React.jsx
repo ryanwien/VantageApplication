@@ -8667,6 +8667,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     demoAbortRef.current = false;
     setDemoRunning(true);
     setShowTutorial(false);
+    // Read BEFORE the try so the finally can put it back on any exit — the
+    // abort path included. Stopping the demo halfway through the roster beat
+    // would otherwise leave you sitting with whichever anchor it was mid-swap.
+    const startedAs = characterId;
     const wait = (ms) => new Promise((res) => {
       const start = performance.now();
       const tick = () => (demoAbortRef.current ? res("abort") : performance.now() - start >= ms ? res("ok") : setTimeout(tick, 90));
@@ -8709,8 +8713,38 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       triggerAnchor("bell"); completeMission("bell");
       await wait(3000); if (!alive()) return;
 
+      // THE ROSTER, SHOWN RATHER THAN MENTIONED
+      // Straight after the bell, because the bell is the one beat where the
+      // anchor is performing rather than reporting — it is the moment the
+      // question "who is this?" is actually live. Three swaps and not one: a
+      // second newsreader says there IS another, the robot says they are not
+      // all people, and the astronaut says the roster is not only newsreaders.
+      // Each swap fires that character's signature sting through the effect on
+      // characterId, so the beat is audible as well as visible.
+      //
+      // It lands back where it started, and the finally puts it back too. A
+      // demo that quietly leaves your anchor changed has made a choice on your
+      // behalf; this one is a demonstration, not a preference.
+      say("And I'm not the only one at this desk. You pick who reads it to you.");
+      await wait(2000); if (!alive()) return;
+      for (const id of ["vega", "tick3r", "nova"].filter(id => id !== startedAs)) {
+        setCharacterId(id);
+        if ((await wait(1500)) === "abort") return;
+      }
+      setCharacterId(startedAs);
+      await wait(1100); if (!alive()) return;
+
       if (aiReady()) {
-        say("That's the desk. Your turn — ask me anything, or say, what's on Netflix.");
+        // The old close was "ask me anything, or say, what's on Netflix" — the
+        // last thing a market desk says to a new user, and it pointed at the
+        // one feature that is not the product. Streaming is a genuine thing
+        // this app does and it is not what anybody opened it for. The close is
+        // the pitch, so it names what the desk is FOR, in the words somebody
+        // would actually use, and ends on the part no other chat window does:
+        // the answer arrives with the source it read.
+        say("Everything you just watched runs on the live session — the chart, the answer, the bell.");
+        await wait(4400); if (!alive()) return;
+        say("Your turn. Ask me why a stock moved, put two of them side by side, set an alert on a price, or have me write the whole thing up as a report. And every answer comes back with the source it read, and the time it read it.");
         await wait(1200);
       } else {
         say("That's the tour. One last thing — let's get your A.I. key set up so I can actually answer you.");
@@ -8718,6 +8752,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         if (alive()) setSetupOpen(true);
       }
     } finally {
+      setCharacterId(startedAs);
       demoAbortRef.current = false;
       setDemoRunning(false);
     }
@@ -13172,9 +13207,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
              in mono. That is the block the auth gate and the homepage already
              use, so all three front doors now match.
            · Each row's call to action was accent TEXT with an arrow. Four
-             identical green links is four primaries, which is none. The tour
-             is the recommended path, so it gets the filled button and the
-             other three get outlines.
+             identical green links is four primaries, which is none. One row is
+             the recommended path, so it gets the filled button and the other
+             three get outlines. Which row that is, and why, is at the list.
            · The tiles were emoji (🔦 ▶ 🎯 ⚙️). The reference uses Unicode in
              mono tiles and the README says, of exactly this: "If the codebase
              has an icon set, substitute equivalents rather than shipping
@@ -13229,10 +13264,25 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 The "Set it up (keys & options)" row below is still the way in
                 for anyone who does want to paste one. */}
 
+            {/* THE ORDER IS THE RECOMMENDATION, AND ONE THING CARRIES IT
+                First row, filled button and accent tile are the same decision
+                wearing three clothes, so `primary` rides on the row rather than
+                being set independently — they cannot drift apart and end up
+                recommending two different things.
+
+                The demo leads because it is the only one of the four that asks
+                for nothing. The tour was first and it spotlights a screen the
+                reader has not used yet: it labels a chart nobody has drawn and
+                a transcript nobody has filled, so the parts get named before
+                they mean anything. The demo charts a stock, asks a question and
+                rings the bell on its own, which is the same tour with the
+                screen already doing something — and it leaves the desk in the
+                state the tour's labels are about. Anyone who wants the labels
+                first is one row down with an outline button, not buried. */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 18 }}>
               {[
-                { icon: "spotlight", title: t("Take the guided tour"), desc: t("I'll spotlight each part of the screen, step by step."), cta: t("Start tour"), primary: true, on: launchSpotlight },
-                { icon: "play", title: t("Watch me demo it"), desc: t("Sit back — I'll chart a stock, ask a question, ring the bell."), cta: t("Play demo"), on: runDemo },
+                { icon: "play", title: t("Watch me demo it"), desc: t("Sit back — I'll chart a stock, ask a question, ring the bell."), cta: t("Play demo"), primary: true, on: runDemo },
+                { icon: "spotlight", title: t("Take the guided tour"), desc: t("I'll spotlight each part of the screen, step by step."), cta: t("Start tour"), on: launchSpotlight },
                 { icon: "missions", title: t("Try the missions"), desc: t("Six hands-on tasks that check off as you do them."), cta: t("Show missions"), on: launchMissions },
                 { icon: "settings", title: t("Set it up (keys & options)"), desc: t("What each key does and where to get it."), cta: t("Setup guide"), on: () => { setShowTutorial(false); setSetupOpen(true); } },
               ].map((o) => (
