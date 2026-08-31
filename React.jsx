@@ -2129,7 +2129,7 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
     // are drawn behind the desk and the desk's own props rest on the surface
     // above y=196. See .v-anchorstatus in global.css, and the caption block
     // below, which moved down here first and for the same reason.
-    const drawEnv = (env, t, moodCol, m, onAir = 0) => {
+    const drawEnv = (env, t, moodCol, m) => {
       if (!env || env === "studio") return;
       ctx.save();
       if (env === "newsroom") {
@@ -2157,13 +2157,20 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         const logoW = ctx.measureText("VANTAGE").width;
         ctx.fillStyle = "rgba(150,185,255,0.12)"; ctx.fillRect(10, 13, logoW + 26, 17);
         drawVantageMark(ctx, 13, 15, 13);
-        // The mark's dot IS the on-air light, by the brand's own definition —
-        // while the anchor reads, the station bug's dot burns as the tally.
-        if (onAir > 0.02) {
-          const tg = ctx.createRadialGradient(22.8, 19.1, 0.5, 22.8, 19.1, 7);
-          tg.addColorStop(0, alpha(C.up, 0.75 * onAir)); tg.addColorStop(1, alpha(C.up, 0));
-          ctx.fillStyle = tg; ctx.beginPath(); ctx.arc(22.8, 19.1, 7, 0, Math.PI * 2); ctx.fill();
-        }
+        // THE STATION BUG DOES NOT REACT TO THE ANCHOR
+        // The mark's dot used to burn as a tally light while the anchor read:
+        // a green radial at 75% alpha over the logo's dot, ramped by the same
+        // eased onAir envelope as the rest of the on-air treatment. It was a
+        // nice idea about broadcast and the wrong thing on this set. A station
+        // ident is furniture — it is the one element in frame that is supposed
+        // to be identical in every shot — and an ident that lights up whenever
+        // somebody talks stops reading as part of the room and starts reading
+        // as a notification, which is exactly how it was reported.
+        //
+        // The tally it was standing in for already exists twice over and in the
+        // right places: the status chip on the desk front says what the desk is
+        // doing in words, and the anchor's own mouth says it by moving. Nothing
+        // is lost by taking a third one off the wall.
         ctx.fillStyle = C.textStrong; ctx.textBaseline = "middle"; ctx.fillText("VANTAGE", 30, 22); ctx.textBaseline = "alphabetic";
         // rim lights
         ctx.fillStyle = "rgba(232,235,242,0.03)";
@@ -2679,7 +2686,7 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       const zoom = 1 + s.push * 0.04;
       ctx.translate((W / 2) * (1 - zoom), 78 * (1 - zoom));
       ctx.scale(zoom, zoom);
-      drawEnv(propsRef.current.env, t, moodCol, m, s.onAir);
+      drawEnv(propsRef.current.env, t, moodCol, m);
       ctx.save();
       // entrance: rise + fade
       ctx.globalAlpha = s.enter;
@@ -7007,6 +7014,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   const [elevenVoiceId, setElevenVoiceId] = useState("");
   const [elevenErr, setElevenErr] = useState("");
   const [speakingId, setSpeakingId] = useState(null);
+  // Mirrors speakingId for the code that reads it OUTSIDE a render: the demo
+  // is one long async function, so it captured this value once and would watch
+  // a number that can never change. Every voice path sets speakingId — browser
+  // TTS, the sentence-streamer and the studio voice — so this is the one
+  // honest answer to "is the desk still talking?".
+  const speakingIdRef = useRef(null);
+  useEffect(() => { speakingIdRef.current = speakingId; }, [speakingId]);
   const [voices, setVoices] = useState([]);
   const [voiceName, setVoiceName] = useState("");
   const [autoSpeak, setAutoSpeak] = useState(true);
@@ -8842,19 +8856,50 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       };
       tick();
     });
+    // Waits for the DESK to stop talking, rather than for a number of seconds.
+    //
+    // Every other line in the demo is one this file wrote, so its length is
+    // knowable. The answer is not: it is however long the model felt like
+    // being, and a fixed wait was therefore always going to be wrong in one of
+    // two directions. Measured end to end, it was wrong in the worse one — six
+    // seconds covered "NVDA is up 1.14%, trading at 220.02." and the chart beat
+    // then cut the anchor off before the two sentences explaining WHY it was
+    // up. The beat exists to show that this desk answers questions out loud,
+    // and it was demonstrating that by talking over its own answer.
+    //
+    // speakingId only clears once the stream is done AND nothing is still
+    // outstanding, so it cannot read false in the gap between two sentences of
+    // one answer. Both bounds are real: the answer takes a couple of seconds to
+    // come back, so leaving before it starts is as wrong as leaving mid-way,
+    // and a model that runs long must not be able to stall the demo forever.
+    const waitForDesk = (capMs) => new Promise((res) => {
+      const start = performance.now();
+      let began = false;
+      const tick = () => {
+        if (demoAbortRef.current) return res("abort");
+        const el = performance.now() - start;
+        if (speakingIdRef.current === "desk") began = true;
+        else if (began) return res("spoke");
+        else if (el >= 7000) return res("silent");   // no voice configured — do not sit here for the full cap
+        if (el >= capMs) return res("cap");
+        setTimeout(tick, 120);
+      };
+      tick();
+    });
     const typeInto = async (setter, text) => {
       for (let i = 0; i <= text.length; i++) { if (!alive()) return; setter(text.slice(0, i)); await wait(45); }
     };
     try {
-      // Promises the close, so the argument at the end arrives as the payoff
-      // it was set up to be rather than as a paragraph appended to a finished
-      // demo. It also stops promising "two minutes" and then taking one.
-      // sayFully, not a guessed wait, for the same reason the close uses it:
-      // this line is the one that sets up the close, and the promise is in its
-      // TAIL. Measured, browser TTS reads these at about 12.9 characters a
-      // second, so the 3400ms this beat used to hold for was already cutting a
-      // shorter sentence, and it cut "and why you'd want one" clean off.
-      if ((await sayFully("Welcome to Vantage. Sit back — I'll show you what this desk does, and why you'd want one.")) === "abort") return;
+      // The opening states the length of the thing and nothing else. It used to
+      // end "— and why you'd want one", which pre-sold the argument at the
+      // close; the close makes that argument perfectly well on its own, and a
+      // demo that opens by telling you it is about to convince you is asking
+      // for a defence before it has shown you anything.
+      //
+      // sayFully rather than a guessed wait, as everywhere else here: measured,
+      // browser TTS reads these at about 12.9 characters a second, and the
+      // 3400ms this beat used to hold for was already cutting a shorter line.
+      if ((await sayFully("Welcome to Vantage. Sit back — I'll show you what this desk does.")) === "abort") return;
       if ((await wait(400)) === "abort") return;
 
       say("First, I'll chart a stock from the command bar.");
@@ -8879,10 +8924,29 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         if ((await intro) === "abort") return;
         if ((await wait(300)) === "abort") return;
         askDesk("What's driving NVDA today?"); completeMission("ask");
-        await wait(6000); if (!alive()) return;
+        // 45s, not 24: measured against a real answer, 24 WAS the beat rather
+        // than a backstop — it fired at the cap every time and cut the third
+        // sentence, which is the one that answers the question. A three-sentence
+        // reply reads for about twenty-seven seconds, so the cap only earns its
+        // name with room above that.
+        if ((await waitForDesk(45000)) === "abort") return;
+        if ((await wait(600)) === "abort") return;
       } else {
-        say("I'd answer your questions right here — but that needs an A.I. key, and you don't have one set up yet. I'll show you where at the end.");
-        await wait(4600); if (!alive()) return;
+        // THE DEMO DOES NOT ASK YOU FOR A KEY
+        // The desk's models come from the server, and on a cold load they
+        // arrive a moment after the page does — which is the usual reason this
+        // branch runs at all. What it must not do is turn that into a chore:
+        // the onboarding card one click back says, in these words, that there
+        // are no keys to paste, and a demo that then sends you off to set up an
+        // A.I. key is arguing with the product it is demonstrating. So the beat
+        // says what the box is for, in the present tense, and moves on.
+        //
+        // sayFully rather than a guessed wait, for the reason every other line
+        // here uses it: the sentence it replaced was 135 characters against a
+        // 4.6-second hold, and measured, it was cut in half — the reader heard
+        // the apology and not the part that told them anything.
+        if ((await sayFully("The same box takes questions in plain words — why a stock moved, or what changed since the open — and I read the answer back to you.")) === "abort") return;
+        if ((await wait(400)) === "abort") return;
       }
 
       // OUR CHART, NOT SOMEBODY ELSE'S
@@ -8961,7 +9025,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       setCharacterId(startedAs); setEnvId(startedIn);
       if ((await wait(500)) === "abort") return;
 
-      if (aiReady()) {
+      {
         // THE CLOSE IS THE ARGUMENT, NOT A RECAP
         // It was "ask me anything, or say, what's on Netflix" — the last thing
         // a market desk says to a new user, pointed at the one feature that is
@@ -9015,10 +9079,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         if ((await wait(150)) === "abort") return;
         say("Your turn — ask me why a stock moved, put two of them side by side, or have me write the whole thing up as a report.");
         await wait(1200);
-      } else {
-        say("That's the tour. One last thing — let's get your A.I. key set up so I can actually answer you.");
-        await wait(3200);
-        if (alive()) setSetupOpen(true);
       }
     } finally {
       setCharacterId(startedAs); setEnvId(startedIn);
