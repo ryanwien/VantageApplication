@@ -2110,8 +2110,10 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         const g = ctx.createLinearGradient(0, 0, 0, H);
         g.addColorStop(0, "#0E1420"); g.addColorStop(1, "#0B0E14");
         ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-        // accent bands across the set wall
-        ctx.fillStyle = "rgba(255,255,255,0.05)";
+        // accent bands across the set wall — same set-blue as the key light,
+        // and for the same reason: white at 5% on this wall is a grey line, not
+        // a lit one. See the glow above.
+        ctx.fillStyle = "rgba(150,185,255,0.07)";
         ctx.fillRect(0, 40, W, 3); ctx.fillRect(0, 46, W, 1);
         // wall screen, upper right, live mood chart
         ctx.fillStyle = "#080C13"; ctx.fillRect(128, 10, 54, 36);
@@ -2127,7 +2129,7 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         // station logo panel, upper left — size the pill to the measured text so it never overflows
         ctx.font = "700 9px monospace";
         const logoW = ctx.measureText("VANTAGE").width;
-        ctx.fillStyle = "rgba(255,255,255,0.10)"; ctx.fillRect(10, 13, logoW + 26, 17);
+        ctx.fillStyle = "rgba(150,185,255,0.12)"; ctx.fillRect(10, 13, logoW + 26, 17);
         drawVantageMark(ctx, 13, 15, 13);
         // The mark's dot IS the on-air light, by the brand's own definition —
         // while the anchor reads, the station bug's dot burns as the tally.
@@ -2661,9 +2663,25 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       // numbers on purpose — see the breathing block.
       const cx = W / 2, cy = 84 + headBob;
 
+      // THE KEY LIGHT IS THE SET'S LIGHT, NOT A WHITE ONE
+      // This was rgba(255,255,255,0.06), and what it actually did was not
+      // brighten the wall — it bleached a patch of it. Sampled off the live
+      // canvas, the lit wall beside the anchor's head came back at saturation
+      // 0.387 against 0.469 in the corner the glow does not reach, for a
+      // luminance difference of 1.8. So the visible artefact was never a bright
+      // area, it was a GREY one: white light adds the same amount to all three
+      // channels, which on a #0B0E14 set costs the blue more than it gains the
+      // value, and a desaturated patch on a saturated set reads as white even
+      // when it is barely lighter.
+      //
+      // The stops now carry the set's own cast — 17:21:32 is what the unlit
+      // corner measures, opened up to the brightness of a practical — so the
+      // light reinforces the studio's blue instead of cancelling it, and the
+      // alpha can go up rather than down: it is free to separate the anchor
+      // from the wall now that separating them no longer means draining them.
       const glow = ctx.createRadialGradient(cx, cy + 30, 10, cx, cy + 30, 110);
-      glow.addColorStop(0, "rgba(255,255,255,0.06)");
-      glow.addColorStop(1, "rgba(255,255,255,0)");
+      glow.addColorStop(0, "rgba(150,185,255,0.09)");
+      glow.addColorStop(1, "rgba(150,185,255,0)");
       ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
 
       // ---- background crew member (drawn first = furthest away) ----
