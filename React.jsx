@@ -8678,12 +8678,50 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     });
     const alive = () => !demoAbortRef.current;
     const say = (t) => { if (alive()) speak("demo", t); };
+    // Like say(), but waits for the sentence to actually finish.
+    //
+    // speak() opens with stopSpeak(), so a new line CUTS the previous one. The
+    // beats above can live with that — they are captions on something you are
+    // watching happen, and the picture carries the beat. The close cannot: it
+    // is the argument, it is the only part that is nothing but words, and a
+    // wait that is a second short there silently deletes the end of a
+    // sentence. How long a sentence takes is not knowable from here anyway —
+    // it depends on the voice engine, the user's speech rate and the language.
+    //
+    // The cap is not belt-and-braces, it is the primary path on two real
+    // configurations: onDone fires only when a read reaches its end on its
+    // own, and both speak() and speakEleven() have early returns — no
+    // speechSynthesis, no studio voice picked, a TTS request that failed —
+    // that never reach it. Sized at roughly eleven characters a second, which
+    // is slower than any engine here actually reads.
+    const sayFully = (text) => new Promise((res) => {
+      if (!alive()) return res("abort");
+      let settled = false;
+      const finish = (why) => { if (!settled) { settled = true; res(why); } };
+      speak("demo", text, () => finish("spoke"));
+      const start = performance.now(), cap = (text.length / 11) * 1000 + 1200;
+      const tick = () => {
+        if (settled) return;
+        if (demoAbortRef.current) return finish("abort");
+        if (performance.now() - start >= cap) return finish("cap");
+        setTimeout(tick, 90);
+      };
+      tick();
+    });
     const typeInto = async (setter, text) => {
       for (let i = 0; i <= text.length; i++) { if (!alive()) return; setter(text.slice(0, i)); await wait(45); }
     };
     try {
-      say("Welcome to Vantage. Sit back — I'll give you the two-minute tour.");
-      if ((await wait(3400)) === "abort") return;
+      // Promises the close, so the argument at the end arrives as the payoff
+      // it was set up to be rather than as a paragraph appended to a finished
+      // demo. It also stops promising "two minutes" and then taking one.
+      // sayFully, not a guessed wait, for the same reason the close uses it:
+      // this line is the one that sets up the close, and the promise is in its
+      // TAIL. Measured, browser TTS reads these at about 12.9 characters a
+      // second, so the 3400ms this beat used to hold for was already cutting a
+      // shorter sentence, and it cut "and why you'd want one" clean off.
+      if ((await sayFully("Welcome to Vantage. Sit back — I'll show you what this desk does, and why you'd want one.")) === "abort") return;
+      if ((await wait(400)) === "abort") return;
 
       say("First, I'll chart a stock from the command bar.");
       await typeInto(setCmd, "NVDA");
@@ -8735,16 +8773,36 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       await wait(1100); if (!alive()) return;
 
       if (aiReady()) {
-        // The old close was "ask me anything, or say, what's on Netflix" — the
-        // last thing a market desk says to a new user, and it pointed at the
-        // one feature that is not the product. Streaming is a genuine thing
-        // this app does and it is not what anybody opened it for. The close is
-        // the pitch, so it names what the desk is FOR, in the words somebody
-        // would actually use, and ends on the part no other chat window does:
-        // the answer arrives with the source it read.
-        say("Everything you just watched runs on the live session — the chart, the answer, the bell.");
-        await wait(4400); if (!alive()) return;
-        say("Your turn. Ask me why a stock moved, put two of them side by side, set an alert on a price, or have me write the whole thing up as a report. And every answer comes back with the source it read, and the time it read it.");
+        // THE CLOSE IS THE ARGUMENT, NOT A RECAP
+        // It was "ask me anything, or say, what's on Netflix" — the last thing
+        // a market desk says to a new user, pointed at the one feature that is
+        // not the product. Replacing it with a list of what the desk can do
+        // was only half of it: a capability list is still a recap, and
+        // somebody who has sat back for forty seconds is owed an answer to
+        // "why would I keep this open", not an inventory.
+        //
+        // Three sentences, because the product only makes three claims and
+        // everything else it does is downstream of one of them:
+        //   you can ASK instead of read      — the skill barrier is the thing
+        //                                      being removed, and it is the
+        //                                      only reason the anchor exists
+        //   you can CHECK what you are told  — sourced, timed, and it refuses
+        //                                      rather than guessing. This is
+        //                                      the one that makes the first
+        //                                      claim safe to act on
+        //   it CARRIES ON without you        — alerts. The desk is worth
+        //                                      leaving open, which is the
+        //                                      difference between a tool you
+        //                                      visit and one you keep
+        // Then the handoff, kept concrete, because a reason is easier to
+        // believe when the next thing you read is a sentence you could type.
+        if ((await sayFully("So — why keep this open. Reading a chart is a skill. Asking a question isn't, and that is the whole difference.")) === "abort") return;
+        if ((await wait(500)) === "abort") return;
+        if ((await sayFully("You can act on what I tell you, too, because every answer carries the source I read and the time I read it. And when I don't know something, I say so instead of guessing.")) === "abort") return;
+        if ((await wait(500)) === "abort") return;
+        if ((await sayFully("Then I keep watching after you look away. Set one alert and I'll call it the moment it fires.")) === "abort") return;
+        if ((await wait(500)) === "abort") return;
+        say("Your turn — ask me why a stock moved, put two of them side by side, or have me write the whole thing up as a report.");
         await wait(1200);
       } else {
         say("That's the tour. One last thing — let's get your A.I. key set up so I can actually answer you.");
