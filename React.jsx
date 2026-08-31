@@ -2111,6 +2111,17 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
     const env = (p) => Math.sin(Math.min(1, Math.max(0, p)) * Math.PI);
 
     // ---- procedural environments (furthest layer, unaffected by entrance fade) ----
+    // THE DOM CHROME IS ON THIS CANVAS, AND SETS HAVE TO DRESS AROUND IT
+    // The status pill and the name plate are real elements positioned over the
+    // frame, so from a set's point of view they are furniture it cannot see.
+    // Measured in these units the pill occupies x 123–184, y 6–18 (top right)
+    // and the plate x 6–43, y 220–224 (bottom left). Two sets were furnishing
+    // straight into the pill — the newsroom's wall monitor and the podcast's
+    // ON AIR sign — and the pill sat on top of them, which is what it looked
+    // like: a chip dropped on a screen, not a graphic over a set.
+    // CHROME_TOP is the first row on the RIGHT-HAND side a set may put anything
+    // solid into. Anything to the left of CHROME_X is clear all the way up.
+    const CHROME_TOP = 22, CHROME_X = 120;
     const drawEnv = (env, t, moodCol, m, onAir = 0) => {
       if (!env || env === "studio") return;
       ctx.save();
@@ -2123,9 +2134,12 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         // a lit one. See the glow above.
         ctx.fillStyle = "rgba(150,185,255,0.07)";
         ctx.fillRect(0, 40, W, 3); ctx.fillRect(0, 46, W, 1);
-        // wall screen, upper right, live mood chart
-        ctx.fillStyle = "#080C13"; ctx.fillRect(128, 10, 54, 36);
-        ctx.strokeStyle = "#1D2433"; ctx.lineWidth = 1; ctx.strokeRect(128, 10, 54, 36);
+        // wall screen, upper right, live mood chart — top edge at CHROME_TOP so
+        // the status pill sits in the wall above it rather than on its bezel.
+        // It keeps its bottom at the accent band, so it loses height, not
+        // position; the sparkline is centred on y=34 and is untouched by that.
+        ctx.fillStyle = "#080C13"; ctx.fillRect(128, CHROME_TOP, 54, 46 - CHROME_TOP);
+        ctx.strokeStyle = "#1D2433"; ctx.lineWidth = 1; ctx.strokeRect(128, CHROME_TOP, 54, 46 - CHROME_TOP);
         ctx.strokeStyle = moodCol; ctx.globalAlpha = 0.5; ctx.lineWidth = 1.2;
         ctx.beginPath();
         for (let i = 0; i <= 10; i++) {
@@ -2245,8 +2259,10 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         ctx.fillStyle = "#1C1714";
         for (let ry = 0; ry < H; ry += 20) for (let rx = 0; rx < W; rx += 20) { ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx + 10, ry + 10); ctx.lineTo(rx, ry + 20); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(rx + 20, ry); ctx.lineTo(rx + 10, ry + 10); ctx.lineTo(rx + 20, ry + 20); ctx.closePath(); ctx.fill(); }
         const on = reduced || Math.sin(t / 700) > -0.3;
-        ctx.fillStyle = on ? "#D0121F" : "rgba(208,18,31,0.28)"; ctx.fillRect(58, 10, 74, 16);
-        ctx.fillStyle = on ? "#fff" : "rgba(255,255,255,0.4)"; ctx.font = "bold 9px monospace"; ctx.fillText("ON AIR", 74, 22);
+        // Shifted left to end at CHROME_X: the sign ran to 132 and the status
+        // pill starts at 123, so the pill was clipping its right-hand end.
+        ctx.fillStyle = on ? "#D0121F" : "rgba(208,18,31,0.28)"; ctx.fillRect(CHROME_X - 74, 10, 74, 16);
+        ctx.fillStyle = on ? "#fff" : "rgba(255,255,255,0.4)"; ctx.font = "bold 9px monospace"; ctx.fillText("ON AIR", CHROME_X - 58, 22);
       } else if (env === "reef") {
         const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#0A3A55"); g.addColorStop(1, "#062435");
         ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
@@ -3620,11 +3636,31 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       // On air, a warm key comes up from the anchor's upper left and the
       // frame's edges fall off a step — a studio going live, not a filter.
       // Painted inside the camera transform, so the push and the lamps agree.
+      //
+      // THE WARM KEY IS GONE. THE FALLOFF DOES THE JOB ON ITS OWN.
+      // It was rgba(255,240,214,0.13) painted source-over across the frame —
+      // the definition of the filter the note above swears it is not: a cream
+      // sheet 170px wide on a 190px frame, added to the wall, the suit and the
+      // face alike, drawn LAST so it sat over everything, and gated on s.onAir
+      // so it existed for exactly as long as the anchor was speaking. That is
+      // the white hue that appeared when he talked, and it is why looking for
+      // it in a still frame found nothing — it is not in the still frame.
+      //
+      // Blending it was tried first and is worth recording, because the idea is
+      // right and the operator is not: soft-light's shadow term LIFTS blacks by
+      // design. Its D(Cb) sends a 0.08 backdrop to 0.25, so the wall still went
+      // up 7.3 in luminance and DOWN 0.115 in saturation — the same wash, via a
+      // different door. Overlay is the same story with a near-white source,
+      // because 2·Cb·Cs on a dark backdrop is still a multiplication upward.
+      // No full-frame gradient can light a subject without lighting the room
+      // behind it; that needs geometry this canvas does not have.
+      //
+      // So the read is signalled by what is left, and there is plenty of it:
+      // the edges fall off, the camera pushes in 4%, the station bug's dot
+      // burns as the tally, and the pill flaps to "On air". Darkening cannot
+      // add a cast, which is the whole reason the falloff survives and the key
+      // does not.
       if (s.onAir > 0.01) {
-        const key = ctx.createRadialGradient(cx - 34, 44, 8, cx - 34, 44, 170);
-        key.addColorStop(0, `rgba(255,240,214,${0.13 * s.onAir})`);
-        key.addColorStop(1, "rgba(255,240,214,0)");
-        ctx.fillStyle = key; ctx.fillRect(0, 0, W, H);
         const vig = ctx.createRadialGradient(cx, 92, 60, cx, 92, 190);
         vig.addColorStop(0, "rgba(0,0,0,0)");
         vig.addColorStop(1, `rgba(0,0,0,${0.2 * s.onAir})`);
@@ -7259,7 +7295,23 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     const st = streamRef.current;
     if (!st.id) return;
     const pending = full.slice(st.spokenLen);
-    const m = pending.match(/^[\s\S]*[.!?…](?=\s|$)/); // everything up to the last completed sentence
+    // Everything up to the last completed sentence. The lookahead is `\s` and
+    // NOT `\s|$`, and on a market desk that one alternative was the difference
+    // between an answer and a ransom note.
+    //
+    // This runs on a PARTIAL stream, so "$" does not mean end of text — it
+    // means "as far as the model has got so far". Any decimal point that
+    // happened to land on a token boundary therefore read as a full stop, and
+    // every fragment is queued as its own utterance with a gap after it.
+    // Observed live in the demo, reading a real answer out loud:
+    //
+    //   "…down from a previous close of 129." / "51 to 125." / "16."
+    //
+    // Replayed a character at a time, one sentence about one stock came apart
+    // into six fragments; with the anchor dropped it is two. Nothing is lost by
+    // dropping it, because a final sentence with no whitespace after it is
+    // exactly what endStreamSpeak's tail already exists to say.
+    const m = pending.match(/^[\s\S]*[.!?…](?=\s)/);
     if (!m) return;
     st.spokenLen += m[0].length;
     const chunk = m[0].trim();
@@ -8756,9 +8808,20 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       await wait(2400); if (!alive()) return;
 
       if (aiReady()) {
-        say("Now watch me ask the desk a question — I answer out loud.");
+        // The line and the typing run TOGETHER, and the question is only SENT
+        // once the line has actually finished. It used to be a say() followed
+        // by 1.87s of typing and waiting, against a sentence that measures 4.4
+        // — so askDesk's own reply cut it, every time, at "I answer out"; the
+        // clause that was cut is the one naming the thing being demonstrated.
+        //
+        // Awaiting the line before typing would fix it and cost the beat its
+        // picture: three and a half seconds of a man talking at a field nobody
+        // is filling in. Started and not awaited, the typing happens under the
+        // sentence, exactly as it did, and the await lands after both.
+        const intro = sayFully("Now watch me ask the desk a question — I answer out loud.");
         await typeInto(setAiQuestion, "What's driving NVDA today?");
-        await wait(700); if (!alive()) return;
+        if ((await intro) === "abort") return;
+        if ((await wait(300)) === "abort") return;
         askDesk("What's driving NVDA today?"); completeMission("ask");
         await wait(6000); if (!alive()) return;
       } else {
