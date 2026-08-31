@@ -2093,9 +2093,6 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       // Falling edge of speech: the beat where a person closes their mouth
       // and swallows before the next thing.
       settle: 0, wasTalking: false,
-      // The broadcast, as a place. `push` is the camera's slow driver, and now
-      // the only one — the studio's lights stopped answering the read.
-      push: 0,
       // True while the eyes are away from the lens and owe it a return.
       returning: false,
     };
@@ -2420,13 +2417,13 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       const busy = (!TK && !s.action) ? (propsRef.current.busy || null) : null; // "work" | "present" | null
       s.busyAmt += ((busy ? 1 : 0) - s.busyAmt) * Math.min(1, dt / 220);
 
-      // --- the camera goes live ---
-      // The half-second lighting envelope that used to sit above this line is
-      // gone with the lamps it drove. The camera is an operator, not a lamp, so
-      // it creeps in over several seconds of reading and eases back home once
-      // the read ends. Under reduced motion the push stays parked — it is the
-      // one on-air cue that is motion rather than state.
-      s.push += ((TK && !reduced ? 1 : 0) - s.push) * Math.min(1, dt / (TK ? 5600 : 1500));
+      // --- nothing goes live ---
+      // Two eased drivers used to sit here: a half-second one for the studio's
+      // lamps and a five-and-a-half-second one for the camera's push. Both are
+      // gone with the effects they drove, and the set no longer knows or cares
+      // whether the anchor is reading. TK still drives the mouth, and the desk
+      // chrome still says "On air" in words — those are the read, and they are
+      // enough of it.
 
       // --- idle action scheduler (only while quiet AND not heads-down on a task) ---
       if (!TK && !s.action && !busy && !reduced) {
@@ -2676,15 +2673,24 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       const surprised = act === "react";
 
       ctx.clearRect(0, 0, W, H);
-      // ---- camera 1: the push-in ----
-      // While the anchor reads, the camera creeps toward the face — 4% over
-      // roughly ten seconds, centred between the eyes — and pulls back out
-      // when the read ends. The whole set rides it, environment included: a
-      // camera is a place you stand, not a layer effect.
+      // ---- camera: locked off ----
+      // It used to creep toward the face while the anchor read — 4% over five
+      // and a half seconds, centred between the eyes, the whole set riding it
+      // because a camera is a place you stand and not a layer effect. It was
+      // the last of the four cues that fired on speech, and the last one to go.
+      //
+      // It is worth being clear that it was not a defect the way the other
+      // three were. The warm key and the falloff were grade applied to the
+      // whole frame, and the station bug's tally was an ident behaving like a
+      // notification; this was camera language, slow enough to read as an
+      // operator leaning in rather than as the picture changing. What it shares
+      // with them is the only thing that turned out to matter: the frame was
+      // not the same before and after he opened his mouth.
+      //
+      // The save() stays. Nothing sets a transform now, but everything below is
+      // still drawn between it and its restore, and it is the guard that keeps
+      // a stray fillStyle or alpha out of the chrome painted afterwards.
       ctx.save();
-      const zoom = 1 + s.push * 0.04;
-      ctx.translate((W / 2) * (1 - zoom), 78 * (1 - zoom));
-      ctx.scale(zoom, zoom);
       drawEnv(propsRef.current.env, t, moodCol, m);
       ctx.save();
       // entrance: rise + fade
@@ -3663,12 +3669,13 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       // his mouth, which is the same complaint in the other direction. A set is
       // not supposed to breathe with the person standing on it.
       //
+      // And finally the camera itself, which is a separate note up at the top of
+      // the draw. Four cues fired on speech; none of them do now.
+      //
       // What signals the read is what always actually signalled it: the mouth
-      // moves, the pill flaps to "On air", and the camera creeps in 4% over
-      // five and a half seconds — an operator leaning in, not a lamp switching.
-      // That last one is motion rather than grade, it is slow enough to read as
-      // intent, and it is the only one of the four that was never reported.
-      ctx.restore(); // end camera
+      // moves, and the chrome on the desk front says "On air" in words. Neither
+      // of those is the set changing — one is the person, and one is a label.
+      ctx.restore(); // end camera guard
 
       // ---- scene caption for a scheduled moment (bell / meal / break) or a sustained task (work / present) ----
       let cap = null, capA = 0;
