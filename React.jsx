@@ -2036,6 +2036,21 @@ const AnchorRoster = React.memo(function AnchorRoster({ characterId, onPick }) {
 function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyserRef, speechRef, crew, env, cue, busy, onAction, onCue, framed }) {
   const { t } = useI18n();
   const cvsRef = useRef(null);
+  // A SWAP IS A DISSOLVE, NOT A CUT
+  // Two different things change the picture wholesale. Picking a different
+  // anchor tears down and rebuilds the draw loop, because the effect below is
+  // keyed on the character; changing the SET does not even do that — it simply
+  // draws a different room on the next frame. Either way the whole frame is
+  // replaced between two rAF ticks, which is a cut, and the demo does three of
+  // them back to back while saying "you pick who reads it to you, and the room
+  // they read it from". Three hard cuts is the moment that reads as abrupt.
+  //
+  // So the outgoing frame is kept and held over the incoming one for about a
+  // third of a second. It lives at COMPONENT level on purpose: the character
+  // path destroys everything inside the effect, the canvas backing store
+  // included, so anything stored in there would be gone exactly when it is
+  // needed.
+  const xfadeRef = useRef(null);
   const propsRef = useRef({ talking, mood, crew, env, cue, busy, onAction, onCue });
   propsRef.current = { talking, mood, crew, env, cue, busy, onAction, onCue };
   const ch = character || CHARACTERS[0];
@@ -2065,6 +2080,18 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
     ctx.scale(DPR, DPR);
     let raf, dead = false;
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+    // Grab whatever the canvas is showing right now, to dissolve out of. Called
+    // from the effect's cleanup (a character swap, before setup clears the
+    // backing store) and from the top of a frame whose set has just changed —
+    // both moments where the canvas still holds the OLD picture.
+    const snap = () => {
+      if (reduced) return;
+      const x = xfadeRef.current || (xfadeRef.current = { cv: document.createElement("canvas"), a: 0, at: 0 });
+      if (x.cv.width !== cvs.width || x.cv.height !== cvs.height) { x.cv.width = cvs.width; x.cv.height = cvs.height; }
+      x.cv.getContext("2d").drawImage(cvs, 0, 0);
+      x.a = 1; x.at = performance.now();
+    };
 
     const s = {
       amp: 0, ampTarget: 0, blink: 0, nextBlink: 1800, lastT: 0,
@@ -2391,6 +2418,10 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
       const { talking: TK, mood: MD } = propsRef.current;
       const dt = s.lastT ? Math.min(64, t - s.lastT) : 16;
       s.lastT = t;
+      // The set changes without rebuilding the loop, so it is caught here —
+      // before the clearRect below, while the canvas still holds the old room.
+      if (s.lastEnv === undefined) s.lastEnv = propsRef.current.env;
+      else if (s.lastEnv !== propsRef.current.env) { snap(); s.lastEnv = propsRef.current.env; }
       if (s.bornAt == null) s.bornAt = t;
       const age = t - s.bornAt;
       s.enter = Math.min(1, s.enter + dt / 400);
@@ -3731,10 +3762,25 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         ctx.globalAlpha = 1;
       }
 
+      // The outgoing frame, laid over the incoming one and fading out. Drawn in
+      // DEVICE pixels — the transform is set aside rather than fought, because
+      // the capture is the backing store at its own resolution. The staleness
+      // guard matters: this ref survives an unmount, and a remount minutes
+      // later must not dissolve in from a picture nobody remembers.
+      const xf = xfadeRef.current;
+      if (xf && xf.a > 0.01 && performance.now() - xf.at < 1200) {
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha = xf.a;
+        ctx.drawImage(xf.cv, 0, 0);
+        ctx.restore();
+        xf.a = Math.max(0, xf.a - dt / 300);
+      }
+
       raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
-    return () => { dead = true; cancelAnimationFrame(raf); };
+    return () => { dead = true; cancelAnimationFrame(raf); snap(); };
   }, [ch]);
 
   if (framed) {
@@ -8995,10 +9041,44 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // was back at the anchor three seconds later. Something on the desk scrolls
       // while the answer above is still settling. Winning the last word before
       // each change costs nothing and does not depend on knowing which.
-      const showChart = () => document.getElementById("app-chart-panel")?.scrollIntoView({ block: "center" });
+      // A 1,900px jump cut is the most abrupt thing in the run, and it happens
+      // twice: down to the chart and back up for the bell. Gliding costs the
+      // beat nothing — every wait around these is already over a second — and
+      // it is the difference between the page teleporting and the demo taking
+      // you somewhere. Honoured for anyone who has asked motion to stop.
+      const glide = { block: "center", behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" };
+      const showChart = () => document.getElementById("app-chart-panel")?.scrollIntoView(glide);
+      // WAIT FOR THE PAGE TO ARRIVE, NOT FOR A NUMBER
+      // An eased move takes as long as it takes — a function of distance, of
+      // the device, and of whether the compositor is keeping up. The beat used
+      // to hold a flat 1500ms and then start flipping switches, which was fine
+      // while the scroll was an instant teleport and stopped being fine the
+      // moment it was not: measured on a slow frame budget, the move took 3.8
+      // seconds and the moving average came on two seconds before the chart was
+      // on screen. The viewer would have heard "a moving average" and seen the
+      // top of the page.
+      //
+      // Capped, because a demo must not be able to wedge itself on a scroll
+      // that never lands — it goes ahead and shows the beat anyway, which is
+      // strictly better than stopping.
+      const arriveAt = (sel, capMs = 3000) => new Promise((res) => {
+        const start = performance.now();
+        const tick = () => {
+          if (demoAbortRef.current) return res("abort");
+          const el = document.querySelector(sel);
+          if (el) {
+            const r = el.getBoundingClientRect();
+            if (r.top < window.innerHeight * 0.75 && r.bottom > window.innerHeight * 0.25) return res("there");
+          }
+          if (performance.now() - start >= capMs) return res("cap");
+          setTimeout(tick, 80);
+        };
+        tick();
+      });
       showChart();
       const chartLine = sayFully("And the chart is mine to drive. A moving average, the session's high and low, and the same tape again as a point-and-figure grid.");
-      if ((await wait(1500)) === "abort") return;
+      if ((await arriveAt("#app-chart-panel")) === "abort") return;
+      if ((await wait(900)) === "abort") return;
       showChart(); setChartSMA(true);
       if ((await wait(1900)) === "abort") return;
       showChart(); setChartHL(true);
@@ -9016,10 +9096,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // moved. Re-framing the chart AFTER the shrink has settled turns a lurch
       // into no movement at all, which is what a housekeeping step should look
       // like.
-      setChartSMA(chartWas.sma); setChartHL(chartWas.hl); setChartMode(chartWas.mode);
-      if ((await wait(300)) === "abort") return;   // let the panel actually shrink
-      showChart();
-      if ((await wait(300)) === "abort") return;
+      // LEAVE FIRST, TIDY UP AFTER
+      // The restore used to happen here, followed 300ms later by a re-frame of
+      // the chart to absorb the shrink, and 300ms after THAT by the glide up to
+      // the anchor. Two eased scrolls in opposite directions inside four tenths
+      // of a second: measured, the second one did not glide at all — it sat
+      // still and then jumped, because it was retargeting a scroll that was
+      // still running.
+      //
+      // Doing it the other way round removes the problem instead of tuning it.
+      // Go up first, on a still page, then put the toggles back once the chart
+      // is off screen — where the height change is not only invisible but
+      // harmless, since near the top of the document a page that gets 140px
+      // shorter has nothing to clamp.
 
       // AND NOW GO BACK, ON PURPOSE
       // The bell and the roster that follows it are the two beats you have to
@@ -9027,10 +9116,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // different people in three different rooms. Both were playing about two
       // thousand pixels above the viewport, because the chart beat had left the
       // page down at the chart and nothing brought it back. The move up is not
-      // the bug; the bug was that it used to happen by accident, during the
-      // restore above, and not happen at all when it was needed.
-      const showAnchor = () => document.querySelector(".v-anchorframe")?.scrollIntoView({ block: "center" });
+      // the bug; the bug was that it used to happen by accident, as a side
+      // effect of the restore, and not happen at all when it was needed.
+      const showAnchor = () => document.querySelector(".v-anchorframe")?.scrollIntoView(glide);
       showAnchor();
+      if ((await arriveAt(".v-anchorframe")) === "abort") return;   // nothing else moves until the glide lands
+      setChartSMA(chartWas.sma); setChartHL(chartWas.hl); setChartMode(chartWas.mode);
+      if ((await wait(300)) === "abort") return;
+
       say("And I run a live trading day. Here's the opening bell.");
       await wait(1400); if (!alive()) return;
       triggerAnchor("bell"); completeMission("bell");
