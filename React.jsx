@@ -681,7 +681,15 @@ const TOUR_STEPS = [
   // the tour pointing at the same box is the redundancy the merge removed.
   { target: "tour-anchor", title: "Your anchor — that's me", body: "I read every answer on air. Pick from 22 anchors and 18 sets right here, each with its own voice and soundscape.", say: "That's me, your anchor. Twenty-two anchors and eighteen sets to choose from, right here." },
   { target: "tour-lang", title: "Speak your language", body: "Switches the interface and my spoken answers between six languages. Your choice is remembered.", say: "Switch the whole app, and my answers, into any of six languages right here." },
-  { target: "tour-ask", title: "The AI desk", body: "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “take me to Robinhood”, “what's on netflix”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.", say: "One box for everything. Type a ticker to chart it, or just ask me a question. I understand plain commands too, like, take me to Robinhood, or, what's on Netflix." },
+  // The examples used to be “take me to Robinhood”, “what's on netflix” and
+  // “write a report and export ppt” — the one box that is the whole product,
+  // introduced by what it can do for your evening. Streaming is real and it is
+  // not what anybody opened this for; the demo's close was fixed for the same
+  // reason. These three are the market ones, and all three are handled intents:
+  // a free-form question, the price-alert parser at "price alerts", and the
+  // export path. The spoken line names no ticker on purpose — a synthesiser
+  // reads NVDA as a word.
+  { target: "tour-ask", title: "The AI desk", body: "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “why is NVDA down?”, “alert me when NVDA hits 150”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.", say: "One box for everything. Type a ticker to chart it, or just ask me a question in plain words — why a stock moved, or, alert me when it hits a price, and I'll watch the session for you." },
   { target: "tour-response", title: "Answers, news & Watch", body: "Answers, news, and the streaming catalog land here. Trailers play right inside.", say: "Answers, news, and the streaming catalog all appear here, in one place." },
   { target: "tour-export", title: "Export & edit anything", body: "Export the session as Word, PowerPoint or Excel. A review step lets you edit everything before it saves.", say: "Export your session as Word, PowerPoint or Excel. You can edit everything before it saves." },
   { target: "tour-ticker", title: "Ticker tape", body: "Your watchlist scrolls across the top. Flip DEMO to LIVE in settings for real Finnhub quotes.", say: "Your watchlist scrolls across the ticker tape. Switch to live Finnhub quotes in settings and it stays live." },
