@@ -11,6 +11,8 @@ import {
   normalizePlaidHoldings,
   speakableBrokerLine,
   matchInstitution,
+  brokerPlanGate,
+  BROKER_PLAN,
 } from "./brokers.js";
 
 describe("the catalog", () => {
@@ -280,5 +282,34 @@ describe("matchInstitution", () => {
   it("returns null rather than guessing", () => {
     expect(matchInstitution("how is my portfolio")).toBeNull();
     expect(matchInstitution("")).toBeNull();
+  });
+});
+
+// The gate guards a stored credential for somebody's brokerage account, so
+// every way of NOT being on the plan is spelled out rather than assumed to
+// fall out of one comparison.
+describe("brokerPlanGate", () => {
+  it("lets Trading Floor through", () => {
+    expect(brokerPlanGate("desk")).toBeNull();
+    expect(BROKER_PLAN).toBe("desk");
+  });
+
+  it("stops every lesser plan, and says which one is needed", () => {
+    for (const plan of ["free", "pro"]) {
+      const gate = brokerPlanGate(plan);
+      expect(gate).not.toBeNull();
+      expect(gate.needsPlan).toBe("desk");
+      expect(gate.error).toMatch(/Trading Floor/);
+    }
+  });
+
+  it("fails closed on an absent, unknown or malformed plan", () => {
+    for (const plan of [undefined, null, "", "DESK", "trading-floor", 0, {}, ["desk"]]) {
+      expect(brokerPlanGate(plan)).not.toBeNull();
+    }
+  });
+
+  it("tells the caller a demo book is still available, so the refusal is not a dead end", () => {
+    expect(brokerPlanGate("free").error).toMatch(/demonstration book/i);
   });
 });

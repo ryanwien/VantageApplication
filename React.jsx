@@ -5503,11 +5503,14 @@ const PLANS = [
   // nobody sees. Nothing below derives copy from it any more — the id decides
   // which Stripe price to fetch and nothing else.
   { id: "free", label: "Explorer", price: "$12", cadence: "/mo", tagline: "The whole desk, on simulated data.",
-    perks: ["Demo market data — tape, charts & P&F", "Watchlist, portfolio & price alerts", "The anchor, in your browser's voice", "Games & calendar"] },
+    perks: ["Demo market data — tape, charts & P&F", "Watchlist, portfolio & price alerts", "Demo brokerage books on the desk", "The anchor, in your browser's voice", "Games & calendar"] },
   { id: "pro", label: "Pro Desk", price: "$25", cadence: "/mo", featured: true, tagline: "For the daily driver.",
     perks: ["Everything in Explorer", "Live market data", "AI desk answers & written reports", "Real video results & streaming"] },
+  // The two perks that are actually somebody else's live account or somebody
+  // else's per-character bill. Both are enforced on the SERVER as well as here
+  // — see the plan gates on /api/tts and /api/brokers/link.
   { id: "desk", label: "Trading Floor", price: "$39", cadence: "/mo", tagline: "The full broadcast desk.",
-    perks: ["Everything in Pro Desk", "Studio anchor voice (ElevenLabs)"] },
+    perks: ["Everything in Pro Desk", "Link Robinhood, Schwab & Morgan Stanley — your real positions on the desk", "Studio anchor voice (ElevenLabs)"] },
 ];
 const planLabel = (id) => (PLANS.find(p => p.id === id)?.label || "Explorer");
 
@@ -5539,7 +5542,11 @@ const PLAN_RANK = { free: 0, pro: 1, desk: 2 };
 // How long the missions pass runs once it is claimed. See the state that holds
 // it for why it is claimed rather than granted, and why it stops at Pro Desk.
 const PASS_HOURS = 24;
-const FEATURE_PLAN = { ai: "pro", finnhub: "pro", youtube: "pro", tmdb: "pro", spotify: "pro", elevenlabs: "desk" };
+// `brokers` gates LINKING A REAL ACCOUNT, not the panel. The demo book stays on
+// every plan — Explorer's whole proposition is the desk on simulated data, and a
+// demo brokerage book is simulated data. What Trading Floor buys is the live
+// one, which is why this is also enforced server-side (/api/brokers/link).
+const FEATURE_PLAN = { ai: "pro", finnhub: "pro", youtube: "pro", tmdb: "pro", spotify: "pro", elevenlabs: "desk", brokers: "desk" };
 
 // Plain-language legal copy shown behind the "I agree" gate. Intentionally short and
 // honest for a prototype — it names the app's real behaviour (keys stay in the browser).
@@ -8893,9 +8900,20 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // user thinks they connected a real account and did not.
   const connectBroker = useCallback(async (institutionId) => {
     setBrokerErr("");
+    // Demo first, and on every plan: an unconfigured server has no real link to
+    // offer anyone, and a demo book is exactly the simulated data Explorer is
+    // sold on. Only the LIVE link is a Trading Floor feature.
     if (!brokerServer?.configured) {
       setDemoLinks(ls => addDemoLink(ls, institutionId));
       if (!panels.portfolio) setPanels(p => ({ ...p, portfolio: true }));
+      return;
+    }
+    if (!planAllows("brokers")) {
+      // Not silently downgraded to a demo link. Somebody who pressed CONNECT on
+      // a configured server asked for their real account, and quietly handing
+      // them a fabricated book instead is the one outcome this feature must
+      // never produce.
+      setBrokerErr(`Linking a live brokerage account is a ${planLabel(FEATURE_PLAN.brokers)} feature. Open Settings → Account to upgrade; demo books stay on every plan.`);
       return;
     }
     setBrokerBusy(institutionId);
@@ -8923,7 +8941,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     } catch (e) {
       setBrokerErr(humanizeError(e));
     } finally { setBrokerBusy(""); }
-  }, [brokerServer, panels.portfolio, refreshBrokerServer]);
+  }, [brokerServer, panels.portfolio, refreshBrokerServer, planAllows]);
 
   const disconnectBroker = useCallback(async (conn) => {
     setBrokerErr("");
@@ -13565,7 +13583,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
             {/* --- Linked brokerages --- */}
             {(() => {
               const unlinked = BROKER_INSTITUTIONS.filter(i => !brokerConnections.some(c => c.institutionId === i.id));
+              // Three states, not two. A server with no aggregator links a demo
+              // book for anyone; a configured one links a LIVE account, and that
+              // is the Trading Floor perk. The third state — configured, but
+              // this plan cannot use it — has to look locked BEFORE the click.
               const isDemoMode = !brokerServer?.configured;
+              const liveLocked = !isDemoMode && !planAllows("brokers");
               const chip = { display: "inline-flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 12, color: C.text };
               return (
                 <div style={{ padding: "10px 12px", borderTop: portfolioRows.length > 0 ? `1px solid ${C.grid}` : "none", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -13625,18 +13648,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                           style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, padding: "9px 10px", cursor: brokerBusy ? "default" : "pointer", opacity: brokerBusy && brokerBusy !== inst.id ? 0.5 : 1 }}>
                           <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: inst.tint }} />
                           <span style={{ ...chip, flex: 1 }}>{inst.name}</span>
-                          <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>
-                            {brokerBusy === inst.id ? "…" : isDemoMode ? "DEMO" : "CONNECT"}
+                          <span style={{ fontFamily: MONO, fontSize: 10, color: liveLocked ? C.accentText : C.faint }}>
+                            {brokerBusy === inst.id ? "…" : isDemoMode ? "DEMO" : liveLocked ? "🔒" : "CONNECT"}
                           </span>
                         </button>
                       ))}
                       {/* Said before the click, not after. Whether this button
-                          reaches a real brokerage depends on server config the
-                          user cannot see, so the panel says which one it is. */}
+                          reaches a real brokerage depends on two things the user
+                          cannot see — server config and their own plan — so the
+                          panel names which of the three it is about to do. */}
                       <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint, lineHeight: 1.5 }}>
                         {isDemoMode
                           ? t("No aggregator is configured, so these link a labelled demonstration book — not a real account. Nothing is sent anywhere.")
-                          : t("Opens your brokerage's own sign-in through Plaid. Vantage never sees your brokerage password, and reads positions only.")}
+                          : liveLocked
+                            ? <>Linking a live account is a <b style={{ color: C.accentText }}>{planLabel(FEATURE_PLAN.brokers)}</b> feature. {lockChip("brokers")}</>
+                            : t("Opens your brokerage's own sign-in through Plaid. Vantage never sees your brokerage password, and reads positions only.")}
                       </div>
                       <button onClick={() => setBrokerSheet(false)} style={{ ...button("ghost", "sm"), width: "100%", padding: 7, borderRadius: R.sm, fontSize: 12 }}>{t("Cancel")}</button>
                     </div>

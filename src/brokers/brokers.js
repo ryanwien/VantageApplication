@@ -380,6 +380,30 @@ export function speakableBrokerLine(broker, rows = [], priceOf = () => null, mon
   return `${sum.brokerName}: ${sum.positions} position${sum.positions === 1 ? "" : "s"}, ${dir} ${money(Math.abs(sum.pnl))}, ${Math.abs(sum.pnlPct).toFixed(1)} percent.`;
 }
 
+// ---------- the plan gate ----------
+//
+// Linking a LIVE account is the Trading Floor perk. The demo book is free on
+// every plan, because simulated data is exactly what the entry plan is sold on
+// — so this gates the aggregator path and nothing else.
+//
+// It lives here rather than inline in the server for one reason: a four-line
+// authorization check that guards a stored brokerage credential is worth
+// having tests, and the server file cannot be imported without starting a
+// listener. React.jsx's FEATURE_PLAN.brokers is the client's copy of the same
+// answer; this is the one the server enforces.
+export const BROKER_PLAN = "desk";
+
+// Returns an error body to send, or null to proceed. An unknown plan, a missing
+// account and a lapsed one all fail closed — the only value that opens the gate
+// is the exact plan id.
+export function brokerPlanGate(plan) {
+  if (plan === BROKER_PLAN) return null;
+  return {
+    error: "Linking a live brokerage account is a Trading Floor feature. Every plan can put a demonstration book on the desk.",
+    needsPlan: BROKER_PLAN,
+  };
+}
+
 // Which institution is a spoken/typed phrase asking about? Used by the desk so
 // "how's my Morgan Stanley account" reaches the right book. Returns an id or
 // null — never a guess, because briefing the wrong account is worse than

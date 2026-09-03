@@ -32,7 +32,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { GRAPHQL_OPS, isKnownOp } from "../src/datahub/catalog.js";
-import { INSTITUTIONS, institutionById, matchInstitution, normalizePlaidHoldings } from "../src/brokers/brokers.js";
+import { INSTITUTIONS, institutionById, matchInstitution, normalizePlaidHoldings, brokerPlanGate, BROKER_PLAN } from "../src/brokers/brokers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
@@ -286,6 +286,21 @@ async function runMarketAgent(email) {
 // browser from src/brokers/brokers.js, because the standing rule of this app is
 // that the backend is optional — a demo link has to work with no server at all.
 // So this file owns exactly one thing: the real path.
+// Linking a LIVE account is the Trading Floor perk; the demo book is free to
+// every plan and never comes through this server at all. Enforced here and not
+// only in the browser for the reason the /api/tts gate spells out: a gate that
+// lives in the client is a convention, and this one guards a stored credential
+// for somebody's brokerage account.
+//
+// The rule itself is brokerPlanGate() in src/brokers/brokers.js, where it can
+// be unit-tested; this only looks up the plan to hand it.
+//
+// NOT checked, deliberately, and for the same reason as /api/tts:
+// hasSubscription() and whether the trial has run out. STRIPE_SECRET_KEY is
+// unset, so no account can hold a subscription and enforcing it would lock out
+// every legitimate user on day 8 through a payment route that does not exist
+// yet. Add `&& (hasSubscription(u) || inTrial(u))` on the day Stripe goes live.
+const gateBrokerPlan = (email) => brokerPlanGate(USERS[email]?.plan);
 const saveBrokers = () => writeJSON(BROKERS_FILE, BROKERS);
 const brokerRecord = (email) => (BROKERS[email] ||= { connections: [] });
 const publicConnection = (c) => ({
@@ -1496,6 +1511,10 @@ const server = http.createServer(async (req, res) => {
         configured: plaidConfigured(),
         provider: plaidConfigured() ? "plaid" : null,
         env: plaidConfigured() ? PLAID.env : null,
+        // The plan a LIVE link needs. The browser has its own copy in
+        // FEATURE_PLAN, but it is the client's copy — this is the server saying
+        // what it will actually enforce, so the two can be compared.
+        needsPlan: BROKER_PLAN,
         institutions: INSTITUTIONS.map(({ id, name, tint, access, note }) => ({ id, name, tint, access, note })),
         connections: (rec?.connections || []).map(publicConnection),
       });
@@ -1512,6 +1531,8 @@ const server = http.createServer(async (req, res) => {
       if (!plaidConfigured()) return send(res, 503, { error: "Brokerage links are not configured on this server. The desk will link a labelled demo book instead." });
       const email = emailFromReq(req, url);
       if (!email) return send(res, 401, { error: "Sign in to link a brokerage account." });
+      const gate = gateBrokerPlan(email);
+      if (gate) return send(res, 403, gate);
       const rl = rateLimit(`blink:${email}`, 10, 3600000);
       if (!rl.ok) return send(res, 429, { error: "Too many link attempts — try again later.", retryInSec: Math.ceil(rl.resetMs / 1000) });
       const j = await plaidCall("/link/token/create", {
@@ -1532,6 +1553,11 @@ const server = http.createServer(async (req, res) => {
       if (!plaidConfigured()) return send(res, 503, { error: "Brokerage links are not configured on this server." });
       const email = emailFromReq(req, url);
       if (!email) return send(res, 401, { error: "Sign in to link a brokerage account." });
+      // Checked again, not just on /link. The two routes are separately
+      // callable, and a public_token obtained on a Trading Floor plan that
+      // lapsed before the exchange must not still buy a stored access token.
+      const gate = gateBrokerPlan(email);
+      if (gate) return send(res, 403, gate);
       const { publicToken, institutionName: pickedName } = await readBody(req);
       if (!publicToken) return send(res, 400, { error: "Pass { publicToken } from Plaid Link." });
       const ex = await plaidCall("/item/public_token/exchange", { public_token: publicToken });
@@ -1744,6 +1770,7 @@ const server = http.createServer(async (req, res) => {
         configured: plaidConfigured(),
         provider: plaidConfigured() ? "plaid" : null,
         env: plaidConfigured() ? PLAID.env : null,
+        needsPlan: BROKER_PLAN,
         linked: email ? (BROKERS[email]?.connections?.length || 0) : 0,
       };
       for (const k of ["zoom", "google"]) status[k] = { configured: !!(CFG[k].id && CFG[k].secret), connected: !!(email && TOKENS[email]?.[k]?.access_token) };

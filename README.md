@@ -328,10 +328,13 @@ Like everything else here, this has two tiers:
 1. **Demo book (no backend, no keys)** — the default. A fixed, plausible book generated in the
    browser (`src/brokers/brokers.js`), marked **DEMO** on every row, in the connect sheet, and in
    the anchor's spoken brief. Works offline and with the server stopped, which is the point.
-2. **Real holdings (aggregator)** — set `PLAID_CLIENT_ID` / `PLAID_SECRET` and the same button
+2. **Real holdings (aggregator)** — a **Trading Floor ($39/mo)** feature. Set `PLAID_CLIENT_ID` /
+   `PLAID_SECRET` and the same button
    opens Plaid Link. Credentials are typed into Plaid's own UI; Vantage never sees a brokerage
    password and reads positions only. The access token stays in `server/brokers.json`
-   (gitignored) and is never included in a response.
+   (gitignored) and is never included in a response. The plan gate is enforced on the server
+   (`brokerPlanGate`), not only in the browser — it guards a stored credential for somebody's
+   brokerage account, so a client-side check would be a convention rather than a control.
 
 **Why an aggregator and not the brokers directly.** Robinhood publishes no third-party API;
 Morgan Stanley publishes no retail one; Schwab's Trader API is a hand-approved application.
