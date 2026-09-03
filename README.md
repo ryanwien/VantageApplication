@@ -315,6 +315,45 @@ node scripts/check-keys.mjs
 
 ---
 
+## Brokerage links: Robinhood · Schwab · Morgan Stanley
+
+**Portfolio panel → Link an account.** Linked holdings land in the same list as hand-typed ones —
+same sparkline, same allocation strip, same totals — with the institution and account stamped on
+every row. The anchor can read one book on its own: *"how is my Morgan Stanley account"* briefs
+that account alone. (`MS` and `HOOD` still chart the tickers; the institution has to be spelled
+out.)
+
+Like everything else here, this has two tiers:
+
+1. **Demo book (no backend, no keys)** — the default. A fixed, plausible book generated in the
+   browser (`src/brokers/brokers.js`), marked **DEMO** on every row, in the connect sheet, and in
+   the anchor's spoken brief. Works offline and with the server stopped, which is the point.
+2. **Real holdings (aggregator)** — set `PLAID_CLIENT_ID` / `PLAID_SECRET` and the same button
+   opens Plaid Link. Credentials are typed into Plaid's own UI; Vantage never sees a brokerage
+   password and reads positions only. The access token stays in `server/brokers.json`
+   (gitignored) and is never included in a response.
+
+**Why an aggregator and not the brokers directly.** Robinhood publishes no third-party API;
+Morgan Stanley publishes no retail one; Schwab's Trader API is a hand-approved application.
+Plaid's `/investments/holdings/get` reaches all three through one interface. Swapping in
+SnapTrade or a direct Schwab integration means one normalizer in `src/brokers/brokers.js` and
+`refreshConnection()` in `server/index.js` — the rest of the app reads the normalized shape.
+
+**Why the brokers' own sites are not embedded.** They forbid it in their own headers, and the
+browser enforces it: `robinhood.com` sends `X-Frame-Options: deny`, `schwab.com` and
+`morganstanley.com` send `SAMEORIGIN` with `frame-ancestors` allowlists that name only their own
+domains. No app-side change overrides that — hence the `NO_EMBED` list, and hence importing the
+data rather than the page.
+
+> **Cost basis, and where it can be wrong.** Plaid documents `cost_basis` as the holding's *total*
+> original value; this app stores cost *per share*, so the normalizer divides by quantity. A
+> provider returning a per-share figure there would be silently scaled, so a 1000× sanity guard
+> catches the unit error. `normalizePlaidHoldings` is unit-tested against Plaid's documented
+> response shape — but the live round-trip has **not** been exercised against a real Plaid
+> account. Run a sandbox link first and check a known holding before trusting production numbers.
+
+---
+
 ## Accounts & subscriptions
 
 - **Sign up / log in** at the gate (or **Explore as guest** to skip it).
@@ -334,9 +373,10 @@ node scripts/check-keys.mjs
 ```
 React.jsx          the whole UI (one big component + a few module components)
 exporters.js       lazy-loaded Excel / Word / PowerPoint generators
+src/brokers/       institution catalog, demo book, holdings normalizers (+ tests)
 src/datahub/       catalog intent detection, whitelisted queries, honesty checks (+ tests)
 src/settings/      preferences & local-proof modules (+ tests)
-server/index.js    the optional backend: accounts, meetings, billing (dependency-free)
+server/index.js    the optional backend: accounts, meetings, billing, brokerage links (dependency-free)
 examples/          real generated output — read it without running anything
 scripts/datahub/   seed a bare dataset to reproduce the refusal behaviour
 index.html         Vite entry

@@ -21,6 +21,9 @@ server/tokens.json
 server/users.json
 server/sessions.json
 server/ai-usage.json
+# brokerage aggregator access tokens — a bearer credential for somebody's actual
+# brokerage account, and one the account holder cannot rotate without re-linking.
+server/brokers.json
 
 # Local editor/agent tooling that is NOT part of this project. Kept out of the repo on
 # purpose: .claude/settings.json registers a hook that executes .appsec/appsec-gate.ps1 on

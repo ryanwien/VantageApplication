@@ -32,6 +32,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { GRAPHQL_OPS, isKnownOp } from "../src/datahub/catalog.js";
+import { INSTITUTIONS, institutionById, matchInstitution, normalizePlaidHoldings } from "../src/brokers/brokers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
@@ -114,6 +115,33 @@ const VERTEX = {
 };
 const MARKET = { finnhubKey: FINNHUB_KEY, cronSecret: process.env.AGENT_CRON_SECRET };
 
+// ---- brokerage links (Robinhood / Schwab / Morgan Stanley) ----
+//
+// None of the three can be read directly. Robinhood publishes no third-party
+// API at all; Morgan Stanley publishes no retail one; Schwab's Trader API
+// exists but its apps are approved by hand. Plaid is the one aggregator that
+// lists all three, so it is the single real path wired here — and it is
+// OPTIONAL like everything else in this file: with no client id the browser
+// falls back to a clearly-labelled demo book (src/brokers/brokers.js) that
+// needs no server at all.
+//
+// PLAID_ENV is sandbox | production. There is no separate "development" tier
+// any more, and sandbox is the right default: it costs nothing and returns a
+// fixture book, which is what a first run should get.
+const PLAID = {
+  clientId: process.env.PLAID_CLIENT_ID || "",
+  secret: process.env.PLAID_SECRET || "",
+  env: (process.env.PLAID_ENV || "sandbox").toLowerCase(),
+};
+const plaidConfigured = () => !!(PLAID.clientId && PLAID.secret);
+const plaidBase = () => `https://${PLAID.env === "production" ? "production" : "sandbox"}.plaid.com`;
+// NOT pre-selecting the institution on /link/token/create is deliberate. Plaid's
+// institution ids are per-environment strings, and sandbox serves its own
+// fixture bank rather than the real three — so pinning one would work in
+// production and silently fail in sandbox. Link's own picker is shown instead,
+// and which institution was chosen is read back from what Link hands the
+// browser on success (see /api/brokers/exchange).
+
 // Social sign-in via OpenID Connect ("Continue with Google / Yahoo"). Each needs an OAuth app.
 // Google REUSES the meetings client id/secret (just register the extra redirect URI + these scopes).
 // Yahoo needs its own app. Proton is intentionally absent — it offers no third-party OIDC login.
@@ -140,12 +168,14 @@ const USERS_FILE = path.join(__dirname, "users.json");        // { [email]: { em
 const SESSIONS_FILE = path.join(__dirname, "sessions.json");  // { [token]: { email, createdAt } }
 const AI_USAGE_FILE = path.join(__dirname, "ai-usage.json");
 const TOKENS_FILE = path.join(__dirname, "tokens.json");      // { [email]: { zoom:{...}, google:{...} } }  ← per-user OAuth tokens
+const BROKERS_FILE = path.join(__dirname, "brokers.json");    // { [email]: { connections: [...] } }  ← per-user brokerage links + aggregator access tokens
 const readJSON = (f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch { return {}; } };
 const writeJSON = (f, o) => { try { fs.writeFileSync(f, JSON.stringify(o, null, 2)); } catch (e) { console.error(`save failed (${path.basename(f)}):`, e.message); } };
 let USERS = readJSON(USERS_FILE);
 let SESSIONS = readJSON(SESSIONS_FILE);
 let AI_USAGE = readJSON(AI_USAGE_FILE);
 let TOKENS = readJSON(TOKENS_FILE);
+let BROKERS = readJSON(BROKERS_FILE);
 const pendingState = new Map(); // oauth CSRF state -> { prov, email }
 
 // ---- helpers ----
@@ -241,6 +271,70 @@ async function runMarketAgent(email) {
   AI_USAGE[email].latestBrief = { at: new Date().toISOString(), symbols: rows.map(r => r.sym), text };
   writeJSON(AI_USAGE_FILE, AI_USAGE);
   return { delivered: true, usage, symbols: rows.map(r => r.sym) };
+}
+
+// ============================================================
+//  BROKERAGE LINKS — read a real book of holdings into the desk
+// ============================================================
+// The aggregator's access token is the whole reason this lives on the server:
+// it is a bearer credential for somebody's brokerage account, so it is written
+// to a gitignored file here and NEVER appears in a response. `publicConnection`
+// is the only shape a browser is allowed to see, and every route returns
+// through it.
+//
+// The demo book is deliberately NOT served from here. It is generated in the
+// browser from src/brokers/brokers.js, because the standing rule of this app is
+// that the backend is optional — a demo link has to work with no server at all.
+// So this file owns exactly one thing: the real path.
+const saveBrokers = () => writeJSON(BROKERS_FILE, BROKERS);
+const brokerRecord = (email) => (BROKERS[email] ||= { connections: [] });
+const publicConnection = (c) => ({
+  id: c.id,
+  provider: c.provider,
+  institutionId: c.institutionId,
+  institutionName: c.institutionName,
+  demo: false,
+  connectedAt: c.connectedAt,
+  refreshedAt: c.refreshedAt || null,
+  accounts: c.accounts || [],
+  // Present and honest: a link whose last refresh failed still lists its last
+  // known accounts, with the reason attached, rather than silently going stale.
+  staleReason: c.staleReason || null,
+});
+
+async function plaidCall(endpoint, body) {
+  if (!plaidConfigured()) throw new Error("Brokerage links are not configured on this server (set PLAID_CLIENT_ID / PLAID_SECRET).");
+  const r = await fetch(`${plaidBase()}${endpoint}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ client_id: PLAID.clientId, secret: PLAID.secret, ...body }),
+    signal: AbortSignal.timeout(20000),
+  });
+  const j = await r.json().catch(() => ({}));
+  // Plaid answers a failure with a typed body. error_message is written for a
+  // person; display_message is written for an end user when one exists.
+  if (!r.ok) throw new Error(j.display_message || j.error_message || `Plaid returned HTTP ${r.status}.`);
+  return j;
+}
+
+// Pull the current book for one stored connection and write it back onto the
+// record. Never throws: a provider outage must leave the last known holdings on
+// screen with a reason, not blank the panel.
+async function refreshConnection(conn) {
+  try {
+    const holdings = await plaidCall("/investments/holdings/get", { access_token: conn.accessToken });
+    const shaped = normalizePlaidHoldings(holdings, {
+      institutionId: conn.institutionId,
+      institutionName: conn.institutionName,
+      connectionId: conn.id,
+    });
+    conn.accounts = shaped.accounts;
+    conn.refreshedAt = Date.now();
+    conn.staleReason = null;
+  } catch (e) {
+    conn.staleReason = String(e.message || e);
+  }
+  return conn;
 }
 
 // ============================================================
@@ -1389,6 +1483,112 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // ---- BROKERAGE LINKS ----
+    //
+    // GET is deliberately answerable when signed out: the browser draws the
+    // connect sheet before anyone has an account, and "what can I link" is not
+    // account data. Only `connections` needs an identity, and an anonymous
+    // caller simply has none.
+    if (p === "/api/brokers" && req.method === "GET") {
+      const email = emailFromReq(req, url);
+      const rec = email ? BROKERS[email] : null;
+      return send(res, 200, {
+        configured: plaidConfigured(),
+        provider: plaidConfigured() ? "plaid" : null,
+        env: plaidConfigured() ? PLAID.env : null,
+        institutions: INSTITUTIONS.map(({ id, name, tint, access, note }) => ({ id, name, tint, access, note })),
+        connections: (rec?.connections || []).map(publicConnection),
+      });
+    }
+
+    // Step 1 of a real link: mint a Plaid Link token. The browser opens Plaid's
+    // own UI with it — the account credentials are typed into Plaid, never into
+    // Vantage and never into this server.
+    if (p === "/api/brokers/link" && req.method === "POST") {
+      // Configuration is checked BEFORE the session. "Sign in first" is the
+      // wrong answer to a feature that is not switched on at all — it sends the
+      // caller off to make an account that would not have helped, and it made
+      // scripts/check-keys.mjs report an unset key as merely unauthenticated.
+      if (!plaidConfigured()) return send(res, 503, { error: "Brokerage links are not configured on this server. The desk will link a labelled demo book instead." });
+      const email = emailFromReq(req, url);
+      if (!email) return send(res, 401, { error: "Sign in to link a brokerage account." });
+      const rl = rateLimit(`blink:${email}`, 10, 3600000);
+      if (!rl.ok) return send(res, 429, { error: "Too many link attempts — try again later.", retryInSec: Math.ceil(rl.resetMs / 1000) });
+      const j = await plaidCall("/link/token/create", {
+        // Stable per account so Plaid can recognise a returning user, and
+        // hashed so their email is not a Plaid-side identifier.
+        user: { client_user_id: crypto.createHash("sha256").update(email).digest("hex").slice(0, 32) },
+        client_name: "Vantage",
+        products: ["investments"],
+        country_codes: ["US"],
+        language: "en",
+      });
+      return send(res, 200, { linkToken: j.link_token, expiration: j.expiration || null, env: PLAID.env });
+    }
+
+    // Step 2: trade Plaid's one-shot public token for a long-lived access token,
+    // then immediately pull the book so the panel has something to draw.
+    if (p === "/api/brokers/exchange" && req.method === "POST") {
+      if (!plaidConfigured()) return send(res, 503, { error: "Brokerage links are not configured on this server." });
+      const email = emailFromReq(req, url);
+      if (!email) return send(res, 401, { error: "Sign in to link a brokerage account." });
+      const { publicToken, institutionName: pickedName } = await readBody(req);
+      if (!publicToken) return send(res, 400, { error: "Pass { publicToken } from Plaid Link." });
+      const ex = await plaidCall("/item/public_token/exchange", { public_token: publicToken });
+      // Which of OUR three did they pick? Plaid Link hands the browser the
+      // institution's display name; matchInstitution maps it back to the
+      // catalog. An institution outside the catalog is still linked and still
+      // works — it simply has no tint and no spoken alias.
+      const institutionId = matchInstitution(pickedName || "") || null;
+      const rec = brokerRecord(email);
+      const conn = {
+        id: ex.item_id || crypto.randomBytes(8).toString("hex"),
+        provider: "plaid",
+        institutionId,
+        institutionName: institutionId ? institutionById(institutionId).name : (String(pickedName || "").trim() || "Linked account"),
+        accessToken: ex.access_token,   // ← never leaves this file
+        itemId: ex.item_id || null,
+        connectedAt: Date.now(),
+        accounts: [],
+      };
+      // Replace rather than append when the same item is linked twice: two
+      // records for one item would double every position in the panel.
+      rec.connections = [...rec.connections.filter(c => c.id !== conn.id), conn];
+      await refreshConnection(conn);
+      saveBrokers();
+      return send(res, 200, { connection: publicConnection(conn) });
+    }
+
+    // Re-pull the book. No id refreshes every link the account has.
+    if (p === "/api/brokers/refresh" && req.method === "POST") {
+      const email = emailFromReq(req, url);
+      if (!email) return send(res, 401, { error: "Not signed in." });
+      const { connectionId } = await readBody(req);
+      const rec = brokerRecord(email);
+      const targets = connectionId ? rec.connections.filter(c => c.id === connectionId) : rec.connections;
+      if (connectionId && !targets.length) return send(res, 404, { error: "No such linked account." });
+      await Promise.all(targets.map(refreshConnection));
+      saveBrokers();
+      return send(res, 200, { connections: rec.connections.map(publicConnection) });
+    }
+
+    // Forget a link. Plaid's /item/remove is best-effort: failing to tell Plaid
+    // must not leave the user staring at an account they asked us to drop.
+    if (p === "/api/brokers/disconnect" && req.method === "POST") {
+      const email = emailFromReq(req, url);
+      if (!email) return send(res, 401, { error: "Not signed in." });
+      const { connectionId } = await readBody(req);
+      const rec = brokerRecord(email);
+      const gone = rec.connections.find(c => c.id === connectionId);
+      if (!gone) return send(res, 404, { error: "No such linked account." });
+      rec.connections = rec.connections.filter(c => c.id !== connectionId);
+      saveBrokers();
+      if (gone.accessToken && plaidConfigured()) {
+        try { await plaidCall("/item/remove", { access_token: gone.accessToken }); } catch { /* dropped locally either way */ }
+      }
+      return send(res, 200, { ok: true, connections: rec.connections.map(publicConnection) });
+    }
+
     if (p === "/api/auth/me" && req.method === "GET") {
       const email = emailFromReq(req, url);
       if (!email || !USERS[email]) return send(res, 401, { error: "Not signed in." });
@@ -1537,6 +1737,15 @@ const server = http.createServer(async (req, res) => {
       status.eleven = { configured: !!ELEVEN_KEY };
       status.hosted = { configured: !!(VERTEX.project && VERTEX.serviceAccount && VERTEX.privateKey) };
       status.music = { playlist: SPOTIFY_PLAYLIST, configured: !!SPOTIFY_PLAYLIST };
+      // `configured` false is not a fault — it is the app's zero-setup state,
+      // and the browser answers it with a labelled demo book rather than an
+      // error. `linked` is how many real accounts this caller actually has.
+      status.brokers = {
+        configured: plaidConfigured(),
+        provider: plaidConfigured() ? "plaid" : null,
+        env: plaidConfigured() ? PLAID.env : null,
+        linked: email ? (BROKERS[email]?.connections?.length || 0) : 0,
+      };
       for (const k of ["zoom", "google"]) status[k] = { configured: !!(CFG[k].id && CFG[k].secret), connected: !!(email && TOKENS[email]?.[k]?.access_token) };
       return send(res, 200, status);
     }
@@ -1606,6 +1815,7 @@ server.listen(PORT, () => {
   console.log(`Vantage backend → ${PUBLIC_ORIGIN}`);
   console.log(`  auth: on · billing: ${STRIPE.secret ? "configured" : "simulated (no STRIPE_SECRET_KEY)"}`);
   console.log(`  zoom: ${on("zoom")} · google: ${on("google")}`);
+  console.log(`  brokerage links: ${plaidConfigured() ? `plaid (${PLAID.env})` : "demo book only (no PLAID_CLIENT_ID)"}`);
   // An ElevenLabs SECRET starts "sk_". The dashboard also shows a 64-char hex
   // key ID beside it, and the two are easy to mix up — the API rejects the ID
   // with a 401, which surfaces three layers away as a failed voice. Say it here,

@@ -175,6 +175,20 @@ export const api = {
     calendar: (max = 8) => get(`/api/google/events?max=${encodeURIComponent(max)}`),
   },
 
+  // ---- brokerage links (Robinhood / Schwab / Morgan Stanley) ----
+  //
+  // The REAL path only. A demo link never comes through here — it is built in
+  // the browser from src/brokers/brokers.js, because a demo that needs a
+  // running server is not a zero-setup demo. `list` is unauthenticated so the
+  // connect sheet can be drawn before anyone signs in.
+  brokers: {
+    list: () => get("/api/brokers"),
+    linkToken: () => post("/api/brokers/link", {}),
+    exchange: ({ publicToken, institutionName }) => post("/api/brokers/exchange", { publicToken, institutionName }),
+    refresh: (connectionId = null) => post("/api/brokers/refresh", { connectionId }, { timeout: 30000 }),
+    disconnect: (connectionId) => post("/api/brokers/disconnect", { connectionId }),
+  },
+
   // ---- scheduled market-brief agent ----
   agent: {
     preferences: () => get("/api/agent/preferences"),

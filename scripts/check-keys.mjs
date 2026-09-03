@@ -28,6 +28,10 @@ const CHECKS = [
   { key: "ELEVENLABS_API_KEY", what: "studio voice",  req: ["/api/voices"] },
   { key: "OPENROUTER_API_KEY", what: "the AI desk",   req: ["/api/ai/chat", { messages: [{ role: "user", content: "hi" }] }] },
   { key: "GEMINI_API_KEY",     what: "Gemini",        req: ["/api/ai/gemini", { contents: [{ parts: [{ text: "hi" }] }] }] },
+  // Needs a session, so it answers 401 rather than reaching Plaid when run
+  // unauthenticated — which still separates "no keys set" (503) from
+  // "configured", and that is the question this script is for.
+  { key: "PLAID_CLIENT_ID",    what: "broker links",  req: ["/api/brokers/link", {}] },
 ];
 
 const call = async ([path, body]) => {
@@ -45,6 +49,10 @@ const call = async ([path, body]) => {
 const verdict = ({ status, text }) => {
   if (status === 503) return ["not set", "—"];
   if (status === 429) return ["rate limited", "can't tell from here; try again later"];
+  // 401 is this server asking for a session, never a provider rejecting a key —
+  // a bad key comes back 502/503. So the key IS set; the route just needs an
+  // account, and this script deliberately has none.
+  if (status === 401) return ["configured", "set; route needs a signed-in account to prove it"];
   if (status >= 200 && status < 300) return ["works", ""];
   let msg = text;
   try { msg = JSON.parse(text).error || text; } catch {}

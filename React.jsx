@@ -40,6 +40,11 @@ import RichText from "./src/ui/RichText.jsx";
 import Toggle, { ToggleGlyph } from "./src/ui/Toggle.jsx";
 import Overlay from "./src/ui/Overlay.jsx";
 import { api, ApiError, tokenStore } from "./src/api/client.js";
+import {
+  INSTITUTIONS as BROKER_INSTITUTIONS, holdingsFromConnections, cashFromConnections,
+  mergePositions, summarizeByBroker, speakableBrokerLine, matchInstitution,
+} from "./src/brokers/brokers.js";
+import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink } from "./src/brokers/links.js";
 import { AuthProvider, useAuth } from "./src/api/auth-context.jsx";
 import AppShell from "./src/ui/AppShell.jsx";
 import { AuthPlate } from "./src/ui/HeroPlate.jsx";
@@ -153,6 +158,9 @@ import HomePage from "./src/ui/HomePage.jsx";
      • navigator/embeds   — openEmbed opens embeddable sites in-panel; brokers & streaming services
                             block iframes (X-Frame-Options) so they open in a new tab instead.
      • right-rail panels  — watchlist, movers, news, portfolio, price alerts, calendar (toggle in settings)
+     • brokerage links    — Robinhood / Schwab / Morgan Stanley holdings imported into the portfolio
+                            panel. Demo book in the browser (src/brokers/), real books via the
+                            server's aggregator link. Their SITES cannot be embedded — see NO_EMBED.
      • breaking news + price alerts — a banner + a synced sting + the anchor announcing on air
      • settings modal     — START (one key + status board) · DATA · AI · VOICE · MEET
      • onboarding         — a hub launching a spotlight tour / auto-demo / interactive missions,
@@ -289,6 +297,33 @@ function makeLogoDataUrl() {
   ctx.fillStyle = C.muted; ctx.font = "12px monospace"; ctx.fillText("MARKET INTELLIGENCE", 90, 77);
   _logoCache = cvs.toDataURL("image/png");
   return _logoCache;
+}
+
+// ---------- Plaid Link, loaded on demand ----------
+//
+// The only third-party script this app pulls at runtime, and it is fetched the
+// moment somebody actually starts a real brokerage link — never on boot. Two
+// reasons: a script from plaid.com has no business on the page of a visitor who
+// never clicks "connect", and the whole feature degrades to a labelled demo
+// book when no aggregator is configured, which is the common case.
+//
+// Cached as a promise so a second click reuses the first load rather than
+// appending a second <script>.
+let _plaidLinkPromise = null;
+function loadPlaidLink() {
+  if (window.Plaid) return Promise.resolve(window.Plaid);
+  if (_plaidLinkPromise) return _plaidLinkPromise;
+  _plaidLinkPromise = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.plaid.com/link/v2/stable/link-initialize.js";
+    s.async = true;
+    s.onload = () => (window.Plaid ? resolve(window.Plaid) : reject(new Error("Plaid Link loaded but did not initialise.")));
+    // A rejected promise here must not be cached, or one blocked request would
+    // make the button permanently dead for the rest of the session.
+    s.onerror = () => { _plaidLinkPromise = null; reject(new Error("Could not load Plaid Link — check the network or an ad blocker.")); };
+    document.head.appendChild(s);
+  });
+  return _plaidLinkPromise;
 }
 
 // ---------- demo market engine ----------
@@ -7026,11 +7061,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     setDayPass(p => (p?.claimedAt ? p : { claimedAt: Date.now(), hours: PASS_HOURS }));
   }, []);
 
+  // Deep links, not accounts — "take me to Robinhood" opens their research page
+  // for the symbol on the chart. Linking a BOOK of holdings is a different
+  // thing entirely and lives in the portfolio panel (src/brokers/brokers.js).
   const BROKERS = [
     { name: "Fidelity", url: (s) => `https://digital.fidelity.com/prgw/digital/research/quote?symbol=${s}` },
     { name: "Schwab · TD", url: (s) => `https://www.schwab.com/research/stocks/quotes/summary/${s}` },
     { name: "Robinhood", url: (s) => `https://robinhood.com/stocks/${s}` },
     { name: "Webull", url: (s) => `https://www.webull.com/quote/${s.toLowerCase()}` },
+    // No per-symbol research URL that works without a login, so this one goes
+    // to the wealth-management landing page rather than to a 404.
+    { name: "Morgan Stanley", url: () => "https://www.morganstanley.com/what-we-do/wealth-management" },
   ];
 
   // Streaming services — like the brokers, these block iframe embedding (X-Frame-Options),
@@ -8529,7 +8570,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   }, [embed?.url]);
   // brokers block iframe embedding (X-Frame-Options), so opening them in-panel just shows "refused to
   // connect" — route those straight to a new tab, and reserve the in-app panel for embeddable sites.
-  const NO_EMBED = ["robinhood.com", "fidelity.com", "schwab.com", "webull.com", "tdameritrade.com", "etrade.com", "vanguard.com", "coinbase.com", "netflix.com", "disneyplus.com", "hulu.com"];
+  const NO_EMBED = ["robinhood.com", "fidelity.com", "schwab.com", "webull.com", "tdameritrade.com", "etrade.com", "morganstanley.com", "vanguard.com", "coinbase.com", "netflix.com", "disneyplus.com", "hulu.com"];
   const openEmbed = useCallback((url, title, trusted = false) => {
     try {
       const host = new URL(url).hostname.replace(/^www\./, "");
@@ -8785,7 +8826,56 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   const [positions, setPositions] = useState(() => { try { return JSON.parse(window.localStorage.getItem("tape-positions") || "[]"); } catch { return []; } });
   useEffect(() => { try { window.localStorage.setItem("tape-positions", JSON.stringify(positions)); } catch { /* private */ } }, [positions]);
   const [portForm, setPortForm] = useState({ sym: "", shares: "", cost: "" });
-  const portfolioRows = positions.map(p => {
+
+  // ---- linked brokerages: Robinhood / Schwab / Morgan Stanley ----
+  //
+  // Two sources, one list. DEMO links are built in the browser and persisted as
+  // ids (src/brokers/links.js), so the feature works with no server and no
+  // credentials — that is the state a first visit and a demo are both in. REAL
+  // links live on the server, which holds the aggregator's access token and is
+  // the only thing that ever sees it (server/index.js, /api/brokers).
+  //
+  // Everything downstream — the sparkline, the allocation strip, the totals,
+  // the anchor's brief — reads `portfolioRows`, so both kinds arrive there and
+  // nothing else in this file has to know which is which. The one thing that
+  // must stay visible is WHICH: a linked row carries `broker` and `demo`, and
+  // is drawn with the institution's name on it.
+  const [demoLinks, setDemoLinks] = useState(() => {
+    try { return loadLinks(window.localStorage.getItem(LINKS_KEY)); } catch { return []; }
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem(LINKS_KEY, serializeLinks(demoLinks)); } catch { /* private */ }
+  }, [demoLinks]);
+  const [brokerServer, setBrokerServer] = useState(null); // null = not asked yet
+  const [brokerBusy, setBrokerBusy] = useState("");       // institution id currently connecting
+  const [brokerErr, setBrokerErr] = useState("");
+  const [brokerSheet, setBrokerSheet] = useState(false);  // the connect list is open
+
+  const refreshBrokerServer = useCallback(async () => {
+    try { setBrokerServer(await api.brokers.list()); }
+    // A missing backend is the normal state here, not a failure to report: the
+    // demo links above still work, and the sheet says so.
+    catch { setBrokerServer({ configured: false, connections: [] }); }
+  }, []);
+  useEffect(() => { refreshBrokerServer(); }, [refreshBrokerServer]);
+
+  const serverConnections = brokerServer?.connections || [];
+  const brokerConnections = useMemo(
+    () => [...serverConnections, ...demoLinks],
+    [serverConnections, demoLinks],
+  );
+  const linkedRows = useMemo(() => holdingsFromConnections(brokerConnections), [brokerConnections]);
+  const linkedCash = useMemo(() => cashFromConnections(brokerConnections), [brokerConnections]);
+  // A linked book names symbols the demo market has never synthesized (an ETF,
+  // a holding outside the 13-name universe). Without this they draw a price of
+  // "—" and contribute nothing to the totals, which reads as a broken import.
+  useEffect(() => {
+    if (live) return;
+    for (const r of linkedRows) if (!demoMkt[r.sym]) ensureDemoSymbol(r.sym);
+  }, [linkedRows, live, demoMkt, ensureDemoSymbol]);
+
+  const allPositions = useMemo(() => mergePositions(positions, linkedRows), [positions, linkedRows]);
+  const portfolioRows = allPositions.map(p => {
     const price = getRow(p.sym)?.price;
     const cost = p.cost * p.shares;
     const val = price != null ? price * p.shares : null;
@@ -8793,6 +8883,65 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     const pnlPct = (cost > 0 && pnl != null) ? (pnl / cost) * 100 : null;
     return { ...p, price, cost, val, pnl, pnlPct };
   });
+  const brokerTotals = useMemo(
+    () => summarizeByBroker(linkedRows, (s) => getRow(s)?.price ?? null),
+    [linkedRows, getRow],
+  );
+
+  // Link an institution. With no aggregator configured this is the demo path,
+  // and the button says so before it is pressed — there is no moment where the
+  // user thinks they connected a real account and did not.
+  const connectBroker = useCallback(async (institutionId) => {
+    setBrokerErr("");
+    if (!brokerServer?.configured) {
+      setDemoLinks(ls => addDemoLink(ls, institutionId));
+      if (!panels.portfolio) setPanels(p => ({ ...p, portfolio: true }));
+      return;
+    }
+    setBrokerBusy(institutionId);
+    try {
+      const { linkToken } = await api.brokers.linkToken();
+      // Plaid's own UI, loaded only when a real link is actually started —
+      // there is no reason for a script from plaid.com to be on the page of
+      // somebody who never clicks this.
+      const Plaid = await loadPlaidLink();
+      await new Promise((resolve, reject) => {
+        const handler = Plaid.create({
+          token: linkToken,
+          onSuccess: async (publicToken, metadata) => {
+            try {
+              await api.brokers.exchange({ publicToken, institutionName: metadata?.institution?.name || "" });
+              await refreshBrokerServer();
+              resolve();
+            } catch (e) { reject(e); }
+          },
+          onExit: (err) => (err ? reject(new Error(err.display_message || err.error_message || "Link cancelled.")) : resolve()),
+        });
+        handler.open();
+      });
+      if (!panels.portfolio) setPanels(p => ({ ...p, portfolio: true }));
+    } catch (e) {
+      setBrokerErr(humanizeError(e));
+    } finally { setBrokerBusy(""); }
+  }, [brokerServer, panels.portfolio, refreshBrokerServer]);
+
+  const disconnectBroker = useCallback(async (conn) => {
+    setBrokerErr("");
+    if (conn.demo) { setDemoLinks(ls => removeLink(ls, conn.institutionId)); return; }
+    try { await api.brokers.disconnect(conn.id); await refreshBrokerServer(); }
+    catch (e) { setBrokerErr(humanizeError(e)); }
+  }, [refreshBrokerServer]);
+
+  const refreshBrokers = useCallback(async () => {
+    if (!brokerServer?.configured || !serverConnections.length) return;
+    setBrokerBusy("refresh"); setBrokerErr("");
+    try {
+      const { connections } = await api.brokers.refresh();
+      setBrokerServer(s => ({ ...s, connections }));
+    }
+    catch (e) { setBrokerErr(humanizeError(e)); }
+    finally { setBrokerBusy(""); }
+  }, [brokerServer?.configured, serverConnections.length]);
   const portTotals = portfolioRows.reduce((a, r) => { a.val += r.val || 0; a.cost += r.cost || 0; return a; }, { val: 0, cost: 0 });
   portTotals.pnl = portTotals.val - portTotals.cost;
   portTotals.pnlPct = portTotals.cost > 0 ? (portTotals.pnl / portTotals.cost) * 100 : 0;
@@ -8804,18 +8953,42 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     setPortForm({ sym: "", shares: "", cost: "" });
     if (!panels.portfolio) setPanels(p => ({ ...p, portfolio: true }));
   };
+  // Manual rows only. A linked row is a fact about somebody's brokerage
+  // account, not a list entry to delete — it goes away by disconnecting the
+  // institution, which is what the ✕ on a linked row does instead.
   const removePosition = (id) => setPositions(ps => ps.filter(p => p.id !== id));
-  const briefPortfolio = useCallback(() => {
+
+  // The anchor's read of the book. `broker` narrows it to one institution, so
+  // "how's my Morgan Stanley account" answers about Morgan Stanley rather than
+  // reading out every position the desk knows about.
+  const briefPortfolio = useCallback((brokerArg = null) => {
+    // This is wired straight to onClick in three places, and an onClick handler
+    // is called with a MouseEvent. Without this the event would arrive as the
+    // institution id, match nothing, and the anchor would announce an empty
+    // account — so the argument is only honoured when it is actually an id.
+    const broker = typeof brokerArg === "string" ? brokerArg : null;
     setDeskPortfolio(true); // show the full portfolio inside the desk response box
     if (!panels.portfolio) setPanels(p => ({ ...p, portfolio: true }));
     setTimeout(() => { const el = document.getElementById("tour-response"); if (el) try { el.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch { /* older */ } }, 80);
-    if (!positions.length) { speak("nav", "Your portfolio is empty. Add some holdings and I'll track your gains and losses."); return; }
-    const rows = positions.map(p => { const price = getRow(p.sym)?.price; const pnl = price != null ? (price - p.cost) * p.shares : null; return { sym: p.sym, pnl }; });
+
+    const scope = broker ? allPositions.filter(p => p.broker === broker) : allPositions;
+    if (!scope.length) {
+      speak("nav", broker
+        ? `You have no ${BROKER_INSTITUTIONS.find(i => i.id === broker)?.name || "linked"} account on the desk. Link one from the portfolio panel and I'll read it.`
+        : "Your portfolio is empty. Add some holdings, or link a brokerage account, and I'll track your gains and losses.");
+      return;
+    }
+    const rows = scope.map(p => { const price = getRow(p.sym)?.price; const pnl = price != null ? (price - p.cost) * p.shares : null; return { sym: p.sym, pnl }; });
     const tot = rows.reduce((a, r) => a + (r.pnl || 0), 0);
-    const totCost = positions.reduce((a, p) => a + p.cost * p.shares, 0);
+    const totCost = scope.reduce((a, p) => a + p.cost * p.shares, 0);
     const totPct = totCost > 0 ? tot / totCost * 100 : 0;
-    speak("nav", `Your portfolio is ${tot >= 0 ? "up" : "down"} ${fmt(Math.abs(tot))}, or ${Math.abs(totPct).toFixed(1)} percent. ` + rows.map(r => `${r.sym} ${r.pnl >= 0 ? "up" : "down"} ${fmt(Math.abs(r.pnl))}`).join("; ") + ".");
-  }, [positions, panels.portfolio, getRow, speak]);
+    // A demo book must announce itself out loud, not only on screen — a spoken
+    // brief is the one place the DEMO badge cannot be seen.
+    const demoNote = scope.some(p => p.demo) ? "Reading a demonstration book, not a live account. " : "";
+    const where = broker ? `Your ${BROKER_INSTITUTIONS.find(i => i.id === broker)?.name || "linked"} account` : "Your portfolio";
+    speak("nav", `${demoNote}${where} is ${tot >= 0 ? "up" : "down"} ${fmt(Math.abs(tot))}, or ${Math.abs(totPct).toFixed(1)} percent. `
+      + rows.map(r => `${r.sym} ${r.pnl >= 0 ? "up" : "down"} ${fmt(Math.abs(r.pnl))}`).join("; ") + ".");
+  }, [allPositions, panels.portfolio, getRow, speak]);
 
   // ---- voice control: press-to-talk → speech recognition → run the transcript as a desk command ----
   const [listening, setListening] = useState(false);
@@ -9843,6 +10016,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     if (/schwab|ameritrade|\btd\b/.test(q)) hits.push(BROKERS[1]);
     if (/robinhood/.test(q)) hits.push(BROKERS[2]);
     if (/webull/.test(q)) hits.push(BROKERS[3]);
+    if (/morgan\s*stanley/.test(q)) hits.push(BROKERS[4]);
 
     // resolve a symbol: $SYM wins, then a known ticker, then any plausible caps ticker, then the chart's focus
     let sym = selected, explicit = false;
@@ -9863,7 +10037,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     // navOnly: a short command with nothing analytical left in it
     const residue = q
       .replace(/(take me to|take me|go to|goto|open( up)?|pull up|bring up|launch|navigate to|show me|please|can you|on|to|the|at|for me|for)/g, " ")
-      .replace(/fidelity|schwab|td ameritrade|ameritrade|\btd\b|robinhood|webull/g, " ")
+      .replace(/fidelity|schwab|td ameritrade|ameritrade|\btd\b|robinhood|webull|morgan\s*stanley/g, " ")
       .replace(/\$?[a-z]{1,5}\b/gi, " ")
       .trim();
     const navOnly = navVerb && residue.length < 4;
@@ -10112,11 +10286,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // as a ticker when the desk already knows it, so a rail cannot fill up with
   // CEO, ETF, AI and USA. Cashtags ($NVDA) are taken regardless — see
   // src/video/video.js.
+  // allPositions, not positions: a symbol you hold at Schwab is a symbol you
+  // hold, and the news filter and the "held" marker should both know it.
   const knownSymbols = useMemo(
-    () => [...new Set([...UNIVERSE.map(u => u.sym), ...watchlist, ...positions.map(p => p.sym)])],
-    [watchlist, positions],
+    () => [...new Set([...UNIVERSE.map(u => u.sym), ...watchlist, ...allPositions.map(p => p.sym)])],
+    [watchlist, allPositions],
   );
-  const heldSymbols = useMemo(() => new Set(positions.map(p => p.sym)), [positions]);
+  const heldSymbols = useMemo(() => new Set(allPositions.map(p => p.sym)), [allPositions]);
 
   const openVideoDesk = useCallback((topic, videos) => {
     if (!videos?.length) return;
@@ -10827,11 +11003,26 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     }
 
     // portfolio intent: "brief my portfolio", "how are my positions", "my holdings"
+    //
+    // Naming an institution narrows it: "pull up my Morgan Stanley portfolio"
+    // reads that account alone. The institution has to be spelled out — MS and
+    // HOOD are tickers and still chart (see matchInstitution).
+    const askedBroker = matchInstitution(q);
+    if (askedBroker && /\b(portfolio|positions|holdings|account|balance|book)\b/i.test(q)) {
+      briefPortfolio(askedBroker);
+      const sum = brokerTotals.find(b => b.broker === askedBroker);
+      const inst = BROKER_INSTITUTIONS.find(i => i.id === askedBroker);
+      deskReply(sum
+        ? `${inst.name} is on the desk — ${sum.positions} position${sum.positions === 1 ? "" : "s"}, ${sum.pnl >= 0 ? "up" : "down"} ${fmt(Math.abs(sum.pnl))} (${sum.pnlPct >= 0 ? "+" : ""}${sum.pnlPct.toFixed(2)}%).${sum.demo ? " Demonstration book — not a live account." : ""}`
+        : `No ${inst.name} account is linked yet. Open the portfolio panel and press Link an account.`);
+      return; // desk-handled
+    }
     if (/\b(my )?(portfolio|positions|holdings)\b/i.test(q) || /how('?s| is| are) my (portfolio|positions|holdings|investments)\b/i.test(q)) {
       briefPortfolio();
-      deskReply(positions.length
-        ? `Your portfolio is on the desk — ${positions.length} position${positions.length === 1 ? "" : "s"}, ${portTotals.pnl >= 0 ? "up" : "down"} ${fmt(Math.abs(portTotals.pnl))} (${portTotals.pnlPct >= 0 ? "+" : ""}${portTotals.pnlPct.toFixed(2)}%).`
-        : "Your portfolio is empty — add a symbol, share count and cost below and I'll track it from then on.");
+      const n = portfolioRows.length;
+      deskReply(n
+        ? `Your portfolio is on the desk — ${n} position${n === 1 ? "" : "s"}${brokerTotals.length ? ` across ${brokerTotals.length} linked account${brokerTotals.length === 1 ? "" : "s"}` : ""}, ${portTotals.pnl >= 0 ? "up" : "down"} ${fmt(Math.abs(portTotals.pnl))} (${portTotals.pnlPct >= 0 ? "+" : ""}${portTotals.pnlPct.toFixed(2)}%).`
+        : "Your portfolio is empty — add a symbol, share count and cost below, or link a brokerage account, and I'll track it from then on.");
       return; // desk-handled
     }
 
@@ -11708,12 +11899,28 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // ---- the portfolio, as a chat attachment ----
   const portfolioPanel = deskPortfolio && (
     <DeskCard key="portfolio" icon={<DeskIcon name="portfolio" size={16} />} title={t("Portfolio")}
-      note={positions.length > 0 ? priv(<span style={{ color: dirColorN(portTotals.pnl) }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} · {portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%</span>) : null}
-      actions={positions.length > 0 && (
-        <button onClick={briefPortfolio} title="Read on air" style={{ ...button("live", "sm"), fontSize: 12.5 }}>▶ read</button>
+      note={portfolioRows.length > 0 ? priv(<span style={{ color: dirColorN(portTotals.pnl) }}>{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} · {portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%</span>) : null}
+      actions={portfolioRows.length > 0 && (
+        <button onClick={() => briefPortfolio()} title="Read on air" style={{ ...button("live", "sm"), fontSize: 12.5 }}>▶ read</button>
       )}
       onClose={() => setDeskPortfolio(false)} closeLabel="Close portfolio">
-      {positions.length === 0 && <div style={{ fontFamily: SANS, fontSize: 13, color: C.faint, lineHeight: 1.6 }}>No holdings yet — add a symbol, the shares, and your cost per share below.</div>}
+      {portfolioRows.length === 0 && <div style={{ fontFamily: SANS, fontSize: 13, color: C.faint, lineHeight: 1.6 }}>No holdings yet — add a symbol, the shares, and your cost per share below, or link a brokerage account from the portfolio panel.</div>}
+      {/* One line per linked institution, above the positions. The desk card is
+          where a brief lands, so "which account is this" has to be answerable
+          without scrolling back to the rail. */}
+      {brokerTotals.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, paddingBottom: 10 }}>
+          {brokerTotals.map(b => (
+            <button key={b.broker} onClick={() => briefPortfolio(b.broker)} title={`Read ${b.brokerName} on air`}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.xs, padding: "4px 9px", cursor: "pointer", fontFamily: SANS, fontSize: 12, color: C.text }}>
+              <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: BROKER_INSTITUTIONS.find(i => i.id === b.broker)?.tint || C.faint }} />
+              {b.brokerName}
+              {b.demo && <span style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.06em", color: C.faint, border: `1px solid ${C.panelEdge}`, borderRadius: 3, padding: "0 3px" }}>DEMO</span>}
+              {priv(<span style={{ fontFamily: MONO, fontSize: 11.5, color: dirColorN(b.pnl) }}>{b.pnl >= 0 ? "+" : ""}{fmt(b.pnl)}</span>)}
+            </button>
+          ))}
+        </div>
+      )}
       {portfolioRows.length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 6, fontFamily: SANS, fontSize: 12, color: C.faint, paddingBottom: 6, borderBottom: `1px solid ${C.edge}` }}>
           <span>Symbol</span><span style={{ textAlign: "right" }}>Cost → now</span><span style={{ textAlign: "right" }}>Value</span><span style={{ textAlign: "right" }}>P&L</span><span />
@@ -11721,14 +11928,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       )}
       {portfolioRows.map(r => (
         <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 6, alignItems: "center", fontFamily: MONO, fontSize: 12.5, padding: "8px 0", borderBottom: `1px solid ${C.edge}` }}>
-          <button onClick={() => setSelected(r.sym)} style={{ background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 13.5, fontWeight: 700, textAlign: "left", cursor: "pointer", padding: 0 }}>{r.sym} <span style={{ fontFamily: MONO, color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span></button>
+          <span>
+            <button onClick={() => setSelected(r.sym)} style={{ background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 13.5, fontWeight: 700, textAlign: "left", cursor: "pointer", padding: 0 }}>{r.sym} <span style={{ fontFamily: MONO, color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span></button>
+            {r.broker && <span style={{ display: "block", fontFamily: SANS, fontSize: 10.5, color: C.faint }}>{r.brokerName} · {r.account}</span>}
+          </span>
           <span style={{ textAlign: "right", color: C.muted, fontSize: 12, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{fmt(r.cost / r.shares)}→{r.price != null ? fmt(r.price) : "—"}</span>
           <span style={{ textAlign: "right", color: C.text, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.val != null ? fmt(r.val) : "—"}</span>
           <span style={{ textAlign: "right", color: dirColorN(r.pnl), ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}{r.pnlPct != null ? <span style={{ fontSize: 11, display: "block", color: dirColorN(r.pnl) }}>{r.pnlPct >= 0 ? "+" : ""}{r.pnlPct.toFixed(1)}%</span> : null}</span>
-          <button onClick={() => removePosition(r.id)} className="v-rowx" aria-label={`Remove ${r.sym}`} style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 13 }}>✕</button>
+          {/* A linked lot is not ours to delete — it is what the brokerage says
+              you hold. The way to remove it is to unlink the institution. */}
+          {r.source === "linked"
+            ? <span aria-hidden="true" style={{ fontFamily: SANS, fontSize: 11, color: C.faint }} title={`From ${r.brokerName} — unlink the account to remove it`}>🔗</span>
+            : <button onClick={() => removePosition(r.id)} className="v-rowx" aria-label={`Remove ${r.sym}`} style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 13 }}>✕</button>}
         </div>
       ))}
-      {positions.length > 0 && (
+      {portfolioRows.length > 0 && (
         <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 10, fontFamily: MONO, fontSize: 13, fontWeight: 500 }}>
           {priv(<span style={{ color: C.muted }}>{t("Total")} · {fmt(portTotals.val)}</span>)}
           {priv(<span style={{ color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}
@@ -13339,16 +13553,109 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         {/* --- Portfolio (right rail) --- */}
         {panels.portfolio && (
           <div id="sec-portfolio" className="v-scrollin" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
-            <div style={panelHead({ divider: positions.length > 0, pad: "16px 16px 12px" })}>
+            <div style={panelHead({ divider: portfolioRows.length > 0, pad: "16px 16px 12px" })}>
               <span>{t("Portfolio")}</span>
-              {positions.length > 0 && (
+              {portfolioRows.length > 0 && (
                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(portTotals.pnl) }}>{prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat") ? `${prefDirGlyph(portTotals.pnl > 0 ? "up" : portTotals.pnl < 0 ? "down" : "flat")} ` : ""}{portTotals.pnl >= 0 ? "+" : ""}{fmt(portTotals.pnl)} ({portTotals.pnlPct >= 0 ? "+" : ""}{portTotals.pnlPct.toFixed(2)}%)</span>)}
-                  <button onClick={briefPortfolio} title={t("Read on air")} aria-label={t("Read on air")} className="v-tap" style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.accentText, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶</button>
+                  <button onClick={() => briefPortfolio()} title={t("Read on air")} aria-label={t("Read on air")} className="v-tap" style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.accentText, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "2px 7px", cursor: "pointer" }}>▶</button>
                 </span>
               )}
             </div>
-            {positions.length > 0 && (() => {
+            {/* --- Linked brokerages --- */}
+            {(() => {
+              const unlinked = BROKER_INSTITUTIONS.filter(i => !brokerConnections.some(c => c.institutionId === i.id));
+              const isDemoMode = !brokerServer?.configured;
+              const chip = { display: "inline-flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 12, color: C.text };
+              return (
+                <div style={{ padding: "10px 12px", borderTop: portfolioRows.length > 0 ? `1px solid ${C.grid}` : "none", display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                    <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 10, letterSpacing: "-0.010em", color: C.faint }}>{t("LINKED ACCOUNTS")}</span>
+                    {serverConnections.length > 0 && (
+                      <button onClick={refreshBrokers} disabled={brokerBusy === "refresh"} title={t("Re-pull holdings from the brokerage")}
+                        style={{ background: "transparent", border: `1px solid ${C.panelEdge}`, color: C.accentText, borderRadius: R.xs, fontFamily: SANS, fontSize: 10, padding: "2px 7px", cursor: brokerBusy === "refresh" ? "default" : "pointer", opacity: brokerBusy === "refresh" ? 0.5 : 1 }}>
+                        {brokerBusy === "refresh" ? "…" : "↻"}
+                      </button>
+                    )}
+                  </div>
+
+                  {brokerConnections.map(c => {
+                    const inst = BROKER_INSTITUTIONS.find(i => i.id === c.institutionId);
+                    const sum = brokerTotals.find(b => b.broker === c.institutionId);
+                    return (
+                      <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 8, background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, padding: "8px 10px" }}>
+                        <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: inst?.tint || C.faint, flex: "0 0 auto" }} />
+                        <span style={{ minWidth: 0, flex: 1 }}>
+                          <span style={{ ...chip, fontWeight: 600 }}>
+                            {c.institutionName}
+                            {/* The one label that must never be missable. A demo
+                                book and a real one are drawn identically in
+                                every other respect, on purpose — this is the
+                                difference. */}
+                            {c.demo && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.06em", color: C.faint, border: `1px solid ${C.panelEdge}`, borderRadius: 3, padding: "0 3px" }}>DEMO</span>}
+                          </span>
+                          <span style={{ display: "block", fontFamily: SANS, fontSize: 11, color: C.faint }}>
+                            {(c.accounts || []).length} {(c.accounts || []).length === 1 ? t("account") : t("accounts")}
+                            {sum ? ` · ${sum.positions} ${sum.positions === 1 ? t("position") : t("positions")}` : ""}
+                            {c.staleReason ? ` · ${t("last refresh failed")}` : ""}
+                          </span>
+                        </span>
+                        {sum && priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(sum.pnl), whiteSpace: "nowrap" }}>{sum.pnl >= 0 ? "+" : ""}{fmt(sum.pnl)}</span>)}
+                        <button onClick={() => disconnectBroker(c)} className="v-rowx" aria-label={`${t("Unlink")} ${c.institutionName}`} title={t("Unlink")}
+                          style={{ background: "transparent", border: "none", color: C.faint, cursor: "pointer", fontFamily: SANS, fontSize: 12, padding: 0 }}>✕</button>
+                      </div>
+                    );
+                  })}
+
+                  {/* The connect list. Collapsed to one button until asked for,
+                      because the rail is narrow and three institutions is three
+                      rows the panel does not need until somebody wants one. */}
+                  {unlinked.length > 0 && !brokerSheet && (
+                    <button onClick={() => setBrokerSheet(true)}
+                      style={{ ...button("ghost", "sm"), width: "100%", padding: 9, borderRadius: R.sm, fontSize: 12.5 }}>
+                      {brokerConnections.length ? t("Link another account") : t("Link an account")}
+                    </button>
+                  )}
+
+                  {brokerSheet && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {unlinked.map(inst => (
+                        <button key={inst.id} onClick={() => connectBroker(inst.id)} disabled={!!brokerBusy}
+                          title={inst.note}
+                          style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, padding: "9px 10px", cursor: brokerBusy ? "default" : "pointer", opacity: brokerBusy && brokerBusy !== inst.id ? 0.5 : 1 }}>
+                          <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: inst.tint }} />
+                          <span style={{ ...chip, flex: 1 }}>{inst.name}</span>
+                          <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint }}>
+                            {brokerBusy === inst.id ? "…" : isDemoMode ? "DEMO" : "CONNECT"}
+                          </span>
+                        </button>
+                      ))}
+                      {/* Said before the click, not after. Whether this button
+                          reaches a real brokerage depends on server config the
+                          user cannot see, so the panel says which one it is. */}
+                      <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint, lineHeight: 1.5 }}>
+                        {isDemoMode
+                          ? t("No aggregator is configured, so these link a labelled demonstration book — not a real account. Nothing is sent anywhere.")
+                          : t("Opens your brokerage's own sign-in through Plaid. Vantage never sees your brokerage password, and reads positions only.")}
+                      </div>
+                      <button onClick={() => setBrokerSheet(false)} style={{ ...button("ghost", "sm"), width: "100%", padding: 7, borderRadius: R.sm, fontSize: 12 }}>{t("Cancel")}</button>
+                    </div>
+                  )}
+
+                  {brokerErr && <div role="alert" style={{ fontFamily: SANS, fontSize: 11.5, color: C.down, lineHeight: 1.5 }}>{brokerErr}</div>}
+
+                  {/* Cash is reported by the brokerage but is not a position, so
+                      it is shown here and kept out of the P&L above. */}
+                  {linkedCash.length > 0 && priv(
+                    <div style={{ fontFamily: MONO, fontSize: 11, color: C.faint }}>
+                      {t("Cash")} · {fmt(linkedCash.reduce((a, c) => a + c.cash, 0))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {portfolioRows.length > 0 && (() => {
               const series = portfolioRows
                 .map(r => ({ closes: getCloses(r.sym), shares: r.shares }))
                 .filter(x => x.closes.length > 1);
@@ -13407,14 +13714,23 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                   aria-label={`${t("Show")} ${r.sym}`}
                   style={{ position: "absolute", inset: 0, width: "100%", background: "transparent", border: "none", cursor: "pointer", padding: 0 }} />
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", pointerEvents: "none" }}>
-                  <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span></span>
+                  <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>
+                    {r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span>
+                    {/* Two lots of the same symbol at two brokerages are two
+                        rows, so the row has to say which one it is. */}
+                    {r.broker && <span style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginLeft: 6 }}>{r.brokerName}{r.demo ? " · DEMO" : ""}</span>}
+                  </span>
                   {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>)}
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 2, position: "relative", pointerEvents: "none" }}>
                   {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>@{fmt(r.cost / r.shares)} → {r.price != null ? fmt(r.price) : "—"}</span>)}
                   {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.pnl) }}>{r.pnlPct == null ? "" : `${r.pnlPct >= 0 ? "+" : ""}${r.pnlPct.toFixed(1)}%`}</span>)}
-                  <button onClick={() => removePosition(r.id)} className="v-rowx" aria-label={`Remove ${r.sym}`}
-                    style={{ background: "transparent", border: "none", padding: 0, fontFamily: MONO, fontSize: 12, color: C.faint, cursor: "pointer", pointerEvents: "auto" }}>✕</button>
+                  {/* No ✕ on a linked lot: it is not a list entry, it is what
+                      the brokerage reports. Unlink the account to remove it. */}
+                  {r.source === "linked"
+                    ? <span aria-hidden="true" title={`${r.brokerName} · ${r.account}`} style={{ fontFamily: SANS, fontSize: 10, color: C.faint }}>🔗</span>
+                    : <button onClick={() => removePosition(r.id)} className="v-rowx" aria-label={`Remove ${r.sym}`}
+                        style={{ background: "transparent", border: "none", padding: 0, fontFamily: MONO, fontSize: 12, color: C.faint, cursor: "pointer", pointerEvents: "auto" }}>✕</button>}
                 </div>
                 {r.pnlPct != null && (
                   <div style={{ position: "relative", height: 4, background: C.grid, borderRadius: 2, marginTop: 6, overflow: "hidden", pointerEvents: "none" }}>
@@ -13426,7 +13742,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               </div>
               ));
             })()}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16, borderTop: positions.length ? `1px solid ${C.panelEdge}` : "none" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16, borderTop: `1px solid ${C.panelEdge}` }}>
               {(() => {
                 const fieldStyle = { boxSizing: "border-box", background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 13, padding: "9px 12px", outline: "none" };
                 return (<>
