@@ -6849,9 +6849,25 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 
   // ---- live polling ----
   const liveStaleRef = useRef(false); // true when the market's closed (last trade is old) → poll far less
+  // Symbols the live poll must cover beyond the watchlist — everything held,
+  // typed or linked. Filled by an effect near allPositions; see pollLive.
+  const pollExtraRef = useRef([]);
   const pollLive = useCallback(async () => {
     if (!live) return false;
-    const syms = [...new Set([selected, ...watchlist])];
+    // Held symbols are polled too. They were not, and the omission was
+    // invisible in demo mode (where every symbol is synthesized) and obvious
+    // the moment a linked book arrived: a Morgan Stanley position in JPM had
+    // no price at all, because JPM was in nobody's watchlist.
+    //
+    // Read through a ref rather than a dependency: allPositions is declared
+    // two thousand lines below this callback, so naming it in the dep array
+    // would be a temporal-dead-zone throw at render. The ref is filled by an
+    // effect that runs after both exist.
+    //
+    // Watchlist first, then holdings, then truncate — the batch endpoint caps
+    // at 25 symbols, and the tape going stale is more visible than one
+    // position's mark.
+    const syms = [...new Set([selected, ...watchlist, ...pollExtraRef.current])].slice(0, 25);
     // ONE batched request per tick — the proxy fans out to Finnhub server-side
     // (/api/quote?symbols=, up to 25). Polling per symbol counted 8 rate-limit
     // hits for one refresh and drained the per-IP quota in minutes.
@@ -9006,7 +9022,25 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     catch (e) { setBrokerErr(humanizeError(e)); }
     finally { setBrokerBusy(""); }
   }, [brokerServer?.configured, serverConnections.length]);
-  const portTotals = portfolioRows.reduce((a, r) => { a.val += r.val || 0; a.cost += r.cost || 0; return a; }, { val: 0, cost: 0 });
+  // An unpriced row contributes its COST to both sides, not zero to one of
+  // them. `a.val += r.val || 0` looks harmless and is the worst arithmetic in
+  // this file: a holding we cannot price counted as worth nothing while still
+  // counting its full cost basis, so the panel reported a loss equal to
+  // everything it failed to fetch. Measured on a linked Morgan Stanley book
+  // with four of six symbols unpriced: the header read −113,644.35 (−46.92%)
+  // on a book that was up 27,807.15, and the per-broker summary beside it —
+  // which already fell back to cost — disagreed by 141k.
+  //
+  // Cost is the honest stand-in: it contributes no P&L in either direction,
+  // which is exactly what "we don't know what this is worth" should do to a
+  // total. summarizeByBroker() has always done this; now they agree.
+  const portTotals = portfolioRows.reduce((a, r) => {
+    const cost = r.cost || 0;
+    a.val += r.val != null ? r.val : cost;
+    a.cost += cost;
+    if (r.val == null) a.unpriced += 1;
+    return a;
+  }, { val: 0, cost: 0, unpriced: 0 });
   portTotals.pnl = portTotals.val - portTotals.cost;
   portTotals.pnlPct = portTotals.cost > 0 ? (portTotals.pnl / portTotals.cost) * 100 : 0;
   const addPosition = () => {
@@ -10357,6 +10391,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     [watchlist, allPositions],
   );
   const heldSymbols = useMemo(() => new Set(allPositions.map(p => p.sym)), [allPositions]);
+  // Hand the held symbols to the live poll, which is declared far above this
+  // and cannot name allPositions directly without a temporal-dead-zone throw.
+  useEffect(() => { pollExtraRef.current = [...heldSymbols]; }, [heldSymbols]);
 
   const openVideoDesk = useCallback((topic, videos) => {
     if (!videos?.length) return;
