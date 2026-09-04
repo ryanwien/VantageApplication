@@ -38,6 +38,7 @@ import {
   normalizeSchwabAccounts, normalizeSchwabTransactions,
   schwabAccountHashes, tokenExpiresAt, tokenIsStale, refreshWindowClosed, schwabDate,
 } from "../src/brokers/schwab.js";
+import { msReady, msReadiness, normalizeMorganStanleyAccounts, normalizeMorganStanleyTrades } from "../src/brokers/morgan-stanley.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
@@ -156,6 +157,14 @@ const SCHWAB = {
   redirect: process.env.SCHWAB_REDIRECT_URI || "https://127.0.0.1:8787/api/brokers/schwab/callback",
 };
 const schwabConfigured = () => !!(SCHWAB.key && SCHWAB.secret);
+
+// Morgan Stanley — the seam, not the integration. Their APIs are granted by
+// invitation, and the response shapes arrive with onboarding rather than being
+// published, so nothing here guesses a field name. msReadiness() reports which
+// of the two things is still missing (credentials, then spec) and the connect
+// sheet says so instead of a flat "not configured", which would be three
+// different problems wearing one label. See src/brokers/morgan-stanley.js.
+const morganStanleyConfigured = () => msReady(process.env);
 const plaidBase = () => `https://${PLAID.env === "production" ? "production" : "sandbox"}.plaid.com`;
 // NOT pre-selecting the institution on /link/token/create is deliberate. Plaid's
 // institution ids are per-environment strings, and sandbox serves its own
@@ -413,6 +422,15 @@ async function refreshConnection(conn) {
         institutionId: conn.institutionId,
         institutionName: conn.institutionName,
       }).accounts;
+    } else if (conn.provider === "morgan-stanley") {
+      // The seam. There is no call here yet because there is no published
+      // endpoint to call — msReadiness() carries the reason, and it surfaces
+      // as this connection's staleReason rather than as a silent empty book.
+      // When the spec arrives, this becomes a fetch through msAgent() and a
+      // normalizeMorganStanleyAccounts(); nothing outside this branch changes.
+      const state = msReadiness(process.env);
+      if (!state.ready) throw new Error(state.message);
+      throw new Error("Morgan Stanley credentials and field map are set, but the fetch is not wired yet — see src/brokers/morgan-stanley.js.");
     } else {
       const holdings = await plaidCall("/investments/holdings/get", { access_token: conn.accessToken });
       conn.accounts = normalizePlaidHoldings(holdings, {
@@ -1589,11 +1607,15 @@ const server = http.createServer(async (req, res) => {
         // `providers` is the honest detail underneath: Schwab's own OAuth
         // reaches exactly one institution, Plaid reaches all three, and the
         // browser needs to know which button to draw for which row.
-        configured: plaidConfigured() || schwabConfigured(),
-        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : null),
+        configured: plaidConfigured() || schwabConfigured() || morganStanleyConfigured(),
+        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : (morganStanleyConfigured() ? "morgan-stanley" : null)),
         providers: {
           plaid: { configured: plaidConfigured(), env: plaidConfigured() ? PLAID.env : null, institutions: INSTITUTIONS.map(i => i.id) },
           schwab: { configured: schwabConfigured(), institutions: ["schwab"] },
+          // `readiness` rather than a bare boolean: "not configured" would
+          // collapse "nobody has invited you yet" and "we have keys but no
+          // spec" into one word, and they need different answers from a person.
+          "morgan-stanley": { configured: morganStanleyConfigured(), institutions: ["morgan-stanley"], readiness: msReadiness(process.env) },
         },
         env: plaidConfigured() ? PLAID.env : null,
         // The plan a LIVE link needs. The browser has its own copy in
@@ -1963,11 +1985,15 @@ const server = http.createServer(async (req, res) => {
         // `providers` is the honest detail underneath: Schwab's own OAuth
         // reaches exactly one institution, Plaid reaches all three, and the
         // browser needs to know which button to draw for which row.
-        configured: plaidConfigured() || schwabConfigured(),
-        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : null),
+        configured: plaidConfigured() || schwabConfigured() || morganStanleyConfigured(),
+        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : (morganStanleyConfigured() ? "morgan-stanley" : null)),
         providers: {
           plaid: { configured: plaidConfigured(), env: plaidConfigured() ? PLAID.env : null, institutions: INSTITUTIONS.map(i => i.id) },
           schwab: { configured: schwabConfigured(), institutions: ["schwab"] },
+          // `readiness` rather than a bare boolean: "not configured" would
+          // collapse "nobody has invited you yet" and "we have keys but no
+          // spec" into one word, and they need different answers from a person.
+          "morgan-stanley": { configured: morganStanleyConfigured(), institutions: ["morgan-stanley"], readiness: msReadiness(process.env) },
         },
         env: plaidConfigured() ? PLAID.env : null,
         needsPlan: BROKER_PLAN,
