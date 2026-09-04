@@ -341,7 +341,12 @@ const UNIVERSE = [
   { sym: "BAC", name: "Bank of America", base: 44.1, vol: 0.011 },
   { sym: "XOM", name: "Exxon Mobil", base: 117.5, vol: 0.010 },
   { sym: "DIS", name: "Walt Disney Co.", base: 96.8, vol: 0.014 },
-  { sym: "NFLX", name: "Netflix Inc.", base: 702.3, vol: 0.019 },
+  // Post-split. This was 702.30, which predates Netflix's 10-for-1 split and
+  // was the other half of the demo book showing NFLX down 89%: fixing the cost
+  // basis alone would have moved the absurdity from LIVE mode into DEMO mode,
+  // where the synthetic price is generated from this number and the position
+  // would have read up 734% instead.
+  { sym: "NFLX", name: "Netflix Inc.", base: 78.5, vol: 0.019 },
 ];
 
 // deterministic PRNG so every demo session opens the same "day"

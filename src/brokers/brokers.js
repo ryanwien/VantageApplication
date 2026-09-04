@@ -114,7 +114,16 @@ const DEMO_BOOK = {
       holdings: [
         { sym: "JPM", shares: 220, cost: 198.55 },
         { sym: "META", shares: 95, cost: 512.4 },
-        { sym: "NFLX", shares: 40, cost: 744.1 },
+        // POST-SPLIT. This was 744.10, written against the app's synthetic
+        // NFLX price — but Netflix has since split 10-for-1, and with LIVE
+        // data on, a pre-split basis against a post-split quote showed the
+        // position down 89.5%. Nothing was broken; the number just looked it,
+        // which in a demo is the same thing.
+        //
+        // Any hardcoded basis drifts eventually. This one is deliberately a
+        // modest LOSER, because the rest of this account is green and a book
+        // with no red line in it reads as a mock-up.
+        { sym: "NFLX", shares: 40, cost: 84.2 },
         { sym: "BAC", shares: 900, cost: 39.62 },
       ],
     },
@@ -169,7 +178,9 @@ const DEMO_TAPE = {
   "morgan-stanley": {
     "active-assets": [
       { d: 1, side: "buy", sym: "JPM", shares: 60, price: 231.5 },
-      { d: 5, side: "sell", sym: "NFLX", shares: 15, price: 731.9 },
+      // Post-split too — this read "SELL NFLX ×15 @ 731.90" on a tape whose
+      // own quote column said 78. Same split, same fix.
+      { d: 5, side: "sell", sym: "NFLX", shares: 15, price: 80.1 },
       { d: 14, side: "buy", sym: "META", shares: 40, price: 548.3 },
       { d: 23, side: "buy", sym: "BAC", shares: 400, price: 41.15 },
       { d: 38, side: "sell", sym: "DIS", shares: 90, price: 101.2 },
