@@ -43,6 +43,7 @@ import { api, ApiError, tokenStore } from "./src/api/client.js";
 import {
   INSTITUTIONS as BROKER_INSTITUTIONS, holdingsFromConnections, cashFromConnections,
   mergePositions, summarizeByBroker, speakableBrokerLine, matchInstitution,
+  activityFromConnections,
 } from "./src/brokers/brokers.js";
 import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink } from "./src/brokers/links.js";
 import { AuthProvider, useAuth } from "./src/api/auth-context.jsx";
@@ -8830,6 +8831,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 
   // ---- portfolio: holdings with live P&L; the anchor can brief it ----
   const [deskPortfolio, setDeskPortfolio] = useState(false); // show the portfolio inside the desk response box
+  // Which question the panel is answering: what you HOLD, or what you TRADED.
+  // A closed position appears in one and not the other, so they cannot be one list.
+  const [portfolioView, setPortfolioView] = useState("positions");
   const [positions, setPositions] = useState(() => { try { return JSON.parse(window.localStorage.getItem("tape-positions") || "[]"); } catch { return []; } });
   useEffect(() => { try { window.localStorage.setItem("tape-positions", JSON.stringify(positions)); } catch { /* private */ } }, [positions]);
   const [portForm, setPortForm] = useState({ sym: "", shares: "", cost: "" });
@@ -8873,6 +8877,34 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   );
   const linkedRows = useMemo(() => holdingsFromConnections(brokerConnections), [brokerConnections]);
   const linkedCash = useMemo(() => cashFromConnections(brokerConnections), [brokerConnections]);
+  // The tape. Demo connections carry their own activity, so this needs no
+  // server; a LIVE connection has none attached (the holdings call does not
+  // return trades) and is fetched from /api/brokers/activity on demand — which
+  // is why the panel opens on positions and only pays for the tape when asked.
+  // Named for what it is rather than for "tape". This component already has a
+  // `tapeRows` (the scrolling ticker) and a `liveTape` (live price history),
+  // and both were collided with on the way here — a third tape would have
+  // shadowed one of them somewhere quieter than a build error.
+  const [brokerTrades, setBrokerTrades] = useState(null);   // null = not fetched, [] = none
+  const [tapeBusy, setTapeBusy] = useState(false);
+  const [tapeErr, setTapeErr] = useState("");
+  const demoTape = useMemo(() => activityFromConnections(demoLinks), [demoLinks]);
+  const hasLiveLink = serverConnections.length > 0;
+  const fetchTape = useCallback(async () => {
+    if (!hasLiveLink) return;
+    setTapeBusy(true); setTapeErr("");
+    try {
+      const j = await api.brokers.activity();
+      setBrokerTrades(j.activity || []);
+    } catch (e) { setTapeErr(humanizeError(e)); setBrokerTrades([]); }
+    finally { setTapeBusy(false); }
+  }, [hasLiveLink]);
+  // Newest first across both sources, so a book that is half demo and half
+  // live still reads as one chronological tape.
+  const brokerTape = useMemo(
+    () => [...demoTape, ...(brokerTrades || [])].sort((x, y) => (y.at ?? -Infinity) - (x.at ?? -Infinity)),
+    [demoTape, brokerTrades],
+  );
   // A linked book names symbols the demo market has never synthesized (an ETF,
   // a holding outside the 13-name universe). Without this they draw a price of
   // "—" and contribute nothing to the totals, which reads as a broken import.
@@ -13580,8 +13612,65 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 </span>
               )}
             </div>
+            {/* --- Positions / Activity --- the panel answers two different
+                questions and they need different lists. "What do I hold" is the
+                positions view; "what did I buy or sell" is the tape, and a
+                closed trade appears in one and not the other. Only offered once
+                there is a linked account, because a typed position has no
+                trade history to show. */}
+            {brokerConnections.length > 0 && (
+              <div style={{ display: "flex", gap: 6, padding: "10px 12px 0" }}>
+                {[["positions", t("Positions")], ["activity", t("Activity")]].map(([id, label]) => (
+                  <button key={id} onClick={() => {
+                    setPortfolioView(id);
+                    // Fetch the live tape on first open, never on mount.
+                    if (id === "activity" && hasLiveLink && brokerTrades === null && !tapeBusy) fetchTape();
+                  }}
+                    aria-pressed={portfolioView === id}
+                    style={{ flex: 1, background: portfolioView === id ? C.surfaceRaised : "transparent", border: `1px solid ${portfolioView === id ? C.accent : C.panelEdge}`, color: portfolioView === id ? C.text : C.faint, borderRadius: R.xs, fontFamily: SANS, fontWeight: 600, fontSize: 11, padding: "5px 8px", cursor: "pointer" }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {portfolioView === "activity" && (
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {tapeBusy && <div style={{ padding: "12px", fontFamily: SANS, fontSize: 12, color: C.faint }}>{t("Pulling your trades…")}</div>}
+                {tapeErr && <div style={{ padding: "12px", fontFamily: SANS, fontSize: 12, color: C.down }}>{tapeErr}</div>}
+                {!tapeBusy && !brokerTape.length && (
+                  <div style={{ padding: "12px", fontFamily: SANS, fontSize: 12.5, color: C.faint, lineHeight: 1.6 }}>
+                    {t("No buys or sells in the last 180 days.")}
+                  </div>
+                )}
+                {brokerTape.slice(0, 40).map(r => (
+                  <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderTop: `1px solid ${C.grid}` }}>
+                    {/* The side is the first thing read, so it is the first
+                        thing drawn — and coloured with the same up/down palette
+                        the rest of the desk uses, so a colour-blind reader gets
+                        the word rather than only the hue. */}
+                    <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", color: r.side === "buy" ? C.up : C.down, border: `1px solid ${r.side === "buy" ? C.up : C.down}`, borderRadius: R.xs, padding: "1px 5px", opacity: 0.9 }}>
+                      {r.side === "buy" ? t("BUY") : t("SELL")}
+                    </span>
+                    <button onClick={() => setSelected(r.sym)} title={`${t("Show")} ${r.sym}`}
+                      style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>{r.sym}</button>
+                    {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>×{r.shares}{r.price != null ? ` @ ${fmt(r.price)}` : ""}</span>)}
+                    <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+                      {r.demo && <span style={{ fontFamily: MONO, fontSize: 9, color: C.faint, border: `1px solid ${C.panelEdge}`, borderRadius: R.xs, padding: "0 4px" }}>DEMO</span>}
+                      <span title={`${r.brokerName} · ${r.account}`} style={{ fontFamily: SANS, fontSize: 10, color: C.faint }}>
+                        {r.at != null ? new Date(r.at).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+                {brokerTape.length > 40 && (
+                  <div style={{ padding: "8px 12px", fontFamily: SANS, fontSize: 11, color: C.faint, borderTop: `1px solid ${C.grid}` }}>
+                    {t("Showing the 40 most recent of")} {brokerTape.length}.
+                  </div>
+                )}
+              </div>
+            )}
             {/* --- Linked brokerages --- */}
-            {(() => {
+            {portfolioView === "positions" && (() => {
               const unlinked = BROKER_INSTITUTIONS.filter(i => !brokerConnections.some(c => c.institutionId === i.id));
               // Three states, not two. A server with no aggregator links a demo
               // book for anyone; a configured one links a LIVE account, and that
@@ -13681,7 +13770,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               );
             })()}
 
-            {portfolioRows.length > 0 && (() => {
+            {portfolioView === "positions" && portfolioRows.length > 0 && (() => {
               const series = portfolioRows
                 .map(r => ({ closes: getCloses(r.sym), shares: r.shares }))
                 .filter(x => x.closes.length > 1);
@@ -13701,7 +13790,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
             {/* Allocation strip: each holding's share of portfolio value, coloured
                 by its P&L direction. Percent-of-total only — no dollar amounts —
                 so it stays honest with privacy mode on. */}
-            {portfolioRows.length > 1 && (() => {
+            {portfolioView === "positions" && portfolioRows.length > 1 && (() => {
               const slices = portfolioRows.map(r => ({ sym: r.sym, v: (r.price != null ? r.price : r.cost / r.shares) * r.shares, pnl: r.pnl ?? 0 }));
               const total = slices.reduce((a, x) => a + x.v, 0);
               if (!(total > 0)) return null;
@@ -13718,7 +13807,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 </div>
               );
             })()}
-            {(() => {
+            {portfolioView === "positions" && (() => {
               const maxPnl = Math.max(0.5, ...portfolioRows.map(r => Math.abs(r.pnlPct ?? 0)));
               return portfolioRows.map(r => (
               // A div wrapping a stretched button, not a button wrapping a
@@ -13768,6 +13857,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               </div>
               ));
             })()}
+            {/* Typing a position by hand belongs to the positions view. On the
+                tape it would be an input with nothing to add to — you cannot
+                hand-enter a trade you did not make. */}
+            {portfolioView === "positions" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 16, borderTop: `1px solid ${C.panelEdge}` }}>
               {(() => {
                 const fieldStyle = { boxSizing: "border-box", background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, color: C.text, fontFamily: SANS, fontSize: 13, padding: "9px 12px", outline: "none" };
@@ -13785,6 +13878,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               {/* The rail's one primary action. */}
               <button onClick={addPosition} style={{ ...button("primary", "sm"), width: "100%", padding: 10, borderRadius: R.sm, fontSize: 13.5, fontWeight: 700 }}>{t("Add position")}</button>
             </div>
+            )}
           </div>
         )}
 

@@ -32,7 +32,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { GRAPHQL_OPS, isKnownOp } from "../src/datahub/catalog.js";
-import { INSTITUTIONS, institutionById, matchInstitution, normalizePlaidHoldings, brokerPlanGate, BROKER_PLAN } from "../src/brokers/brokers.js";
+import { INSTITUTIONS, institutionById, matchInstitution, normalizePlaidHoldings, normalizePlaidTransactions, brokerPlanGate, BROKER_PLAN } from "../src/brokers/brokers.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
@@ -1583,6 +1583,45 @@ const server = http.createServer(async (req, res) => {
       await refreshConnection(conn);
       saveBrokers();
       return send(res, 200, { connection: publicConnection(conn) });
+    }
+
+    // The tape: what was bought and sold. A separate route from /refresh
+    // because it is a separate Plaid product call with its own date window,
+    // and because the Portfolio panel opens on positions — nobody should pay
+    // for a transactions fetch until they ask to see one.
+    //
+    // Not plan-gated: by the time there is a live connection to read from, the
+    // gate has already been passed at /link. A demo tape needs no server.
+    if (p === "/api/brokers/activity" && req.method === "GET") {
+      const email = emailFromReq(req, url);
+      if (!email) return send(res, 401, { error: "Not signed in." });
+      const rec = brokerRecord(email);
+      if (!rec.connections.length) return send(res, 200, { activity: [] });
+      // Plaid wants YYYY-MM-DD. 180 days by default: enough to cover a quarter
+      // plus the trades that opened it, without pulling years nobody scrolls.
+      const days = Math.min(730, Math.max(1, Number(url.searchParams.get("days")) || 180));
+      const iso = (ms) => new Date(ms).toISOString().slice(0, 10);
+      const end = Date.now();
+      const out = [];
+      for (const conn of rec.connections) {
+        try {
+          const j = await plaidCall("/investments/transactions/get", {
+            access_token: conn.accessToken,
+            start_date: iso(end - days * 86400000),
+            end_date: iso(end),
+          });
+          out.push(...normalizePlaidTransactions(j, {
+            connectionId: conn.id,
+            institutionId: conn.institutionId,
+            institutionName: conn.institutionName,
+          }));
+        } catch (e) {
+          // One broker being unreadable must not blank the others' tape.
+          out.push({ error: String(e.message || e), broker: conn.institutionId, brokerName: conn.institutionName });
+        }
+      }
+      const rows = out.filter(r => !r.error).sort((a, b) => (b.at ?? -Infinity) - (a.at ?? -Infinity));
+      return send(res, 200, { activity: rows, errors: out.filter(r => r.error), days });
     }
 
     // Re-pull the book. No id refreshes every link the account has.

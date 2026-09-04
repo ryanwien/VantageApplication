@@ -132,6 +132,55 @@ const DEMO_BOOK = {
   ],
 };
 
+// ---------- the demo tape ----------
+//
+// What you BOUGHT AND SOLD, which is a different question from what you hold —
+// a position that was opened and closed leaves no trace in a holdings list, and
+// it is exactly the row somebody scrolls back to find.
+//
+// Days are offsets, not dates: a fixed calendar would be visibly stale a month
+// from now, and "3 days ago" reads as a live account in a way that
+// "2026-02-14" never does. Resolved against the same `at` the connection is
+// built with, so the whole demo stays one consistent moment.
+//
+// The buys line up with the holdings above and the sells do not — a closed
+// NVDA trade at Robinhood, a trimmed DIS at Morgan Stanley — because a tape
+// where every row still shows up as a position is a tape nobody needs.
+const DEMO_TAPE = {
+  robinhood: {
+    individual: [
+      { d: 2, side: "buy", sym: "TSLA", shares: 10, price: 241.15 },
+      { d: 9, side: "sell", sym: "NVDA", shares: 30, price: 137.4 },
+      { d: 16, side: "buy", sym: "NVDA", shares: 50, price: 121.05 },
+      { d: 31, side: "buy", sym: "AMD", shares: 65, price: 171.05 },
+    ],
+  },
+  schwab: {
+    brokerage: [
+      { d: 4, side: "buy", sym: "AAPL", shares: 25, price: 226.4 },
+      { d: 12, side: "sell", sym: "XOM", shares: 50, price: 119.8 },
+      { d: 27, side: "buy", sym: "MSFT", shares: 60, price: 402.18 },
+    ],
+    roth: [
+      { d: 6, side: "buy", sym: "GOOGL", shares: 35, price: 166.2 },
+      { d: 41, side: "buy", sym: "AMZN", shares: 70, price: 176.25 },
+    ],
+  },
+  "morgan-stanley": {
+    "active-assets": [
+      { d: 1, side: "buy", sym: "JPM", shares: 60, price: 231.5 },
+      { d: 5, side: "sell", sym: "NFLX", shares: 15, price: 731.9 },
+      { d: 14, side: "buy", sym: "META", shares: 40, price: 548.3 },
+      { d: 23, side: "buy", sym: "BAC", shares: 400, price: 41.15 },
+      { d: 38, side: "sell", sym: "DIS", shares: 90, price: 101.2 },
+    ],
+    ira: [
+      { d: 8, side: "buy", sym: "MSFT", shares: 40, price: 419.7 },
+      { d: 52, side: "buy", sym: "DIS", shares: 310, price: 104.35 },
+    ],
+  },
+};
+
 // A demo connection, shaped exactly like a real one so nothing downstream has
 // to branch on `demo` except the parts that LABEL it.
 //
@@ -154,6 +203,13 @@ export function demoConnection(institutionId, at = Date.now()) {
       mask: a.mask,
       cash: a.cash,
       holdings: a.holdings.map((h) => ({ ...h })),
+      activity: (DEMO_TAPE[institutionId]?.[a.id] || []).map((t) => ({
+        side: t.side,
+        sym: t.sym,
+        shares: t.shares,
+        price: t.price,
+        at: at - t.d * 86400000,
+      })),
     })),
   };
 }
@@ -191,6 +247,45 @@ export function holdingsFromConnections(connections = []) {
     }
   }
   return rows;
+}
+
+// The tape: every buy and sell across every linked account, newest first.
+//
+// Sorted here rather than in the panel because "what did I trade" is a
+// chronological question and the answer spans brokers — a list grouped by
+// institution answers a question nobody asked. `amount` is derived once, so no
+// caller has to remember whether a sell is negative (it is not; `side` carries
+// the direction and the UI colours from it).
+export function activityFromConnections(connections = []) {
+  const rows = [];
+  for (const c of connections || []) {
+    for (const acct of c.accounts || []) {
+      for (const t of acct.activity || []) {
+        const sym = String(t.sym || "").toUpperCase();
+        const shares = Math.abs(Number(t.shares));
+        const price = Number(t.price);
+        const side = t.side === "sell" ? "sell" : "buy";
+        if (!sym || !Number.isFinite(shares) || shares === 0) continue;
+        const at = Number(t.at);
+        rows.push({
+          id: `${c.id}:${acct.id}:${sym}:${side}:${at}`,
+          at: Number.isFinite(at) ? at : null,
+          side,
+          sym,
+          shares,
+          price: Number.isFinite(price) ? price : null,
+          amount: Number.isFinite(price) ? price * shares : null,
+          demo: !!c.demo,
+          broker: c.institutionId,
+          brokerName: c.institutionName || institutionName(c.institutionId),
+          account: acct.name,
+          accountId: acct.id,
+        });
+      }
+    }
+  }
+  // Undated rows sink rather than sorting randomly to the top.
+  return rows.sort((a, b) => (b.at ?? -Infinity) - (a.at ?? -Infinity));
 }
 
 // Cash is not a position and must never be drawn as one — but a book that
@@ -366,6 +461,48 @@ export function normalizePlaidHoldings(payload = {}, { institutionId, institutio
     connectedAt: Date.now(),
     accounts: [...byAccount.values()],
   };
+}
+
+// Plaid's /investments/transactions/get → the same tape rows as the demo book.
+//
+// Plaid reports far more than trades on this endpoint — dividends, fees,
+// transfers, cash movements — and only `buy` and `sell` are trades. Everything
+// else is dropped rather than drawn as a mystery row with no share count.
+//
+// Its `quantity` is signed (negative on a sell) and its `amount` is signed the
+// other way round (positive when money leaves). Neither sign is trusted here:
+// `subtype` says what happened, and the magnitudes are taken as magnitudes.
+export function normalizePlaidTransactions(payload = {}, { connectionId, institutionId, institutionName: instName, accounts } = {}) {
+  const securities = new Map();
+  for (const s of payload.securities || []) securities.set(s.security_id, s);
+  const acctNames = new Map();
+  for (const a of payload.accounts || accounts || []) acctNames.set(a.account_id, a.name || "Account");
+
+  const rows = [];
+  for (const t of payload.investment_transactions || []) {
+    const subtype = String(t.subtype || "").toLowerCase();
+    if (subtype !== "buy" && subtype !== "sell") continue;
+    const sym = String(securities.get(t.security_id)?.ticker_symbol || "").toUpperCase().trim();
+    const shares = Math.abs(Number(t.quantity));
+    if (!sym || !Number.isFinite(shares) || shares === 0) continue;
+    const price = Number(t.price);
+    const at = Date.parse(t.date);
+    rows.push({
+      id: t.investment_transaction_id || `${connectionId}:${sym}:${subtype}:${t.date}`,
+      at: Number.isFinite(at) ? at : null,
+      side: subtype,
+      sym,
+      shares,
+      price: Number.isFinite(price) ? price : null,
+      amount: Number.isFinite(price) ? price * shares : Math.abs(Number(t.amount)) || null,
+      demo: false,
+      broker: institutionId || null,
+      brokerName: instName || institutionName(institutionId),
+      account: acctNames.get(t.account_id) || "Account",
+      accountId: t.account_id,
+    });
+  }
+  return rows.sort((a, b) => (b.at ?? -Infinity) - (a.at ?? -Infinity));
 }
 
 // A one-line spoken summary of a linked book, for the anchor. Returns null when

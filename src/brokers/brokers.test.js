@@ -13,6 +13,8 @@ import {
   matchInstitution,
   brokerPlanGate,
   BROKER_PLAN,
+  activityFromConnections,
+  normalizePlaidTransactions,
 } from "./brokers.js";
 
 describe("the catalog", () => {
@@ -311,5 +313,94 @@ describe("brokerPlanGate", () => {
 
   it("tells the caller a demo book is still available, so the refusal is not a dead end", () => {
     expect(brokerPlanGate("free").error).toMatch(/demonstration book/i);
+  });
+});
+
+describe("the tape — what was bought and sold", () => {
+  const NOW = 1_800_000_000_000;
+
+  it("flattens every account's activity, newest first", () => {
+    const rows = activityFromConnections([demoConnection("morgan-stanley", NOW)]);
+    expect(rows.length).toBe(7);
+    const times = rows.map((r) => r.at);
+    expect([...times].sort((a, b) => b - a)).toEqual(times);
+  });
+
+  it("spans brokers in one chronological list, not grouped by institution", () => {
+    const rows = activityFromConnections([
+      demoConnection("robinhood", NOW),
+      demoConnection("schwab", NOW),
+    ]);
+    const brokers = rows.map((r) => r.broker);
+    // Interleaved by date: a grouped list would have every robinhood row first.
+    expect(new Set(brokers).size).toBe(2);
+    expect(brokers.join(",")).not.toMatch(/^(robinhood,)+(schwab,?)+$/);
+  });
+
+  it("carries both sides, and shows a sell of something no longer held", () => {
+    const rows = activityFromConnections([demoConnection("robinhood", NOW)]);
+    expect(new Set(rows.map((r) => r.side))).toEqual(new Set(["buy", "sell"]));
+    const held = new Set(holdingsFromConnections([demoConnection("robinhood", NOW)]).map((h) => h.sym));
+    // TSLA is both traded and held; the point is the tape is not merely a
+    // restatement of the holdings list.
+    expect(rows.some((r) => held.has(r.sym))).toBe(true);
+  });
+
+  it("derives amount and keeps shares positive on a sell", () => {
+    const sell = activityFromConnections([demoConnection("robinhood", NOW)]).find((r) => r.side === "sell");
+    expect(sell.shares).toBeGreaterThan(0);
+    expect(sell.amount).toBeCloseTo(sell.shares * sell.price, 6);
+  });
+
+  it("dates are offsets from the connection's own moment, so the tape never goes stale", () => {
+    const a = activityFromConnections([demoConnection("schwab", NOW)])[0].at;
+    const b = activityFromConnections([demoConnection("schwab", NOW + 86400000)])[0].at;
+    expect(b - a).toBe(86400000);
+  });
+
+  it("survives empty and malformed input", () => {
+    expect(activityFromConnections()).toEqual([]);
+    expect(activityFromConnections([{ id: "a", accounts: [{ id: "b" }] }])).toEqual([]);
+    expect(activityFromConnections([
+      { id: "a", accounts: [{ id: "b", activity: [{ sym: "", shares: 1 }, { sym: "X", shares: 0 }] }] },
+    ])).toEqual([]);
+  });
+});
+
+describe("normalizePlaidTransactions", () => {
+  const payload = {
+    accounts: [{ account_id: "acc1", name: "Brokerage" }],
+    securities: [{ security_id: "sec1", ticker_symbol: "AAPL" }],
+    investment_transactions: [
+      { investment_transaction_id: "t1", account_id: "acc1", security_id: "sec1", date: "2026-08-01", type: "buy", subtype: "buy", quantity: 10, price: 200, amount: 2000 },
+      // Plaid signs a sell's quantity negative and its amount the other way.
+      { investment_transaction_id: "t2", account_id: "acc1", security_id: "sec1", date: "2026-08-20", type: "sell", subtype: "sell", quantity: -4, price: 220, amount: -880 },
+      { investment_transaction_id: "t3", account_id: "acc1", security_id: "sec1", date: "2026-08-10", type: "cash", subtype: "dividend", quantity: 0, price: 0, amount: 12.5 },
+      { investment_transaction_id: "t4", account_id: "acc1", security_id: "sec1", date: "2026-08-11", type: "fee", subtype: "management fee", quantity: 0, price: 0, amount: 3 },
+    ],
+  };
+
+  it("keeps only buys and sells", () => {
+    const rows = normalizePlaidTransactions(payload, { institutionId: "schwab" });
+    expect(rows.map((r) => r.id)).toEqual(["t2", "t1"]); // newest first
+  });
+
+  it("takes magnitudes rather than trusting Plaid's signs", () => {
+    const sell = normalizePlaidTransactions(payload, { institutionId: "schwab" }).find((r) => r.side === "sell");
+    expect(sell.shares).toBe(4);
+    expect(sell.amount).toBe(880);
+  });
+
+  it("joins the security's ticker and the account's name", () => {
+    const row = normalizePlaidTransactions(payload, { institutionId: "schwab" })[0];
+    expect(row.sym).toBe("AAPL");
+    expect(row.account).toBe("Brokerage");
+    expect(row.brokerName).toBe("Charles Schwab");
+  });
+
+  it("is never marked demo, and survives an empty payload", () => {
+    expect(normalizePlaidTransactions(payload, { institutionId: "schwab" }).every((r) => r.demo === false)).toBe(true);
+    expect(normalizePlaidTransactions({}, { institutionId: "schwab" })).toEqual([]);
+    expect(normalizePlaidTransactions(undefined, {})).toEqual([]);
   });
 });

@@ -187,6 +187,9 @@ export const api = {
     exchange: ({ publicToken, institutionName }) => post("/api/brokers/exchange", { publicToken, institutionName }),
     refresh: (connectionId = null) => post("/api/brokers/refresh", { connectionId }, { timeout: 30000 }),
     disconnect: (connectionId) => post("/api/brokers/disconnect", { connectionId }),
+    // The tape. Separate from refresh(): a different Plaid product, a date
+    // window, and a cost nobody should pay before opening the Activity view.
+    activity: (days = 180) => get(`/api/brokers/activity?days=${encodeURIComponent(days)}`),
   },
 
   // ---- scheduled market-brief agent ----
