@@ -8932,10 +8932,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // user thinks they connected a real account and did not.
   const connectBroker = useCallback(async (institutionId) => {
     setBrokerErr("");
-    // Demo first, and on every plan: an unconfigured server has no real link to
-    // offer anyone, and a demo book is exactly the simulated data Explorer is
-    // sold on. Only the LIVE link is a Trading Floor feature.
-    if (!brokerServer?.configured) {
+    // Which live path can reach THIS institution? Schwab has its own OAuth
+    // (first-party, no aggregator); everything else goes through Plaid. A
+    // server may have one, both, or neither configured, so the question is per
+    // institution rather than global.
+    const viaSchwab = institutionId === "schwab" && brokerServer?.providers?.schwab?.configured;
+    const viaPlaid = brokerServer?.providers?.plaid?.configured;
+    // Demo first, and on every plan: a server with no live path for this
+    // institution has nothing real to offer, and a demo book is exactly the
+    // simulated data Explorer is sold on. Only the LIVE link is Trading Floor.
+    if (!viaSchwab && !viaPlaid) {
       setDemoLinks(ls => addDemoLink(ls, institutionId));
       if (!panels.portfolio) setPanels(p => ({ ...p, portfolio: true }));
       return;
@@ -8946,6 +8952,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // them a fabricated book instead is the one outcome this feature must
       // never produce.
       setBrokerErr(`Linking a live brokerage account is a ${planLabel(FEATURE_PLAN.brokers)} feature. Open Settings → Account to upgrade; demo books stay on every plan.`);
+      return;
+    }
+    // Schwab's consent screen is a full-page navigation, not a modal: their
+    // OAuth server sets its own cookies and will not run inside an iframe or a
+    // popup we control. The server bounces back to /?connected=schwab, which
+    // the existing connected-provider handler already picks up.
+    if (viaSchwab) {
+      window.location.href = api.brokers.schwabConnectUrl();
       return;
     }
     setBrokerBusy(institutionId);

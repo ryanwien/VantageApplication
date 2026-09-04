@@ -33,6 +33,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { GRAPHQL_OPS, isKnownOp } from "../src/datahub/catalog.js";
 import { INSTITUTIONS, institutionById, matchInstitution, normalizePlaidHoldings, normalizePlaidTransactions, brokerPlanGate, BROKER_PLAN } from "../src/brokers/brokers.js";
+import {
+  SCHWAB_AUTH_URL, SCHWAB_TOKEN_URL, SCHWAB_TRADER, SCHWAB_SCOPE,
+  normalizeSchwabAccounts, normalizeSchwabTransactions,
+  schwabAccountHashes, tokenExpiresAt, tokenIsStale, refreshWindowClosed, schwabDate,
+} from "../src/brokers/schwab.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
@@ -134,6 +139,23 @@ const PLAID = {
   env: (process.env.PLAID_ENV || "sandbox").toLowerCase(),
 };
 const plaidConfigured = () => !!(PLAID.clientId && PLAID.secret);
+
+// Charles Schwab — the first FIRST-PARTY brokerage link: Schwab's own OAuth,
+// no aggregator in the middle. Independent of Plaid on purpose, so a desk can
+// run one, the other, or both; a Schwab link made here takes precedence over a
+// Schwab link made through Plaid, because first-party data needs no
+// reconciliation.
+//
+// The callback must be HTTPS and match the app registration EXACTLY — Schwab
+// compares the string, not the resolved host, and a trailing slash is a
+// different URI. It defaults to the loopback address their portal accepts for
+// individual apps.
+const SCHWAB = {
+  key: process.env.SCHWAB_APP_KEY || "",
+  secret: process.env.SCHWAB_APP_SECRET || "",
+  redirect: process.env.SCHWAB_REDIRECT_URI || "https://127.0.0.1:8787/api/brokers/schwab/callback",
+};
+const schwabConfigured = () => !!(SCHWAB.key && SCHWAB.secret);
 const plaidBase = () => `https://${PLAID.env === "production" ? "production" : "sandbox"}.plaid.com`;
 // NOT pre-selecting the institution on /link/token/create is deliberate. Plaid's
 // institution ids are per-environment strings, and sandbox serves its own
@@ -332,18 +354,73 @@ async function plaidCall(endpoint, body) {
   return j;
 }
 
+// ---- Schwab: OAuth + authenticated calls ----
+//
+// The access token lives 30 minutes, so nearly every call refreshes it first.
+// That makes the refresh path the hot path, not the exceptional one, and it
+// writes the new token back to disk immediately — a token minted and lost is a
+// token that forces a reconnect for no reason.
+async function schwabToken(body) {
+  // Schwab wants HTTP Basic with the app key and secret, and a form body.
+  const basic = Buffer.from(`${SCHWAB.key}:${SCHWAB.secret}`).toString("base64");
+  const r = await fetch(SCHWAB_TOKEN_URL, {
+    method: "POST",
+    headers: { Authorization: `Basic ${basic}`, "Content-Type": "application/x-www-form-urlencoded" },
+    body: form(body),
+    signal: AbortSignal.timeout(20000),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error_description || j.error || `Schwab token HTTP ${r.status}`);
+  return j;
+}
+
+async function schwabAuthed(conn, pathAndQuery) {
+  if (tokenIsStale(conn.expiresAt)) {
+    if (refreshWindowClosed(conn.connectedAt)) {
+      // A distinct, actionable message. "Unauthorized" would be true and
+      // useless: nothing retries its way out of an expired refresh token.
+      throw new Error("This Schwab link has expired — Schwab requires reconnecting every 7 days.");
+    }
+    const j = await schwabToken({ grant_type: "refresh_token", refresh_token: conn.refreshToken });
+    conn.accessToken = j.access_token;
+    if (j.refresh_token) conn.refreshToken = j.refresh_token;
+    conn.expiresAt = tokenExpiresAt(j.expires_in);
+    saveBrokers();
+  }
+  const r = await fetch(`${SCHWAB_TRADER}${pathAndQuery}`, {
+    headers: { Authorization: `Bearer ${conn.accessToken}`, Accept: "application/json" },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (r.status === 401) throw new Error("Schwab rejected the access token — reconnect the account.");
+  if (!r.ok) throw new Error(`Schwab returned HTTP ${r.status}.`);
+  return r.json();
+}
+
 // Pull the current book for one stored connection and write it back onto the
 // record. Never throws: a provider outage must leave the last known holdings on
 // screen with a reason, not blank the panel.
+//
+// Dispatches on the connection's own provider rather than assuming Plaid —
+// this is the seam the Plaid work left, and Schwab is the first thing through
+// it. Everything downstream reads the normalized shape and cannot tell which
+// branch produced it.
 async function refreshConnection(conn) {
   try {
-    const holdings = await plaidCall("/investments/holdings/get", { access_token: conn.accessToken });
-    const shaped = normalizePlaidHoldings(holdings, {
-      institutionId: conn.institutionId,
-      institutionName: conn.institutionName,
-      connectionId: conn.id,
-    });
-    conn.accounts = shaped.accounts;
+    if (conn.provider === "schwab") {
+      const accounts = await schwabAuthed(conn, "/accounts?fields=positions");
+      conn.accounts = normalizeSchwabAccounts(accounts, {
+        connectionId: conn.id,
+        institutionId: conn.institutionId,
+        institutionName: conn.institutionName,
+      }).accounts;
+    } else {
+      const holdings = await plaidCall("/investments/holdings/get", { access_token: conn.accessToken });
+      conn.accounts = normalizePlaidHoldings(holdings, {
+        institutionId: conn.institutionId,
+        institutionName: conn.institutionName,
+        connectionId: conn.id,
+      }).accounts;
+    }
     conn.refreshedAt = Date.now();
     conn.staleReason = null;
   } catch (e) {
@@ -1508,8 +1585,16 @@ const server = http.createServer(async (req, res) => {
       const email = emailFromReq(req, url);
       const rec = email ? BROKERS[email] : null;
       return send(res, 200, {
-        configured: plaidConfigured(),
-        provider: plaidConfigured() ? "plaid" : null,
+        // "Configured" means SOME live path exists, not specifically Plaid.
+        // `providers` is the honest detail underneath: Schwab's own OAuth
+        // reaches exactly one institution, Plaid reaches all three, and the
+        // browser needs to know which button to draw for which row.
+        configured: plaidConfigured() || schwabConfigured(),
+        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : null),
+        providers: {
+          plaid: { configured: plaidConfigured(), env: plaidConfigured() ? PLAID.env : null, institutions: INSTITUTIONS.map(i => i.id) },
+          schwab: { configured: schwabConfigured(), institutions: ["schwab"] },
+        },
         env: plaidConfigured() ? PLAID.env : null,
         // The plan a LIVE link needs. The browser has its own copy in
         // FEATURE_PLAN, but it is the client's copy — this is the server saying
@@ -1518,6 +1603,53 @@ const server = http.createServer(async (req, res) => {
         institutions: INSTITUTIONS.map(({ id, name, tint, access, note }) => ({ id, name, tint, access, note })),
         connections: (rec?.connections || []).map(publicConnection),
       });
+    }
+
+    // ---- Schwab's own OAuth (first-party; no aggregator) ----
+    //
+    // A top-level browser navigation, so the session token rides in the query
+    // string the way the Zoom/Google logins above already do — a redirect
+    // cannot carry an Authorization header.
+    if (p === "/api/brokers/schwab/login") {
+      const email = emailFromReq(req, url);
+      if (!schwabConfigured()) return send(res, 400, "Schwab is not configured — set SCHWAB_APP_KEY / SCHWAB_APP_SECRET in .env");
+      if (!email) return send(res, 401, "Sign in to Vantage first, then connect your Schwab account.");
+      const gate = gateBrokerPlan(email);
+      if (gate) return send(res, 403, gate.error);
+      const state = crypto.randomBytes(16).toString("hex");
+      pendingState.set(state, { prov: "schwab", email });
+      return send(res, 302, "", {
+        Location: `${SCHWAB_AUTH_URL}?${form({
+          response_type: "code", client_id: SCHWAB.key, redirect_uri: SCHWAB.redirect, scope: SCHWAB_SCOPE, state,
+        })}`,
+      });
+    }
+
+    if (p === "/api/brokers/schwab/callback") {
+      const code = url.searchParams.get("code"), state = url.searchParams.get("state");
+      if (url.searchParams.get("error")) return send(res, 400, `Schwab authorization denied: ${url.searchParams.get("error")}`);
+      const pend = pendingState.get(state);
+      if (!code || !pend || pend.prov !== "schwab") return send(res, 400, "Invalid OAuth state — try connecting again.");
+      pendingState.delete(state);
+      const j = await schwabToken({ grant_type: "authorization_code", code, redirect_uri: SCHWAB.redirect });
+      const rec = brokerRecord(pend.email);
+      const conn = {
+        id: `schwab-${crypto.randomBytes(6).toString("hex")}`,
+        provider: "schwab",
+        institutionId: "schwab",
+        institutionName: institutionById("schwab").name,
+        accessToken: j.access_token,     // ← never leaves this file
+        refreshToken: j.refresh_token,   // ← nor this
+        expiresAt: tokenExpiresAt(j.expires_in),
+        connectedAt: Date.now(),
+        accounts: [],
+      };
+      // One Schwab link per account. Re-authorizing replaces rather than
+      // appends, or every reconnect would double the positions on the desk.
+      rec.connections = [...rec.connections.filter(c => !(c.provider === "schwab")), conn];
+      await refreshConnection(conn);
+      saveBrokers();
+      return send(res, 302, "", { Location: `${APP_ORIGIN}/?connected=schwab` });
     }
 
     // Step 1 of a real link: mint a Plaid Link token. The browser opens Plaid's
@@ -1605,6 +1737,27 @@ const server = http.createServer(async (req, res) => {
       const out = [];
       for (const conn of rec.connections) {
         try {
+          if (conn.provider === "schwab") {
+            // Schwab is addressed per-account and by HASH, and it wants
+            // ISO-8601 with milliseconds where Plaid wants YYYY-MM-DD — the
+            // two differences that 400 silently if carried across.
+            for (const acct of conn.accounts || []) {
+              const q = form({
+                types: "TRADE",
+                startDate: schwabDate(end - days * 86400000),
+                endDate: schwabDate(end),
+              });
+              const txs = await schwabAuthed(conn, `/accounts/${encodeURIComponent(acct.id)}/transactions?${q}`);
+              out.push(...normalizeSchwabTransactions(txs, {
+                connectionId: conn.id,
+                accountName: acct.name,
+                accountId: acct.id,
+                institutionId: conn.institutionId,
+                institutionName: conn.institutionName,
+              }));
+            }
+            continue;
+          }
           const j = await plaidCall("/investments/transactions/get", {
             access_token: conn.accessToken,
             start_date: iso(end - days * 86400000),
@@ -1806,8 +1959,16 @@ const server = http.createServer(async (req, res) => {
       // and the browser answers it with a labelled demo book rather than an
       // error. `linked` is how many real accounts this caller actually has.
       status.brokers = {
-        configured: plaidConfigured(),
-        provider: plaidConfigured() ? "plaid" : null,
+        // "Configured" means SOME live path exists, not specifically Plaid.
+        // `providers` is the honest detail underneath: Schwab's own OAuth
+        // reaches exactly one institution, Plaid reaches all three, and the
+        // browser needs to know which button to draw for which row.
+        configured: plaidConfigured() || schwabConfigured(),
+        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : null),
+        providers: {
+          plaid: { configured: plaidConfigured(), env: plaidConfigured() ? PLAID.env : null, institutions: INSTITUTIONS.map(i => i.id) },
+          schwab: { configured: schwabConfigured(), institutions: ["schwab"] },
+        },
         env: plaidConfigured() ? PLAID.env : null,
         needsPlan: BROKER_PLAN,
         linked: email ? (BROKERS[email]?.connections?.length || 0) : 0,

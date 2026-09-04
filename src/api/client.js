@@ -190,6 +190,10 @@ export const api = {
     // The tape. Separate from refresh(): a different Plaid product, a date
     // window, and a cost nobody should pay before opening the Activity view.
     activity: (days = 180) => get(`/api/brokers/activity?days=${encodeURIComponent(days)}`),
+    // Schwab's own OAuth. A URL rather than a fetch, for the same reason the
+    // meetings connect is: the server has to set state and 302 to Schwab, and a
+    // redirect cannot carry an Authorization header — hence ?token=.
+    schwabConnectUrl: () => `/api/brokers/schwab/login?token=${encodeURIComponent(tokenStore.get())}`,
   },
 
   // ---- scheduled market-brief agent ----
