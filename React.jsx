@@ -8937,11 +8937,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   const allPositions = useMemo(() => mergePositions(positions, linkedRows), [positions, linkedRows]);
   const portfolioRows = allPositions.map(p => {
     const price = getRow(p.sym)?.price;
-    const cost = p.cost * p.shares;
+    // A null cost is UNKNOWN, not zero. `null * shares` is 0 in JavaScript,
+    // which would make a Robinhood crypto holding — whose endpoint carries no
+    // purchase price at all — read as pure profit: pnl = value − 0 = the whole
+    // position. Two of these have already shipped in this file; this is the
+    // third face of the same mistake, and it is stopped at the same place.
+    const costKnown = p.cost != null;
+    const cost = costKnown ? p.cost * p.shares : null;
     const val = price != null ? price * p.shares : null;
-    const pnl = val != null ? val - cost : null;
+    const pnl = (val != null && cost != null) ? val - cost : null;
     const pnlPct = (cost > 0 && pnl != null) ? (pnl / cost) * 100 : null;
-    return { ...p, price, cost, val, pnl, pnlPct };
+    return { ...p, price, cost, val, pnl, pnlPct, costKnown };
   });
   const brokerTotals = useMemo(
     () => summarizeByBroker(linkedRows, (s) => getRow(s)?.price ?? null),
@@ -8958,6 +8964,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     // server may have one, both, or neither configured, so the question is per
     // institution rather than global.
     const viaSchwab = institutionId === "schwab" && brokerServer?.providers?.schwab?.configured;
+    // Robinhood's own key reaches CRYPTO only — it is a real first-party path
+    // but not a substitute for the equities Plaid carries, so when both are
+    // available Plaid wins and this is the fallback rather than the default.
+    const viaRobinhood = institutionId === "robinhood" && brokerServer?.providers?.["robinhood-crypto"]?.configured;
     const viaPlaid = brokerServer?.providers?.plaid?.configured;
     // Demo first, and on every plan: a server with no live path for this
     // institution has nothing real to offer, and a demo book is exactly the
@@ -8981,6 +8991,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     // the existing connected-provider handler already picks up.
     if (viaSchwab) {
       window.location.href = api.brokers.schwabConnectUrl();
+      return;
+    }
+    // Robinhood crypto: no redirect and no consent screen — the key already
+    // lives on the server, so linking is one call that either reads the book or
+    // fails. Only taken when Plaid cannot serve this institution, because Plaid
+    // brings the equities that this path cannot.
+    if (viaRobinhood && !viaPlaid) {
+      setBrokerBusy(institutionId);
+      try { await api.brokers.connectRobinhood(); await refreshBrokerServer(); }
+      catch (e) { setBrokerErr(humanizeError(e)); }
+      finally { setBrokerBusy(""); }
       return;
     }
     setBrokerBusy(institutionId);
@@ -9040,12 +9061,23 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // which is exactly what "we don't know what this is worth" should do to a
   // total. summarizeByBroker() has always done this; now they agree.
   const portTotals = portfolioRows.reduce((a, r) => {
-    const cost = r.cost || 0;
-    a.val += r.val != null ? r.val : cost;
-    a.cost += cost;
-    if (r.val == null) a.unpriced += 1;
+    // Two different unknowns, handled the same way and for the same reason:
+    // whichever side is missing takes the other's value, so the row moves the
+    // total's SIZE without inventing a gain or a loss it cannot know about.
+    //   · price unknown → contribute cost to both sides
+    //   · cost unknown  → contribute value to both sides (Robinhood crypto)
+    // A row missing both contributes nothing, which is all it can honestly do.
+    const cost = r.cost;
+    const val = r.val;
+    if (val == null && cost == null) { a.unpriced += 1; return a; }
+    const v = val != null ? val : cost;
+    const c = cost != null ? cost : val;
+    a.val += v;
+    a.cost += c;
+    if (val == null) a.unpriced += 1;
+    if (cost == null) a.costUnknown += 1;
     return a;
-  }, { val: 0, cost: 0, unpriced: 0 });
+  }, { val: 0, cost: 0, unpriced: 0, costUnknown: 0 });
   portTotals.pnl = portTotals.val - portTotals.cost;
   portTotals.pnlPct = portTotals.cost > 0 ? (portTotals.pnl / portTotals.cost) * 100 : 0;
   const addPosition = () => {

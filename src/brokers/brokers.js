@@ -244,7 +244,19 @@ export function holdingsFromConnections(connections = []) {
           id: `${c.id}:${acct.id}:${sym}`,
           sym,
           shares,
-          cost: Number.isFinite(Number(h.cost)) ? Number(h.cost) : 0,
+          // NULL is preserved, not flattened to 0. Some providers genuinely do
+          // not report a cost basis — Robinhood's crypto holdings endpoint has
+          // no purchase price in it at all — and a zero there is not "free", it
+          // is "unknown" wearing a number that renders as an infinite gain.
+          // Downstream, null cost means value known, P&L unknown.
+          // The null test comes FIRST and cannot be reordered: Number(null) is
+          // 0 and Number.isFinite(0) is true, so a null checked second is
+          // never reached — it silently becomes the zero this line exists to
+          // prevent. (An absent field is different: Number(undefined) is NaN,
+          // so it falls through to 0, which is the right answer for "the
+          // provider said nothing" as opposed to "the provider has no such
+          // concept".)
+          cost: h.cost === null ? null : (Number.isFinite(Number(h.cost)) ? Number(h.cost) : 0),
           source: "linked",
           demo: !!c.demo,
           connectionId: c.id,
@@ -380,16 +392,25 @@ export function summarizeByBroker(rows = [], priceOf = () => null) {
       demo: !!r.demo,
       positions: 0,
       priced: 0,
+      costUnknown: 0,
       value: 0,
       cost: 0,
     };
     const shares = Number(r.shares) || 0;
     const price = priceOf(r.sym);
     const marked = Number.isFinite(price) && price != null;
+    // A cost of null is unknown, not zero — see holdingsFromConnections. Such
+    // a row contributes its market value to BOTH sides, so it adds size to the
+    // book without fabricating a gain equal to the whole position.
+    const costKnown = r.cost != null;
+    const costEach = costKnown ? Number(r.cost) || 0 : null;
     cur.positions += 1;
     if (marked) cur.priced += 1;
-    cur.value += (marked ? price : Number(r.cost) || 0) * shares;
-    cur.cost += (Number(r.cost) || 0) * shares;
+    if (!costKnown) cur.costUnknown += 1;
+    const valueEach = marked ? price : costEach;
+    if (valueEach == null && costEach == null) { out.set(r.broker, cur); continue; }
+    cur.value += (valueEach != null ? valueEach : costEach) * shares;
+    cur.cost += (costEach != null ? costEach : valueEach) * shares;
     out.set(r.broker, cur);
   }
   return [...out.values()].map((b) => ({

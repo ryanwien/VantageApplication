@@ -194,6 +194,10 @@ export const api = {
     // meetings connect is: the server has to set state and 302 to Schwab, and a
     // redirect cannot carry an Authorization header — hence ?token=.
     schwabConnectUrl: () => `/api/brokers/schwab/login?token=${encodeURIComponent(tokenStore.get())}`,
+    // Robinhood CRYPTO. A plain POST, not a redirect: the API key lives on the
+    // server and there is no consent screen, so linking is just proving the key
+    // can read the book.
+    connectRobinhood: () => post("/api/brokers/robinhood/connect", {}),
   },
 
   // ---- scheduled market-brief agent ----

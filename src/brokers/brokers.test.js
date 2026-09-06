@@ -404,3 +404,40 @@ describe("normalizePlaidTransactions", () => {
     expect(normalizePlaidTransactions(undefined, {})).toEqual([]);
   });
 });
+
+// A provider that reports no cost basis at all — Robinhood's crypto holdings
+// endpoint carries none. "Unknown" must never become zero anywhere in the
+// chain: a zero basis renders as an infinite gain, which is the same arithmetic
+// that once showed an unpriced book down 47%.
+describe("a holding with no cost basis", () => {
+  const conn = {
+    id: "rh", institutionId: "robinhood", institutionName: "Robinhood", demo: false,
+    accounts: [{ id: "crypto", name: "Crypto", holdings: [{ sym: "BTC-CRYPTO", shares: 0.5, cost: null }] }],
+  };
+
+  it("survives the flatten as null, not 0", () => {
+    const [row] = holdingsFromConnections([conn]);
+    expect(row.cost).toBeNull();
+    expect(row.cost).not.toBe(0);
+  });
+
+  it("still flattens a genuinely absent cost to 0, which is a different case", () => {
+    const noField = { ...conn, accounts: [{ id: "a", name: "A", holdings: [{ sym: "X", shares: 1 }] }] };
+    expect(holdingsFromConnections([noField])[0].cost).toBe(0);
+  });
+
+  it("adds market value to the broker total without inventing a gain", () => {
+    const [sum] = summarizeByBroker(holdingsFromConnections([conn]), () => 60000);
+    expect(sum.value).toBe(30000);
+    expect(sum.cost).toBe(30000);   // value stands in for the unknown cost
+    expect(sum.pnl).toBe(0);        // ...so no P&L is fabricated
+    expect(sum.costUnknown).toBe(1);
+  });
+
+  it("contributes nothing when neither price nor cost is known", () => {
+    const [sum] = summarizeByBroker(holdingsFromConnections([conn]), () => null);
+    expect(sum.value).toBe(0);
+    expect(sum.cost).toBe(0);
+    expect(Number.isNaN(sum.pnl)).toBe(false);
+  });
+});

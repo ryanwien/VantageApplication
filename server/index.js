@@ -39,6 +39,11 @@ import {
   schwabAccountHashes, tokenExpiresAt, tokenIsStale, refreshWindowClosed, schwabDate,
 } from "../src/brokers/schwab.js";
 import { msReady, msReadiness, normalizeMorganStanleyAccounts, normalizeMorganStanleyTrades } from "../src/brokers/morgan-stanley.js";
+import {
+  RH_BASE, RH_HOLDINGS_PATH, RH_BEST_BID_ASK_PATH,
+  rhTimestamp, rhHeaders, normalizeRobinhoodHoldings, normalizeRobinhoodQuotes, rhNextPath, cryptoAssetCode,
+} from "../src/brokers/robinhood.js";
+import { makeEd25519Signer } from "../src/brokers/robinhood-sign.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
@@ -165,6 +170,26 @@ const schwabConfigured = () => !!(SCHWAB.key && SCHWAB.secret);
 // sheet says so instead of a flat "not configured", which would be three
 // different problems wearing one label. See src/brokers/morgan-stanley.js.
 const morganStanleyConfigured = () => msReady(process.env);
+
+// Robinhood — CRYPTO only, and the only self-serve first-party key any of the
+// three institutions issues. Minted by the account holder in web classic
+// (crypto account settings → Add key), so unlike Schwab there is no approval
+// queue and unlike Morgan Stanley there is no invitation.
+//
+// The private key is a base64 Ed25519 SEED (32 bytes), which is what
+// Robinhood's own key generator prints. Node cannot import a bare seed
+// directly, so it is wrapped in the PKCS#8 DER prefix below — that constant is
+// the entire "algorithm identifier + octet string" header for Ed25519 and is
+// fixed for every key of this type.
+const ROBINHOOD = {
+  apiKey: process.env.ROBINHOOD_API_KEY || "",
+  privateKey: process.env.ROBINHOOD_PRIVATE_KEY || "",
+};
+const robinhoodConfigured = () => !!(ROBINHOOD.apiKey && ROBINHOOD.privateKey);
+// The signer itself lives in src/brokers/robinhood-sign.js, where the DER
+// wrapping is covered by a signature round-trip test. It is the one part of
+// this integration that cannot be checked by reading it.
+const robinhoodSigner = () => makeEd25519Signer(ROBINHOOD.privateKey);
 const plaidBase = () => `https://${PLAID.env === "production" ? "production" : "sandbox"}.plaid.com`;
 // NOT pre-selecting the institution on /link/token/create is deliberate. Plaid's
 // institution ids are per-environment strings, and sandbox serves its own
@@ -363,6 +388,59 @@ async function plaidCall(endpoint, body) {
   return j;
 }
 
+// ---- Robinhood crypto: signed GETs ----
+//
+// Every request is signed over `{api_key}{timestamp}{path}{method}{body}`, and
+// `path` must be the EXACT path requested, query string included — so the
+// signed string and the fetched URL are derived from one variable here rather
+// than assembled twice.
+async function robinhoodGet(path) {
+  if (!robinhoodConfigured()) throw new Error("Robinhood is not configured on this server (set ROBINHOOD_API_KEY / ROBINHOOD_PRIVATE_KEY).");
+  const headers = rhHeaders({
+    apiKey: ROBINHOOD.apiKey,
+    timestamp: rhTimestamp(),
+    path,
+    method: "GET",
+    sign: robinhoodSigner(),
+  });
+  const r = await fetch(`${RH_BASE}${path}`, { headers, signal: AbortSignal.timeout(20000) });
+  if (r.status === 401) throw new Error("Robinhood rejected the signature — check ROBINHOOD_API_KEY and the private key, and that the server clock is correct.");
+  if (r.status === 403) throw new Error("This Robinhood API key is not permitted to read crypto holdings.");
+  if (!r.ok) throw new Error(`Robinhood returned HTTP ${r.status}.`);
+  return r.json();
+}
+
+// Holdings, following `next` to the end. Capped: a runaway cursor should not
+// turn one refresh into an unbounded walk.
+async function robinhoodHoldings() {
+  const results = [];
+  let path = RH_HOLDINGS_PATH, accountNumber = null, pages = 0;
+  while (path && pages < 20) {
+    const page = await robinhoodGet(path);
+    for (const row of page?.results || []) {
+      results.push(row);
+      accountNumber = accountNumber || row.account_number || null;
+    }
+    path = rhNextPath(page);
+    pages += 1;
+  }
+  return { results, accountNumber };
+}
+
+// Marks for the codes actually held. Crypto has no quote on the equity feed,
+// so the same provider that reports the position also prices it.
+async function robinhoodMarks(codes) {
+  if (!codes.length) return new Map();
+  const q = codes.map((c) => `symbol=${encodeURIComponent(`${c}-USD`)}`).join("&");
+  try {
+    return normalizeRobinhoodQuotes(await robinhoodGet(`${RH_BEST_BID_ASK_PATH}?${q}`));
+  } catch {
+    // An unpriced crypto row is a row with no P&L, which the panel already
+    // draws honestly. Losing the marks must not lose the positions.
+    return new Map();
+  }
+}
+
 // ---- Schwab: OAuth + authenticated calls ----
 //
 // The access token lives 30 minutes, so nearly every call refreshes it first.
@@ -421,6 +499,15 @@ async function refreshConnection(conn) {
         connectionId: conn.id,
         institutionId: conn.institutionId,
         institutionName: conn.institutionName,
+      }).accounts;
+    } else if (conn.provider === "robinhood-crypto") {
+      const { results, accountNumber } = await robinhoodHoldings();
+      const codes = [...new Set(results.map(r => String(r.asset_code || "").toUpperCase()).filter(Boolean))];
+      const marks = await robinhoodMarks(codes);
+      conn.accounts = normalizeRobinhoodHoldings({ results }, {
+        connectionId: conn.id,
+        accountNumber: accountNumber || conn.accountNumber,
+        priceOf: (code) => marks.get(code) ?? null,
       }).accounts;
     } else if (conn.provider === "morgan-stanley") {
       // The seam. There is no call here yet because there is no published
@@ -1607,11 +1694,14 @@ const server = http.createServer(async (req, res) => {
         // `providers` is the honest detail underneath: Schwab's own OAuth
         // reaches exactly one institution, Plaid reaches all three, and the
         // browser needs to know which button to draw for which row.
-        configured: plaidConfigured() || schwabConfigured() || morganStanleyConfigured(),
-        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : (morganStanleyConfigured() ? "morgan-stanley" : null)),
+        configured: plaidConfigured() || schwabConfigured() || morganStanleyConfigured() || robinhoodConfigured(),
+        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : (robinhoodConfigured() ? "robinhood-crypto" : (morganStanleyConfigured() ? "morgan-stanley" : null))),
         providers: {
           plaid: { configured: plaidConfigured(), env: plaidConfigured() ? PLAID.env : null, institutions: INSTITUTIONS.map(i => i.id) },
           schwab: { configured: schwabConfigured(), institutions: ["schwab"] },
+          // CRYPTO only. Named so in the payload because the connect sheet must
+          // not offer this as plain "Robinhood" and leave somebody expecting stocks.
+          "robinhood-crypto": { configured: robinhoodConfigured(), institutions: ["robinhood"], assetClass: "crypto" },
           // `readiness` rather than a bare boolean: "not configured" would
           // collapse "nobody has invited you yet" and "we have keys but no
           // spec" into one word, and they need different answers from a person.
@@ -1625,6 +1715,39 @@ const server = http.createServer(async (req, res) => {
         institutions: INSTITUTIONS.map(({ id, name, tint, access, note }) => ({ id, name, tint, access, note })),
         connections: (rec?.connections || []).map(publicConnection),
       });
+    }
+
+    // Robinhood crypto: no OAuth at all. The key is minted by the account
+    // holder and lives in this server's .env, so "connecting" is one POST that
+    // proves the key works by fetching the book — there is no consent screen
+    // to bounce through and nothing per-user to store.
+    if (p === "/api/brokers/robinhood/connect" && req.method === "POST") {
+      const email = emailFromReq(req, url);
+      if (!robinhoodConfigured()) return send(res, 503, { error: "Robinhood crypto is not configured on this server. The desk will link a labelled demo book instead." });
+      if (!email) return send(res, 401, { error: "Sign in to link a brokerage account." });
+      const gate = gateBrokerPlan(email);
+      if (gate) return send(res, 403, gate);
+      const rec = brokerRecord(email);
+      const conn = {
+        id: `robinhood-crypto-${crypto.randomBytes(4).toString("hex")}`,
+        provider: "robinhood-crypto",
+        institutionId: "robinhood",
+        institutionName: institutionById("robinhood").name,
+        connectedAt: Date.now(),
+        accounts: [],
+      };
+      rec.connections = [...rec.connections.filter(c => c.provider !== "robinhood-crypto"), conn];
+      await refreshConnection(conn);
+      saveBrokers();
+      // A key that cannot read is not a link. Refusing here — rather than
+      // storing a connection whose every refresh fails — keeps a broken key
+      // from looking connected in the panel.
+      if (conn.staleReason) {
+        rec.connections = rec.connections.filter(c => c.id !== conn.id);
+        saveBrokers();
+        return send(res, 502, { error: conn.staleReason });
+      }
+      return send(res, 200, { connection: publicConnection(conn) });
     }
 
     // ---- Schwab's own OAuth (first-party; no aggregator) ----
@@ -1985,11 +2108,14 @@ const server = http.createServer(async (req, res) => {
         // `providers` is the honest detail underneath: Schwab's own OAuth
         // reaches exactly one institution, Plaid reaches all three, and the
         // browser needs to know which button to draw for which row.
-        configured: plaidConfigured() || schwabConfigured() || morganStanleyConfigured(),
-        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : (morganStanleyConfigured() ? "morgan-stanley" : null)),
+        configured: plaidConfigured() || schwabConfigured() || morganStanleyConfigured() || robinhoodConfigured(),
+        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : (robinhoodConfigured() ? "robinhood-crypto" : (morganStanleyConfigured() ? "morgan-stanley" : null))),
         providers: {
           plaid: { configured: plaidConfigured(), env: plaidConfigured() ? PLAID.env : null, institutions: INSTITUTIONS.map(i => i.id) },
           schwab: { configured: schwabConfigured(), institutions: ["schwab"] },
+          // CRYPTO only. Named so in the payload because the connect sheet must
+          // not offer this as plain "Robinhood" and leave somebody expecting stocks.
+          "robinhood-crypto": { configured: robinhoodConfigured(), institutions: ["robinhood"], assetClass: "crypto" },
           // `readiness` rather than a bare boolean: "not configured" would
           // collapse "nobody has invited you yet" and "we have keys but no
           // spec" into one word, and they need different answers from a person.
