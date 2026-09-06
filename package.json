@@ -10,7 +10,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:keys": "node scripts/check-keys.mjs",
+    "check:brokers": "node --env-file=.env scripts/check-brokers.mjs",
+    "robinhood:keygen": "node scripts/robinhood-keygen.mjs"
   },
   "dependencies": {
     "docx": "^9.7.1",
