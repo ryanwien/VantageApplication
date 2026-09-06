@@ -12667,6 +12667,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         // converted, and the subscription took over on schedule. Telling them
         // their trial ended is stale news dressed in red.
         if (!trial.active && account?.subscribed === true) return null;
+        // Nor did anyone lapse on a server with no payment processor. The
+        // paywall already refuses to lock in that case — "nothing to pay with,
+        // so a lock is a trap" — and this strip was not following its own
+        // app's rule: it drew a red LAPSED bar across the desk, with a button
+        // leading to a plan nobody can buy, on every install where
+        // STRIPE_SECRET_KEY is unset. That is every developer, and every demo.
+        //
+        // Only the LAPSED half is suppressed. The live countdown is a true
+        // statement about a date either way, and stays.
+        if (!trial.active && !billingCfg?.enabled) return null;
         // daysLeft counts down 7…1, so day counts up 1…7 and never reads 0 of 7.
         const day = TRIAL_DAYS - trial.daysLeft + 1;
         if (trial.active && trialDismissed === day) return null;

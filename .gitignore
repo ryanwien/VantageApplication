@@ -34,6 +34,11 @@ server/brokers.json
 .vscode/
 .github/copilot-instructions.md
 .demo-tooling/
+# Local MCP server registrations. Project scope means anyone who clones the
+# repo inherits them, and the one here points at Robinhood's agent endpoint,
+# whose advertised OAuth scope is "internal" — not ours to distribute. Stays a
+# local file; it works exactly the same untracked.
+.mcp.json
 
 # HyperFrames video tooling — vendor skill packages, not app source
 .agents/
