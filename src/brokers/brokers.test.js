@@ -85,6 +85,29 @@ describe("connections → rows", () => {
     expect(rows.map((r) => r.sym)).toEqual(["MSFT"]);
   });
 
+  // Regression: this field was dropped, so an instrument the app cannot quote
+  // (an option contract, a mutual fund) fell through to the synthetic demo
+  // market and was valued at a wholly invented price — a real $110 Plaid
+  // position rendered at $1.96M.
+  it("carries the brokerage's own mark through as brokerPrice", () => {
+    const rows = holdingsFromConnections([
+      {
+        id: "x", institutionId: "schwab", accounts: [
+          { id: "a", name: "A", holdings: [
+            { sym: "NFLX180201C00355000", shares: 10000, cost: 0.01, price: 0.011 },
+            { sym: "NOPRICE", shares: 5, cost: 10 },
+            { sym: "JUNK", shares: 5, cost: 10, price: "not-a-number" },
+          ] },
+        ],
+      },
+    ]);
+    expect(rows.find((r) => r.sym === "NFLX180201C00355000").brokerPrice).toBe(0.011);
+    // Absent and unparseable both become null, never 0 — a zero mark would
+    // value the position at nothing and report the entire cost as a loss.
+    expect(rows.find((r) => r.sym === "NOPRICE").brokerPrice).toBe(null);
+    expect(rows.find((r) => r.sym === "JUNK").brokerPrice).toBe(null);
+  });
+
   it("keeps cash out of the positions and in its own list", () => {
     const rows = holdingsFromConnections(conns);
     expect(rows.some((r) => r.sym === "CASH")).toBe(false);
@@ -186,6 +209,41 @@ describe("summarizeByBroker", () => {
   it("skips typed positions, which belong to no broker", () => {
     const out = summarizeByBroker([...rows, { sym: "X", shares: 1, cost: 1, broker: null }], () => 1);
     expect(out.map((b) => b.broker).sort()).toEqual(["robinhood", "schwab"]);
+  });
+
+  // Regression: grouping by institution alone merged a demonstration book into
+  // a real account at the same brokerage. Both cards then showed one combined
+  // figure — a real Schwab link worth ~1,226 read as 13,024 — with only one of
+  // them badged DEMO. Simulated money must never reach a real account's total.
+  it("never merges a demo book into a real account at the same brokerage", () => {
+    const mixed = [
+      { sym: "AAPL", shares: 10, cost: 100, broker: "schwab", brokerName: "Charles Schwab", demo: true },
+      { sym: "MSFT", shares: 10, cost: 50, broker: "schwab", brokerName: "Charles Schwab", demo: false },
+    ];
+    const out = summarizeByBroker(mixed, () => 200);
+    expect(out.length).toBe(2);
+
+    const live = out.find((b) => !b.demo);
+    const demo = out.find((b) => b.demo);
+    expect(live.positions).toBe(1);
+    expect(demo.positions).toBe(1);
+    expect(live.cost).toBe(500);    // MSFT only — not 500 + 1000
+    expect(demo.cost).toBe(1000);   // AAPL only
+    // Distinct keys, or React draws two cards under one identity.
+    expect(live.key).not.toBe(demo.key);
+  });
+
+  // The resolver needs the ROW, not just the ticker: a real linked holding can
+  // be priceable only from its own brokerage mark, and a ticker alone cannot
+  // distinguish that from a demo row the synthetic market may price.
+  it("hands the whole row to the price resolver, not just the symbol", () => {
+    const seen = [];
+    summarizeByBroker(rows, (sym, row) => { seen.push([sym, row?.sym, row?.demo]); return 1; });
+    expect(seen).toEqual([
+      ["AAPL", "AAPL", true],
+      ["MSFT", "MSFT", true],
+      ["TSLA", "TSLA", true],
+    ]);
   });
 });
 

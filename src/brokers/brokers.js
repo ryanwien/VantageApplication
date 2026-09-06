@@ -257,6 +257,27 @@ export function holdingsFromConnections(connections = []) {
           // provider said nothing" as opposed to "the provider has no such
           // concept".)
           cost: h.cost === null ? null : (Number.isFinite(Number(h.cost)) ? Number(h.cost) : 0),
+          // The BROKERAGE'S OWN MARK, carried through rather than dropped.
+          // For anything the app cannot quote — an option contract, a mutual
+          // fund, a private placement — this is the only price that is true by
+          // construction, and it was previously thrown away here: the panel
+          // then priced those rows off the synthetic demo market and showed a
+          // $110 position as $1.96M. Named brokerPrice, not price, because
+          // portfolioRows computes its own `price` and the two must not
+          // silently overwrite one another.
+          // NULL FIRST, and for the fourth time in this file: Number(null) is
+          // 0, Number("") is 0, and Number.isFinite(0) is true, so a null
+          // tested second never runs. Written the wrong way round first, three
+          // lines under the comment above explaining the trap, and caught by a
+          // test rather than by reading it.
+          //
+          // Unlike `cost`, an ABSENT price is null too, not 0. A missing basis
+          // can honestly mean "paid nothing"; a missing mark can never mean
+          // "worth nothing" — it means the row cannot be valued, and a zero
+          // would draw a real position as worthless.
+          brokerPrice: (h.price === null || h.price === undefined || h.price === "")
+            ? null
+            : (Number.isFinite(Number(h.price)) ? Number(h.price) : null),
           source: "linked",
           demo: !!c.demo,
           connectionId: c.id,
@@ -382,11 +403,23 @@ export function aggregateBySymbol(rows = []) {
 // in because live prices belong to the app's market layer, not to this file;
 // a symbol it cannot price contributes its cost basis instead of vanishing,
 // and `priced` says how many rows got a real mark.
+// priceOf receives (sym, row). The ROW matters: a real linked holding may only
+// be priceable from its own brokerage mark, and a resolver given nothing but a
+// ticker cannot tell that case from a demo book's synthetic one.
 export function summarizeByBroker(rows = [], priceOf = () => null) {
   const out = new Map();
   for (const r of rows) {
     if (!r.broker) continue;
-    const cur = out.get(r.broker) || {
+    // KEYED BY INSTITUTION **AND** DEMO-NESS, never by institution alone.
+    // A demonstration book and a real linked account at the same brokerage are
+    // two different books. Summing them put simulated money inside a real
+    // account's total: a genuine Schwab link worth ~1,226 displayed as 13,024
+    // because a demo Schwab book was already on the desk — and BOTH cards
+    // showed that same merged figure, with only one of them badged DEMO. This
+    // key is what stops the panel from ever adding pretend money to real money.
+    const gkey = `${r.broker}::${r.demo ? "demo" : "live"}`;
+    const cur = out.get(gkey) || {
+      key: gkey,
       broker: r.broker,
       brokerName: r.brokerName || institutionName(r.broker),
       demo: !!r.demo,
@@ -397,7 +430,7 @@ export function summarizeByBroker(rows = [], priceOf = () => null) {
       cost: 0,
     };
     const shares = Number(r.shares) || 0;
-    const price = priceOf(r.sym);
+    const price = priceOf(r.sym, r);
     const marked = Number.isFinite(price) && price != null;
     // A cost of null is unknown, not zero — see holdingsFromConnections. Such
     // a row contributes its market value to BOTH sides, so it adds size to the
@@ -408,10 +441,10 @@ export function summarizeByBroker(rows = [], priceOf = () => null) {
     if (marked) cur.priced += 1;
     if (!costKnown) cur.costUnknown += 1;
     const valueEach = marked ? price : costEach;
-    if (valueEach == null && costEach == null) { out.set(r.broker, cur); continue; }
+    if (valueEach == null && costEach == null) { out.set(gkey, cur); continue; }
     cur.value += (valueEach != null ? valueEach : costEach) * shares;
     cur.cost += (costEach != null ? costEach : valueEach) * shares;
-    out.set(r.broker, cur);
+    out.set(gkey, cur);
   }
   return [...out.values()].map((b) => ({
     ...b,

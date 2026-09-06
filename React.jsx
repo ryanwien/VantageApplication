@@ -8935,8 +8935,31 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   }, [linkedRows, live, demoMkt, ensureDemoSymbol]);
 
   const allPositions = useMemo(() => mergePositions(positions, linkedRows), [positions, linkedRows]);
+
+  // WHICH PRICE IS ALLOWED TO VALUE THIS ROW, and the order is load-bearing.
+  //
+  // getRow() has two completely different meanings depending on `live`: with a
+  // quote feed it returns a REAL quote or null, and without one it returns a
+  // SYNTHETIC price off demoMkt — invented, by design, so the demo book moves.
+  // Feeding that synthetic number into a real linked holding is how a $110
+  // Plaid position rendered as $1.96M: the app could not quote an option
+  // contract, so it made a price up and multiplied it by 10,000 shares.
+  //
+  // That is the same disease as a null cost read as zero, which this file has
+  // already fixed twice — an unknown wearing a plausible number. So for a REAL
+  // linked row the brokerage's own mark wins over the synthetic market, and
+  // loses to a genuine quote (which is fresher than the broker's overnight
+  // mark). Manual and demo rows are unaffected: they have no brokerage mark and
+  // the synthetic market is exactly what they are supposed to use.
+  const priceFor = useCallback((p) => {
+    const quoted = getRow(p.sym)?.price;
+    const realLinked = p.source === "linked" && !p.demo;
+    if (realLinked && !live) return p.brokerPrice ?? null;
+    return quoted ?? p.brokerPrice ?? null;
+  }, [getRow, live]);
+
   const portfolioRows = allPositions.map(p => {
-    const price = getRow(p.sym)?.price;
+    const price = priceFor(p);
     // A null cost is UNKNOWN, not zero. `null * shares` is 0 in JavaScript,
     // which would make a Robinhood crypto holding — whose endpoint carries no
     // purchase price at all — read as pure profit: pnl = value − 0 = the whole
@@ -8949,9 +8972,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     const pnlPct = (cost > 0 && pnl != null) ? (pnl / cost) * 100 : null;
     return { ...p, price, cost, val, pnl, pnlPct, costKnown };
   });
+  // Same resolver as the rows above — deliberately shared, so the per-broker
+  // card and the row it summarizes can never disagree about what a holding is
+  // worth. They have drifted before.
   const brokerTotals = useMemo(
-    () => summarizeByBroker(linkedRows, (s) => getRow(s)?.price ?? null),
-    [linkedRows, getRow],
+    () => summarizeByBroker(linkedRows, (_s, r) => priceFor(r)),
+    [linkedRows, priceFor],
   );
 
   // Link an institution. With no aggregator configured this is the demo path,
@@ -9106,7 +9132,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     if (!panels.portfolio) setPanels(p => ({ ...p, portfolio: true }));
     setTimeout(() => { const el = document.getElementById("tour-response"); if (el) try { el.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch { /* older */ } }, 80);
 
-    const scope = broker ? allPositions.filter(p => p.broker === broker) : allPositions;
+    // When a demo book AND a real link both exist at this institution, the real
+    // account is what "my Schwab portfolio" means. Reading them added together
+    // would put simulated money into a spoken answer about real holdings —
+    // the one thing the demo must never be able to do.
+    const atBroker = broker ? allPositions.filter(p => p.broker === broker) : null;
+    const scope = atBroker
+      ? (atBroker.some(p => !p.demo) ? atBroker.filter(p => !p.demo) : atBroker)
+      : allPositions;
     if (!scope.length) {
       speak("nav", broker
         ? `You have no ${BROKER_INSTITUTIONS.find(i => i.id === broker)?.name || "linked"} account on the desk. Link one from the portfolio panel and I'll read it.`
@@ -11148,7 +11181,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     const askedBroker = matchInstitution(q);
     if (askedBroker && /\b(portfolio|positions|holdings|account|balance|book)\b/i.test(q)) {
       briefPortfolio(askedBroker);
-      const sum = brokerTotals.find(b => b.broker === askedBroker);
+      // Real account first, demo only as a fallback — matching the scope
+      // briefPortfolio() just spoke, so the number read aloud and the sentence
+      // describing it can never come from different books.
+      const sum = brokerTotals.find(b => b.broker === askedBroker && !b.demo)
+        || brokerTotals.find(b => b.broker === askedBroker);
       const inst = BROKER_INSTITUTIONS.find(i => i.id === askedBroker);
       deskReply(sum
         ? `${inst.name} is on the desk — ${sum.positions} position${sum.positions === 1 ? "" : "s"}, ${sum.pnl >= 0 ? "up" : "down"} ${fmt(Math.abs(sum.pnl))} (${sum.pnlPct >= 0 ? "+" : ""}${sum.pnlPct.toFixed(2)}%).${sum.demo ? " Demonstration book — not a live account." : ""}`
@@ -12049,7 +12086,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       {brokerTotals.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, paddingBottom: 10 }}>
           {brokerTotals.map(b => (
-            <button key={b.broker} onClick={() => briefPortfolio(b.broker)} title={`Read ${b.brokerName} on air`}
+            <button key={b.key} onClick={() => briefPortfolio(b.broker)} title={`Read ${b.brokerName} on air`}
               style={{ display: "inline-flex", alignItems: "center", gap: 6, background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.xs, padding: "4px 9px", cursor: "pointer", fontFamily: SANS, fontSize: 12, color: C.text }}>
               <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: BROKER_INSTITUTIONS.find(i => i.id === b.broker)?.tint || C.faint }} />
               {b.brokerName}
@@ -12068,7 +12105,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1fr auto", gap: 6, alignItems: "center", fontFamily: MONO, fontSize: 12.5, padding: "8px 0", borderBottom: `1px solid ${C.edge}` }}>
           <span>
             <button onClick={() => setSelected(r.sym)} style={{ background: "transparent", border: "none", color: C.text, fontFamily: SANS, fontSize: 13.5, fontWeight: 700, textAlign: "left", cursor: "pointer", padding: 0 }}>{r.sym} <span style={{ fontFamily: MONO, color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span></button>
-            {r.broker && <span style={{ display: "block", fontFamily: SANS, fontSize: 10.5, color: C.faint }}>{r.brokerName} · {r.account}</span>}
+            {/* brokerName, not broker — see the activity tape's note: `broker`
+                is null for any institution outside the shipped catalog. */}
+            {r.brokerName && <span style={{ display: "block", fontFamily: SANS, fontSize: 10.5, color: C.faint }}>{r.brokerName} · {r.account}</span>}
           </span>
           <span style={{ textAlign: "right", color: C.muted, fontSize: 12, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{fmt(r.cost / r.shares)}→{r.price != null ? fmt(r.price) : "—"}</span>
           <span style={{ textAlign: "right", color: C.text, ...privacyStyle }} aria-label={prefs.privacy ? t("hidden") : undefined}>{r.val != null ? fmt(r.val) : "—"}</span>
@@ -13791,7 +13830,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 
                   {brokerConnections.map(c => {
                     const inst = BROKER_INSTITUTIONS.find(i => i.id === c.institutionId);
-                    const sum = brokerTotals.find(b => b.broker === c.institutionId);
+                    // Matched on demo-ness too. Holding a demo book AND a real
+                    // link at the same brokerage is normal — you try the demo,
+                    // then connect the account — and matching on institution
+                    // alone handed both cards the same total.
+                    const sum = brokerTotals.find(b => b.broker === c.institutionId && !!b.demo === !!c.demo);
                     return (
                       <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 8, background: C.surfaceRaised, border: `1px solid ${C.panelEdge}`, borderRadius: R.sm, padding: "8px 10px" }}>
                         <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: inst?.tint || C.faint, flex: "0 0 auto" }} />
@@ -13889,7 +13932,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 by its P&L direction. Percent-of-total only — no dollar amounts —
                 so it stays honest with privacy mode on. */}
             {portfolioView === "positions" && portfolioRows.length > 1 && (() => {
-              const slices = portfolioRows.map(r => ({ sym: r.sym, v: (r.price != null ? r.price : r.cost / r.shares) * r.shares, pnl: r.pnl ?? 0 }));
+              // Carries r.id, because portfolioRows is one row per (connection,
+              // account, symbol) — the same ticker held at two brokerages is
+              // two rows and therefore two slices. Keying these by symbol gave
+              // React duplicate keys the moment anyone held one name in two
+              // accounts, which is ordinary, and duplicate keys let it drop or
+              // duplicate slices in a bar that is supposed to sum to 100%.
+              const slices = portfolioRows.map(r => ({ id: r.id, sym: r.sym, v: (r.price != null ? r.price : r.cost / r.shares) * r.shares, pnl: r.pnl ?? 0 }));
               const total = slices.reduce((a, x) => a + x.v, 0);
               if (!(total > 0)) return null;
               return (
@@ -13897,7 +13946,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                   <div role="img" aria-label={`Allocation by value: ${slices.map(x => `${x.sym} ${(x.v / total * 100).toFixed(0)}%`).join(", ")}`}
                     style={{ display: "flex", height: 6, borderRadius: R.xs, overflow: "hidden", gap: 1 }}>
                     {slices.map(x => (
-                      <span key={x.sym} title={`${x.sym} · ${(x.v / total * 100).toFixed(1)}% of portfolio value`}
+                      <span key={x.id} title={`${x.sym} · ${(x.v / total * 100).toFixed(1)}% of portfolio value`}
                         style={{ width: `${(x.v / total * 100).toFixed(2)}%`, background: dirColorN(x.pnl), opacity: 0.85, minWidth: 2 }} />
                     ))}
                   </div>
@@ -13930,8 +13979,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                   <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>
                     {r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span>
                     {/* Two lots of the same symbol at two brokerages are two
-                        rows, so the row has to say which one it is. */}
-                    {r.broker && <span style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginLeft: 6 }}>{r.brokerName}{r.demo ? " · DEMO" : ""}</span>}
+                        rows, so the row has to say which one it is.
+                        Guarded on brokerName — the value actually rendered —
+                        NOT on `broker`, which is the catalog id and is null for
+                        every institution outside the three we ship. Plaid links
+                        whatever the user picks, so keying on the id silently
+                        stripped the label from any other brokerage and left two
+                        of them looking like the same row. */}
+                    {r.brokerName && <span style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginLeft: 6 }}>{r.brokerName}{r.demo ? " · DEMO" : ""}</span>}
                   </span>
                   {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>)}
                 </div>

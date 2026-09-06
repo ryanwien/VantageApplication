@@ -3,6 +3,7 @@ import {
   rhTimestamp, rhSignatureMessage, rhHeaders, rhSymbol, isCryptoSymbol, cryptoAssetCode,
   normalizeRobinhoodHoldings, normalizeRobinhoodQuotes, rhNextPath, RH_BASE,
 } from "./robinhood.js";
+import { holdingsFromConnections, summarizeByBroker } from "./brokers.js";
 
 // The signature is the whole integration. Every part of the message is a
 // string with no delimiter between it and the next, so any mistake produces a
@@ -164,5 +165,50 @@ describe("rhNextPath", () => {
     expect(rhNextPath({ next: null })).toBeNull();
     expect(rhNextPath({})).toBeNull();
     expect(rhNextPath(undefined)).toBeNull();
+  });
+});
+
+// The whole chain, because Robinhood's shape is the one that exercises both
+// halves of the "unknown is not a number" rule at once: its holdings endpoint
+// reports NO cost basis, and its symbols are ones no quote provider carries.
+// Before brokerPrice was carried through, such a row was priced off the
+// synthetic demo market — an invented number on a real crypto position.
+describe("Robinhood holdings through holdingsFromConnections", () => {
+  const conn = normalizeRobinhoodHoldings(
+    { results: [
+      { asset_code: "BTC", total_quantity: 0.5, account_number: "RH123456" },
+      { asset_code: "ETH", total_quantity: 3 },
+    ] },
+    { connectionId: "rh1", accountNumber: "RH123456", priceOf: (c) => (c === "BTC" ? 61000 : null) },
+  );
+
+  it("keeps cost null and carries the mark as brokerPrice", () => {
+    const rows = holdingsFromConnections([conn]);
+    const btc = rows.find((r) => r.sym === "BTC-CRYPTO");
+    const eth = rows.find((r) => r.sym === "ETH-CRYPTO");
+
+    // Cost stays UNKNOWN. A zero here reads as a position acquired free, which
+    // renders as an infinite gain.
+    expect(btc.cost).toBe(null);
+    expect(eth.cost).toBe(null);
+
+    // The mark survives the hop, so the row can be valued without inventing a price.
+    expect(btc.brokerPrice).toBe(61000);
+    // Unmarkable stays null rather than becoming 0 — a zero-value crypto
+    // position is a wrong answer, not a missing one.
+    expect(eth.brokerPrice).toBe(null);
+
+    expect(btc.demo).toBe(false);
+    expect(btc.broker).toBe("robinhood");
+  });
+
+  it("summarizes without inventing P&L on a book that has no cost basis", () => {
+    const rows = holdingsFromConnections([conn]);
+    const [sum] = summarizeByBroker(rows, (_s, r) => r.brokerPrice);
+    expect(sum.costUnknown).toBe(2);       // both rows
+    // Value and cost move together, so a book with no basis adds SIZE to the
+    // desk without reporting a gain equal to the whole position.
+    expect(sum.value).toBe(sum.cost);
+    expect(sum.pnl).toBe(0);
   });
 });
