@@ -8855,6 +8855,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // Which question the panel is answering: what you HOLD, or what you TRADED.
   // A closed position appears in one and not the other, so they cannot be one list.
   const [portfolioView, setPortfolioView] = useState("positions");
+  // Which symbols are showing their individual lots, and whether the list is
+  // past its top-N cut. Both are view state and deliberately not persisted:
+  // reopening the panel should show the short list again.
+  const [portExpanded, setPortExpanded] = useState(() => new Set());
+  const [portShowAll, setPortShowAll] = useState(false);
   const [positions, setPositions] = useState(() => { try { return JSON.parse(window.localStorage.getItem("tape-positions") || "[]"); } catch { return []; } });
   useEffect(() => { try { window.localStorage.setItem("tape-positions", JSON.stringify(positions)); } catch { /* private */ } }, [positions]);
   const [portForm, setPortForm] = useState({ sym: "", shares: "", cost: "" });
@@ -8972,6 +8977,49 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     const pnlPct = (cost > 0 && pnl != null) ? (pnl / cost) * 100 : null;
     return { ...p, price, cost, val, pnl, pnlPct, costKnown };
   });
+  // ---- one row per SYMBOL, with its lots underneath ----
+  //
+  // Three linked books put 35 rows and 2,779px of list into a rail whose
+  // neighbours end long before it does, and most of that length was
+  // repetition: the same ticker held in several accounts is several rows. The
+  // panel is also the wrong place to answer "which account" first — the broker
+  // cards directly above already do that.
+  //
+  // So the list groups by symbol and keeps every lot one click underneath.
+  // Aggregation follows summarizeByBroker's rule for an unknown cost —
+  // whichever side is missing takes the other's value — so a Robinhood crypto
+  // lot carrying no basis adds SIZE to the group without inventing a gain.
+  const portfolioGroups = useMemo(() => {
+    const bySym = new Map();
+    for (const r of portfolioRows) {
+      const g = bySym.get(r.sym) || { sym: r.sym, shares: 0, cost: 0, val: 0, lots: [], costUnknown: 0, priced: 0 };
+      const val = r.val;
+      const cost = r.costKnown ? r.cost : null;
+      if (!r.costKnown) g.costUnknown += 1;
+      if (val != null) g.priced += 1;
+      // A lot with NEITHER side known still belongs to the group — it is a real
+      // holding — but it must not move either total in any direction.
+      if (!(val == null && cost == null)) {
+        g.val += (val != null ? val : cost);
+        g.cost += (cost != null ? cost : val);
+      }
+      g.shares += r.shares;
+      g.lots.push(r);
+      bySym.set(r.sym, g);
+    }
+    return [...bySym.values()].map(g => {
+      const pnl = g.priced ? g.val - g.cost : null;
+      return {
+        ...g,
+        // Taken from a lot rather than derived from g.val, which may contain a
+        // cost standing in for a missing mark and is therefore not a price.
+        price: g.lots.find(l => l.price != null)?.price ?? null,
+        pnl,
+        pnlPct: (pnl != null && g.cost > 0) ? (pnl / g.cost) * 100 : null,
+      };
+    }).sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
+  }, [portfolioRows]);
+
   // Same resolver as the rows above — deliberately shared, so the per-broker
   // card and the row it summarizes can never disagree about what a holding is
   // worth. They have drifted before.
@@ -13432,6 +13480,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         </div>
         )}
 
+
+        {/* --- Vantage Calendar (native, left rail) --- */}
+        {panels.calendar && (
+          <div id="app-calendar-panel" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
+            <div style={panelHead({ divider: false, pad: "16px 16px 4px" })}>
+              <span>{t("Calendar")}</span>
+              <span style={{ ...panelNote, fontSize: 11 }}>{t("on this device")}</span>
+            </div>
+            <AppCalendar extra={marketEvents} />
+          </div>
+        )}
         </div>
 
         {/* --- chart + stats --- */}
@@ -13955,8 +14014,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               );
             })()}
             {portfolioView === "positions" && (() => {
-              const maxPnl = Math.max(0.5, ...portfolioRows.map(r => Math.abs(r.pnlPct ?? 0)));
-              return portfolioRows.map(r => (
+              // The rail shows the biggest positions and hides the tail. Ten is
+              // enough to see the shape of a book without the list outrunning
+              // every panel beside it, and the count on the button says exactly
+              // what is being withheld — a silently truncated list reads as a
+              // complete one.
+              const TOP = 10;
+              const groups = portShowAll ? portfolioGroups : portfolioGroups.slice(0, TOP);
+              const hidden = portfolioGroups.length - groups.length;
+              // Scaled across the WHOLE book, not the visible slice, so the bars
+              // do not silently rescale when the list is expanded.
+              const maxPnl = Math.max(0.5, ...portfolioGroups.map(g => Math.abs(g.pnlPct ?? 0)));
+              return (<>
+              {groups.map(g => {
+              const one = g.lots.length === 1 ? g.lots[0] : null;
+              const open = portExpanded.has(g.sym);
+              return (
               // A div wrapping a stretched button, not a button wrapping a
               // span. The row used to be one big <button> with the remove ✕
               // nested inside it as a <span onClick>, which is two faults in one
@@ -13970,45 +14043,83 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               // the row still selects, because the overlay covers the row; the
               // text is inert so it never intercepts, and only the ✕ opts back
               // into taking clicks.
-              <div key={r.id} className="wl-row"
-                style={{ position: "relative", display: "block", width: "100%", padding: "8px 12px", background: r.sym === selected ? C.surfaceRaised : "transparent", borderLeft: `2px solid ${r.sym === selected ? C.accent : "transparent"}`, borderTop: `1px solid ${C.grid}`, textAlign: "left" }}>
-                <button onClick={() => setSelected(r.sym)} aria-current={r.sym === selected ? "true" : undefined}
-                  aria-label={`${t("Show")} ${r.sym}`}
+              <div key={g.sym}>
+              <div className="wl-row"
+                style={{ position: "relative", display: "block", width: "100%", padding: "8px 12px", background: g.sym === selected ? C.surfaceRaised : "transparent", borderLeft: `2px solid ${g.sym === selected ? C.accent : "transparent"}`, borderTop: `1px solid ${C.grid}`, textAlign: "left" }}>
+                <button onClick={() => setSelected(g.sym)} aria-current={g.sym === selected ? "true" : undefined}
+                  aria-label={`${t("Show")} ${g.sym}`}
                   style={{ position: "absolute", inset: 0, width: "100%", background: "transparent", border: "none", cursor: "pointer", padding: 0 }} />
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", pointerEvents: "none" }}>
                   <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.text }}>
-                    {r.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 12 }}>×{r.shares}</span>
-                    {/* Two lots of the same symbol at two brokerages are two
-                        rows, so the row has to say which one it is.
-                        Guarded on brokerName — the value actually rendered —
-                        NOT on `broker`, which is the catalog id and is null for
-                        every institution outside the three we ship. Plaid links
-                        whatever the user picks, so keying on the id silently
-                        stripped the label from any other brokerage and left two
-                        of them looking like the same row. */}
-                    {r.brokerName && <span style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginLeft: 6 }}>{r.brokerName}{r.demo ? " · DEMO" : ""}</span>}
+                    {g.sym} <span style={{ color: C.faint, fontWeight: 400, fontSize: 12 }}>×{g.shares}</span>
+                    {/* One lot names its brokerage; several name their count and
+                        open on click. Guarded on brokerName — the value actually
+                        rendered — NOT on `broker`, which is the catalog id and is
+                        null for every institution outside the three we ship.
+                        Plaid links whatever the user picks, so keying on the id
+                        silently stripped the label from any other brokerage and
+                        left two of them looking like the same row. */}
+                    {one
+                      ? (one.brokerName && <span style={{ fontFamily: SANS, fontSize: 10, color: C.faint, marginLeft: 6 }}>{one.brokerName}{one.demo ? " · DEMO" : ""}</span>)
+                      : <button onClick={() => setPortExpanded(s => { const n = new Set(s); n.has(g.sym) ? n.delete(g.sym) : n.add(g.sym); return n; })}
+                          aria-expanded={open} aria-label={`${open ? t("Hide") : t("Show")} ${g.sym} ${t("accounts")}`}
+                          style={{ background: "transparent", border: "none", padding: 0, marginLeft: 6, fontFamily: SANS, fontSize: 10, color: C.faint, cursor: "pointer", pointerEvents: "auto" }}>
+                          {g.lots.length} {t("accounts")} {open ? "▾" : "▸"}
+                        </button>}
                   </span>
-                  {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.pnl) }}>{r.pnl == null ? "—" : `${r.pnl >= 0 ? "+" : ""}${fmt(r.pnl)}`}</span>)}
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(g.pnl) }}>{g.pnl == null ? "—" : `${g.pnl >= 0 ? "+" : ""}${fmt(g.pnl)}`}</span>)}
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 2, position: "relative", pointerEvents: "none" }}>
-                  {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>@{fmt(r.cost / r.shares)} → {r.price != null ? fmt(r.price) : "—"}</span>)}
-                  {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(r.pnl) }}>{r.pnlPct == null ? "" : `${r.pnlPct >= 0 ? "+" : ""}${r.pnlPct.toFixed(1)}%`}</span>)}
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>@{fmt(g.cost / g.shares)} → {g.price != null ? fmt(g.price) : "—"}</span>)}
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(g.pnl) }}>{g.pnlPct == null ? "" : `${g.pnlPct >= 0 ? "+" : ""}${g.pnlPct.toFixed(1)}%`}</span>)}
                   {/* No ✕ on a linked lot: it is not a list entry, it is what
-                      the brokerage reports. Unlink the account to remove it. */}
-                  {r.source === "linked"
-                    ? <span aria-hidden="true" title={`${r.brokerName} · ${r.account}`} style={{ fontFamily: SANS, fontSize: 10, color: C.faint }}>🔗</span>
-                    : <button onClick={() => removePosition(r.id)} className="v-rowx" aria-label={`Remove ${r.sym}`}
-                        style={{ background: "transparent", border: "none", padding: 0, fontFamily: MONO, fontSize: 12, color: C.faint, cursor: "pointer", pointerEvents: "auto" }}>✕</button>}
+                      the brokerage reports. Unlink the account to remove it.
+                      A grouped row carries neither — its lots do, below. */}
+                  {one && (one.source === "linked"
+                    ? <span aria-hidden="true" title={`${one.brokerName} · ${one.account}`} style={{ fontFamily: SANS, fontSize: 10, color: C.faint }}>🔗</span>
+                    : <button onClick={() => removePosition(one.id)} className="v-rowx" aria-label={`Remove ${one.sym}`}
+                        style={{ background: "transparent", border: "none", padding: 0, fontFamily: MONO, fontSize: 12, color: C.faint, cursor: "pointer", pointerEvents: "auto" }}>✕</button>)}
                 </div>
-                {r.pnlPct != null && (
+                {g.pnlPct != null && (
                   <div style={{ position: "relative", height: 4, background: C.grid, borderRadius: 2, marginTop: 6, overflow: "hidden", pointerEvents: "none" }}>
                     <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: C.panelEdge }} />
-                    <div style={{ position: "absolute", top: 0, bottom: 0, background: dirColorN(r.pnl), transition: "left 0.5s ease, width 0.5s ease",
-                      left: r.pnlPct >= 0 ? "50%" : `${50 - (Math.abs(r.pnlPct) / maxPnl) * 50}%`, width: `${(Math.abs(r.pnlPct) / maxPnl) * 50}%` }} />
+                    <div style={{ position: "absolute", top: 0, bottom: 0, background: dirColorN(g.pnl), transition: "left 0.5s ease, width 0.5s ease",
+                      left: g.pnlPct >= 0 ? "50%" : `${50 - (Math.abs(g.pnlPct) / maxPnl) * 50}%`, width: `${(Math.abs(g.pnlPct) / maxPnl) * 50}%` }} />
                   </div>
                 )}
               </div>
-              ));
+              {/* The lots. Nothing is lost by grouping — this is where "which
+                  account, and what did it cost there" still lives, and it is
+                  the only place a manual lot inside a grouped symbol can be
+                  removed. */}
+              {open && g.lots.map(r => (
+                <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, padding: "5px 12px 5px 26px", background: C.surfaceRaised, borderTop: `1px solid ${C.grid}` }}>
+                  <span style={{ fontFamily: SANS, fontSize: 10.5, color: C.faint, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {r.brokerName || t("Typed by hand")}{r.demo ? " · DEMO" : ""}{r.account ? ` · ${r.account}` : ""}
+                  </span>
+                  {priv(<span style={{ fontFamily: MONO, fontSize: 11, color: C.muted, whiteSpace: "nowrap" }}>×{r.shares} @{fmt(r.cost / r.shares)}</span>)}
+                  {r.source === "linked"
+                    ? <span aria-hidden="true" style={{ fontFamily: SANS, fontSize: 10, color: C.faint }}>🔗</span>
+                    : <button onClick={() => removePosition(r.id)} className="v-rowx" aria-label={`Remove ${r.sym}`}
+                        style={{ background: "transparent", border: "none", padding: 0, fontFamily: MONO, fontSize: 12, color: C.faint, cursor: "pointer" }}>✕</button>}
+                </div>
+              ))}
+              </div>
+              );
+              })}
+              {hidden > 0 && (
+                <button onClick={() => setPortShowAll(true)}
+                  style={{ display: "block", width: "100%", background: "transparent", border: "none", borderTop: `1px solid ${C.grid}`, padding: "9px 12px", fontFamily: SANS, fontSize: 12, color: C.accent, cursor: "pointer", textAlign: "center" }}>
+                  {t("Show all")} {portfolioGroups.length} ({hidden} {t("more")})
+                </button>
+              )}
+              {portShowAll && portfolioGroups.length > TOP && (
+                <button onClick={() => setPortShowAll(false)}
+                  style={{ display: "block", width: "100%", background: "transparent", border: "none", borderTop: `1px solid ${C.grid}`, padding: "9px 12px", fontFamily: SANS, fontSize: 12, color: C.faint, cursor: "pointer", textAlign: "center" }}>
+                  {t("Show top")} {TOP}
+                </button>
+              )}
+              </>);
             })()}
             {/* Typing a position by hand belongs to the positions view. On the
                 tape it would be an input with nothing to add to — you cannot
@@ -14054,16 +14165,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           </div>
         )}
 
-        {/* --- Vantage Calendar (native, right rail) --- */}
-        {panels.calendar && (
-          <div id="app-calendar-panel" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
-            <div style={panelHead({ divider: false, pad: "16px 16px 4px" })}>
-              <span>{t("Calendar")}</span>
-              <span style={{ ...panelNote, fontSize: 11 }}>{t("on this device")}</span>
-            </div>
-            <AppCalendar extra={marketEvents} />
-          </div>
-        )}
         </div>
       </div>
 

@@ -274,6 +274,55 @@ a:hover { text-decoration: underline; }
 
 .v-dash-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 
+/* Wide desktop: the proportions invert as the viewport grows. The rails are
+   pinned at 250/268px while the centre takes every extra pixel, so at 1920 the
+   WIDEST column held the least (762px of content in 1336px) and the NARROWEST
+   held the most (1928px in 268px). Giving the rails room at large sizes spends
+   the width where the content actually is, and stops the right rail's labels
+   wrapping ("Charles Schwab ·" / "DEMO") for want of about forty pixels. */
+@media (min-width: 1500px) {
+  .v-dash { grid-template-columns: 300px minmax(0, 1fr) 400px; }
+}
+
+/* And the reason for the blank space itself: a grid row is as tall as its
+   tallest track, so a rail carrying three stacked panels dragged the row to
+   1928px while the column beside it ended at 762 — 1,166px of nothing, 1336px
+   wide. Capping the rail to the viewport and letting it scroll inside itself
+   hands the page height back to the main column, which is the one with the
+   chart in it.
+
+   Applied to BOTH rails, not just the right one. Capping only the taller rail
+   moves the problem rather than fixing it: with the calendar in the left rail
+   that column became the tallest (958px) and drove the row height in exactly
+   the same way. Whichever rail grows, the page height stays the main column's.
+
+   Not applied below 1180px: there the rails are already full-width above and
+   below the main column (see the tablet query), where they are not beside
+   anything and a fixed height would just hide half of each behind a second
+   scrollbar. */
+@media (min-width: 1181px) {
+  .v-dash-left,
+  .v-dash-right {
+    position: sticky;
+    top: 14px;
+    max-height: calc(100vh - 28px);
+    overflow-y: auto;
+    /* Reaching the end of the rail should stop, not start scrolling the page
+       underneath it. */
+    overscroll-behavior: contain;
+  }
+
+  /* The cap above must make the RAIL scroll, not squash what is in it. These
+     columns are flex, so their panels shrink by default — and every panel sets
+     overflow:hidden, so shrinking does not add a scrollbar, it silently cuts
+     the content off. Capping the rail took 18px off the watchlist and 14px off
+     the calendar, which is the last row of each, gone with nothing to say so.
+     flex-shrink:0 keeps every panel its natural height and lets the rail
+     scroll past them instead. */
+  .v-dash-left > *,
+  .v-dash-right > * { flex-shrink: 0; }
+}
+
 /* Tablet: the right rail moves under the main column; the watchlist stays beside it. */
 @media (max-width: 1180px) {
   .v-dash { grid-template-columns: 230px minmax(0, 1fr); }
