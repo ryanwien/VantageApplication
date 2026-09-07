@@ -45,7 +45,7 @@ import {
   mergePositions, summarizeByBroker, speakableBrokerLine, matchInstitution,
   activityFromConnections,
 } from "./src/brokers/brokers.js";
-import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink } from "./src/brokers/links.js";
+import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions } from "./src/brokers/links.js";
 import { AuthProvider, useAuth } from "./src/api/auth-context.jsx";
 import AppShell from "./src/ui/AppShell.jsx";
 import { AuthPlate } from "./src/ui/HeroPlate.jsx";
@@ -13867,12 +13867,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
             )}
             {/* --- Linked brokerages --- */}
             {portfolioView === "positions" && (() => {
-              const unlinked = BROKER_INSTITUTIONS.filter(i => !brokerConnections.some(c => c.institutionId === i.id));
               // Three states, not two. A server with no aggregator links a demo
               // book for anyone; a configured one links a LIVE account, and that
               // is the Trading Floor perk. The third state — configured, but
               // this plan cannot use it — has to look locked BEFORE the click.
               const isDemoMode = !brokerServer?.configured;
+              // Which institutions are still offered. The demo/real distinction
+              // is the whole rule and it has been got wrong four times in this
+              // feature, so it lives in links.js where it is tested rather than
+              // inline here.
+              const unlinked = unlinkedInstitutions(BROKER_INSTITUTIONS, brokerConnections, { isDemoMode });
               const liveLocked = !isDemoMode && !planAllows("brokers");
               const chip = { display: "inline-flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 12, color: C.text };
               return (

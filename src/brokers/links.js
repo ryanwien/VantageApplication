@@ -51,3 +51,22 @@ export function addDemoLink(connections = [], institutionId, at = Date.now()) {
 
 export const removeLink = (connections = [], institutionId) =>
   connections.filter((c) => c.institutionId !== institutionId);
+
+// Which institutions the connect sheet should still offer.
+//
+// THE DEMO/REAL DISTINCTION IS THE WHOLE RULE, and getting it wrong here is
+// worse than it looks. Filtering on institutionId alone — "is this brokerage
+// present at all" — meant a DEMO book hid its own institution, so trying the
+// demo made the real account unreachable. The demo is offered on every plan
+// and is the natural first click, so the most likely path through this feature
+// locked the user out of the paid half of it, with no route back except
+// unlinking the demo and somehow knowing that was the reason.
+//
+// In demo mode the demo IS the link and still counts: there is no live path to
+// offer, and addDemoLink() no-ops on a duplicate, so listing it again would
+// render a button that does nothing.
+export function unlinkedInstitutions(institutions = [], connections = [], { isDemoMode = false } = {}) {
+  return institutions.filter(
+    (i) => !connections.some((c) => c.institutionId === i.id && (isDemoMode || !c.demo)),
+  );
+}
