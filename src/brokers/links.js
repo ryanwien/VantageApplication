@@ -97,3 +97,36 @@ export function partialCoverage(institutionId, connections = []) {
   );
   return c ? "crypto" : null;
 }
+
+// WHICH PATH A CONNECT PRESS TAKES, for one institution.
+//
+// It lives here rather than in the click handler because TWO callers need the
+// same answer and they must not disagree: the handler, which performs the link,
+// and the sheet, which tells the user what pressing will do. Every bug this
+// feature has shipped has been one thing treated as another — a demo book as a
+// real one, a crypto link as a whole brokerage — and a routing rule written out
+// twice is the same shape of mistake waiting to happen. One function, one
+// answer, tested.
+//
+// FIRST-PARTY FIRST. A credential the server already holds reads the real book
+// with nobody in the middle and nothing for the user to type. The aggregator
+// asks for a phone number and then answers out of whatever environment it is
+// pointed at — in sandbox, a fixture bank filed under the user's own
+// institution name. "Richer" is not the same as "theirs".
+//
+// Robinhood is the one that is both: its key covers crypto and no equities
+// exist on that path, so Plaid is how the stocks arrive — on the SECOND press,
+// the one the sheet labels ADD STOCKS. partialCoverage() is exactly that
+// condition, which is why it is asked here rather than re-derived.
+export function linkRoute(institutionId, { providers = {}, connections = [], demoOnly = false } = {}) {
+  // Demo is a DECISION when the user has made it, and only a fallback when
+  // nothing else can be reached. Both end in the same demo book, so they are
+  // one answer here; the sheet is what explains which of the two it is.
+  if (demoOnly) return "demo";
+  const has = (p) => !!providers?.[p]?.configured;
+  if (institutionId === "schwab" && has("schwab")) return "schwab";
+  if (institutionId === "robinhood" && has("robinhood-crypto") && !partialCoverage(institutionId, connections)) {
+    return "robinhood-crypto";
+  }
+  return has("plaid") ? "plaid" : "demo";
+}

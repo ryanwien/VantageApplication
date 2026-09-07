@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage } from "./links.js";
+import { loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage, linkRoute } from "./links.js";
 
 describe("loadLinks", () => {
   it("rebuilds a demo book from a stored id", () => {
@@ -124,5 +124,64 @@ describe("unlinkedInstitutions with a partial (crypto-only) link", () => {
     expect(partialCoverage("schwab", [cryptoRH])).toBe(null);
     // A demo book is not a partial link, it is a fake one.
     expect(partialCoverage("robinhood", [{ ...cryptoRH, demo: true }])).toBe(null);
+  });
+});
+
+describe("linkRoute", () => {
+  const ALL = {
+    plaid: { configured: true },
+    schwab: { configured: true },
+    "robinhood-crypto": { configured: true },
+  };
+  const cryptoRH = { institutionId: "robinhood", demo: false, provider: "robinhood-crypto" };
+
+  // The reversal. Plaid used to win every institution it could reach, which
+  // sent somebody holding a working Robinhood key to a phone-number form and
+  // then, in sandbox, to a fixture bank wearing their brokerage's name.
+  it("prefers the brokerage's own key over the aggregator", () => {
+    expect(linkRoute("robinhood", { providers: ALL })).toBe("robinhood-crypto");
+    expect(linkRoute("schwab", { providers: ALL })).toBe("schwab");
+  });
+
+  // The institution with no first-party path at all is the one the aggregator
+  // is here for.
+  it("sends Morgan Stanley to the aggregator, because it has nothing of its own", () => {
+    expect(linkRoute("morgan-stanley", { providers: ALL })).toBe("plaid");
+  });
+
+  // The ADD STOCKS press: the crypto book is already linked, so the only thing
+  // left to fetch is the half that key cannot reach.
+  it("falls through to the aggregator once the crypto book is already linked", () => {
+    expect(linkRoute("robinhood", { providers: ALL, connections: [cryptoRH] })).toBe("plaid");
+  });
+
+  // Robinhood's own branch was unreachable in EVERY configuration before this:
+  // with no aggregator the handler demoed out before reaching it, and with one
+  // its own guard was false. A key that is set and never used is worse than no
+  // key, because the desk reports it working.
+  it("uses the key when it is the only credential there is", () => {
+    expect(linkRoute("robinhood", { providers: { "robinhood-crypto": { configured: true } } })).toBe("robinhood-crypto");
+  });
+
+  it("has nothing live to offer without a path to the institution", () => {
+    expect(linkRoute("morgan-stanley", { providers: { "robinhood-crypto": { configured: true } } })).toBe("demo");
+    expect(linkRoute("schwab", { providers: {} })).toBe("demo");
+    expect(linkRoute("robinhood", {})).toBe("demo");
+  });
+
+  // The switch has to reach the ROUTE, not only the label. While demo mode was
+  // known to the sheet alone, a button reading DEMO opened Plaid's real
+  // sign-in — the one failure this feature must never produce.
+  it("honours the Settings switch over every configured path", () => {
+    for (const id of ["robinhood", "schwab", "morgan-stanley"]) {
+      expect(linkRoute(id, { providers: ALL, demoOnly: true })).toBe("demo");
+    }
+  });
+
+  // A demo book is not a partial link, so it must not consume the first press
+  // and push the real key to second place.
+  it("is not satisfied by a demo book", () => {
+    const demoRH = { institutionId: "robinhood", demo: true, provider: "robinhood-crypto" };
+    expect(linkRoute("robinhood", { providers: ALL, connections: [demoRH] })).toBe("robinhood-crypto");
   });
 });

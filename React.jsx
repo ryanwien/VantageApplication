@@ -45,7 +45,7 @@ import {
   mergePositions, summarizeByBroker, speakableBrokerLine, matchInstitution,
   activityFromConnections,
 } from "./src/brokers/brokers.js";
-import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage } from "./src/brokers/links.js";
+import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage, linkRoute } from "./src/brokers/links.js";
 import { AuthProvider, useAuth } from "./src/api/auth-context.jsx";
 import AppShell from "./src/ui/AppShell.jsx";
 import { AuthPlate } from "./src/ui/HeroPlate.jsx";
@@ -9038,20 +9038,20 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // user thinks they connected a real account and did not.
   const connectBroker = useCallback(async (institutionId) => {
     setBrokerErr("");
-    // Which live path can reach THIS institution? Schwab has its own OAuth
-    // (first-party, no aggregator); everything else goes through Plaid. A
-    // server may have one, both, or neither configured, so the question is per
-    // institution rather than global.
-    const viaSchwab = institutionId === "schwab" && brokerServer?.providers?.schwab?.configured;
-    // Robinhood's own key reaches CRYPTO only — it is a real first-party path
-    // but not a substitute for the equities Plaid carries, so when both are
-    // available Plaid wins and this is the fallback rather than the default.
-    const viaRobinhood = institutionId === "robinhood" && brokerServer?.providers?.["robinhood-crypto"]?.configured;
-    const viaPlaid = brokerServer?.providers?.plaid?.configured;
-    // Demo first, and on every plan: a server with no live path for this
-    // institution has nothing real to offer, and a demo book is exactly the
-    // simulated data Explorer is sold on. Only the LIVE link is Trading Floor.
-    if (!viaSchwab && !viaPlaid) {
+    // The route is decided in links.js, not here, because the sheet has to
+    // describe the same decision this makes and the two must not drift. See
+    // linkRoute() for why first-party wins and why Demo is read at all — the
+    // switch reaching only the LABEL is how a button saying DEMO ended up
+    // opening Plaid's real sign-in.
+    const route = linkRoute(institutionId, {
+      providers: brokerServer?.providers,
+      connections: brokerConnections,
+      demoOnly: !brokerServer?.configured || !prefs.portfolioLive,
+    });
+    // Demo on every plan: a server with no live path for this institution has
+    // nothing real to offer, and a demo book is exactly the simulated data
+    // Explorer is sold on. Only the LIVE link is Trading Floor.
+    if (route === "demo") {
       setDemoLinks(ls => addDemoLink(ls, institutionId));
       if (!panels.portfolio) setPanels(p => ({ ...p, portfolio: true }));
       return;
@@ -9068,15 +9068,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     // OAuth server sets its own cookies and will not run inside an iframe or a
     // popup we control. The server bounces back to /?connected=schwab, which
     // the existing connected-provider handler already picks up.
-    if (viaSchwab) {
+    if (route === "schwab") {
       window.location.href = api.brokers.schwabConnectUrl();
       return;
     }
     // Robinhood crypto: no redirect and no consent screen — the key already
     // lives on the server, so linking is one call that either reads the book or
-    // fails. Only taken when Plaid cannot serve this institution, because Plaid
-    // brings the equities that this path cannot.
-    if (viaRobinhood && !viaPlaid) {
+    // fails. The press AFTER this one is the ADD STOCKS press, and linkRoute
+    // sends that to Plaid for the equities this key cannot reach.
+    if (route === "robinhood-crypto") {
       setBrokerBusy(institutionId);
       try { await api.brokers.connectRobinhood(); await refreshBrokerServer(); }
       catch (e) { setBrokerErr(humanizeError(e)); }
@@ -9108,7 +9108,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     } catch (e) {
       setBrokerErr(humanizeError(e));
     } finally { setBrokerBusy(""); }
-  }, [brokerServer, panels.portfolio, refreshBrokerServer, planAllows]);
+  }, [brokerServer, brokerConnections, prefs.portfolioLive, panels.portfolio, refreshBrokerServer, planAllows]);
 
   const disconnectBroker = useCallback(async (conn) => {
     setBrokerErr("");
@@ -13894,6 +13894,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 aggregator: !!brokerServer?.providers?.plaid?.configured,
               });
               const liveLocked = !isDemoMode && !planAllows("brokers");
+              // Not every row takes the same path any more, so one sentence
+              // promising Plaid for all three would be false for the rows whose
+              // own key the server already holds. Asked of the same function
+              // the click uses, so what this says and what that does cannot
+              // drift apart.
+              const anyFirstParty = unlinked.some((i) => {
+                const r = linkRoute(i.id, {
+                  providers: brokerServer?.providers,
+                  connections: brokerConnections,
+                  demoOnly: isDemoMode,
+                });
+                return r === "schwab" || r === "robinhood-crypto";
+              });
               const chip = { display: "inline-flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 12, color: C.text };
               return (
                 <div style={{ padding: "10px 12px", borderTop: portfolioRows.length > 0 ? `1px solid ${C.grid}` : "none", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -13990,7 +14003,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                               : t("No aggregator is configured, so these link a labelled demonstration book — not a real account. Nothing is sent anywhere."))
                           : liveLocked
                             ? <>Linking a live account is a <b style={{ color: C.accentText }}>{planLabel(FEATURE_PLAN.brokers)}</b> feature. {lockChip("brokers")}</>
-                            : t("Opens your brokerage's own sign-in through Plaid. Vantage never sees your brokerage password, and reads positions only.")}
+                            : anyFirstParty
+                              ? t("Where Vantage already holds the brokerage's own key it links directly — no sign-in, nothing to type, nobody in the middle. Any other opens your brokerage's own sign-in through Plaid, which never shows Vantage your password and reads positions only.")
+                              : t("Opens your brokerage's own sign-in through Plaid. Vantage never sees your brokerage password, and reads positions only.")}
                       </div>
                       <button onClick={() => setBrokerSheet(false)} style={{ ...button("ghost", "sm"), width: "100%", padding: 7, borderRadius: R.sm, fontSize: 12 }}>{t("Cancel")}</button>
                     </div>

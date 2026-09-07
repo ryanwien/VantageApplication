@@ -336,11 +336,28 @@ Like everything else here, this has two tiers:
    (`brokerPlanGate`), not only in the browser — it guards a stored credential for somebody's
    brokerage account, so a client-side check would be a convention rather than a control.
 
-**Why an aggregator and not the brokers directly.** Robinhood publishes no third-party API;
-Morgan Stanley publishes no retail one; Schwab's Trader API is a hand-approved application.
-Plaid's `/investments/holdings/get` reaches all three through one interface. Swapping in
-SnapTrade or a direct Schwab integration means one normalizer in `src/brokers/brokers.js` and
-`refreshConnection()` in `server/index.js` — the rest of the app reads the normalized shape.
+**Which path each institution takes.** First-party first, aggregator second — decided in one
+place, `linkRoute()` in `src/brokers/links.js`, because the connect sheet has to describe the
+same choice the click makes.
+
+| Institution | Path | Why |
+| --- | --- | --- |
+| **Robinhood** | its own API key | Self-serve at *account → crypto → Add key*. Reaches **crypto only** — there is no equities endpoint on it — so Plaid is offered as a second, explicit **ADD STOCKS** press rather than replacing the key. |
+| **Charles Schwab** | its own OAuth once approved, Plaid until then | `SCHWAB_APP_KEY` / `SCHWAB_APP_SECRET` come from a **hand-approved** application at developer.schwab.com. |
+| **Morgan Stanley** | Plaid | No retail API exists to hold a key for; the aggregator is the only path. |
+
+A held key reads the real book with nobody in the middle and nothing to type. The aggregator asks
+for a phone number and then answers out of whatever environment it is pointed at — in **sandbox**
+that is a fixture bank filed under the user's own institution name, which is not "richer data", it
+is somebody else's. Swapping in SnapTrade or another provider means one normalizer in
+`src/brokers/brokers.js`, one branch in `linkRoute()`, and `refreshConnection()` in
+`server/index.js` — the rest of the app reads the normalized shape.
+
+> **The Schwab callback must be HTTPS, and this server speaks HTTP.** `SCHWAB_REDIRECT_URI`
+> defaults to `https://127.0.0.1:8787/api/brokers/schwab/callback`, Schwab compares the string
+> exactly, and it is fixed at **registration** — so it has to be right before the app is submitted,
+> not after the key arrives. `server/index.js` calls `http.createServer`, so nothing answers TLS
+> on that port today and the callback would fail the handshake. Close that gap before registering.
 
 **Why the brokers' own sites are not embedded.** They forbid it in their own headers, and the
 browser enforces it: `robinhood.com` sends `X-Frame-Options: deny`, `schwab.com` and
