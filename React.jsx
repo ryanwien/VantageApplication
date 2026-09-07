@@ -13254,7 +13254,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               suggestions={[
                 { label: t("Summarize {sym} today").replace("{sym}", selected), value: `Summarize ${selected} today — price action and why` },
                 { label: t("What's moving today?"), value: "What's moving in the market today and why?" },
-                { label: t("Take me to Robinhood"), value: "take me to Robinhood" },
                 { label: t("What's on Netflix?"), value: "what's on netflix" },
                 { label: t("Write a report → PPT"), value: "write a report and export ppt" },
               ]}
@@ -13876,7 +13875,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               // book for anyone; a configured one links a LIVE account, and that
               // is the Trading Floor perk. The third state — configured, but
               // this plan cannot use it — has to look locked BEFORE the click.
-              const isDemoMode = !brokerServer?.configured;
+              // Two ways to be in demo mode, and the switch has to be one of
+              // them or it is decoration: the server having no aggregator, or
+              // the user having said so in Settings → Data → Portfolio. Either
+              // way CONNECT links a labelled demo book, and the note under the
+              // buttons says which of the three it is about to do.
+              const isDemoMode = !brokerServer?.configured || !prefs.portfolioLive;
               // Which institutions are still offered. The demo/real distinction
               // is the whole rule and it has been got wrong four times in this
               // feature, so it lives in links.js where it is tested rather than
@@ -13976,7 +13980,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                           panel names which of the three it is about to do. */}
                       <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint, lineHeight: 1.5 }}>
                         {isDemoMode
-                          ? t("No aggregator is configured, so these link a labelled demonstration book — not a real account. Nothing is sent anywhere.")
+                          // Demo mode has TWO causes and they need different
+                          // sentences. Telling somebody who chose Demo in
+                          // Settings that "no aggregator is configured" is
+                          // simply false — theirs is — and it sends them off to
+                          // debug a server that is working.
+                          ? (brokerServer?.configured
+                              ? t("Portfolio is set to Demo in Settings → Display & data, so these link a labelled demonstration book. Switch it to Live to connect a real account.")
+                              : t("No aggregator is configured, so these link a labelled demonstration book — not a real account. Nothing is sent anywhere."))
                           : liveLocked
                             ? <>Linking a live account is a <b style={{ color: C.accentText }}>{planLabel(FEATURE_PLAN.brokers)}</b> feature. {lockChip("brokers")}</>
                             : t("Opens your brokerage's own sign-in through Plaid. Vantage never sees your brokerage password, and reads positions only.")}
@@ -14693,6 +14704,40 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                             onChange={(v, locked) => { if (locked) { setSettingsTab("account"); return; } setMode(v); }} />
                         </SetRow>
 
+                        {/* The same question as Quotes, asked about holdings:
+                            are these real positions or a demonstration book?
+                            It sits here rather than only in the panel because
+                            this is the screen people open to find out what is
+                            real, and the Portfolio panel is the screen where
+                            they have already assumed an answer. */}
+                        <SetRow label={t("Portfolio")}
+                          note={!brokerServer?.configured
+                            ? t("No aggregator is configured on this server, so only demonstration books are available.")
+                            : prefs.portfolioLive
+                              ? t("Your real accounts, read through Plaid. Positions only — Vantage never sees your brokerage password.")
+                              : t("Demonstration books only — Connect links a labelled demo book instead of a real account.")}>
+                          <Segmented label={t("Portfolio")} tone="accent" value={prefs.portfolioLive ? "live" : "demo"}
+                            options={[["demo", t("Demo")], ["live", t("Live"), !planAllows("brokers")]]}
+                            onChange={(v, locked) => { if (locked) { setSettingsTab("account"); return; } setPref("portfolioLive", v === "live"); }} />
+                        </SetRow>
+
+                        {/* Appears only once live linking is actually on, which
+                            is the point: the accounts are the thing the switch
+                            above turns on, so they belong under it rather than
+                            two panels away. */}
+                        {prefs.portfolioLive && brokerServer?.configured && (
+                          <SetRow label={t("Linked accounts")}
+                            note={brokerConnections.length
+                              ? brokerConnections.map(c => `${c.institutionName}${c.demo ? " · DEMO" : ""}`).join(" · ")
+                              : t("Nothing linked yet.")}>
+                            <button
+                              onClick={() => { setShowSettings(false); setPanels(p => ({ ...p, portfolio: true })); setPortfolioView("positions"); setBrokerSheet(true); }}
+                              style={{ ...button("ghost", "sm"), fontSize: 12.5 }}>
+                              {brokerConnections.length ? t("Manage accounts") : t("Link an account")}
+                            </button>
+                          </SetRow>
+                        )}
+
                         <SetRow label={t("Refresh every")}>
                           <Segmented label={t("Refresh every")} value={prefs.refreshMs}
                             options={[[0, t("Manual")], [5000, "5s"], [15000, "15s"], [30000, "30s"]]}
@@ -14941,50 +14986,28 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                               {t("No login needed — turn on ♪ and the player docks bottom-right. (Spotify's embed plays 30-second previews without an account; full tracks play automatically if you're already signed in to Spotify in this browser.)")}
                             </div>
 
-                            {/* Optional full playback via OAuth (Premium) — collapsed so it never demands a login */}
-                            <details style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.edge}` }}>
-                              <summary style={{ fontFamily: SANS, fontSize: 13, color: C.faint, cursor: "pointer" }}>
-                                {t("Optional · connect a Premium account for full tracks")}
-                              </summary>
-                              <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 13, color: C.muted }}>
-                                <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ color: C.accentText }}>{t("create an app ↗")}</a>
-                                {lockChip("spotify")}
+                            {/* The Premium OAuth SETUP is gone: registering a
+                                Spotify developer app, pasting a client id and
+                                matching a redirect URI is a chore this panel
+                                should not be asking of anyone, and the embed
+                                above already plays without any of it.
+
+                                What remains is the way OUT. Playback still runs
+                                on a stored token for anyone who connected while
+                                the form existed, and deleting the whole block
+                                would leave them holding an OAuth grant with no
+                                control in the app to revoke it. So this renders
+                                only when there is something to disconnect, and
+                                disappears for good once they do. */}
+                            {spotifyAuth && (
+                              <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.edge}`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                                <span style={{ fontFamily: SANS, fontSize: 13, color: spotifyReady ? C.up : C.muted }}>
+                                  {spotifyReady ? t("● connected — full tracks enabled") : t("connecting…")}
+                                </span>
+                                <button onClick={disconnectSpotify} style={{ ...button("ghost", "sm"), fontSize: 12.5 }}>{t("Disconnect")}</button>
                               </div>
-                              {spotifyReady ? (
-                                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
-                                  <span style={{ fontFamily: SANS, fontSize: 13, color: C.up }}>{t("● connected — full tracks enabled")}</span>
-                                  <button onClick={disconnectSpotify} style={{ ...button("ghost", "sm"), fontSize: 12.5 }}>{t("Disconnect")}</button>
-                                </div>
-                              ) : (
-                                <>
-                                  <input
-                                    value={spotifyClientId}
-                                    onChange={e => setSpotifyClientId(e.target.value)}
-                                    placeholder={t("Spotify app Client ID")}
-                                    style={{ ...fieldRecipe({ size: "sm" }), marginTop: 10, fontFamily: MONO, background: C.surface }}
-                                  />
-                                  <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, marginTop: 8, lineHeight: 1.6 }}>
-                                    {lang === "en"
-                                      ? <>In your Spotify app settings, add this exact <b style={{ color: C.muted }}>Redirect URI</b>:</>
-                                      : <>{t("In your Spotify app settings, add this exact Redirect URI:")}</>}<br />
-                                    <code style={{ color: C.accentText, wordBreak: "break-all" }}>{spotifyRedirect()}</code>
-                                    {!/^https:|127\.0\.0\.1/.test(spotifyRedirect()) && (
-                                      <span style={{ color: C.down }}><br />⚠ {t("Spotify requires https or 127.0.0.1 — open this app at http://127.0.0.1:5173 (not localhost) and register that.")}</span>
-                                    )}
-                                  </div>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
-                                    {(() => { const ok = planAllows("spotify") && spotifyClientId.trim(); return (
-                                    <button onClick={() => { if (!planAllows("spotify")) { setSettingsTab("account"); return; } connectSpotify(); }} disabled={!ok}
-                                      style={{ background: ok ? "#1DB954" : C.edgeStrong, color: ok ? "#ffffff" : C.faint, border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 13, fontWeight: 600, padding: "9px 16px", cursor: ok ? "pointer" : "default" }}>
-                                      {planAllows("spotify") ? t("Connect Spotify") : `${t("Connect Spotify")} 🔒`}
-                                    </button>
-                                    ); })()}
-                                    {spotifyAuth && !spotifyReady && <span style={{ fontFamily: SANS, fontSize: 12.5, color: C.muted }}>{t("connecting…")}</span>}
-                                  </div>
-                                </>
-                              )}
-                              {spotifyErr && <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.down, marginTop: 8 }}>{spotifyErr}</div>}
-                            </details>
+                            )}
+                            {spotifyErr && <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.down, marginTop: 8 }}>{spotifyErr}</div>}
                           </div>
                         )}
                       </div>

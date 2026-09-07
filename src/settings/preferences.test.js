@@ -104,3 +104,24 @@ describe("pnfPatterns notify pref", () => {
     expect(notifyEnabled(loadPrefs(JSON.stringify({ notify: { pnfPatterns: true } })), "pnfPatterns")).toBe(true);
   });
 });
+
+// The one preference that defaults ON. An absent value means "never chosen",
+// and reading that as false would silently downgrade a configured aggregator to
+// a demo book on the first load after this shipped.
+describe("portfolioLive", () => {
+  it("defaults to true when nothing is stored", () => {
+    expect(loadPrefs(null).portfolioLive).toBe(true);
+    expect(loadPrefs("{}").portfolioLive).toBe(true);
+    expect(loadPrefs('{"refreshMs":5000}').portfolioLive).toBe(true);
+  });
+
+  it("honours an explicit false", () => {
+    expect(loadPrefs('{"portfolioLive":false}').portfolioLive).toBe(false);
+  });
+
+  it("honours an explicit true, and coerces junk to a boolean", () => {
+    expect(loadPrefs('{"portfolioLive":true}').portfolioLive).toBe(true);
+    expect(loadPrefs('{"portfolioLive":"yes"}').portfolioLive).toBe(true);
+    expect(loadPrefs('{"portfolioLive":0}').portfolioLive).toBe(false);
+  });
+});

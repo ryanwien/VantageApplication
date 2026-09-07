@@ -5,6 +5,15 @@ export const DEFAULT_PREFS = {
   colorBlind: false,
   privacy: false,
   refreshMs: 15000,
+  // Whether the Portfolio panel may link REAL brokerage accounts, mirroring the
+  // Quotes Demo/Live switch beside it.
+  //
+  // Defaults TRUE, unlike the notify flags below, because it is not a new
+  // capability being switched on — the server's own configuration and the
+  // account's plan already decide whether a live link is possible at all, and
+  // this only lets someone opt OUT of being offered one. Defaulting it false
+  // would silently turn a configured aggregator back into a demo book.
+  portfolioLive: true,
   // All off by default — break-ins (sound + speech) are opt-in, not something a
   // first visit should have to discover how to silence.
   notify: { priceTriggers: false, breakingNews: false, pnfPatterns: false },
@@ -35,6 +44,10 @@ export function loadPrefs(rawString, legacyBreaking) {
     colorBlind: !!stored.colorBlind,
     privacy: !!stored.privacy,
     refreshMs: coerceRefreshMs(stored.refreshMs),
+    // Absent means "never chosen", which must read as the default TRUE — not as
+    // false. `!!stored.portfolioLive` would turn every existing install's live
+    // links back into demo books on the first load after this shipped.
+    portfolioLive: "portfolioLive" in stored ? !!stored.portfolioLive : DEFAULT_PREFS.portfolioLive,
     notify,
   };
 }
