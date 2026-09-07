@@ -45,7 +45,7 @@ import {
   mergePositions, summarizeByBroker, speakableBrokerLine, matchInstitution,
   activityFromConnections,
 } from "./src/brokers/brokers.js";
-import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions } from "./src/brokers/links.js";
+import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage } from "./src/brokers/links.js";
 import { AuthProvider, useAuth } from "./src/api/auth-context.jsx";
 import AppShell from "./src/ui/AppShell.jsx";
 import { AuthPlate } from "./src/ui/HeroPlate.jsx";
@@ -8992,7 +8992,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   const portfolioGroups = useMemo(() => {
     const bySym = new Map();
     for (const r of portfolioRows) {
-      const g = bySym.get(r.sym) || { sym: r.sym, shares: 0, cost: 0, val: 0, lots: [], costUnknown: 0, priced: 0 };
+      const g = bySym.get(r.sym) || { sym: r.sym, shares: 0, cost: 0, val: 0, lots: [], costUnknown: 0, priced: 0, accounts: 0, typed: 0 };
+      // Counted apart, because they are different KINDS of holding. A lot at a
+      // brokerage is reported by an institution; a typed lot is asserted by the
+      // user and belongs to no account at all. Calling the group "2 accounts"
+      // when one of them was hand-entered misstates where the shares are.
+      if (r.source === "linked") g.accounts += 1; else g.typed += 1;
       const val = r.val;
       const cost = r.costKnown ? r.cost : null;
       if (!r.costKnown) g.costUnknown += 1;
@@ -13876,7 +13881,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               // is the whole rule and it has been got wrong four times in this
               // feature, so it lives in links.js where it is tested rather than
               // inline here.
-              const unlinked = unlinkedInstitutions(BROKER_INSTITUTIONS, brokerConnections, { isDemoMode });
+              // `aggregator` is what makes a crypto-only Robinhood link stop
+              // counting as "Robinhood is linked": Plaid carries the equities
+              // that key cannot reach, so the row stays on offer. Without Plaid
+              // there is nothing better to offer and it does not.
+              const unlinked = unlinkedInstitutions(BROKER_INSTITUTIONS, brokerConnections, {
+                isDemoMode,
+                aggregator: !!brokerServer?.providers?.plaid?.configured,
+              });
               const liveLocked = !isDemoMode && !planAllows("brokers");
               const chip = { display: "inline-flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 12, color: C.text };
               return (
@@ -13937,12 +13949,24 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       {unlinked.map(inst => (
                         <button key={inst.id} onClick={() => connectBroker(inst.id)} disabled={!!brokerBusy}
-                          title={inst.note}
+                          title={partialCoverage(inst.id, brokerConnections)
+                            ? `${inst.name} is linked for crypto only — that key reaches no equities. Connecting through Plaid adds the stock positions.`
+                            : inst.note}
                           style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", background: "transparent", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, padding: "9px 10px", cursor: brokerBusy ? "default" : "pointer", opacity: brokerBusy && brokerBusy !== inst.id ? 0.5 : 1 }}>
                           <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: inst.tint }} />
                           <span style={{ ...chip, flex: 1 }}>{inst.name}</span>
                           <span style={{ fontFamily: MONO, fontSize: 10, color: liveLocked ? C.accentText : C.faint }}>
-                            {brokerBusy === inst.id ? "…" : isDemoMode ? "DEMO" : liveLocked ? "🔒" : "CONNECT"}
+                            {/* An institution already carrying a PARTIAL link is
+                                offered again, so the label has to say what the
+                                second link adds. "CONNECT" beside a Robinhood
+                                row that is visibly already on the desk reads as
+                                a bug rather than as the offer of the half its
+                                own key cannot reach. */}
+                            {brokerBusy === inst.id ? "…"
+                              : isDemoMode ? "DEMO"
+                              : liveLocked ? "🔒"
+                              : partialCoverage(inst.id, brokerConnections) ? t("ADD STOCKS")
+                              : "CONNECT"}
                           </span>
                         </button>
                       ))}
@@ -14068,7 +14092,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                       : <button onClick={() => setPortExpanded(s => { const n = new Set(s); n.has(g.sym) ? n.delete(g.sym) : n.add(g.sym); return n; })}
                           aria-expanded={open} aria-label={`${open ? t("Hide") : t("Show")} ${g.sym} ${t("accounts")}`}
                           style={{ background: "transparent", border: "none", padding: 0, marginLeft: 6, fontFamily: SANS, fontSize: 10, color: C.faint, cursor: "pointer", pointerEvents: "auto" }}>
-                          {g.lots.length} {t("accounts")} {open ? "▾" : "▸"}
+                          {/* Never a bare lot count. A hand-typed lot is not an
+                              account, and "2 accounts" on a group holding one
+                              brokerage lot and one typed lot says the shares
+                              are somewhere they are not. */}
+                          {g.accounts > 0 && g.typed > 0
+                            ? `${g.accounts} ${g.accounts === 1 ? t("account") : t("accounts")} + ${t("typed")}`
+                            : g.accounts > 0
+                              ? `${g.accounts} ${t("accounts")}`
+                              : `${g.typed} ${t("typed lots")}`} {open ? "▾" : "▸"}
                         </button>}
                   </span>
                   {priv(<span style={{ fontFamily: MONO, fontSize: 12, color: dirColorN(g.pnl) }}>{g.pnl == null ? "—" : `${g.pnl >= 0 ? "+" : ""}${fmt(g.pnl)}`}</span>)}

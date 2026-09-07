@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions } from "./links.js";
+import { loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage } from "./links.js";
 
 describe("loadLinks", () => {
   it("rebuilds a demo book from a stored id", () => {
@@ -91,5 +91,38 @@ describe("unlinkedInstitutions", () => {
     expect(unlinkedInstitutions(INST, []).length).toBe(3);
     expect(unlinkedInstitutions().length).toBe(0);
     expect(unlinkedInstitutions(INST, [{}]).map((i) => i.id)).toEqual(["robinhood", "schwab", "morgan-stanley"]);
+  });
+});
+
+// Robinhood's own key reaches crypto and nothing else, so a crypto link must
+// not stand in for the equities an aggregator would bring.
+describe("unlinkedInstitutions with a partial (crypto-only) link", () => {
+  const INST = [{ id: "robinhood" }, { id: "schwab" }, { id: "morgan-stanley" }];
+  const cryptoRH = { institutionId: "robinhood", demo: false, provider: "robinhood-crypto" };
+  const plaidRH = { institutionId: "robinhood", demo: false, provider: "plaid" };
+
+  it("keeps Robinhood offered when only the crypto key is linked and Plaid exists", () => {
+    const out = unlinkedInstitutions(INST, [cryptoRH], { aggregator: true });
+    expect(out.map((i) => i.id)).toContain("robinhood");
+  });
+
+  // Nothing better to offer: promising an upgrade this server cannot make is
+  // worse than leaving the row out.
+  it("hides it when no aggregator is configured, because crypto is all there is", () => {
+    const out = unlinkedInstitutions(INST, [cryptoRH], { aggregator: false });
+    expect(out.map((i) => i.id)).not.toContain("robinhood");
+  });
+
+  it("hides it once the aggregator link exists too", () => {
+    const out = unlinkedInstitutions(INST, [cryptoRH, plaidRH], { aggregator: true });
+    expect(out.map((i) => i.id)).not.toContain("robinhood");
+  });
+
+  it("reports what an existing partial link covers", () => {
+    expect(partialCoverage("robinhood", [cryptoRH])).toBe("crypto");
+    expect(partialCoverage("robinhood", [plaidRH])).toBe(null);
+    expect(partialCoverage("schwab", [cryptoRH])).toBe(null);
+    // A demo book is not a partial link, it is a fake one.
+    expect(partialCoverage("robinhood", [{ ...cryptoRH, demo: true }])).toBe(null);
   });
 });

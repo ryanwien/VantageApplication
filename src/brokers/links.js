@@ -65,8 +65,35 @@ export const removeLink = (connections = [], institutionId) =>
 // In demo mode the demo IS the link and still counts: there is no live path to
 // offer, and addDemoLink() no-ops on a duplicate, so listing it again would
 // render a button that does nothing.
-export function unlinkedInstitutions(institutions = [], connections = [], { isDemoMode = false } = {}) {
-  return institutions.filter(
-    (i) => !connections.some((c) => c.institutionId === i.id && (isDemoMode || !c.demo)),
+// PARTIAL PROVIDERS reach only part of an institution's book. Robinhood issues
+// exactly one self-serve key and it covers crypto and nothing else — no
+// equities exist on that path at all. So a robinhood-crypto connection is not
+// "Robinhood is linked": somebody holding stocks there still needs the
+// aggregator, and hiding the row because a link of some kind exists is how they
+// would never find it.
+export const PARTIAL_PROVIDERS = new Set(["robinhood-crypto"]);
+
+// `aggregator` says whether a fuller path (Plaid) is configured. Without one
+// there is nothing better to offer, so a partial link is all this server can
+// do and the row stays hidden rather than promising an upgrade it cannot make.
+export function unlinkedInstitutions(institutions = [], connections = [], { isDemoMode = false, aggregator = false } = {}) {
+  return institutions.filter((i) => !connections.some((c) => {
+    if (c.institutionId !== i.id) return false;
+    // A demo book never hides a live path — see above.
+    if (!isDemoMode && c.demo) return false;
+    // A crypto-only link does not cover the equities the aggregator would add.
+    if (aggregator && PARTIAL_PROVIDERS.has(c.provider)) return false;
+    return true;
+  }));
+}
+
+// What an already-linked institution would GAIN by connecting again, or null if
+// it is not linked at all. The connect sheet says this on the button, because
+// "CONNECT" beside a Robinhood row that is already on the desk reads as a bug
+// rather than as the offer of the half it is missing.
+export function partialCoverage(institutionId, connections = []) {
+  const c = (connections || []).find(
+    (x) => x.institutionId === institutionId && !x.demo && PARTIAL_PROVIDERS.has(x.provider),
   );
+  return c ? "crypto" : null;
 }
