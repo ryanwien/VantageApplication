@@ -42,6 +42,7 @@ import { msReady, msReadiness, normalizeMorganStanleyAccounts, normalizeMorganSt
 import {
   RH_BASE, RH_HOLDINGS_PATH, RH_BEST_BID_ASK_PATH,
   rhTimestamp, rhHeaders, normalizeRobinhoodHoldings, normalizeRobinhoodQuotes, rhNextPath, cryptoAssetCode,
+  rhOperatorMatches,
 } from "../src/brokers/robinhood.js";
 import { makeEd25519Signer } from "../src/brokers/robinhood-sign.js";
 
@@ -181,11 +182,25 @@ const morganStanleyConfigured = () => msReady(process.env);
 // directly, so it is wrapped in the PKCS#8 DER prefix below — that constant is
 // the entire "algorithm identifier + octet string" header for Ed25519 and is
 // fixed for every key of this type.
+//
+// WHOSE ACCOUNT: the key reads exactly one Robinhood book — the one that minted
+// it — so unlike Plaid and Schwab it does not scale to users, and a server-wide
+// "configured" would offer the OPERATOR's holdings to every signed-in account
+// on the right plan. ROBINHOOD_ACCOUNT_EMAIL names the account it belongs to,
+// and nobody else is offered the path. Fails closed: unset means nobody.
 const ROBINHOOD = {
   apiKey: process.env.ROBINHOOD_API_KEY || "",
   privateKey: process.env.ROBINHOOD_PRIVATE_KEY || "",
+  accountEmail: process.env.ROBINHOOD_ACCOUNT_EMAIL || "",
 };
+// Has the server got a usable key at all? Still the right question for the
+// boot banner and for check:brokers — but NOT for anything a browser sees.
 const robinhoodConfigured = () => !!(ROBINHOOD.apiKey && ROBINHOOD.privateKey);
+// Is this caller the account the key belongs to? The question every request
+// has to ask instead. rhOperatorMatches lives in src/brokers/robinhood.js with
+// its fail-closed behaviour under test.
+const robinhoodAvailableTo = (email) =>
+  robinhoodConfigured() && rhOperatorMatches(ROBINHOOD.accountEmail, email);
 // The signer itself lives in src/brokers/robinhood-sign.js, where the DER
 // wrapping is covered by a signature round-trip test. It is the one part of
 // this integration that cannot be checked by reading it.
@@ -1694,14 +1709,17 @@ const server = http.createServer(async (req, res) => {
         // `providers` is the honest detail underneath: Schwab's own OAuth
         // reaches exactly one institution, Plaid reaches all three, and the
         // browser needs to know which button to draw for which row.
-        configured: plaidConfigured() || schwabConfigured() || morganStanleyConfigured() || robinhoodConfigured(),
-        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : (robinhoodConfigured() ? "robinhood-crypto" : (morganStanleyConfigured() ? "morgan-stanley" : null))),
+        configured: plaidConfigured() || schwabConfigured() || morganStanleyConfigured() || robinhoodAvailableTo(email),
+        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : (robinhoodAvailableTo(email) ? "robinhood-crypto" : (morganStanleyConfigured() ? "morgan-stanley" : null))),
         providers: {
           plaid: { configured: plaidConfigured(), env: plaidConfigured() ? PLAID.env : null, institutions: INSTITUTIONS.map(i => i.id) },
           schwab: { configured: schwabConfigured(), institutions: ["schwab"] },
           // CRYPTO only. Named so in the payload because the connect sheet must
           // not offer this as plain "Robinhood" and leave somebody expecting stocks.
-          "robinhood-crypto": { configured: robinhoodConfigured(), institutions: ["robinhood"], assetClass: "crypto" },
+          // Per CALLER, not per server: this key reads one person's account, so
+          // advertising it to everyone is how somebody else's book ends up on
+          // a stranger's desk. See robinhoodAvailableTo.
+          "robinhood-crypto": { configured: robinhoodAvailableTo(email), institutions: ["robinhood"], assetClass: "crypto" },
           // `readiness` rather than a bare boolean: "not configured" would
           // collapse "nobody has invited you yet" and "we have keys but no
           // spec" into one word, and they need different answers from a person.
@@ -1725,6 +1743,18 @@ const server = http.createServer(async (req, res) => {
       const email = emailFromReq(req, url);
       if (!robinhoodConfigured()) return send(res, 503, { error: "Robinhood crypto is not configured on this server. The desk will link a labelled demo book instead." });
       if (!email) return send(res, 401, { error: "Sign in to link a brokerage account." });
+      // The gate. A key minted inside one Robinhood account can only read that
+      // account, so serving it to anybody else would hand them the operator's
+      // holdings under their own name. Said plainly rather than as a bare 403,
+      // because for the operator the likely cause is a missing .env line and
+      // for everyone else it is simply not their path.
+      if (!robinhoodAvailableTo(email)) {
+        return send(res, 403, {
+          error: ROBINHOOD.accountEmail
+            ? "This server's Robinhood key belongs to a different account. Link Robinhood through the aggregator instead."
+            : "Robinhood's key reads only the account that minted it, so this server has to be told whose it is — set ROBINHOOD_ACCOUNT_EMAIL in .env. Until then nobody is offered this path.",
+        });
+      }
       const gate = gateBrokerPlan(email);
       if (gate) return send(res, 403, gate);
       const rec = brokerRecord(email);
@@ -2108,14 +2138,17 @@ const server = http.createServer(async (req, res) => {
         // `providers` is the honest detail underneath: Schwab's own OAuth
         // reaches exactly one institution, Plaid reaches all three, and the
         // browser needs to know which button to draw for which row.
-        configured: plaidConfigured() || schwabConfigured() || morganStanleyConfigured() || robinhoodConfigured(),
-        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : (robinhoodConfigured() ? "robinhood-crypto" : (morganStanleyConfigured() ? "morgan-stanley" : null))),
+        configured: plaidConfigured() || schwabConfigured() || morganStanleyConfigured() || robinhoodAvailableTo(email),
+        provider: plaidConfigured() ? "plaid" : (schwabConfigured() ? "schwab" : (robinhoodAvailableTo(email) ? "robinhood-crypto" : (morganStanleyConfigured() ? "morgan-stanley" : null))),
         providers: {
           plaid: { configured: plaidConfigured(), env: plaidConfigured() ? PLAID.env : null, institutions: INSTITUTIONS.map(i => i.id) },
           schwab: { configured: schwabConfigured(), institutions: ["schwab"] },
           // CRYPTO only. Named so in the payload because the connect sheet must
           // not offer this as plain "Robinhood" and leave somebody expecting stocks.
-          "robinhood-crypto": { configured: robinhoodConfigured(), institutions: ["robinhood"], assetClass: "crypto" },
+          // Per CALLER, not per server: this key reads one person's account, so
+          // advertising it to everyone is how somebody else's book ends up on
+          // a stranger's desk. See robinhoodAvailableTo.
+          "robinhood-crypto": { configured: robinhoodAvailableTo(email), institutions: ["robinhood"], assetClass: "crypto" },
           // `readiness` rather than a bare boolean: "not configured" would
           // collapse "nobody has invited you yet" and "we have keys but no
           // spec" into one word, and they need different answers from a person.
@@ -2195,6 +2228,14 @@ server.listen(PORT, () => {
   console.log(`  auth: on · billing: ${STRIPE.secret ? "configured" : "simulated (no STRIPE_SECRET_KEY)"}`);
   console.log(`  zoom: ${on("zoom")} · google: ${on("google")}`);
   console.log(`  brokerage links: ${plaidConfigured() ? `plaid (${PLAID.env})` : "demo book only (no PLAID_CLIENT_ID)"}`);
+  // A key that is set but unowned fails closed, and that is the one state which
+  // would otherwise be silent: the desk just never offers Robinhood and nothing
+  // anywhere says why. Only printed when there is a key to talk about.
+  if (robinhoodConfigured()) {
+    console.log(`  robinhood crypto: ${ROBINHOOD.accountEmail
+      ? `key bound to ${ROBINHOOD.accountEmail}`
+      : "KEY SET BUT UNOWNED — set ROBINHOOD_ACCOUNT_EMAIL in .env, or nobody is offered this path"}`);
+  }
   // An ElevenLabs SECRET starts "sk_". The dashboard also shows a 64-char hex
   // key ID beside it, and the two are easy to mix up — the API rejects the ID
   // with a 401, which surfaces three layers away as a failed voice. Say it here,

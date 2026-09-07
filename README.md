@@ -342,9 +342,26 @@ same choice the click makes.
 
 | Institution | Path | Why |
 | --- | --- | --- |
-| **Robinhood** | its own API key | Self-serve at *account → crypto → Add key*. Reaches **crypto only** — there is no equities endpoint on it — so Plaid is offered as a second, explicit **ADD STOCKS** press rather than replacing the key. |
+| **Robinhood** | its own API key, **one account only** | Self-serve at *account → crypto → Add key*. Reaches **crypto only** — there is no equities endpoint on it — so Plaid is offered as a second, explicit **ADD STOCKS** press rather than replacing the key. |
 | **Charles Schwab** | its own OAuth once approved, Plaid until then | `SCHWAB_APP_KEY` / `SCHWAB_APP_SECRET` come from a **hand-approved** application at developer.schwab.com. |
 | **Morgan Stanley** | Plaid | No retail API exists to hold a key for; the aggregator is the only path. |
+
+> **The Robinhood key does not scale to users, and is gated so it cannot try.** Plaid and Schwab
+> are *app* identities that each user then authenticates against — their own bank login, their own
+> Schwab consent — so one credential serves everybody and each person gets their own book. A
+> Robinhood crypto key is not that: it is minted inside one Robinhood account and can only ever
+> read that account. A server-wide `configured` therefore answered **yes to everyone**, so any
+> signed-in account on the Trading Floor plan could press CONNECT and be handed the **operator's**
+> holdings, stored and labelled as their own.
+>
+> `ROBINHOOD_ACCOUNT_EMAIL` names the account the key belongs to. Nobody else is offered the path —
+> they route to the aggregator instead. It **fails closed**: unset means *nobody*, because an absent
+> variable must not be the setting that exposes an account. That silence is made loud in three
+> places — `npm run check:brokers` reports `half-set`, the server says so at boot, and the connect
+> route answers with the reason rather than a bare 403.
+>
+> For a store build, Robinhood should reach users through the aggregator like Morgan Stanley. This
+> key is a single-operator desk feature.
 
 A held key reads the real book with nobody in the middle and nothing to type. The aggregator asks
 for a phone number and then answers out of whatever environment it is pointed at — in **sandbox**

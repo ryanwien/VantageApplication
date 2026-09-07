@@ -154,3 +154,37 @@ export function rhNextPath(payload) {
     return typeof next === "string" && next.startsWith("/") ? next : null;
   }
 }
+
+// ---------- whose account this key actually is ----------
+//
+// THE KEY IS ONE ACCOUNT'S, NOT ONE APP'S. Every other path in this app is a
+// per-user link: Plaid takes each person through their own bank login, and
+// Schwab's OAuth pairs an app registration with each user's own consent. This
+// one has no consent step at all, because Robinhood issues no third-party
+// credential for crypto — the key is minted inside a Robinhood account and can
+// only ever read the book of the account that minted it.
+//
+// That is fine on a personal desk and wrong the moment there is a second user:
+// a global "is it configured" answers YES for everybody, so any signed-in
+// account on the right plan could press CONNECT and be handed the OPERATOR's
+// holdings, filed and labelled as their own. The same shape as every other bug
+// this feature has had — one thing treated as another, here a server-wide
+// credential treated as a per-user link.
+//
+// So the key is bound to the one account it belongs to, and this is the
+// question every caller has to ask instead of `configured`.
+//
+// FAILS CLOSED. With no operator address set the answer is nobody, not
+// everybody — an unset variable must not be the setting that exposes an
+// account. It is a loud no: check:brokers reports it, the server says it at
+// boot, and the connect route explains it rather than 500ing.
+export function rhOperatorMatches(operatorEmail, requestEmail) {
+  const norm = (e) => String(e || "").trim().toLowerCase();
+  const op = norm(operatorEmail);
+  // Both halves must exist. Without this, two absent values compare equal and
+  // an unconfigured server would hand the book to an anonymous caller — the
+  // exact inversion of what this function is for.
+  if (!op) return false;
+  const who = norm(requestEmail);
+  return !!who && who === op;
+}

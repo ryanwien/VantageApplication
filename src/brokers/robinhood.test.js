@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   rhTimestamp, rhSignatureMessage, rhHeaders, rhSymbol, isCryptoSymbol, cryptoAssetCode,
-  normalizeRobinhoodHoldings, normalizeRobinhoodQuotes, rhNextPath, RH_BASE,
+  normalizeRobinhoodHoldings, normalizeRobinhoodQuotes, rhNextPath, RH_BASE, rhOperatorMatches,
 } from "./robinhood.js";
 import { holdingsFromConnections, summarizeByBroker } from "./brokers.js";
 
@@ -210,5 +210,41 @@ describe("Robinhood holdings through holdingsFromConnections", () => {
     // desk without reporting a gain equal to the whole position.
     expect(sum.value).toBe(sum.cost);
     expect(sum.pnl).toBe(0);
+  });
+});
+
+describe("rhOperatorMatches", () => {
+  // The key belongs to ONE Robinhood account. Before this, "is it configured"
+  // was a server-wide yes, so any signed-in account on the right plan could
+  // press CONNECT and receive the operator's holdings under their own name.
+  it("admits the account the key belongs to", () => {
+    expect(rhOperatorMatches("desk@example.com", "desk@example.com")).toBe(true);
+  });
+
+  it("refuses everybody else", () => {
+    expect(rhOperatorMatches("desk@example.com", "someone@example.com")).toBe(false);
+  });
+
+  // Addresses arrive from a sign-in form and from a hand-edited .env, so the
+  // two spellings of the same mailbox must not read as two different people.
+  it("does not care about case or stray whitespace", () => {
+    expect(rhOperatorMatches("Desk@Example.com", "  desk@example.COM ")).toBe(true);
+    expect(rhOperatorMatches("  desk@example.com  ", "desk@example.com")).toBe(true);
+  });
+
+  // The one that matters most: an UNSET operator address must mean nobody, not
+  // everybody. Two absent values comparing equal would hand the book to an
+  // anonymous caller — the exact inversion of the point.
+  it("fails closed when no operator is configured", () => {
+    expect(rhOperatorMatches("", "desk@example.com")).toBe(false);
+    expect(rhOperatorMatches(null, "desk@example.com")).toBe(false);
+    expect(rhOperatorMatches(undefined, undefined)).toBe(false);
+    expect(rhOperatorMatches("", "")).toBe(false);
+    expect(rhOperatorMatches("   ", "   ")).toBe(false);
+  });
+
+  it("refuses a caller with no identity at all", () => {
+    expect(rhOperatorMatches("desk@example.com", "")).toBe(false);
+    expect(rhOperatorMatches("desk@example.com", null)).toBe(false);
   });
 });

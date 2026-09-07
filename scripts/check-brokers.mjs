@@ -114,7 +114,14 @@ async function checkRobinhood() {
     if (r.ok) {
       const j = await r.json().catch(() => ({}));
       const n = Array.isArray(j.results) ? j.results.length : 0;
-      return row("Robinhood", "works", `crypto · ${n} holding${n === 1 ? "" : "s"} (no cost basis — provider omits it)`);
+      const book = `crypto · ${n} holding${n === 1 ? "" : "s"} (no cost basis — provider omits it)`;
+      // A working key that no account owns is offered to NOBODY, by design —
+      // it reads one Robinhood book and serving it server-wide would put the
+      // operator's holdings on a stranger's desk. The key works; the desk still
+      // will not show it. That gap is exactly what this script exists to name.
+      const owner = env("ROBINHOOD_ACCOUNT_EMAIL").trim();
+      if (!owner) return row("Robinhood", "half-set", `${book} — but no ROBINHOOD_ACCOUNT_EMAIL, so the desk offers this to nobody`);
+      return row("Robinhood", "works", `${book} · bound to ${owner}`);
     }
     if (r.status === 401) {
       // The signature covers a timestamp in SECONDS with no separators, so a
