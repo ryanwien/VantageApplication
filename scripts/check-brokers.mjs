@@ -22,6 +22,7 @@
 // Exit codes: 0 every configured provider works · 1 one is set and refused ·
 // 2 the question could not be asked at all.
 import { Buffer } from "node:buffer";
+import fs from "node:fs";
 import {
   RH_BASE, RH_HOLDINGS_PATH, rhHeaders, rhTimestamp,
 } from "../src/brokers/robinhood.js";
@@ -149,7 +150,25 @@ async function checkRobinhood() {
 async function checkSchwab() {
   const key = env("SCHWAB_APP_KEY"), secret = env("SCHWAB_APP_SECRET");
   const problems = [...shapeProblems("SCHWAB_APP_KEY", key), ...shapeProblems("SCHWAB_APP_SECRET", secret)];
-  if (!key || !secret) return row("Schwab", "not set", "approval is manual — request access at developer.schwab.com");
+  // The callback is the part of a Schwab application that is expensive to get
+  // wrong: it is compared as an exact string and fixed at REGISTRATION, so a
+  // mistake is another approval round rather than an edit. Worth saying while
+  // the keys are still absent, because that is when it can still be changed for
+  // free — and it is the only readiness question this script can answer without
+  // credentials.
+  const redirectNote = () => {
+    const uri = env("SCHWAB_REDIRECT_URI") || "https://127.0.0.1:8788/api/brokers/schwab/callback";
+    let u;
+    try { u = new URL(uri); } catch { return ` · ⚠ SCHWAB_REDIRECT_URI is not a URL`; }
+    if (u.protocol !== "https:") return ` · ⚠ the callback must be https, not ${u.protocol.replace(":", "")}`;
+    const haveCert = fs.existsSync(env("TLS_CERT") || "server/certs/dev-localhost.crt")
+      && fs.existsSync(env("TLS_KEY") || "server/certs/dev-localhost.key");
+    if (!haveCert) return " · ⚠ no dev certificate — run: node scripts/make-dev-cert.mjs, or the callback cannot be served";
+    const tlsPort = Number(env("TLS_PORT") || 8788);
+    if (Number(u.port || 443) !== tlsPort) return ` · ⚠ callback port ${u.port || 443} but TLS serves ${tlsPort}`;
+    return ` · callback ready: ${uri}`;
+  };
+  if (!key || !secret) return row("Schwab", "not set", `approval is manual — request access at developer.schwab.com${redirectNote()}`);
   if (problems.length) return row("Schwab", "MALFORMED", problems.join("; "));
 
   const redirect = env("SCHWAB_REDIRECT_URI") || "https://127.0.0.1:8787/api/brokers/schwab/callback";

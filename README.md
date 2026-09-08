@@ -370,11 +370,26 @@ is somebody else's. Swapping in SnapTrade or another provider means one normaliz
 `src/brokers/brokers.js`, one branch in `linkRoute()`, and `refreshConnection()` in
 `server/index.js` — the rest of the app reads the normalized shape.
 
-> **The Schwab callback must be HTTPS, and this server speaks HTTP.** `SCHWAB_REDIRECT_URI`
-> defaults to `https://127.0.0.1:8787/api/brokers/schwab/callback`, Schwab compares the string
-> exactly, and it is fixed at **registration** — so it has to be right before the app is submitted,
-> not after the key arrives. `server/index.js` calls `http.createServer`, so nothing answers TLS
-> on that port today and the callback would fail the handshake. Close that gap before registering.
+> **The Schwab callback must be HTTPS — so the server now serves TLS, on a second port.**
+> Schwab compares the callback as an exact **string** and fixes it at **registration**, so getting
+> it wrong costs another approval round, not an edit. The rest of the app keeps speaking plain
+> http on `PORT` (the Vite proxy, `PUBLIC_ORIGIN`, every other route are untouched); a second
+> listener runs the **same router** over TLS on `TLS_PORT` (default **8788**) purely so the
+> callback has somewhere to land.
+>
+> ```bash
+> node scripts/make-dev-cert.mjs
+> ```
+>
+> writes a self-signed certificate for `127.0.0.1` into `server/certs/` (gitignored, private key
+> never printed) and the listener starts on the next boot. **Register exactly this:**
+> `https://127.0.0.1:8788/api/brokers/schwab/callback` — `npm run check:brokers` prints the
+> string and says whether anything is actually serving it, and the boot banner warns if not.
+> With no certificate present the TLS section is inert and nothing changes.
+>
+> The certificate is trusted by nobody: the browser interrupts the redirect once with a warning
+> you click through. The token exchange itself is server-to-server against `api.schwabapi.com`
+> over real TLS and is unaffected.
 
 **Why the brokers' own sites are not embedded.** They forbid it in their own headers, and the
 browser enforces it: `robinhood.com` sends `X-Frame-Options: deny`, `schwab.com` and

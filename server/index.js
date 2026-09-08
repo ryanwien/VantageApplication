@@ -27,6 +27,7 @@
 // treats it as same-origin; CORS below is a courtesy for a no-proxy/prod setup.
 // ============================================================
 import http from "node:http";
+import https from "node:https";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -160,7 +161,9 @@ const plaidConfigured = () => !!(PLAID.clientId && PLAID.secret);
 const SCHWAB = {
   key: process.env.SCHWAB_APP_KEY || "",
   secret: process.env.SCHWAB_APP_SECRET || "",
-  redirect: process.env.SCHWAB_REDIRECT_URI || "https://127.0.0.1:8787/api/brokers/schwab/callback",
+  // Port 8788, not the app's 8787: this must be https and 8787 is the plain
+  // http the rest of the app speaks. See the TLS listener at the bottom.
+  redirect: process.env.SCHWAB_REDIRECT_URI || "https://127.0.0.1:8788/api/brokers/schwab/callback",
 };
 const schwabConfigured = () => !!(SCHWAB.key && SCHWAB.secret);
 
@@ -1008,7 +1011,11 @@ const clientIp = (req) =>
   req.socket?.remoteAddress || "unknown";
 
 // ---- request router ----
-const server = http.createServer(async (req, res) => {
+// Named rather than inline because TWO listeners run it: plain http on PORT,
+// which is the whole app, and — when a certificate exists — https on TLS_PORT,
+// which exists solely so Schwab's callback has somewhere to land. Same routes,
+// same code; only the socket differs.
+const routeRequest = async (req, res) => {
   const url = new URL(req.url, PUBLIC_ORIGIN);
   const p = url.pathname;
   if (req.method === "OPTIONS") return send(res, 204, "", { "Access-Control-Allow-Methods": "GET,POST,OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization" });
@@ -2220,7 +2227,59 @@ const server = http.createServer(async (req, res) => {
   } catch (e) {
     return send(res, 500, { error: String(e.message || e) });
   }
-});
+};
+const server = http.createServer(routeRequest);
+
+// ---- TLS, for the one thing that requires it ----
+//
+// Schwab's OAuth callback MUST be https — their portal accepts a loopback
+// address for an individual app, but not http — and until now nothing here
+// answered TLS on any port, so a real callback would have failed the handshake
+// with ERR_SSL_PROTOCOL_ERROR: a network-shaped error for a missing listener.
+//
+// This is a SECOND listener on its own port, not a change of protocol for the
+// existing one. The app's API, the Vite proxy and PUBLIC_ORIGIN all keep
+// speaking plain http on PORT exactly as before; a self-signed certificate is
+// no basis for the browser's ordinary traffic, and only the callback needs it.
+//
+// Optional by construction: with no certificate present this whole section is
+// inert and the server behaves precisely as it did. A machine that never
+// touches Schwab should not have to hold a key pair.
+//   node scripts/make-dev-cert.mjs
+const TLS_PORT = Number(process.env.TLS_PORT || 8788);
+const TLS_KEY = process.env.TLS_KEY || path.join("server", "certs", "dev-localhost.key");
+const TLS_CERT = process.env.TLS_CERT || path.join("server", "certs", "dev-localhost.crt");
+const tlsCredentials = () => {
+  try {
+    if (!fs.existsSync(TLS_KEY) || !fs.existsSync(TLS_CERT)) return null;
+    return { key: fs.readFileSync(TLS_KEY), cert: fs.readFileSync(TLS_CERT) };
+  } catch { return null; }
+};
+const tlsCreds = tlsCredentials();
+let tlsServer = null;
+if (tlsCreds) {
+  tlsServer = https.createServer(tlsCreds, routeRequest);
+  // A busy TLS port must not take the whole backend down with it. The app is
+  // fine without this listener — only the Schwab callback is not — so it is
+  // reported and stepped over rather than thrown.
+  tlsServer.on("error", (e) => {
+    console.log(`  ⚠ TLS listener failed on :${TLS_PORT} — ${e.code === "EADDRINUSE" ? "port already in use" : e.message}. The Schwab callback will not be reachable.`);
+    tlsServer = null;
+  });
+  tlsServer.listen(TLS_PORT);
+}
+
+// Is there actually a listener behind the URL we would ask Schwab to register?
+// The string is fixed at REGISTRATION and compared exactly, so a mismatch found
+// afterwards is another approval round rather than an edit — which makes this
+// worth saying at boot, every boot, while it is still free to fix.
+function schwabCallbackServed() {
+  if (!tlsServer) return false;
+  try {
+    const u = new URL(SCHWAB.redirect);
+    return u.protocol === "https:" && Number(u.port || 443) === TLS_PORT;
+  } catch { return false; }
+}
 
 server.listen(PORT, () => {
   const on = (k) => (CFG[k].id && CFG[k].secret) ? "configured" : "NOT configured (.env)";
@@ -2252,4 +2311,10 @@ server.listen(PORT, () => {
   console.log(`    google meetings  ${CFG.google.redirect}`);
   console.log(`    google sign-in   ${OAUTH.google.redirect}`);
   console.log(`    yahoo sign-in    ${OAUTH.yahoo.redirect}`);
+  // The only one of the five that must be https, and the only one that can be
+  // registered against a listener which does not exist.
+  console.log(`    schwab oauth     ${SCHWAB.redirect}`);
+  if (!schwabCallbackServed()) {
+    console.log(`                     ⚠ nothing is serving TLS there${tlsServer ? ` (TLS is on :${TLS_PORT})` : " — run: node scripts/make-dev-cert.mjs"}`);
+  }
 });
