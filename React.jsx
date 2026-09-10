@@ -46,6 +46,7 @@ import {
   activityFromConnections,
 } from "./src/brokers/brokers.js";
 import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage, linkRoute } from "./src/brokers/links.js";
+import { characterHome } from "./src/desk/casting.js";
 import { AuthProvider, useAuth } from "./src/api/auth-context.jsx";
 import AppShell from "./src/ui/AppShell.jsx";
 import { AuthPlate } from "./src/ui/HeroPlate.jsx";
@@ -7135,6 +7136,34 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   const [characterId, setCharacterId] = useState("sterling");
   const [crewId, setCrewId] = useState("off"); // 'auto' | 'off' | character id
   const [envId, setEnvId] = useState("newsroom");
+
+  // PICKING AN ANCHOR PICKS THE ROOM
+  // The anchor and the set were independent settings, which meant they spent
+  // most of their time contradicting each other: a suited news anchor in a
+  // headset presenting the market from a cyberpunk neon grid, a knight at the
+  // newsroom desk. Nobody chose those pairings. They were what you got by
+  // changing one of two settings and not the other — and stepping through the
+  // roster changed the person while leaving the room exactly where it was,
+  // which is what made twenty-two anchors read as one anchor in a costume.
+  //
+  // The costume already knows where it belongs, so the mapping is derived from
+  // it rather than listed (src/desk/casting.js) and cannot drift out of sync
+  // with the roster. Both pick sites go through here: the three-face stepper
+  // under the portrait and the full roster in settings.
+  //
+  // Choosing a set by hand still works and still holds — until the next anchor
+  // change, which is the honest rule rather than a special case: the room is
+  // part of who is presenting, so changing who is presenting changes it.
+  //
+  // An anchor with no room leaves the set alone rather than falling back to
+  // the newsroom. Dragging the viewer out of the room they are in is worse
+  // than doing nothing, and it means a character can be added before anyone
+  // has decided where they live.
+  const pickCharacter = useCallback((id) => {
+    setCharacterId(id);
+    const home = characterHome(CHARACTERS.find(c => c.id === id));
+    if (home) setEnvId(home);
+  }, []);
   const utterRef = useRef(null);
   const audioRef = useRef(null);      // ElevenLabs playback element
   const audioCtxRef = useRef(null);   // shared AudioContext
@@ -9262,15 +9291,35 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     demoAbortRef.current = false;
     setDemoRunning(true);
     setShowTutorial(false);
-    // Read BEFORE the try so the finally can put them back on any exit — the
-    // abort path included. Stopping the demo halfway through the roster beat
-    // would otherwise leave you sitting in whichever set, with whichever
-    // anchor, it happened to be part-way through showing you.
-    const startedAs = characterId, startedIn = envId;
+    // THE DEMO IS BOOKENDED ON STERLING, AT BOTH ENDS
+    // This used to capture whoever was presenting and put them back at the
+    // finish. That was the right instinct — a demo should not quietly
+    // redecorate somebody's desk — but it made the demo start wherever you
+    // happened to have left off, which after a minute of trying anchors on is
+    // an action hero in sunglasses reading the market from a burning
+    // hillside. A demonstration that opens mid-costume-change has no baseline,
+    // and the roster beat below only lands as a reveal against one.
+    //
+    // So the desk is a place the demo goes rather than a state it borrows: it
+    // opens on Sterling in the newsroom, spends the roster beat showing you
+    // three other places it could be, and comes home. Every exit lands here,
+    // the abort path included — stopping halfway through the roster beat
+    // leaves you at the news desk rather than stranded in whichever set it was
+    // part-way through showing you.
+    //
+    // The room is looked up rather than named, off the same casting table both
+    // pickers use, so the demo's first and last frame cannot drift from where
+    // Sterling actually lives.
+    const DEMO_ANCHOR = "sterling";
+    const DEMO_SET = characterHome(CHARACTERS.find(c => c.id === DEMO_ANCHOR)) || "newsroom";
+    const toTheDesk = () => { setCharacterId(DEMO_ANCHOR); setEnvId(DEMO_SET); };
     // The chart's three switches persist to localStorage exactly as the anchor
     // does not, so leaving them flipped would be the demo redecorating somebody
     // else's desk. Captured here so the finally can undo them on any exit.
     const chartWas = { sma: chartSMA, hl: chartHL, mode: chartMode };
+    // The opening frame. "Here is the news desk — and here are the other
+    // places it can be" needs the news desk on screen first.
+    toTheDesk();
     const wait = (ms) => new Promise((res) => {
       const start = performance.now();
       const tick = () => (demoAbortRef.current ? res("abort") : performance.now() - start >= ms ? res("ok") : setTimeout(tick, 90));
@@ -9532,10 +9581,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // The line runs UNDER the sequence rather than before it — sayFully so
       // it cannot be cut, started and not awaited so the swaps have something
       // to happen during, and awaited at the end so the pictures and the
-      // sentence finish together. It lands back where it started, and the
-      // finally puts both back too: a demo that quietly leaves your anchor and
-      // your set changed has made two choices on your behalf, and this is a
-      // demonstration, not a preference.
+      // sentence finish together. Then it comes home to the desk, so the close
+      // is argued by the anchor who opened, and the three other rooms read as
+      // an excursion rather than as the demo wandering off and stopping
+      // wherever it ran out of script.
       const roster = sayFully("And I'm not the only one at this desk. You pick who reads it to you — and the room they read it from.");
       if ((await wait(1500)) === "abort") return;
       for (const [who, where] of [["vega", "floor"], ["tick3r", "server"], ["nova", "space"]]) {
@@ -9543,7 +9592,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         if ((await wait(1700)) === "abort") return;
       }
       if ((await roster) === "abort") return;
-      setCharacterId(startedAs); setEnvId(startedIn);
+      toTheDesk();
       if ((await wait(500)) === "abort") return;
 
       {
@@ -9602,7 +9651,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         await wait(1200);
       }
     } finally {
-      setCharacterId(startedAs); setEnvId(startedIn);
+      // The desk, on every exit including abort. The chart's three switches
+      // are a different thing and still go back: those persist to
+      // localStorage and are the user's own settings, so leaving them flipped
+      // WOULD be redecorating somebody else's desk. The anchor does not
+      // persist, which is what makes ending on Sterling a tidy stage rather
+      // than a preference overwritten.
+      toTheDesk();
       setChartSMA(chartWas.sma); setChartHL(chartWas.hl); setChartMode(chartWas.mode);
       demoAbortRef.current = false;
       setDemoRunning(false);
@@ -13048,7 +13103,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                     Wrapping drops the link onto its own line instead, which is
                     the one outcome where both stay whole. */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                  <AnchorRoster characterId={characterId} onPick={setCharacterId} />
+                  <AnchorRoster characterId={characterId} onPick={pickCharacter} />
                   {/* The rest of the roster, the sets and the voice engine live
                       one click away rather than crowding this card. */}
                   <button onClick={() => { setSettingsTab("anchor"); setShowSettings(true); }} className="v-taprow"
@@ -14859,7 +14914,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                             // A square tile, not a pill: round means a member of
                             // a set you switch on and off, square means one of
                             // these and only one.
-                            <button key={c.id} role="radio" aria-checked={on} onClick={() => setCharacterId(c.id)}
+                            <button key={c.id} role="radio" aria-checked={on} onClick={() => pickCharacter(c.id)}
                               style={{ padding: "10px 0", borderRadius: R.sm, cursor: "pointer", fontFamily: SANS, fontSize: 13, fontWeight: on ? 600 : 400,
                                 background: on ? C.surfaceRaised : "transparent", color: on ? C.text : C.muted,
                                 border: `1px solid ${on ? C.accent : C.edgeStrong}` }}>{c.name}</button>
