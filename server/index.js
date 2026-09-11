@@ -169,9 +169,10 @@ const SCHWAB = {
   redirect: process.env.SCHWAB_REDIRECT_URI || "https://127.0.0.1:8788/api/brokers/schwab/callback",
 };
 const schwabConfigured = () => !!(SCHWAB.key && SCHWAB.secret);
-if (schwabKeyConflict(process.env)) {
-  console.warn("[schwab] SCHWAB_APP_KEY and SCHWAB_CLIENT_ID are both set to different values — using SCHWAB_APP_KEY. Delete the one you are not using.");
-}
+// Which of the two accepted names the key actually came from. Printed at boot:
+// the whole reason the banner needed a Schwab line is that a key under the
+// unexpected name is indistinguishable from no key at all.
+const schwabKeySource = () => (process.env.SCHWAB_APP_KEY ? "SCHWAB_APP_KEY" : "SCHWAB_CLIENT_ID");
 
 // Morgan Stanley — the seam, not the integration. Their APIs are granted by
 // invitation, and the response shapes arrive with onboarding rather than being
@@ -2300,6 +2301,24 @@ server.listen(PORT, () => {
     console.log(`  robinhood crypto: ${ROBINHOOD.accountEmail
       ? `key bound to ${ROBINHOOD.accountEmail}`
       : "KEY SET BUT UNOWNED — set ROBINHOOD_ACCOUNT_EMAIL in .env, or nobody is offered this path"}`);
+  }
+  // Schwab had no line here at all, and that silence cost a week: a WORKING app
+  // key sat in .env under SCHWAB_CLIENT_ID — the name Schwab's own OAuth docs
+  // use — while the server read only SCHWAB_APP_KEY and reported nothing. An
+  // approved application and no application look identical when neither says
+  // anything. So both halves of the state get a line now, and it names the
+  // variable the key came from, because that was the missing fact.
+  if (schwabConfigured()) {
+    console.log(`  schwab: app pair set (${schwabKeySource()}) — a user still has to complete the OAuth login`);
+    if (schwabKeyConflict(process.env)) {
+      console.log(`    ⚠ SCHWAB_CLIENT_ID is also set to a DIFFERENT value — using SCHWAB_APP_KEY. Delete the one you are not using.`);
+    }
+  } else if (SCHWAB.key || SCHWAB.secret) {
+    // Half-set is the state worth shouting about: Schwab hands the key and the
+    // secret over on one page, so a missing half is a copy that stopped short,
+    // not a decision. Silence here sends you back to wait on an approval you
+    // have already been granted.
+    console.log(`  schwab: HALF-SET — ${SCHWAB.key ? "SCHWAB_APP_SECRET" : "SCHWAB_APP_KEY (or SCHWAB_CLIENT_ID)"} is empty; both come off one page at developer.schwab.com`);
   }
   // An ElevenLabs SECRET starts "sk_". The dashboard also shows a 64-char hex
   // key ID beside it, and the two are easy to mix up — the API rejects the ID
