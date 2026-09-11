@@ -42,6 +42,32 @@ export const SCHWAB_TRADER = `${SCHWAB_BASE}/trader/v1`;
 // endpoint.
 export const SCHWAB_SCOPE = "readonly";
 
+// ---------- which variable holds the app key ----------
+//
+// Schwab gives one string two names. Their portal labels it "App Key"; their
+// OAuth documentation — and the authorize URL this app builds — calls it
+// client_id. Someone copying from the portal writes SCHWAB_APP_KEY, someone
+// copying from the OAuth docs writes SCHWAB_CLIENT_ID, and both are faithful
+// readings of the same credential. Reading only one name turns a WORKING key
+// into a silent "Schwab is not configured" — indistinguishable from an
+// approval that never arrived, which is the one state that sends you off to
+// wait on a hand-reviewed application you have already been granted.
+//
+// SCHWAB_APP_KEY wins when both are set: it is the name the README asks for
+// and the name the error messages print.
+export const schwabAppKey = (env = {}) =>
+  String(env?.SCHWAB_APP_KEY || env?.SCHWAB_CLIENT_ID || "").trim();
+
+// Both set to DIFFERENT values is not a preference, it is a question nobody
+// can answer from here — an old key left beside a new one looks exactly like a
+// rename that stopped halfway. The caller reports it instead of picking in
+// silence.
+export const schwabKeyConflict = (env = {}) => {
+  const a = String(env?.SCHWAB_APP_KEY || "").trim();
+  const b = String(env?.SCHWAB_CLIENT_ID || "").trim();
+  return !!(a && b && a !== b);
+};
+
 // An access token is good for 30 minutes. Refreshed a minute early so a call
 // that starts at 29:59 does not arrive expired.
 export const SCHWAB_ACCESS_TTL_MS = 30 * 60 * 1000;

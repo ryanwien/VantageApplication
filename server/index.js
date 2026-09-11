@@ -36,6 +36,7 @@ import { GRAPHQL_OPS, isKnownOp } from "../src/datahub/catalog.js";
 import { INSTITUTIONS, institutionById, matchInstitution, normalizePlaidHoldings, normalizePlaidTransactions, brokerPlanGate, BROKER_PLAN } from "../src/brokers/brokers.js";
 import {
   SCHWAB_AUTH_URL, SCHWAB_TOKEN_URL, SCHWAB_TRADER, SCHWAB_SCOPE,
+  schwabAppKey, schwabKeyConflict,
   normalizeSchwabAccounts, normalizeSchwabTransactions,
   schwabAccountHashes, tokenExpiresAt, tokenIsStale, refreshWindowClosed, schwabDate,
 } from "../src/brokers/schwab.js";
@@ -159,13 +160,18 @@ const plaidConfigured = () => !!(PLAID.clientId && PLAID.secret);
 // different URI. It defaults to the loopback address their portal accepts for
 // individual apps.
 const SCHWAB = {
-  key: process.env.SCHWAB_APP_KEY || "",
+  // Accepts SCHWAB_APP_KEY or SCHWAB_CLIENT_ID — Schwab's portal and its OAuth
+  // docs give the same string those two names. See schwabAppKey().
+  key: schwabAppKey(process.env),
   secret: process.env.SCHWAB_APP_SECRET || "",
   // Port 8788, not the app's 8787: this must be https and 8787 is the plain
   // http the rest of the app speaks. See the TLS listener at the bottom.
   redirect: process.env.SCHWAB_REDIRECT_URI || "https://127.0.0.1:8788/api/brokers/schwab/callback",
 };
 const schwabConfigured = () => !!(SCHWAB.key && SCHWAB.secret);
+if (schwabKeyConflict(process.env)) {
+  console.warn("[schwab] SCHWAB_APP_KEY and SCHWAB_CLIENT_ID are both set to different values — using SCHWAB_APP_KEY. Delete the one you are not using.");
+}
 
 // Morgan Stanley — the seam, not the integration. Their APIs are granted by
 // invitation, and the response shapes arrive with onboarding rather than being
@@ -1794,7 +1800,7 @@ const routeRequest = async (req, res) => {
     // cannot carry an Authorization header.
     if (p === "/api/brokers/schwab/login") {
       const email = emailFromReq(req, url);
-      if (!schwabConfigured()) return send(res, 400, "Schwab is not configured — set SCHWAB_APP_KEY / SCHWAB_APP_SECRET in .env");
+      if (!schwabConfigured()) return send(res, 400, "Schwab is not configured — set SCHWAB_APP_KEY (or SCHWAB_CLIENT_ID) and SCHWAB_APP_SECRET in .env");
       if (!email) return send(res, 401, "Sign in to Vantage first, then connect your Schwab account.");
       const gate = gateBrokerPlan(email);
       if (gate) return send(res, 403, gate.error);

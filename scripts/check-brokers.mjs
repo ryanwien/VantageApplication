@@ -27,7 +27,7 @@ import {
   RH_BASE, RH_HOLDINGS_PATH, rhHeaders, rhTimestamp,
 } from "../src/brokers/robinhood.js";
 import { makeEd25519Signer } from "../src/brokers/robinhood-sign.js";
-import { SCHWAB_TOKEN_URL } from "../src/brokers/schwab.js";
+import { SCHWAB_TOKEN_URL, schwabAppKey, schwabKeyConflict } from "../src/brokers/schwab.js";
 import { msReadiness } from "../src/brokers/morgan-stanley.js";
 
 const env = (k) => process.env[k] || "";
@@ -148,8 +148,14 @@ async function checkRobinhood() {
 // wrong" from "your credentials are fine, nobody has logged in yet". That is
 // the whole question while waiting on approval.
 async function checkSchwab() {
-  const key = env("SCHWAB_APP_KEY"), secret = env("SCHWAB_APP_SECRET");
-  const problems = [...shapeProblems("SCHWAB_APP_KEY", key), ...shapeProblems("SCHWAB_APP_SECRET", secret)];
+  // Either name — see schwabAppKey(). keyName is what the notes below print,
+  // so a person reading a complaint about "SCHWAB_CLIENT_ID" can find that
+  // line in their .env instead of hunting for a variable they never wrote.
+  const key = schwabAppKey(process.env);
+  const keyName = env("SCHWAB_APP_KEY") ? "SCHWAB_APP_KEY" : (env("SCHWAB_CLIENT_ID") ? "SCHWAB_CLIENT_ID" : "SCHWAB_APP_KEY");
+  const secret = env("SCHWAB_APP_SECRET");
+  const problems = [...shapeProblems(keyName, env(keyName)), ...shapeProblems("SCHWAB_APP_SECRET", secret)];
+  if (schwabKeyConflict(process.env)) problems.push("SCHWAB_APP_KEY and SCHWAB_CLIENT_ID are both set to different values — delete the one you are not using");
   // The callback is the part of a Schwab application that is expensive to get
   // wrong: it is compared as an exact string and fixed at REGISTRATION, so a
   // mistake is another approval round rather than an edit. Worth saying while
@@ -168,10 +174,24 @@ async function checkSchwab() {
     if (Number(u.port || 443) !== tlsPort) return ` · ⚠ callback port ${u.port || 443} but TLS serves ${tlsPort}`;
     return ` · callback ready: ${uri}`;
   };
+  // HALF-SET IS ITS OWN ANSWER, for the reason Robinhood's is: one variable
+  // pasted and the other forgotten looks identical to having done nothing at
+  // all, and the person in that state is the one who most needs to be told.
+  // Schwab hands the key and the secret over together on one page, so a
+  // missing half is nearly always a copy that stopped short — and the row that
+  // says "not set" sends them back to wait on an approval they already have.
+  if (key && !secret) return row("Schwab", "half-set", `${keyName} is set but SCHWAB_APP_SECRET is empty — both come off the same page at developer.schwab.com${redirectNote()}`);
+  if (secret && !key) return row("Schwab", "half-set", `SCHWAB_APP_SECRET is set but SCHWAB_APP_KEY (or SCHWAB_CLIENT_ID) is empty — both come off the same page at developer.schwab.com${redirectNote()}`);
   if (!key || !secret) return row("Schwab", "not set", `approval is manual — request access at developer.schwab.com${redirectNote()}`);
   if (problems.length) return row("Schwab", "MALFORMED", problems.join("; "));
 
-  const redirect = env("SCHWAB_REDIRECT_URI") || "https://127.0.0.1:8787/api/brokers/schwab/callback";
+  // 8788, matching server/index.js and redirectNote() above. This said 8787 —
+  // the plain-HTTP port, from before the TLS listener existed — so with
+  // SCHWAB_REDIRECT_URI unset this script would authenticate against a
+  // redirect_uri that differs from the one the app actually registers and the
+  // one the server actually serves. Schwab compares that string EXACTLY, so
+  // the check would fail for a reason that has nothing to do with the keys.
+  const redirect = env("SCHWAB_REDIRECT_URI") || "https://127.0.0.1:8788/api/brokers/schwab/callback";
   try {
     const r = await fetch(SCHWAB_TOKEN_URL, {
       method: "POST",
@@ -186,7 +206,12 @@ async function checkSchwab() {
     if (err === "invalid_client" || r.status === 401) {
       return row("Schwab", "REFUSED", "invalid_client — the app key/secret pair is wrong or the app is not yet approved");
     }
-    if (err === "invalid_grant" || err === "unsupported_token_request" || r.status === 400) {
+    // "unsupported_token_type" is what the live endpoint actually returns for a
+    // bogus code (description: "Authorization code is invalid, expired or
+    // revoked") — observed 2026-09-11, not documented. It was already caught by
+    // the status-400 fallback; naming it means a future reader can tell the
+    // observed reply from the guessed ones.
+    if (err === "invalid_grant" || err === "unsupported_token_request" || err === "unsupported_token_type" || r.status === 400) {
       // Credentials passed Basic auth; only the deliberately-bogus code failed.
       return row("Schwab", "credentials ok", "app pair accepted — a user still has to complete the OAuth login");
     }

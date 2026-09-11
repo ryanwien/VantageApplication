@@ -8,6 +8,8 @@ import {
   refreshWindowClosed,
   schwabDate,
   SCHWAB_REFRESH_TTL_MS,
+  schwabAppKey,
+  schwabKeyConflict,
 } from "./schwab.js";
 
 describe("account hashes", () => {
@@ -173,5 +175,51 @@ describe("schwabDate", () => {
   it("emits ISO-8601 with milliseconds and Z, which the endpoint requires", () => {
     expect(schwabDate(Date.UTC(2026, 7, 20, 14, 30, 0))).toBe("2026-08-20T14:30:00.000Z");
     expect(schwabDate(Date.UTC(2026, 0, 1))).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+  });
+});
+
+// Schwab's portal calls this string "App Key"; its OAuth docs call the same
+// string client_id. Reading only one name turned a working credential into a
+// silent "not configured" — the state that looks exactly like an approval that
+// never arrived. These pin both spellings.
+describe("which variable holds the app key", () => {
+  it("reads either name", () => {
+    expect(schwabAppKey({ SCHWAB_APP_KEY: "abc" })).toBe("abc");
+    expect(schwabAppKey({ SCHWAB_CLIENT_ID: "abc" })).toBe("abc");
+  });
+
+  it("prefers SCHWAB_APP_KEY when both are set — it is the documented name", () => {
+    expect(schwabAppKey({ SCHWAB_APP_KEY: "from-readme", SCHWAB_CLIENT_ID: "from-oauth-docs" }))
+      .toBe("from-readme");
+  });
+
+  it("trims, because a pasted key carries the newline you cannot see", () => {
+    expect(schwabAppKey({ SCHWAB_APP_KEY: "  abc\n" })).toBe("abc");
+    expect(schwabAppKey({ SCHWAB_CLIENT_ID: "\tabc " })).toBe("abc");
+  });
+
+  it("treats an empty or whitespace-only value as absent, falling through", () => {
+    expect(schwabAppKey({ SCHWAB_APP_KEY: "", SCHWAB_CLIENT_ID: "abc" })).toBe("abc");
+    expect(schwabAppKey({ SCHWAB_APP_KEY: "   ", SCHWAB_CLIENT_ID: "abc" })).toBe("");
+  });
+
+  it("returns empty for nothing set, and survives junk", () => {
+    expect(schwabAppKey({})).toBe("");
+    expect(schwabAppKey()).toBe("");
+    expect(schwabAppKey(null)).toBe("");
+    expect(schwabAppKey("nope")).toBe("");
+  });
+
+  it("flags two different values — a rename that stopped halfway", () => {
+    expect(schwabKeyConflict({ SCHWAB_APP_KEY: "a", SCHWAB_CLIENT_ID: "b" })).toBe(true);
+  });
+
+  it("is not a conflict when they agree, or when only one is set", () => {
+    expect(schwabKeyConflict({ SCHWAB_APP_KEY: "a", SCHWAB_CLIENT_ID: "a" })).toBe(false);
+    expect(schwabKeyConflict({ SCHWAB_APP_KEY: " a ", SCHWAB_CLIENT_ID: "a" })).toBe(false);
+    expect(schwabKeyConflict({ SCHWAB_APP_KEY: "a" })).toBe(false);
+    expect(schwabKeyConflict({ SCHWAB_CLIENT_ID: "b" })).toBe(false);
+    expect(schwabKeyConflict({})).toBe(false);
+    expect(schwabKeyConflict()).toBe(false);
   });
 });

@@ -343,7 +343,7 @@ same choice the click makes.
 | Institution | Path | Why |
 | --- | --- | --- |
 | **Robinhood** | its own API key, **one account only** | Self-serve at *account → crypto → Add key*. Reaches **crypto only** — there is no equities endpoint on it — so Plaid is offered as a second, explicit **ADD STOCKS** press rather than replacing the key. |
-| **Charles Schwab** | its own OAuth once approved, Plaid until then | `SCHWAB_APP_KEY` / `SCHWAB_APP_SECRET` come from a **hand-approved** application at developer.schwab.com. |
+| **Charles Schwab** | its own OAuth once approved, Plaid until then | `SCHWAB_APP_KEY` / `SCHWAB_APP_SECRET` come from a **hand-approved** application at developer.schwab.com. The portal labels the key "App Key" and Schwab's OAuth docs call it `client_id`, so `SCHWAB_CLIENT_ID` is accepted as an alias. |
 | **Morgan Stanley** | Plaid | No retail API exists to hold a key for; the aggregator is the only path. |
 
 > **The Robinhood key does not scale to users, and is gated so it cannot try.** Plaid and Schwab
