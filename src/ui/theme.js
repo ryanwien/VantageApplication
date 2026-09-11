@@ -235,6 +235,31 @@ export const GRAD = {
   // The primary button's animated sheen (vt-sheen moves background-position
   // -200% → 200%; the element needs background-size: 200%).
   sheen: `linear-gradient(100deg, ${grow.accent} 0%, ${grow.hover} 45%, ${grow.light} 55%, ${grow.accent} 100%)`,
+
+  // The SAME sweep, for the one button on the landing page that loops it.
+  //
+  // sheen above is painted at REST on every other primary button, so its band
+  // is deliberately shallow — #46a758 to #4cc38a is fifteen points of
+  // luminance, which is a tint, and a tint is right for a control that is not
+  // going anywhere. Animated, that same band is invisible: measured on the
+  // live button the gradient travels the full -200%..200% every 3.5s and the
+  // brightest thing it ever puts under the glyphs is 18% up on the base. The
+  // sweep was running the whole time and could not be seen, which is the
+  // hardest kind of missing animation to report.
+  //
+  // So the landing CTA gets its own: the same accent at both ends, a real
+  // highlight through the middle, and a narrower band so it reads as a pass
+  // of light rather than the button being two colours. 141 to 210 in
+  // luminance, against 141 to 166.
+  //
+  // SAFE UNDER THE TEXT, and it is worth saying why, because a brighter sheen
+  // usually is not. The label is textOnAccent — surf.base, nearly black — so
+  // the band lifts contrast instead of eating it: 6.39:1 at rest, 13.33:1 at
+  // the peak. The warning further down about the sheen costing an outline chip
+  // its contrast is about LIGHT text on a pale fill, which is the other
+  // direction entirely.
+  sheenHero:
+    "linear-gradient(100deg, #46a758 0%, #46a758 38%, #5fd39b 48%, #8fe8bd 52%, #5fd39b 56%, #46a758 66%, #46a758 100%)",
 };
 
 // ============================================================

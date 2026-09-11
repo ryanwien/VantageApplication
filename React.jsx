@@ -15475,7 +15475,7 @@ export default function App() {
               billingCfg={billingCfg} billingBusy={billingBusy} onStartPlanChange={startPlanChange} />
         : showAuth
           ? <AuthScreen onAuthed={signIn} onBack={leaveAuth} />
-          : <HomePage plans={PLANS} t={t} onStart={(planId) => goAuth("up", planId)} onSignIn={() => goAuth("in")} />}
+          : <HomePage plans={PLANS} t={t} lang={lang} onStart={(planId) => goAuth("up", planId)} onSignIn={() => goAuth("in")} />}
     </I18nContext.Provider>
   );
 }

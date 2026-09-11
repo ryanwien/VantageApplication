@@ -35,7 +35,7 @@
 //  prefers-reduced-motion rule there.
 // ============================================================
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { C, GRAD, MONO, SANS, TYPE, R, SHADOW, button } from "./theme.js";
 import VantageMark from "./VantageMark.jsx";
 import HeroPlate from "./HeroPlate.jsx";
@@ -43,6 +43,7 @@ import HomeShowcase from "./HomeShowcase.jsx";
 import HomeBand from "./HomeBand.jsx";
 import HomeTour from "./HomeTour.jsx";
 import HomeFaq from "./HomeFaq.jsx";
+import { usePrefersReducedMotion } from "./DeskMotion.jsx";
 
 // The tape. Static numbers on purpose: this is a marketing page, and wiring it
 // to the live market would mean opening a quote subscription for a visitor who
@@ -52,6 +53,41 @@ const TAPE = [
   ["AMD", "158.90", -0.84], ["AMZN", "203.34", 2.42], ["GOOGL", "182.26", 0.6],
   ["META", "572.34", -0.84], ["TSLA", "256.71", 2.07],
 ];
+
+// What the hero card asks and answers, on a loop.
+//
+// It used to be one hardcoded session — "amd" typed into the bar, AMD's quote
+// under it, AMD's line, AMD's spoken read — which made the card a screenshot
+// of the product answering the only question it knows. The claim above it is
+// "type a ticker", so the card has to type more than one.
+//
+// The numbers are the SAME NUMBERS as TAPE above, deliberately: the tape is
+// running across the top of the same screen, and a card quoting AMD at a
+// price the tape disagrees with is the sort of detail that makes a whole page
+// read as a mock-up. Both are static for the reason TAPE gives — this is a
+// marketing page, and a visitor who has not asked for a quote should not have
+// a market subscription opened for them.
+//
+// Two down and two up, alternating, because the card paints direction: a
+// visitor who only ever sees red learns the wrong thing about the product in
+// the ten seconds they spend here. Each line is thirteen points across the
+// same 420x96 box, so they all draw at one speed and land at one size.
+const SESSIONS = [
+  { sym: "AMD", price: "158.90", pct: -0.84, level: "156",
+    points: "0,26 34,32 68,22 102,44 136,38 170,58 204,50 238,66 272,58 306,74 340,68 374,84 420,78" },
+  { sym: "AMZN", price: "203.34", pct: 2.42, level: "199",
+    points: "0,78 34,72 68,80 102,60 136,66 170,48 204,54 238,36 272,42 306,26 340,32 374,18 420,20" },
+  { sym: "NVDA", price: "124.60", pct: -3.79, level: "122",
+    points: "0,16 34,22 68,14 102,36 136,28 170,50 204,44 238,62 272,54 306,76 340,68 374,86 420,88" },
+  { sym: "TSLA", price: "256.71", pct: 2.07, level: "252",
+    points: "0,74 34,80 68,66 102,70 136,54 170,60 204,44 238,50 272,34 306,40 340,28 374,30 420,24" },
+];
+
+// How long a finished session sits before the bar starts typing the next one.
+// The line takes 2.6s to draw, so this is that plus a beat to read it.
+const HOLD_MS = 5200;
+// Per character. Fast enough to be somebody who knows the ticker they want.
+const TYPE_MS = 95;
 
 function Tape() {
   const half = (
@@ -90,7 +126,61 @@ function Tape() {
 // The hero's right-hand card: the product, mid-sentence. It is a still rather
 // than a live desk, but every part of it is a real surface from the app at the
 // app's own sizes.
-function BroadcastCard({ t }) {
+function BroadcastCard({ t, lang = "en" }) {
+  const reduce = usePrefersReducedMotion();
+  // `asking` is the session the command bar is typing; `shown` is the one the
+  // answer below is still displaying. They are two values and not one on
+  // purpose: hiding the old answer while the new query types would collapse
+  // the card's height and bounce the whole hero, and it would also be a lie
+  // about the product — the previous answer stays on screen until the next
+  // one arrives, which is what the desk actually does.
+  const [asking, setAsking] = useState(0);
+  const [shown, setShown] = useState(0);
+  const [typed, setTyped] = useState(SESSIONS[0].sym.toLowerCase());
+
+  // Advance. One timer, restarted by its own effect on every change, rather
+  // than a free-running interval — an interval would keep its own clock and
+  // drift out of step with the typing that follows it.
+  useEffect(() => {
+    if (reduce || SESSIONS.length < 2) return undefined;
+    const id = setTimeout(() => setAsking(i => (i + 1) % SESSIONS.length), HOLD_MS);
+    return () => clearTimeout(id);
+  }, [asking, reduce]);
+
+  // Type the ticker, then let the answer land on the last keystroke. The
+  // answer is what makes the typing mean something, so it is tied to the end
+  // of the word rather than to a delay that happens to be about as long.
+  useEffect(() => {
+    const word = SESSIONS[asking].sym.toLowerCase();
+    if (reduce) { setTyped(word); setShown(asking); return undefined; }
+    setTyped("");
+    let i = 0;
+    const id = setInterval(() => {
+      i += 1;
+      setTyped(word.slice(0, i));
+      if (i >= word.length) { clearInterval(id); setShown(asking); }
+    }, TYPE_MS);
+    return () => clearInterval(id);
+  }, [asking, reduce]);
+
+  const s = SESSIONS[shown];
+  const up = s.pct > 0;
+  const tone = up ? C.up : C.down;
+  // The percent inside the SPOKEN line is formatted for the reader's language,
+  // because the five translations of it were written with a decimal comma and
+  // dropping "0.84" into "Minus 0,84 %" would undo that. The big mono number
+  // beside the price is NOT localised: it sits directly under a tape of
+  // dot-decimal prices, and one comma in that column would read as a typo.
+  let spokenPct;
+  try {
+    spokenPct = new Intl.NumberFormat(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      .format(Math.abs(s.pct));
+  } catch { spokenPct = Math.abs(s.pct).toFixed(2); }
+  const fill = (key) => t(key)
+    .replace("{sym}", s.sym).replace("{pct}", spokenPct).replace("{level}", s.level);
+  // Dimmed only while a new query is being typed over an old answer.
+  const settling = shown !== asking;
+
   return (
     <div className="vt-fadeup" style={{ position: "relative", animationDelay: "0.12s" }}>
       <div style={{
@@ -103,16 +193,21 @@ function BroadcastCard({ t }) {
           background: C.base, border: `1px solid ${C.edgeStrong}`, borderRadius: R.md, padding: "13px 15px",
         }}>
           <span style={{ fontFamily: MONO, color: C.faint }}>&gt;</span>
-          <span style={{ fontFamily: MONO, fontSize: 14.5, color: C.text }}>amd</span>
+          <span style={{ fontFamily: MONO, fontSize: 14.5, color: C.text }}>{typed}</span>
           <span className="vt-pulse" aria-hidden="true"
             style={{ width: 1.5, height: 17, background: C.accent, animationTimingFunction: "steps(1)" }} />
         </div>
 
         {/* the quote */}
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
-          <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 24, letterSpacing: "-0.015em" }}>AMD</span>
-          <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 34, letterSpacing: "-0.02em" }}>158.90</span>
-          <span style={{ fontFamily: MONO, fontSize: 14, color: C.down }}>−0.84%</span>
+        <div style={{
+          display: "flex", alignItems: "baseline", gap: 12, marginTop: 18, flexWrap: "wrap",
+          opacity: settling ? 0.55 : 1, transition: "opacity 0.25s var(--v-ease)",
+        }}>
+          <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 24, letterSpacing: "-0.015em" }}>{s.sym}</span>
+          <span style={{ fontFamily: MONO, fontWeight: 700, fontSize: 34, letterSpacing: "-0.02em" }}>{s.price}</span>
+          <span style={{ fontFamily: MONO, fontSize: 14, color: tone }}>
+            {up ? "+" : "−"}{Math.abs(s.pct).toFixed(2)}%
+          </span>
         </div>
 
         {/* the session, plotted rather than shown: a head rides the line's tip
@@ -121,16 +216,19 @@ function BroadcastCard({ t }) {
             length — the old draw finished in the first ~0.7s and idled the rest
             of its own animation. overflow is visible so the print can sit half
             on the card's live edge instead of arriving pre-guillotined. */}
-        <svg viewBox="0 0 420 96" preserveAspectRatio="none" role="img" aria-label={t("AMD session, down 0.84%")}
+        {/* KEYED BY SYMBOL, which is the whole mechanism for replaying the
+            draw: v-drawin is a one-shot `forwards` animation, and changing
+            the points under a live element would move the line without
+            redrawing it. A new key is a new element, and a new element starts
+            its animation from the beginning. */}
+        <svg key={s.sym} viewBox="0 0 420 96" preserveAspectRatio="none" role="img"
+          aria-label={fill(up ? "{sym} session, up {pct}%" : "{sym} session, down {pct}%")}
           style={{ width: "100%", height: 96, display: "block", marginTop: 12, overflow: "visible" }}>
           <polyline
-            points="0,26 34,32 68,22 102,44 136,38 170,58 204,50 238,66 272,58 306,74 340,68 374,84 420,78"
+            points={s.points}
             pathLength="1"
-            fill="none" stroke={C.down} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            fill="none" stroke={tone} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
             style={{ strokeDasharray: 1, strokeDashoffset: 1, animation: "v-drawin 2.6s var(--v-ease) forwards" }} />
-          <g className="v-tapehead" aria-hidden="true">
-            <circle className="v-tapedot" r="3" fill={C.down} />
-          </g>
         </svg>
 
         <div style={{ borderTop: `1px solid ${C.edge}`, margin: "16px 0 14px" }} />
@@ -147,8 +245,13 @@ function BroadcastCard({ t }) {
             {t("{who} is reading this answer").replace("{who}", "Sterling")}
           </span>
         </div>
-        <div style={{ fontFamily: SANS, fontSize: 14.5, lineHeight: 1.65, color: C.text, marginTop: 10 }}>
-          {t("Down 0.84% on light volume. Support held at 156.")}
+        <div style={{
+          fontFamily: SANS, fontSize: 14.5, lineHeight: 1.65, color: C.text, marginTop: 10,
+          opacity: settling ? 0.55 : 1, transition: "opacity 0.25s var(--v-ease)",
+        }}>
+          {fill(up
+            ? "Up {pct}% on steady volume. Resistance gave way at {level}."
+            : "Down {pct}% on light volume. Support held at {level}.")}
         </div>
       </div>
 
@@ -169,7 +272,7 @@ function BroadcastCard({ t }) {
   );
 }
 
-export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }) {
+export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x, lang = "en" }) {
   const navLink = {
     background: "transparent", border: "none", padding: 0, cursor: "pointer",
     fontFamily: SANS, fontSize: 14, color: C.muted,
@@ -282,8 +385,8 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
                 second class setting `animation` would replace it outright
                 rather than add to it. The wrapper carries the entrance. */}
             <div className="v-herostep" style={{ "--i": 4 }}>
-              <button onClick={() => onStart()} className="vt-sheen"
-                style={{ ...button("primary", "lg"), marginTop: 26, background: GRAD.sheen, fontWeight: 700, fontSize: 15.5 }}>
+              <button onClick={() => onStart()} className="vt-sheen v-herocta"
+                style={{ ...button("primary", "lg"), marginTop: 26, background: GRAD.sheenHero, fontWeight: 700, fontSize: 15.5 }}>
                 {t("Start 7-day free trial")}
               </button>
             </div>
@@ -302,7 +405,7 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x }
               runs its own view() timeline over the whole cover range, so the
               gap between them opens and closes as you scroll. */}
           <div className="v-heroparallax">
-            <BroadcastCard t={t} />
+            <BroadcastCard t={t} lang={lang} />
           </div>
         </header>
 
