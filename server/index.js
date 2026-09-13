@@ -472,6 +472,16 @@ async function robinhoodMarks(codes) {
 // That makes the refresh path the hot path, not the exceptional one, and it
 // writes the new token back to disk immediately — a token minted and lost is a
 // token that forces a reconnect for no reason.
+// ---- the Schwab handshake, out loud ----
+// Every step of this flow has failed silently at least once: a certificate
+// warning the browser never got past, a state this process forgot across a
+// restart, a token call the provider refused. None of them wrote a line
+// anywhere. The only symptom was brokers.json staying empty, which is also
+// exactly what "nobody has connected yet" looks like, so there was no way to
+// tell a broken link from an untried one. Now each step says what it decided.
+// Never the code, the tokens or the app key - only which step, and what it did.
+const schwabLog = (msg) => console.log(`schwab: ${msg}`);
+
 async function schwabToken(body) {
   // Schwab wants HTTP Basic with the app key and secret, and a form body.
   const basic = Buffer.from(`${SCHWAB.key}:${SCHWAB.secret}`).toString("base64");
@@ -1807,6 +1817,7 @@ const routeRequest = async (req, res) => {
       if (gate) return send(res, 403, gate.error);
       const state = crypto.randomBytes(16).toString("hex");
       pendingState.set(state, { prov: "schwab", email });
+      schwabLog(`sending ${email} to Schwab (state ${state.slice(0, 6)}…). Next line should be the callback coming back.`);
       return send(res, 302, "", {
         Location: `${SCHWAB_AUTH_URL}?${form({
           response_type: "code", client_id: SCHWAB.key, redirect_uri: SCHWAB.redirect, scope: SCHWAB_SCOPE, state,
@@ -1816,11 +1827,30 @@ const routeRequest = async (req, res) => {
 
     if (p === "/api/brokers/schwab/callback") {
       const code = url.searchParams.get("code"), state = url.searchParams.get("state");
-      if (url.searchParams.get("error")) return send(res, 400, `Schwab authorization denied: ${url.searchParams.get("error")}`);
+      const denied = url.searchParams.get("error");
       const pend = pendingState.get(state);
+      // Said before anything is rejected, because WHICH of these is wrong is
+      // the whole diagnosis. An unknown state usually means this process was
+      // restarted mid-login: pendingState is a Map in memory, so a restart
+      // between the redirect out and the callback back forgets every pending
+      // login, and the browser comes home to a server that never heard of it.
+      schwabLog(`callback in — ${code ? "code present" : "NO CODE"}, state ${
+        !state ? "missing" : pend ? "recognised" : "UNKNOWN (not issued by this process, or it restarted since)"
+      }${denied ? `, error=${denied}` : ""}`);
+      if (denied) return send(res, 400, `Schwab authorization denied: ${denied}`);
       if (!code || !pend || pend.prov !== "schwab") return send(res, 400, "Invalid OAuth state — try connecting again.");
       pendingState.delete(state);
-      const j = await schwabToken({ grant_type: "authorization_code", code, redirect_uri: SCHWAB.redirect });
+      let j;
+      try {
+        j = await schwabToken({ grant_type: "authorization_code", code, redirect_uri: SCHWAB.redirect });
+      } catch (e) {
+        // Rethrown, so the browser still gets the 500 with the real reason on
+        // it. Logged as well, because the browser page is the one place the
+        // person debugging this is least likely to still be looking.
+        schwabLog(`token exchange REFUSED — ${e.message || e}`);
+        throw e;
+      }
+      schwabLog("token exchange ok — reading the account list");
       const rec = brokerRecord(pend.email);
       const conn = {
         id: `schwab-${crypto.randomBytes(6).toString("hex")}`,
@@ -1837,6 +1867,10 @@ const routeRequest = async (req, res) => {
       // appends, or every reconnect would double the positions on the desk.
       rec.connections = [...rec.connections.filter(c => !(c.provider === "schwab")), conn];
       await refreshConnection(conn);
+      schwabLog(conn.staleReason
+        ? `linked ${pend.email}, but the first read failed — ${conn.staleReason}`
+        : `linked ${pend.email} — ${conn.accounts.length} account(s), ${
+            conn.accounts.reduce((n, a) => n + ((a.positions || []).length), 0)} position(s)`);
       saveBrokers();
       return send(res, 302, "", { Location: `${APP_ORIGIN}/?connected=schwab` });
     }
