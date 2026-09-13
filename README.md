@@ -388,7 +388,10 @@ is somebody else's. Swapping in SnapTrade or another provider means one normaliz
 > With no certificate present the TLS section is inert and nothing changes.
 >
 > The certificate is trusted by nobody: the browser interrupts the redirect once with a warning
-> you click through. The token exchange itself is server-to-server against `api.schwabapi.com`
+> you click through. It is worth doing that **before** you connect — open
+> `https://127.0.0.1:8788/api/status` in the same browser, accept the warning once, and the
+> redirect back from Schwab then completes without a warning page to get lost on. A warning page
+> nobody clicks through is indistinguishable from a working connect that saved nothing. The token exchange itself is server-to-server against `api.schwabapi.com`
 > over real TLS and is unaffected.
 
 **Why the brokers' own sites are not embedded.** They forbid it in their own headers, and the
@@ -411,6 +414,24 @@ data rather than the page.
 - **Sign up / log in** at the gate (or **Explore as guest** to skip it).
 - When the backend is running, auth is real (hashed passwords + server sessions). Otherwise it's a
   client-side prototype in localStorage.
+- **Locked out?** There is no reset email in this build — so the reset is a command you run on the
+  machine holding the accounts:
+
+  ```bash
+  npm run reset-password                    # list the accounts
+  npm run reset-password you@example.com    # set that one's password
+  ```
+
+  It asks for the new password with the terminal's echo off, holds it to the same policy the signup
+  form does, and signs out that account's old sessions. **Stop the server first** — it reads
+  `users.json` once at boot and writes the whole thing back on its next save, so a reset written
+  underneath a running server is both ignored and then overwritten. The script checks the port and
+  refuses rather than letting that happen quietly.
+- The two dev URLs are **two different accounts stores as far as the browser is concerned**:
+  `localhost:5173` and `127.0.0.1:5173` are separate origins, so a session saved on one does not
+  exist on the other. Pick one and stay on it — the Schwab callback returns to `APP_ORIGIN`
+  (`http://127.0.0.1:5173` unless you set it), which is where you will land signed out if you
+  started on `localhost`.
 - **Plans**: Explorer $12/mo · Pro Desk $25/mo · Trading Floor $39/mo. There is **no free tier** —
   every plan starts with a 7-day trial, which the server adds to the Checkout session
   (`subscription_data[trial_period_days]`) so the first charge really does fall on day 8.

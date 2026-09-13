@@ -2280,6 +2280,19 @@ if (tlsCreds) {
 // The string is fixed at REGISTRATION and compared exactly, so a mismatch found
 // afterwards is another approval round rather than an edit — which makes this
 // worth saying at boot, every boot, while it is still free to fix.
+// A certificate the machine does not trust is the failure that looks like
+// success: the listener is up, the URI matches, and the browser still refuses
+// the redirect coming back from Schwab — on a warning page this process never
+// hears about. Nothing logs, nothing errors, and brokers.json simply stays
+// empty. Detected by the one property every dev cert has: it signed itself.
+function tlsCertIsSelfSigned() {
+  if (!tlsCreds) return false;
+  try {
+    const c = new crypto.X509Certificate(tlsCreds.cert);
+    return c.subject === c.issuer;
+  } catch { return false; }
+}
+
 function schwabCallbackServed() {
   if (!tlsServer) return false;
   try {
@@ -2341,5 +2354,9 @@ server.listen(PORT, () => {
   console.log(`    schwab oauth     ${SCHWAB.redirect}`);
   if (!schwabCallbackServed()) {
     console.log(`                     ⚠ nothing is serving TLS there${tlsServer ? ` (TLS is on :${TLS_PORT})` : " — run: node scripts/make-dev-cert.mjs"}`);
+  } else if (tlsCertIsSelfSigned()) {
+    const origin = (() => { try { return new URL(SCHWAB.redirect).origin; } catch { return `https://127.0.0.1:${TLS_PORT}`; } })();
+    console.log(`                     ⚠ that certificate is self-signed, so a browser refuses the page Schwab redirects to.`);
+    console.log(`                       Open ${origin}/api/status once, click through the warning, then connect.`);
   }
 });

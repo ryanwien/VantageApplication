@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "check:keys": "node scripts/check-keys.mjs",
     "check:brokers": "node --env-file=.env scripts/check-brokers.mjs",
-    "robinhood:keygen": "node scripts/robinhood-keygen.mjs"
+    "robinhood:keygen": "node scripts/robinhood-keygen.mjs",
+    "reset-password": "node scripts/reset-password.mjs"
   },
   "dependencies": {
     "docx": "^9.7.1",
