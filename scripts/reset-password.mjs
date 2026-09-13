@@ -1,7 +1,8 @@
 // Reset the password on a local account.
 //
-//   node scripts/reset-password.mjs                  list the accounts
-//   node scripts/reset-password.mjs you@example.com  set that one's password
+//   node scripts/reset-password.mjs                             list the accounts
+//   node scripts/reset-password.mjs you@example.com             type a new password
+//   node scripts/reset-password.mjs you@example.com --generate  mint one and print it once
 //
 // WHY THIS EXISTS
 // The "Forgot password?" note in the sign-in gate says, when the backend is up:
@@ -21,6 +22,14 @@
 //
 // It never prints, echoes, logs or stores the password you type, and it never
 // prints a hash. The only thing it puts on screen is which account changed.
+//
+// WHY --generate EXISTS
+// The hidden prompt needs a real terminal, because turning echo off is the only
+// honest way to ask for a password. Plenty of things that look like a terminal
+// are not one - an editor's run button, a task runner, a CI step - and there the
+// prompt cannot run at all. Rather than fall back to echoing what you type,
+// --generate mints a strong random password and prints it once. --stdin is the
+// pipe-friendly third way in.
 //
 // Exit codes: 0 done - 1 refused (server up, bad password, unknown account) -
 // 2 the question could not be asked at all (no users.json, no terminal).
@@ -99,6 +108,37 @@ function promptHidden(label) {
   });
 }
 
+// ---------- a password nobody has to think of ----------
+// Ambiguous glyphs are left out on purpose: this one gets read off a screen and
+// typed into a browser, so 0/O and 1/l/I cost more than the entropy they add.
+// 20 characters of the 56 below is about 116 bits, which is plenty.
+const ALPHABET = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const generatePassword = (len = 20) => {
+  const limit = 256 - (256 % ALPHABET.length);
+  let out = "";
+  while (out.length < len) {
+    for (const b of crypto.randomBytes(len * 2)) {
+      if (b >= limit) continue;              // keep every glyph equally likely
+      out += ALPHABET[b % ALPHABET.length];
+      if (out.length === len) break;
+    }
+  }
+  return out;
+};
+
+// ---------- a password read off a pipe ----------
+const CR = String.fromCharCode(13), LF = String.fromCharCode(10);
+const readStdin = () => new Promise((resolve) => {
+  let buf = "";
+  process.stdin.setEncoding("utf8");
+  process.stdin.on("data", (c) => { buf += c; });
+  process.stdin.on("end", () => {
+    if (buf.endsWith(LF)) buf = buf.slice(0, -1);
+    if (buf.endsWith(CR)) buf = buf.slice(0, -1);
+    resolve(buf);
+  });
+});
+
 // ---------- list ----------
 function list(users) {
   const rows = Object.values(users);
@@ -141,20 +181,37 @@ if (!has("--force") && await serverIsUp()) {
 }
 
 let pw;
-try {
-  pw = await promptHidden(`New password for ${email} (at least ${PW_MIN} characters, nothing shows as you type): `);
-  const verdict = passwordCheck(pw, { email });
-  if (!verdict.ok) { console.error(verdict.blocking); process.exit(1); }
-  const again = await promptHidden("Type it again: ");
-  if (again !== pw) { console.error("The two passwords don't match - nothing was changed."); process.exit(1); }
-} catch (e) {
-  if (e.message === "no-tty") {
-    console.error("This needs a real terminal - it turns off echo so the password never appears on screen.");
-    process.exit(2);
+if (has("--generate")) {
+  pw = generatePassword();
+} else if (has("--stdin")) {
+  pw = await readStdin();
+  if (!pw) { console.error("Nothing arrived on stdin - nothing was changed."); process.exit(1); }
+} else {
+  try {
+    pw = await promptHidden(`New password for ${email} (at least ${PW_MIN} characters, nothing shows as you type): `);
+    const again = await promptHidden("Type it again: ");
+    if (again !== pw) { console.error("The two passwords don't match - nothing was changed."); process.exit(1); }
+  } catch (e) {
+    if (e.message === "no-tty") {
+      console.error([
+        "This is not a terminal that can hide what you type, so it will not ask.",
+        "",
+        `  node scripts/reset-password.mjs ${email} --generate`,
+        "",
+        "mints a strong password and prints it once instead. Or run the plain command",
+        "again from a real terminal window rather than from a run button.",
+      ].join(LF));
+      process.exit(2);
+    }
+    console.error("Cancelled - nothing was changed.");
+    process.exit(1);
   }
-  console.error("Cancelled - nothing was changed.");
-  process.exit(1);
 }
+
+// One policy for every way in, so a piped or generated password is held to
+// exactly what the signup form enforces.
+const verdict = passwordCheck(pw, { email });
+if (!verdict.ok) { console.error(verdict.blocking); process.exit(1); }
 
 const { salt, hash } = hashPw(pw);
 users[email] = { ...rec, salt, hash, passwordResetAt: Date.now() };
@@ -173,5 +230,9 @@ if (!has("--keep-sessions")) {
 }
 
 console.log(`Password set for ${email}.`);
+if (has("--generate")) {
+  console.log(LF + "  " + pw + LF);
+  console.log("That is the only time it is printed - copy it before you clear the screen.");
+}
 if (revoked) console.log(`Signed out ${revoked} old session${revoked === 1 ? "" : "s"} on that account.`);
 console.log("Start the server and log in.");
