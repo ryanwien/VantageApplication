@@ -3799,9 +3799,31 @@ select option,
 select optgroup {
   background-color: var(--v-surface);
   color: var(--v-text);
+  /* Bigger than the control that opens it, not smaller. The closed select is a
+     13px value in a settings row and that is the right size for a row; the open
+     list is the moment you are actually reading, and several of these run to
+     forty-odd entries of "Name - three, adjectives, here". Chrome takes
+     font-size and padding on an option; where a browser ignores them the colours
+     above still carry the legibility. */
+  font-size: 14.5px;
+  padding: 7px 12px;
+  line-height: 1.5;
 }
 /* The group heading is a label, not a choice: same weight the rest of the
    product gives a heading over a list. */
 select optgroup {
   color: var(--v-muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+/* The selected row. Left alone it is painted in the OS accent — on Windows a
+   hard #0078d7 that belongs to no part of this product and, against a dark
+   list, reads as an error state rather than as "this is the one you have".
+   Best-effort: the popup is drawn by the browser in its own window, and how
+   much of this it honours varies. The fallback is the row still being legible,
+   which is the whole point. */
+select option:checked {
+  background: var(--v-accent);
+  color: #08110b;
+  font-weight: 600;
 }
