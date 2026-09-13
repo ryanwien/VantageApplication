@@ -236,17 +236,6 @@ function tvEmbedUrl(sym) {
   return `https://s.tradingview.com/widgetembed/?${params.toString()}`;
 }
 
-// a short, readable label for a meeting URL (no long query strings)
-function meetingLabel(url) {
-  try {
-    const u = new URL(url);
-    if (u.hostname.includes("meet.google")) return `Google Meet · ${u.pathname.replace(/\//g, "") || "meeting"}`;
-    if (u.hostname.includes("zoom")) { const m = u.pathname.match(/\/j\/(\d+)/); return `Zoom · ${m ? m[1] : "meeting"}`; }
-    if (u.hostname.includes("teams")) return "Microsoft Teams · meeting";
-    return u.hostname.replace(/^www\./, "");
-  } catch { return String(url); }
-}
-
 // normalize a Spotify URL / URI / bare ID into an embeddable player URL (or null if unrecognized)
 function spotifyEmbedUrl(input) {
   const s = String(input || "").trim();
@@ -8583,9 +8572,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     return `https://calendar.google.com/calendar/embed?${p.toString()}`;
   };
   // an "active meeting" you can pin (paste the link a Go-Live tab created) — kept across reloads, shown as a live badge
-  const [liveMeeting, setLiveMeeting] = useState(() => (typeof window !== "undefined" && window.localStorage.getItem("tape-live-meeting")) || "");
-  const [liveMeetDraft, setLiveMeetDraft] = useState("");
-  useEffect(() => { if (liveMeeting) window.localStorage?.setItem?.("tape-live-meeting", liveMeeting); else window.localStorage?.removeItem?.("tape-live-meeting"); }, [liveMeeting]);
 
   // in-app browser panel: open a broker/site INSIDE Vantage (many brokers block framing → fallback to a tab)
   const [embed, setEmbed] = useState(null); // { url, title, trusted } | null
@@ -9761,7 +9747,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     })));
     if (dropped) console.info(`[vantage] ${dropped} stored provider key entr${dropped === 1 ? "y" : "ies"} removed — the server holds the keys now.`);
   }, []);
-  useEffect(() => { if (showSettings && settingsTab === "meetings") refreshMeetStatus(); }, [showSettings, settingsTab, refreshMeetStatus]);
 
 
   useEffect(() => {
@@ -13018,15 +13003,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                Everything that row carried now lives on the composer at the
                foot of the conversation: the typeahead, the market status, ⌘K.
                See the <ChatAssistant> call below. */}
-          {liveMeeting && (
-            <div style={{ display: "flex", padding: "12px 12px 0" }}>
-              <a href={liveMeeting} target="_blank" rel="noopener noreferrer" title="Rejoin your live meeting"
-                style={{ ...chip("live"), color: C.textOnLive, background: C.liveFill, borderColor: C.liveFill, textDecoration: "none" }}>
-                <span className="v-pulse" aria-hidden="true">🔴</span> ON AIR ↗
-              </a>
-            </div>
-          )}
-
           {/* The embedded player used to dock here, above the conversation.
               It rides the transcript now — see playerPanel. */}
           {/* The results box that used to live here is gone. Everything it held
@@ -14580,14 +14556,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       {() => {
         const serverAi = !!meetStatus?.ai?.configured;
         const aiReady = planAllows("ai") && (serverAi || aiModels.some(m => m.enabled && (isLocalModel(m) || (m.kind === "claude" ? anthropicApiKey.trim() : (m.apiKey || "").trim()))));
-        const meetOn = !!(meetStatus?.zoom?.connected || meetStatus?.google?.connected);
         const nav = [
           ["quick", t("Getting started")],
           ["account", t("Account & plan")],
           ["data", t("Display & data")],
           ["anchor", t("Voice & sound")],
           ["models", t("AI & memory")],
-          ["meetings", t("Meetings")],
         ];
         // The footer's quiet half. Where a setting is stored is the question
         // people actually have about a settings screen, and it was answered
@@ -14598,7 +14572,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           data: t("Saved in this browser."),
           anchor: t("Saved in this browser."),
           models: t("Saved in this browser."),
-          meetings: t("Nothing is stored — links open in a new tab."),
         }[settingsTab];
 
         return (
@@ -14662,7 +14635,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                       { label: t("Real videos"), ready: canSearchVideos, note: canSearchVideos ? t("on") : t("optional"), tab: "data" },
                       { label: t("Streaming"), ready: canBrowseCatalog, note: canBrowseCatalog ? t("on") : t("optional"), tab: "data" },
                       { label: t("Calendar"), ready: true, note: t("built-in"), tab: "data" },
-                      { label: t("Meetings"), ready: meetOn, note: meetOn ? t("connected") : t("optional"), tab: "meetings" },
                       { label: t("Memory"), ready: memoryTurns > 0, note: memoryTurns > 0 ? `${memoryTurns}` : t("empty"), tab: "models" },
                     ];
                     return (<>
@@ -15083,46 +15055,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                       </div>
                     </SetSection>
                   </>)}
-
-                  {/* ================= Meetings ================= */}
-                  {settingsTab === "meetings" && (
-                    <SetSection title={t("Go live — no setup")}
-                      note={t("Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.")}>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        <button onClick={() => window.open("https://meet.new", "_blank", "noopener")}
-                          style={{ background: "#00796B", color: "#fff", border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 13, fontWeight: 600, padding: "9px 16px", cursor: "pointer" }}>{t("New Google Meet")} ↗</button>
-                        <button onClick={() => window.open("https://zoom.us/start/videomeeting", "_blank", "noopener")}
-                          style={{ background: "#1567D3", color: "#fff", border: "none", borderRadius: R.sm, fontFamily: SANS, fontSize: 13, fontWeight: 600, padding: "9px 16px", cursor: "pointer" }}>{t("New Zoom meeting")} ↗</button>
-                      </div>
-
-                      {/* pin the link the tab created, so Vantage shows a live badge you can rejoin/share */}
-                      <div style={{ marginTop: 16, paddingTop: 14, borderTop: `1px solid ${C.edge}` }}>
-                        {liveMeeting ? (
-                          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                            <a href={liveMeeting} target="_blank" rel="noopener noreferrer"
-                              style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 12.5, color: C.text, textDecoration: "none", overflow: "hidden" }}>
-                              <span style={{ color: C.down, flexShrink: 0 }}>🔴 LIVE</span>
-                              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{meetingLabel(liveMeeting)} ↗</span>
-                            </a>
-                            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                              <a href={liveMeeting} target="_blank" rel="noopener noreferrer"
-                                style={{ ...button("primary", "sm"), textDecoration: "none", fontSize: 13 }}>{t("Join")} ↗</a>
-                              <button onClick={() => navigator.clipboard?.writeText(liveMeeting)} style={{ ...button("ghost", "sm"), fontSize: 12.5 }}>{t("Copy link")}</button>
-                              <button onClick={() => setLiveMeeting("")} style={{ ...button("ghost", "sm"), fontSize: 12.5 }}>{t("End")}</button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                            <input value={liveMeetDraft} onChange={e => setLiveMeetDraft(e.target.value)}
-                              placeholder={t("paste your meeting link to pin it as LIVE…")}
-                              style={{ ...fieldRecipe({ size: "sm" }), flex: 1, minWidth: 160, width: "auto", fontFamily: MONO, background: C.surface }} />
-                            <button onClick={() => { const u = liveMeetDraft.trim(); if (/^https?:\/\//.test(u)) { setLiveMeeting(u); setLiveMeetDraft(""); } }}
-                              style={{ ...button("primary", "sm"), fontSize: 13 }}>{t("Pin")}</button>
-                          </div>
-                        )}
-                      </div>
-                    </SetSection>
-                  )}
 
                   {/* ================= Account & plan ================= */}
                   {settingsTab === "account" && (
