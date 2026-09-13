@@ -1812,7 +1812,14 @@ const routeRequest = async (req, res) => {
     if (p === "/api/brokers/schwab/login") {
       const email = emailFromReq(req, url);
       if (!schwabConfigured()) return send(res, 400, "Schwab is not configured — set SCHWAB_APP_KEY (or SCHWAB_CLIENT_ID) and SCHWAB_APP_SECRET in .env");
-      if (!email) return send(res, 401, "Sign in to Vantage first, then connect your Schwab account.");
+      if (!email) {
+        // The likeliest failure of the whole flow, and until now the only step
+        // that said nothing at all: the browser navigates here with an empty or
+        // dead ?token=, gets this sentence as a bare page, and the server log
+        // stays blank — indistinguishable from nobody having pressed connect.
+        schwabLog(`connect refused — ${url.searchParams.get("token") ? "the token sent is not a live session" : "no token was sent (the browser thinks it is signed in and the API does not)"}`);
+        return send(res, 401, "Sign in to Vantage first, then connect your Schwab account.");
+      }
       const gate = gateBrokerPlan(email);
       if (gate) return send(res, 403, gate.error);
       const state = crypto.randomBytes(16).toString("hex");

@@ -47,7 +47,6 @@ import {
 } from "./src/brokers/brokers.js";
 import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage, linkRoute } from "./src/brokers/links.js";
 import { characterHome } from "./src/desk/casting.js";
-import { AuthProvider, useAuth } from "./src/api/auth-context.jsx";
 import AppShell from "./src/ui/AppShell.jsx";
 import { AuthPlate } from "./src/ui/HeroPlate.jsx";
 import ChatAssistant from "./src/ui/ChatAssistant.jsx";
@@ -15274,6 +15273,7 @@ export default function App() {
     // best-effort backend logout; local state always clears
     if (account?.backend && account?.token) { fetch("/api/auth/logout", { method: "POST", headers: { Authorization: `Bearer ${account.token}` } }).catch(() => {}); }
     saveAccount(null); setAccount(null);
+    tokenStore.clear();
     setMeOk(false);
     // The day-8 grace belongs to one person's session, not to the browser.
     try { window.sessionStorage.removeItem("vantage-checkout-grace"); } catch { /* private mode */ }
@@ -15341,6 +15341,23 @@ export default function App() {
     return null;
   };
 
+  // ---- the session token had two homes ----
+  // This component kept it on `account.token` (localStorage: tape-account).
+  // src/api/client.js kept its own under vantage-session-token, and that is the
+  // one every api.* call reads for its Authorization header and every ?token=
+  // redirect interpolates — including the Schwab connect. Nothing kept them
+  // equal, and the client clears ITS copy on any 401, so a single stale
+  // response signed you out of the API while leaving the UI fully signed in:
+  // the connect sheet still offering CONNECT on a desk plan, and
+  // /api/brokers/schwab/login?token= arriving at the server empty.
+  //
+  // So there is one writer now, and it is the account. Whatever the account
+  // says the token is, is the token; no account means no token.
+  useEffect(() => {
+    if (account?.backend && account?.token) tokenStore.set(account.token);
+    else if (!account) tokenStore.clear();
+  }, [account]);
+
   // ---- the server's own answer about this account, on arrival ----
   // `plan` and `subscribed` both live on the server and both can have moved
   // since this browser last looked: a Stripe webhook lands there, not in
@@ -15358,9 +15375,18 @@ export default function App() {
     if (!backendToken) { setMeOk(false); return; }
     let ok = true;
     fetch("/api/auth/me", { headers: { Authorization: `Bearer ${backendToken}` } })
-      .then(r => (r.ok ? r.json() : null))
+      // A 401 here is not the same answer as "could not ask". The server has
+      // looked this token up and does not have it — revoked, expired, or minted
+      // by a store that has since been replaced — and nothing recovers from
+      // that. Lumping it in with an unreachable backend is what left a browser
+      // showing a signed-in desk, on a plan it could no longer prove, with
+      // every call behind it going out unauthenticated. Other statuses and
+      // network errors keep the old, deliberately forgiving behaviour: they
+      // leave meOk false and lock nobody out.
+      .then(r => (r.status === 401 ? "dead" : r.ok ? r.json() : null))
       .then(a => {
         if (!ok || !a) return;
+        if (a === "dead") { signOut(); return; }
         setAccount(prev => { const next = accountFrom(a, { token: prev?.token, backend: true }); saveAccount(next); return next; });
         setMeOk(true);
       })
