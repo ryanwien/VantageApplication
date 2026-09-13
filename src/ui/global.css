@@ -3776,3 +3776,32 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
   color: var(--v-base) !important;
   transition-delay: 100ms;
 }
+
+/* ── The select popup ──────────────────────────────────────────────────────
+   A <select> has a second surface the page never shows: the list the browser
+   draws OUTSIDE the document, in its own window. It takes its colours from the
+   select element — and field({size:"sm"}) makes the select `background:
+   transparent`, which is exactly right in a settings row and exactly wrong
+   here. Transparent resolves to the browser's own canvas (white on Windows)
+   while the text keeps the light colour meant for a dark panel, so the open
+   list was near-white on white: twenty-two browser voices, one of them legible
+   because it happened to be highlighted.
+
+   `color-scheme: dark` on :root is not enough on its own. An explicit
+   background on the control wins over the scheme's canvas, so the pair has to
+   be stated where it is read — on the options themselves.
+
+   Written once, for every select in the product. Three of them had been given
+   these two properties inline, one option element at a time, and the four
+   added since had not — which is the whole reason this was only ever noticed
+   in the voice list. */
+select option,
+select optgroup {
+  background-color: var(--v-surface);
+  color: var(--v-text);
+}
+/* The group heading is a label, not a choice: same weight the rest of the
+   product gives a heading over a list. */
+select optgroup {
+  color: var(--v-muted);
+}

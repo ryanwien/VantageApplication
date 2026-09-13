@@ -12994,7 +12994,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                   whose current value is the label does not need a second one. */}
               <select id="tour-lang" value={lang} onChange={e => setLang(e.target.value)} aria-label={t("Language")} title={t("Language")}
                 style={{ background: "transparent", border: `1px solid ${C.edgeStrong}`, color: C.muted, borderRadius: R.sm, fontFamily: SANS, fontWeight: 500, fontSize: 13, padding: "6px 8px", cursor: "pointer" }}>
-                {LANGS.map(l => <option key={l.code} value={l.code} style={{ background: C.surface, color: C.text }}>{l.label}</option>)}
+                {LANGS.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
               </select>
             </span>
           </div>
@@ -13600,9 +13600,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                         watchlist mid-comparison still names itself here, rather
                         than letting the chip claim a symbol the chart is not
                         drawing. */}
-                    {!chartVs && <option value="" style={{ background: C.surface, color: C.text }}>{t("Compare")}</option>}
+                    {!chartVs && <option value="">{t("Compare")}</option>}
                     {[...new Set([...(chartVs ? [chartVs] : []), ...watchlist.filter(x => x !== selected)])]
-                      .map(x => <option key={x} value={x} style={{ background: C.surface, color: C.text }}>vs {x}</option>)}
+                      .map(x => <option key={x} value={x}>vs {x}</option>)}
                     </select>
                     <svg width="9" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"
                       style={{ position: "absolute", right: 10, pointerEvents: "none" }}>
