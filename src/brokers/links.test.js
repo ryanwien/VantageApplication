@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage, linkRoute } from "./links.js";
+import { loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage, linkRoute, demoOnlyReason } from "./links.js";
 
 describe("loadLinks", () => {
   it("rebuilds a demo book from a stored id", () => {
@@ -183,5 +183,40 @@ describe("linkRoute", () => {
   it("is not satisfied by a demo book", () => {
     const demoRH = { institutionId: "robinhood", demo: true, provider: "robinhood-crypto" };
     expect(linkRoute("robinhood", { providers: ALL, connections: [demoRH] })).toBe("robinhood-crypto");
+  });
+});
+
+describe("demoOnlyReason", () => {
+  const live = { serverConfigured: true, portfolioLive: true, serverAccount: true };
+
+  it("is null when all three conditions hold — the press links a real account", () => {
+    expect(demoOnlyReason(live)).toBe(null);
+  });
+
+  it("blames the server first, because nothing else can be acted on until it is up", () => {
+    expect(demoOnlyReason({ ...live, serverConfigured: false })).toBe("no-server");
+    // even when the other two are also wrong
+    expect(demoOnlyReason({ serverConfigured: false, portfolioLive: false, serverAccount: false })).toBe("no-server");
+  });
+
+  it("blames the user's own Demo choice before anything they did not choose", () => {
+    expect(demoOnlyReason({ ...live, portfolioLive: false })).toBe("preference");
+    expect(demoOnlyReason({ ...live, portfolioLive: false, serverAccount: false })).toBe("preference");
+  });
+
+  it("blames a device-only account — the case that shipped as CONNECT and a dead link", () => {
+    expect(demoOnlyReason({ ...live, serverAccount: false })).toBe("device-account");
+  });
+
+  // The bug this function exists to close: a paid plan and a working aggregator
+  // are not enough. Without a session on the server the press cannot carry one,
+  // and the sheet used to say CONNECT anyway.
+  it("does not let a configured server alone make a link real", () => {
+    expect(demoOnlyReason({ serverConfigured: true, portfolioLive: true, serverAccount: false })).not.toBe(null);
+  });
+
+  it("defaults to demo rather than to a link it cannot make", () => {
+    expect(demoOnlyReason()).toBe("no-server");
+    expect(demoOnlyReason({ serverConfigured: true })).toBe("device-account");
   });
 });

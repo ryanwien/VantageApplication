@@ -130,3 +130,28 @@ export function linkRoute(institutionId, { providers = {}, connections = [], dem
   }
   return has("plaid") ? "plaid" : "demo";
 }
+
+// WHY A CONNECT PRESS WOULD LINK A DEMO BOOK — or null when it would link a
+// real account. The sheet shows this before the press and the handler acts on
+// it, which is the same reason linkRoute() lives here: two callers, one answer.
+//
+// Three conditions have to hold before a press can reach a real brokerage, and
+// each fails differently, so the caller has to know WHICH. Telling somebody who
+// chose Demo in Settings that "no aggregator is configured" is simply false —
+// theirs is — and it sends them off to debug a server that is working.
+//
+// The third condition is the one this feature shipped without. Every broker
+// route on the server requires a session, and an account saved only in this
+// browser has never had one. Nothing checked, so a device-only account on a
+// paid plan was shown CONNECT, pressed it, and left for
+// /api/brokers/schwab/login?token= with nothing after the equals sign — a raw
+// 401 page, no log line, and a connect sheet that had promised the opposite.
+//
+// Order is the order a person can act on: a server that cannot do it at all,
+// then a choice they made, then an account that needs re-making.
+export function demoOnlyReason({ serverConfigured = false, portfolioLive = true, serverAccount = false } = {}) {
+  if (!serverConfigured) return "no-server";
+  if (!portfolioLive) return "preference";
+  if (!serverAccount) return "device-account";
+  return null;
+}

@@ -45,7 +45,7 @@ import {
   mergePositions, summarizeByBroker, speakableBrokerLine, matchInstitution,
   activityFromConnections,
 } from "./src/brokers/brokers.js";
-import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage, linkRoute } from "./src/brokers/links.js";
+import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage, linkRoute, demoOnlyReason } from "./src/brokers/links.js";
 import { characterHome } from "./src/desk/casting.js";
 import AppShell from "./src/ui/AppShell.jsx";
 import { AuthPlate } from "./src/ui/HeroPlate.jsx";
@@ -9060,7 +9060,14 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     const route = linkRoute(institutionId, {
       providers: brokerServer?.providers,
       connections: brokerConnections,
-      demoOnly: !brokerServer?.configured || !prefs.portfolioLive,
+      // account.backend is the third condition: every broker route on the
+      // server wants a session, and an account saved only in this browser has
+      // never had one. See demoOnlyReason().
+      demoOnly: !!demoOnlyReason({
+        serverConfigured: !!brokerServer?.configured,
+        portfolioLive: prefs.portfolioLive,
+        serverAccount: !!account?.backend,
+      }),
     });
     // Demo on every plan: a server with no live path for this institution has
     // nothing real to offer, and a demo book is exactly the simulated data
@@ -13910,7 +13917,12 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
               // the user having said so in Settings → Data → Portfolio. Either
               // way CONNECT links a labelled demo book, and the note under the
               // buttons says which of the three it is about to do.
-              const isDemoMode = !brokerServer?.configured || !prefs.portfolioLive;
+              const demoReason = demoOnlyReason({
+                serverConfigured: !!brokerServer?.configured,
+                portfolioLive: prefs.portfolioLive,
+                serverAccount: !!account?.backend,
+              });
+              const isDemoMode = !!demoReason;
               // Which institutions are still offered. The demo/real distinction
               // is the whole rule and it has been got wrong four times in this
               // feature, so it lives in links.js where it is tested rather than
@@ -14023,14 +14035,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                           panel names which of the three it is about to do. */}
                       <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint, lineHeight: 1.5 }}>
                         {isDemoMode
-                          // Demo mode has TWO causes and they need different
+                          // Demo mode has THREE causes and they need different
                           // sentences. Telling somebody who chose Demo in
                           // Settings that "no aggregator is configured" is
                           // simply false — theirs is — and it sends them off to
-                          // debug a server that is working.
-                          ? (brokerServer?.configured
+                          // debug a server that is working. The third one is
+                          // the account itself, and it is the only one where
+                          // the fix is something the user does in this app.
+                          ? (demoReason === "no-server"
+                              ? t("No aggregator is configured, so these link a labelled demonstration book — not a real account. Nothing is sent anywhere.")
+                              : demoReason === "preference"
                               ? t("Portfolio is set to Demo in Settings → Display & data, so these link a labelled demonstration book. Switch it to Live to connect a real account.")
-                              : t("No aggregator is configured, so these link a labelled demonstration book — not a real account. Nothing is sent anywhere."))
+                              : t("Your account is saved on this device only, so these link a labelled demonstration book. A real brokerage link needs an account on the server — sign out and sign in again with the backend running."))
                           : liveLocked
                             ? <>Linking a live account is a <b style={{ color: C.accentText }}>{planLabel(FEATURE_PLAN.brokers)}</b> feature. {lockChip("brokers")}</>
                             : anyFirstParty
