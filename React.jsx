@@ -48,6 +48,7 @@ import {
 import { LINKS_KEY, loadLinks, serializeLinks, addDemoLink, removeLink, unlinkedInstitutions, partialCoverage, linkRoute, demoOnlyReason } from "./src/brokers/links.js";
 import { characterHome } from "./src/desk/casting.js";
 import AppShell from "./src/ui/AppShell.jsx";
+import Picker from "./src/ui/Picker.jsx";
 import { AuthPlate } from "./src/ui/HeroPlate.jsx";
 import ChatAssistant from "./src/ui/ChatAssistant.jsx";
 import NewsDesk from "./src/ui/NewsDesk.jsx";
@@ -14809,15 +14810,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 
                         <SetRow label={t("Clock timezone")} htmlFor="data-clock-tz"
                           note={t("The OPEN/CLOSED badge always tracks NYSE (Eastern) hours.")}>
-                          <select id="data-clock-tz" value={clockTz} onChange={e => setClockTz(e.target.value)}
-                            style={{ ...fieldRecipe({ size: "sm" }), width: "auto", maxWidth: 240, cursor: "pointer" }}>
-                            <optgroup label="Americas">
-                              {TIMEZONES.filter(z => z.group === "Americas").map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
-                            </optgroup>
-                            <optgroup label="Europe">
-                              {TIMEZONES.filter(z => z.group === "Europe").map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
-                            </optgroup>
-                          </select>
+                          <Picker id="data-clock-tz" label={t("Clock timezone")} value={clockTz} onChange={setClockTz}
+                            options={TIMEZONES.map(z => ({ value: z.id, label: z.label, group: z.group }))} />
                         </SetRow>
                       </div>
                     </SetSection>
@@ -14941,10 +14935,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 
                         {voiceEngine === "elevenlabs" && elevenVoices.length > 0 && (
                           <SetRow label={t("Studio voice")} htmlFor="voice-eleven">
-                            <select id="voice-eleven" value={elevenVoiceId} onChange={e => setElevenVoiceId(e.target.value)}
-                              style={{ ...fieldRecipe({ size: "sm" }), width: "auto", maxWidth: 240, cursor: "pointer" }}>
-                              {elevenVoices.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                            </select>
+                            <Picker id="voice-eleven" label={t("Studio voice")} value={elevenVoiceId} onChange={setElevenVoiceId}
+                              placeholder={t("Search voices…")}
+                              options={elevenVoices.map(v => ({ value: v.id, label: v.name }))} />
                           </SetRow>
                         )}
                         {voiceEngine === "elevenlabs" && elevenErr && (
@@ -14957,32 +14950,33 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                         {voiceEngine === "browser" && (
                           <SetRow label={t("Browser voice")} htmlFor="voice-browser"
                             note={voices.length > 0 ? t("{n} available on this device").replace("{n}", String(voices.length)) : undefined}>
-                            <select id="voice-browser" value={voiceName} onChange={e => setVoiceName(e.target.value)}
-                              style={{ ...fieldRecipe({ size: "sm" }), width: "auto", maxWidth: 240, cursor: "pointer" }}>
-                              {(() => {
+                            <Picker id="voice-browser" label={t("Browser voice")} value={voiceName} onChange={setVoiceName}
+                              placeholder={t("Search voices…")}
+                              options={(() => {
                                 // Every voice the OS/browser exposes is free — group them all by language, current language first
                                 const cur = (TTS_LANG[lang] || "en-US").slice(0, 2);
                                 const langName = (code) => { try { return new Intl.DisplayNames([lang], { type: "language" }).of(code) || code; } catch { return code; } };
                                 const groups = {};
                                 for (const v of voices) { const k = (v.lang || "").slice(0, 2) || "··"; (groups[k] = groups[k] || []).push(v); }
                                 const keys = Object.keys(groups).sort((a, b) => (a === cur ? -1 : b === cur ? 1 : (langName(a)).localeCompare(langName(b))));
-                                return keys.map(k => (
-                                  <optgroup key={k} label={langName(k)}>
-                                    {groups[k].map(v => <option key={v.name} value={v.name}>{v.name} {v.localService ? "· local" : "· network"}</option>)}
-                                  </optgroup>
-                                ));
-                              })()}
-                            </select>
+                                // Flat, each row carrying its heading: the picker
+                                // draws one wherever `group` changes, so what it
+                                // wants is a list, not a list of lists.
+                                return keys.flatMap(k => groups[k].map(v => ({
+                                  value: v.name, label: v.name, group: langName(k),
+                                  note: v.localService ? t("local") : t("network"),
+                                })));
+                              })()} />
                           </SetRow>
                         )}
 
                         <SetRow label={t("Background crew")} htmlFor="voice-crew" note={t("A second voice to react and hand over to.")}>
-                          <select id="voice-crew" value={crewId} onChange={e => setCrewId(e.target.value)}
-                            style={{ ...fieldRecipe({ size: "sm" }), width: "auto", maxWidth: 240, cursor: "pointer" }}>
-                            <option value="auto">{t("Auto — whoever isn't anchoring")}</option>
-                            <option value="off">{t("Off — solo broadcast")}</option>
-                            {CHARACTERS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                          </select>
+                          <Picker id="voice-crew" label={t("Background crew")} value={crewId} onChange={setCrewId}
+                            options={[
+                              { value: "auto", label: t("Auto — whoever isn't anchoring") },
+                              { value: "off", label: t("Off — solo broadcast") },
+                              ...CHARACTERS.map(c => ({ value: c.id, label: c.name })),
+                            ]} />
                         </SetRow>
 
                         <SetRow label={t("Reading speed")} htmlFor="voice-rate" stack>
