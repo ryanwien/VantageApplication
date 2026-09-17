@@ -30,7 +30,7 @@ flowchart TD
 
     UI --> DESK{AI desk}
     DESK -->|cloud key| CLOUD["OpenRouter / Claude<br/>OpenAI / Gemini"]
-    DESK -->|local| LOCAL["Ollama / vLLM<br/>AMD Radeon (ROCm)"]
+    DESK -->|local| LOCAL["Ollama / vLLM<br/>local model"]
     CLOUD -.->|auto-retry on failure| LOCAL
 
     UI --> DATA{Market + media}
@@ -68,107 +68,6 @@ That's it — the app opens in **Demo mode**, driven by a seeded random-walk mar
 needed). `npm run build` produces a static bundle in `dist/`.
 
 Requires **Node 20+** (the backend uses `--env-file`). Check with `node --version`.
-
----
-
-## Run on AMD Radeon / ROCm (fully local agent — no cloud keys)
-
-The AI desk is an agent (tool use, multi-step commands, local multi-turn memory) whose core
-inference can run **entirely on a local model** — on an AMD Radeon GPU through ROCm.
-
-```mermaid
-flowchart TD
-    Q([Your question]) --> SPA["Vantage SPA<br/>?local=1 · no cloud keys"]
-    SPA --> SRV{Local server}
-    SRV -->|Ollama| OLL[llama.cpp]
-    SRV -->|vLLM| VLL[vLLM]
-    OLL --> ROCM[ROCm runtime]
-    VLL --> ROCM
-    ROCM --> GPU["AMD Radeon GPU<br/>model 100% GPU-resident"]
-    GPU -->|streamed tokens| SPA
-
-    classDef amd fill:#ED1C24,stroke:#000,color:#fff;
-    class GPU,ROCM amd;
-```
-
-Every desk answer, report, and voice reply follows this path — no request leaves the machine.
-Step by step:
-
-1. **Serve a model locally** (either works):
-   - **Ollama** (uses ROCm on Radeon): `ollama pull llama3.1`, then allow the browser origin:
-     ```bash
-     OLLAMA_ORIGINS=* ollama serve        # PowerShell: $env:OLLAMA_ORIGINS='*'; ollama serve
-     ```
-   - **vLLM** (ROCm build, OpenAI-compatible): `vllm serve <model> --host 0.0.0.0 --port 8000`
-2. **Start Vantage**: `npm run dev`, then open the one-click URL for whichever server you started —
-   **`http://127.0.0.1:5173/?local=1`** for Ollama, or **`http://127.0.0.1:5173/?local=vllm`** for vLLM
-   (auto-detects the served model; optional `&base=<url>` / `&model=<id>` overrides). Either enables
-   *only* that local model — every desk answer, report, and command now runs on local inference.
-   The same switch lives at **settings → AI → "⚡ Run local-only (AMD / ROCm)"**.
-3. **Verify the GPU is actually doing the work** (Ollama silently falls back to CPU if ROCm
-   isn't engaged):
-   ```bash
-   ollama ps        # PROCESSOR column must read "100% GPU"
-   rocm-smi         # GPU utilization + VRAM jump during a query
-   ```
-4. **What you should see**: sign in, ask the desk *"chart AMD and explain the move"* — the answer
-   header reads `Ollama (local) (llama3.1)`, and it works with the network cable pulled.
-
-Troubleshooting: `model "llama3.1" not found` → `ollama pull llama3.1` (or set MODEL to one from
-`ollama list`). "Can't reach Ollama" → start it with `OLLAMA_ORIGINS=*` as above.
-
----
-
-## DataHub catalog context (optional)
-
-Point the desk at a [DataHub](https://datahub.com) instance and it answers questions about your
-data — schemas, owners, and lineage — from the live catalog, read on air by the anchor.
-
-1. Start DataHub (quickstart on `http://localhost:9002`, GMS on `http://localhost:8080`).
-2. Set the server-side var (the token never reaches the browser):
-
-   ```bash
-   DATAHUB_GMS_URL=http://localhost:8080
-   DATAHUB_TOKEN=<your personal access token>  # Only needed if auth is enabled; generate in Settings → Access Tokens
-   ```
-
-3. The quickstart ships with an empty catalog — ingest sample metadata before the desk can
-   answer questions.
-4. Run the backend: `node --env-file=.env server/index.js`, then ask the desk:
-   - *"who owns the fct_users_created table?"*
-   - *"what columns are in the customers dataset?"*
-   - *"what feeds fct_users_created?"*
-
-Queries are **read-only** and limited to a server-side whitelist. If DataHub is unreachable, the
-desk reports the lookup failed — it never invents catalog facts. When the desk doesn't find an
-exact match for a dataset name, it discloses the closest match instead of silently answering
-about a different one.
-
-### Seeing the honesty behaviour
-
-The interesting case is when the catalog knows the dataset but *not the answer* — a small model
-handed an incomplete fact block will happily invent owners and column lists. Here the model is
-removed from the path entirely and the gap is stated instead.
-
-DataHub's sample metadata is fully populated, so nothing exercises this. Ingest a deliberately
-incomplete dataset:
-
-```bash
-node scripts/datahub/ingest-bare.cjs
-```
-
-Then ask — each answers with **no model involved** (the response header reads `DataHub (catalog)`
-rather than `DataHub + <model>`, so you can tell at a glance):
-
-| Ask | Answer |
-| --- | --- |
-| *"who owns the orders_v2 table?"* | DataHub has no owner recorded for orders_v2. |
-| *"what columns are in the orders_v2 table?"* | DataHub has no schema recorded for orders_v2. |
-| *"what type is the foobar column in fct_users_created?"* | …has no column named "foobar". |
-| *"what feeds the SampleKafkaDataset dataset?"* | DataHub records no upstream datasets for it. |
-
-A question the catalog *can* answer still goes to a model for narration — compare
-*"in fct_users_created, what type is the user_id column?"*, which reports the real type.
 
 ---
 
@@ -261,7 +160,6 @@ TTS_DAILY_CHARS       (default 40000) # studio voice per ACCOUNT per day,
                                       #   is the unit ElevenLabs invoices
 
 AGENT_CRON_SECRET                             # protects the scheduled-agent endpoint
-DATAHUB_GMS_URL / DATAHUB_TOKEN               # optional catalog context (see above)
 SPOTIFY_PLAYLIST                              # defaults to a public playlist
 TRUST_PROXY                                   # set to exactly "1" behind a reverse proxy, so
                                               # rate limits read X-Forwarded-For and not the proxy
@@ -447,11 +345,9 @@ data rather than the page.
 React.jsx          the whole UI (one big component + a few module components)
 exporters.js       lazy-loaded Excel / Word / PowerPoint generators
 src/brokers/       institution catalog, demo book, holdings normalizers (+ tests)
-src/datahub/       catalog intent detection, whitelisted queries, honesty checks (+ tests)
 src/settings/      preferences & local-proof modules (+ tests)
 server/index.js    the optional backend: accounts, meetings, billing, brokerage links (dependency-free)
 examples/          real generated output — read it without running anything
-scripts/datahub/   seed a bare dataset to reproduce the refusal behaviour
 index.html         Vite entry
 vite.config.js     dev server + /api → backend proxy
 MEETINGS_SETUP.md  step-by-step Zoom / Google OAuth setup
