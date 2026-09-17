@@ -11,7 +11,7 @@ where an animated news anchor charts stocks, answers questions out loud, reads t
 trailers, hosts games, tracks a portfolio, and rings the opening bell on a real trading-day clock.
 
 The dashboard runs **fully in the browser with zero setup**. Everything below (live data, AI answers,
-studio voice, real meetings, accounts, subscriptions) is **optional** and layers on top.
+studio voice, accounts, subscriptions) is **optional** and layers on top.
 
 > **Want to see what it produces without running it?** [`examples/`](examples/) holds real
 > generated output — catalog answers and refusals, an analyst report, and the complete list of
@@ -42,7 +42,7 @@ flowchart TD
     VOICE -->|no key| TTS["Browser TTS"]
 
     UI <--> LS[("localStorage<br/>keys + memory")]
-    UI -.optional.-> BE["Node backend<br/>auth · meetings · billing"]
+    UI -.optional.-> BE["Node backend<br/>auth · billing · brokers"]
 ```
 
 Two properties worth calling out:
@@ -96,13 +96,11 @@ never see, and adds three independent layers — **each optional**:
 | Layer | What it adds | Needs |
 |-------|--------------|-------|
 | **Accounts** (`/api/auth/*`) | Real sign-up / login with scrypt-hashed passwords + session tokens | nothing (works as soon as the backend runs) |
-| **Meetings** (`/api/:prov/*`) | Create real **Zoom / Google Meet** links, per user | your own Zoom/Google OAuth apps |
 | **Billing** (`/api/billing/*`) | Real **Stripe Checkout** for paid plans (test mode) | your own Stripe test keys |
 | **Hosted AI** (`/api/ai/brief`) | Vantage-operated Gemini market briefs, metering, and audit logs | Vertex AI service account |
 
 If the backend isn't running, the app falls back gracefully: accounts run **client-side** in
-localStorage, meetings use the **zero-setup** path (see below), and paid plans unlock as a clearly
-labelled **simulation**.
+localStorage and paid plans unlock as a clearly labelled **simulation**.
 
 ### Run it
 
@@ -136,9 +134,8 @@ STRIPE_SECRET_KEY                             # billing (optional; else simulate
 STRIPE_PRICE_EXPLORER / _PRO / _DESK          # Stripe Price IDs; every plan is paid
 STRIPE_WEBHOOK_SECRET                         # Stripe endpoint-signing secret
 
-# Sign-in and meetings — OAuth apps you register yourself
-ZOOM_CLIENT_ID / ZOOM_CLIENT_SECRET           # meetings (optional)
-GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET       # meetings + calendar (optional)
+# Sign-in — OAuth apps you register yourself
+GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET       # Google sign-in + calendar (optional)
 YAHOO_CLIENT_ID / YAHOO_CLIENT_SECRET         # Yahoo sign-in (optional)
 
 # Vertex AI — the hosted-brief path
@@ -170,7 +167,7 @@ APP_ORIGIN     (default http://127.0.0.1:5173 — where the dashboard runs)
 
 > **You don't have to hand-edit a file.** `.env` is just one way to set these. On a real host
 > (Vercel / Render / Railway, Docker `-e`, or a shell `export`) set them as normal environment
-> variables — the server reads `process.env` either way. See [MEETINGS_SETUP.md](MEETINGS_SETUP.md).
+> variables — the server reads `process.env` either way.
 
 ### Rotating a key
 
@@ -199,17 +196,6 @@ The order matters, because the last step is irreversible:
 ```bash
 node scripts/check-keys.mjs
 ```
-
----
-
-## Meetings: two tiers
-
-1. **Zero-setup (no backend, no keys)** — settings → **MEET** → **⚡ Go Live**: opens an instant
-   Google Meet (`meet.new`) or Zoom in a new tab, or pin any link you paste as a 🔴 LIVE badge.
-   This is what most people use.
-2. **Tracked meetings (per-user OAuth)** — sign in, then **Connect Zoom / Google**. Meetings are
-   created on **your own** account and listed inside Vantage. Full walkthrough:
-   **[MEETINGS_SETUP.md](MEETINGS_SETUP.md)**.
 
 ---
 
@@ -346,11 +332,10 @@ React.jsx          the whole UI (one big component + a few module components)
 exporters.js       lazy-loaded Excel / Word / PowerPoint generators
 src/brokers/       institution catalog, demo book, holdings normalizers (+ tests)
 src/settings/      preferences & local-proof modules (+ tests)
-server/index.js    the optional backend: accounts, meetings, billing, brokerage links (dependency-free)
+server/index.js    the optional backend: accounts, billing, brokerage links (dependency-free)
 examples/          real generated output — read it without running anything
 index.html         Vite entry
 vite.config.js     dev server + /api → backend proxy
-MEETINGS_SETUP.md  step-by-step Zoom / Google OAuth setup
 ```
 
 ---
