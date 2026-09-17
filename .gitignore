@@ -40,6 +40,11 @@ server/brokers.json
 # local file; it works exactly the same untracked.
 .mcp.json
 
+# Codex registers the same servers in its own file, and the one here is that
+# same Robinhood endpoint under a different tool. Ignoring one config and
+# committing the other would distribute exactly what the line above refuses to.
+.codex/
+
 # HyperFrames video tooling — vendor skill packages, not app source
 .agents/
 skills-lock.json
