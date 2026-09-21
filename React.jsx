@@ -110,12 +110,12 @@ const GAME_FALLBACK = (
 import { ROUNDS as TICKER_ROUNDS, ROUND_SECONDS as TICKER_SECONDS, answerIndex as tickerAnswer, award as tickerAward } from "./src/games/ticker.js";
 import { ROUNDS as BULLBEAR_ROUNDS, ROUND_SECONDS as BB_SECONDS, isRight as bbRight, award as bbAward } from "./src/games/bullbear.js";
 import Waveform from "./src/ui/Waveform.jsx";
-import VantageMark from "./src/ui/VantageMark.jsx";
+import MarketMindsMark from "./src/ui/MarketMindsMark.jsx";
 import DeskIcon from "./src/ui/DeskIcon.jsx";
 import HomePage from "./src/ui/HomePage.jsx";
 
 /* ============================================================
-   VANTAGE — a browser market dashboard fronted by an animated AI "broadcast desk".
+   MARKETMINDS — a browser market dashboard fronted by an animated AI "broadcast desk".
    ------------------------------------------------------------
    WHAT IT IS
      A single-page React app: a live/simulated market dashboard where an animated news
@@ -256,9 +256,9 @@ function b64url(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-// The logo, drawn on a canvas. Geometry is copied from src/ui/VantageMark.jsx
+// The logo, drawn on a canvas. Geometry is copied from src/ui/MarketMindsMark.jsx
 // because canvas cannot render React — if one changes, change both.
-function drawVantageMark(ctx, x, y, size, tile = "#46a758", ink = "#0b0e13", dot = "#4cc38a", edge = "#46a758") {
+function drawMarketMindsMark(ctx, x, y, size, tile = "#46a758", ink = "#0b0e13", dot = "#4cc38a", edge = "#46a758") {
   const s = size / 32;
   ctx.save();
   ctx.translate(x, y); ctx.scale(s, s);
@@ -272,20 +272,37 @@ function drawVantageMark(ctx, x, y, size, tile = "#46a758", ink = "#0b0e13", dot
   ctx.restore();
 }
 
-// VANTAGE wordmark badge (PNG data URL) for branding exported documents — built once, cached
+// MARKETMINDS wordmark badge (PNG data URL) for branding exported documents — built once, cached
+const WORDMARK = "MARKETMINDS";
+const WORDMARK_FONT = "700 34px 'Schibsted Grotesk', Arial, sans-serif";
+const SUBMARK = "MARKET INTELLIGENCE";
+const SUBMARK_FONT = "12px monospace";
 let _logoCache = null;
 function makeLogoDataUrl() {
   if (_logoCache) return _logoCache;
   if (typeof document === "undefined") return null;
-  const W = 360, H = 96, cvs = document.createElement("canvas");
-  cvs.width = W; cvs.height = H;
+  const H = 96, cvs = document.createElement("canvas");
   const ctx = cvs.getContext("2d");
+  // The badge is sized to the measured wordmark, not to a fixed 360px. At 700
+  // 34px the old name was 163px wide and this one is 269px, which left a single
+  // pixel between the text and the border — a fixed width is really a bet that
+  // the brand name never gets longer, and that bet has now been lost once. The
+  // station bug further down has measured its own pill since the day it was
+  // written, for the same reason; this is that, applied one function earlier.
+  ctx.font = WORDMARK_FONT;
+  const wordW = ctx.measureText(WORDMARK).width;
+  ctx.font = SUBMARK_FONT;
+  const subW = ctx.measureText(SUBMARK).width;
+  // 24px right margin mirrors the mark's 24px left inset, so the badge stays
+  // symmetric whatever the name measures.
+  const W = Math.ceil(Math.max(88 + wordW, 90 + subW)) + 24;
+  cvs.width = W; cvs.height = H;
   const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); };
   ctx.fillStyle = C.panel; rr(2, 2, W - 4, H - 4, 16); ctx.fill();
   ctx.strokeStyle = C.edgeStrong; ctx.lineWidth = 2; rr(2, 2, W - 4, H - 4, 16); ctx.stroke();
-  drawVantageMark(ctx, 24, 24, 48);
-  ctx.fillStyle = C.textStrong; ctx.font = "700 34px 'Schibsted Grotesk', Arial, sans-serif"; ctx.fillText("VANTAGE", 88, 54);
-  ctx.fillStyle = C.muted; ctx.font = "12px monospace"; ctx.fillText("MARKET INTELLIGENCE", 90, 77);
+  drawMarketMindsMark(ctx, 24, 24, 48);
+  ctx.fillStyle = C.textStrong; ctx.font = WORDMARK_FONT; ctx.fillText(WORDMARK, 88, 54);
+  ctx.fillStyle = C.muted; ctx.font = SUBMARK_FONT; ctx.fillText(SUBMARK, 90, 77);
   _logoCache = cvs.toDataURL("image/png");
   return _logoCache;
 }
@@ -509,11 +526,11 @@ const CHARACTERS = [
   { id: "vivienne", name: "Vivienne", skin: "#CDB8AE", hairColor: "#20201F", hair: "long", suit: "#2E2E30", shirt: "#BCBCBC", tieBase: false, earrings: true, hat: "noir" },
 ];
 
-// What Vantage is, in the product's own words. One constant, because two places
+// What MarketMinds is, in the product's own words. One constant, because two places
 // need the identical answer: the desk-handled intent and the system prompt. A
 // model left to describe the app on its own invents a different product every
 // time it is asked, which is the one thing an app's account of itself must not do.
-const VANTAGE_ABOUT =
+const MARKETMINDS_ABOUT =
   "The application currently in use appears to be a simulated trading platform that displays live market data, " +
   "allowing users to analyze stock performance, price changes, and percentage changes in real time. It provides a " +
   "snapshot of various stocks, including their opening, high, low, and previous close prices, enabling traders and " +
@@ -2199,9 +2216,9 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         ctx.stroke(); ctx.globalAlpha = 1;
         // station logo panel, upper left — size the pill to the measured text so it never overflows
         ctx.font = "700 9px monospace";
-        const logoW = ctx.measureText("VANTAGE").width;
+        const logoW = ctx.measureText("MARKETMINDS").width;
         ctx.fillStyle = "rgba(150,185,255,0.12)"; ctx.fillRect(10, 13, logoW + 26, 17);
-        drawVantageMark(ctx, 13, 15, 13);
+        drawMarketMindsMark(ctx, 13, 15, 13);
         // THE STATION BUG DOES NOT REACT TO THE ANCHOR
         // The mark's dot used to burn as a tally light while the anchor read:
         // a green radial at 75% alpha over the logo's dot, ramped by the eased
@@ -2216,7 +2233,7 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
         // right places: the status chip on the desk front says what the desk is
         // doing in words, and the anchor's own mouth says it by moving. Nothing
         // is lost by taking a third one off the wall.
-        ctx.fillStyle = C.textStrong; ctx.textBaseline = "middle"; ctx.fillText("VANTAGE", 30, 22); ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = C.textStrong; ctx.textBaseline = "middle"; ctx.fillText("MARKETMINDS", 30, 22); ctx.textBaseline = "alphabetic";
         // rim lights
         ctx.fillStyle = "rgba(232,235,242,0.03)";
         ctx.fillRect(0, 0, 6, H); ctx.fillRect(W - 6, 0, 6, H);
@@ -3918,7 +3935,7 @@ function DeskAnchor({ talking, listening, mood, speakerLabel, character, analyse
 
 
 // Internet Archive player — public-domain films that DO permit iframe embedding, so they play
-// fully inside Vantage (unlike Netflix/Disney+/Hulu, which block framing entirely).
+// fully inside MarketMinds (unlike Netflix/Disney+/Hulu, which block framing entirely).
 function ArchiveFrame({ id, title }) {
   return (
     <div style={{ position: "relative", width: "100%", paddingTop: "56.25%", background: "#000" }}>
@@ -5307,7 +5324,7 @@ function AlgoWarsGame({ onWin, onCheer, onBack, onClose }) {
   );
 }
 
-// ---- Vantage Calendar: a self-contained month calendar. Events live in localStorage, no account. ----
+// ---- MarketMinds Calendar: a self-contained month calendar. Events live in localStorage, no account. ----
 const CAL_DOW = ["S", "M", "T", "W", "T", "F", "S"];
 const CAL_MON = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const calPad = (n) => String(n).padStart(2, "0");
@@ -5567,7 +5584,7 @@ const PANEL_DEFS = [
   { key: "pnf", title: "P&F signals", inline: "P&F signals" },
 ];
 const LEGAL_TERMS = [
-  "Vantage is a market-information and entertainment dashboard. It is NOT financial advice, and nothing shown here is a recommendation to buy or sell any security.",
+  "MarketMinds is a market-information and entertainment dashboard. It is NOT financial advice, and nothing shown here is a recommendation to buy or sell any security.",
   "Market data may be delayed, simulated, or inaccurate. Do not rely on it for trading decisions.",
   "Any API keys you enter yourself are stored only in your own browser's localStorage and are sent only to those providers' APIs. When the desk runs on this server's own model key instead, your question is sent to our backend, which forwards it to the model provider.",
   "Every plan begins with a 7-day free trial and there is no free tier after it. Where a real Stripe checkout is presented, payment details are entered on Stripe's own page — never in this app — the first charge falls on day 8, and cancelling before then costs nothing.",
@@ -5903,13 +5920,13 @@ function AuthScreen({ onAuthed, onBack }) {
             generic login screen. */}
         <div style={{ padding: "24px 28px 18px", borderBottom: `1px solid ${C.edge}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-            <VantageMark size={34} ignite />
+            <MarketMindsMark size={34} ignite />
             <div>
-              {/* "Vantage", the way the homepage and the app header both set it.
-                  This said VANTAGE in uppercase gradient text at weight 510 —
+              {/* "MarketMinds", the way the homepage and the app header both set it.
+                  This said MARKETMINDS in uppercase gradient text at weight 510 —
                   a wordmark from the previous system, on a screen you reach by
                   pressing a button on the new one. */}
-              <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20, letterSpacing: "-0.018em", color: C.text }}>Vantage</div>
+              <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20, letterSpacing: "-0.018em", color: C.text }}>MarketMinds</div>
               {/* Sentence-case sans, not a mono eyebrow: this is a sentence
                   about where your account lives, not a data label. */}
               <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, marginTop: 3, display: "flex", alignItems: "center", gap: 6 }}>
@@ -6131,7 +6148,7 @@ function AuthScreen({ onAuthed, onBack }) {
             {errBox}
             <label style={{ display: "flex", alignItems: "flex-start", gap: 9, cursor: "pointer", ...TYPE.bodySm, fontSize: 13, color: C.text }}>
               <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} style={{ marginTop: 2, width: 16, height: 16, accentColor: C.accent, flex: "0 0 auto" }} />
-              <span>I have read and agree to the Terms of Use and Privacy Policy, and I understand Vantage is not financial advice.</span>
+              <span>I have read and agree to the Terms of Use and Privacy Policy, and I understand MarketMinds is not financial advice.</span>
             </label>
             <div style={{ display: "flex", gap: 10 }}>
               <button style={{ ...primaryBtn(), background: "transparent", color: C.text, border: `1px solid ${C.panelEdge}`, width: "auto", flex: "0 0 auto", padding: "12px 18px" }} onClick={() => setStep("plan")}>← Back</button>
@@ -6180,9 +6197,9 @@ function TrialEndedScreen({ account, onCheckout, onSignOut, busy, error }) {
             and dressing it differently would read as an interstitial. */}
         <div style={{ padding: "24px 28px 18px", borderBottom: `1px solid ${C.edge}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-            <VantageMark size={34} ignite />
+            <MarketMindsMark size={34} ignite />
             <div>
-              <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20, letterSpacing: "-0.018em", color: C.text }}>Vantage</div>
+              <div style={{ fontFamily: SANS, fontWeight: 700, fontSize: 20, letterSpacing: "-0.018em", color: C.text }}>MarketMinds</div>
               <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, marginTop: 3, display: "flex", alignItems: "center", gap: 6 }}>
                 <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: "50%", background: C.down }} />
                 {account?.email}
@@ -7826,7 +7843,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     const setup = () => {
       if (cancelled || !window.Spotify || spotifyPlayerRef.current) return;
       const player = new window.Spotify.Player({
-        name: "Vantage Desk",
+        name: "MarketMinds Desk",
         volume: Math.max(0, Math.min(1, musicVolume)),
         getOAuthToken: async (cb) => {
           let tok = spotifyAuth.access_token;
@@ -8573,7 +8590,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   };
   // an "active meeting" you can pin (paste the link a Go-Live tab created) — kept across reloads, shown as a live badge
 
-  // in-app browser panel: open a broker/site INSIDE Vantage (many brokers block framing → fallback to a tab)
+  // in-app browser panel: open a broker/site INSIDE MarketMinds (many brokers block framing → fallback to a tab)
   const [embed, setEmbed] = useState(null); // { url, title, trusted } | null
   // THE FRAME IS COVERED UNTIL IT HAS DRAWN, BECAUSE WHAT IT DRAWS FIRST IS WHITE
   // TradingView's widget paints its own white page and then boots the chart into
@@ -9393,7 +9410,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // sayFully rather than a guessed wait, as everywhere else here: measured,
       // browser TTS reads these at about 12.9 characters a second, and the
       // 3400ms this beat used to hold for was already cutting a shorter line.
-      if ((await sayFully("Welcome to Vantage. Sit back — I'll show you what this desk does.")) === "abort") return;
+      if ((await sayFully("Welcome to MarketMinds. Sit back — I'll show you what this desk does.")) === "abort") return;
       if ((await wait(400)) === "abort") return;
 
       say("First, I'll chart a stock from the command bar.");
@@ -9886,7 +9903,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       news: overrides.news ?? (news?.news || []),
       chartImage: overrides.chartImage !== undefined ? overrides.chartImage : chartToDataUrl(),
       writtenReport: overrides.writtenReport ?? writtenReport,
-      title: overrides.title || `Vantage Market Report — ${sel?.sym || selected}`,
+      title: overrides.title || `MarketMinds Market Report — ${sel?.sym || selected}`,
       logo: makeLogoDataUrl(),
     };
   }, [getRow, selected, watchlist, aiResponses, aiModels, lastAsked, news, live, chartToDataUrl, writtenReport]);
@@ -9937,7 +9954,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   const buildPrompt = (question) =>
     `You are one of several analysts on a trading desk answering the same question side by side. Be concise: 2-4 sentences, no preamble. Never give personalized financial advice; frame observations analytically.${lang !== "en" ? ` Respond entirely in ${LANG_AI[lang]}.` : ""}\n` +
     `Earlier turns of this conversation may precede this message — use them to resolve follow-ups (pronouns, "what about its risks?").\n\n` +
-    `If you are asked what this application is, answer with exactly this and nothing else: "${VANTAGE_ABOUT}"\n\n` +
+    `If you are asked what this application is, answer with exactly this and nothing else: "${MARKETMINDS_ABOUT}"\n\n` +
     `The market snapshot below is this dashboard's own data — treat it as the live tape when it is real quotes, or as a hypothetical scenario (say so briefly) when it is simulated demo data.\n` +
     `For questions about current or recent real-world events — "this week in the market", latest news, a company's recent moves — use web search to ground your answer in up-to-date facts, and don't confuse the simulated snapshot with the real market.\n\n` +
     `Market snapshot (JSON):\n${JSON.stringify(buildMarketContext())}\n\nQuestion: ${question}`;
@@ -10183,7 +10200,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     // nothing is listening on 8787 — both used to arrive as a 5xx and get
     // blamed on the provider, sending people to check a status page that was
     // green the whole time.
-    const UNREACHABLE = "the Vantage server isn't answering — start it with: npm run server";
+    const UNREACHABLE = "the MarketMinds server isn't answering — start it with: npm run server";
     let r;
     try {
       r = await fetch(url, {
@@ -10733,7 +10750,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   }, [selected]);
 
   // Three sources, tried cheapest-and-most-real first:
-  //   1. the Vantage backend's /api/news (REST; server-side Finnhub key)
+  //   1. the MarketMinds backend's /api/news (REST; server-side Finnhub key)
   //   2. Finnhub company-news, direct REST with the user's own key
   //   3. AI web search (the original path — the only one that needs no keys/backend)
   const fetchNews = useCallback(async () => {
@@ -11152,10 +11169,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       } catch { /* ignore */ }
     }
 
-    // "What is Vantage?" is answered by the product, not by a model — see
-    // VANTAGE_ABOUT for why.
+    // "What is MarketMinds?" is answered by the product, not by a model — see
+    // MARKETMINDS_ABOUT for why.
     if (/\b(what|what's|whats|tell me about|explain)\b.{0,26}\b(vantage|this (app|application|platform|tool|site|thing)|am i (looking at|using))\b/i.test(q) || /^\s*(about|what is this)\s*\??\s*$/i.test(q)) {
-      pushDeskAnswer(VANTAGE_ABOUT);
+      pushDeskAnswer(MARKETMINDS_ABOUT);
       return; // desk-handled — no model fan-out
     }
 
@@ -11355,7 +11372,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         speak("nav", `Pulled up ${nav.sym} on the dashboard.`);
       } else {
         const links = nav.brokers.map(b => ({ name: b.name, href: b.url(nav.sym) }));
-        setResp("nav", { status: "done", nav: true, links, text: `${nav.brokers[0].name} for ${nav.sym} opened in a new tab (brokers block embedding). To stay inside Vantage, use the 📈 chart button below.` });
+        setResp("nav", { status: "done", nav: true, links, text: `${nav.brokers[0].name} for ${nav.sym} opened in a new tab (brokers block embedding). To stay inside MarketMinds, use the 📈 chart button below.` });
         speak("nav", `Pulling up ${nav.brokers[0].name} for ${nav.sym}.`);
         openEmbed(links[0].href, `${nav.brokers[0].name} · ${nav.sym}`); // brokers route to a tab; embeddable sites open in-panel
       }
@@ -11372,7 +11389,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       setCmdMsg(line); deskReply(line); return;
     }
     const enabled = aiModels.filter(m => m.enabled);
-    // The user's own configured models take precedence. Only fall back to Vantage's hosted Gemini
+    // The user's own configured models take precedence. Only fall back to MarketMinds's hosted Gemini
     // when a signed-in (backend) user hasn't enabled a usable model of their own — otherwise a local
     // Ollama / LM Studio model (or a keyed cloud model) would be silently bypassed by the hosted desk.
     // The hosted route also has to EXIST (status.hosted): without that gate, a signed-in user whose
@@ -11385,7 +11402,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       completeMission("ask");
       setAiResponses(p => (p.nav ? { nav: p.nav } : {}));
       const t0 = performance.now();
-      setResp("desk", { status: "running", text: "", ms: null, via: "Vantage hosted AI", model: "Gemini on Vertex AI", tried: [] });
+      setResp("desk", { status: "running", text: "", ms: null, via: "MarketMinds hosted AI", model: "Gemini on Vertex AI", tried: [] });
       const hostedCtrl = new AbortController();
       askAbortRef.current = hostedCtrl;
       fetch("/api/ai/brief", {
@@ -11393,17 +11410,17 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         body: JSON.stringify({ prompt }), signal: hostedCtrl.signal,
       }).then(async r => {
         const j = await r.json(); if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
-        setResp("desk", { status: "done", text: j.text, ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", model: j.model || "Gemini", tried: [] });
+        setResp("desk", { status: "done", text: j.text, ms: Math.round(performance.now() - t0), via: "MarketMinds hosted AI", model: j.model || "Gemini", tried: [] });
         if (j.text) rememberTurn(q, j.text);
         if (autoSpeak && j.text) speak("desk", j.text);
       }).catch(e => {
         // A user-initiated stop is not a failure, and showing it as a red error
         // bubble would be the app blaming itself for doing what it was told.
         if (askCancelRef.current) {
-          setResp("desk", { status: "done", stopped: true, ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", tried: [] });
+          setResp("desk", { status: "done", stopped: true, ms: Math.round(performance.now() - t0), via: "MarketMinds hosted AI", tried: [] });
           return;
         }
-        setResp("desk", { status: "error", text: humanizeError(e), ms: Math.round(performance.now() - t0), via: "Vantage hosted AI", tried: [] });
+        setResp("desk", { status: "error", text: humanizeError(e), ms: Math.round(performance.now() - t0), via: "MarketMinds hosted AI", tried: [] });
       });
       return;
     }
@@ -11478,10 +11495,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
           {
             const why = friendly(m, e);
             // Do not put a provider's name in front of a fault that is ours.
-            // "OpenRouter: the Vantage server isn't answering" reads as though
+            // "OpenRouter: the MarketMinds server isn't answering" reads as though
             // OpenRouter said it, and sends people to check a status page that
             // was green the whole time.
-            errors.push(/Vantage server isn't answering/.test(why) ? why : `${m.label}: ${why}`);
+            errors.push(/MarketMinds server isn't answering/.test(why) ? why : `${m.label}: ${why}`);
           }
           setResp("desk", { status: "running", text: "", ms: null, via: null, tried: errors.slice() }); // reset for the next model
         }
@@ -12130,7 +12147,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
           {aiResponses.nav.links.map(l => (
             <span key={l.name} style={{ display: "inline-flex", border: `1px solid ${C.edgeStrong}`, borderRadius: R.sm, overflow: "hidden" }}>
-              <button onClick={() => openEmbed(l.href, l.name)} title={`Open ${l.name} inside Vantage`}
+              <button onClick={() => openEmbed(l.href, l.name)} title={`Open ${l.name} inside MarketMinds`}
                 style={{ background: C.surfaceRaised, border: "none", color: C.text, fontFamily: SANS, fontSize: 13, fontWeight: 600, padding: "7px 13px", cursor: "pointer" }}>
                 {l.name}
               </button>
@@ -12356,7 +12373,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         )}
         {player.archive ? (
           <div style={{ padding: "10px 16px", borderTop: `1px solid ${C.edge}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>Public-domain film · playing inside Vantage</span>
+            <span style={{ fontFamily: MONO, fontSize: 12, color: C.faint }}>Public-domain film · playing inside MarketMinds</span>
             <a href={`https://archive.org/details/${player.archive}`} target="_blank" rel="noopener noreferrer"
               style={{ fontFamily: MONO, fontSize: 12, color: C.accentText, textDecoration: "none", border: `1px solid ${C.accentEdge}`, borderRadius: R.xs, padding: "3px 9px" }}>
               Open on Archive ↗
@@ -12529,7 +12546,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       {/* Premium + connected → SDK plays full tracks silently in the background, show a status chip */}
       {spotifyRender && spotifyReady && (
         <div className="spotify-dock" style={{ position: "fixed", bottom: 12, right: 12, zIndex: 40, display: "flex", alignItems: "center", gap: 8, background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: 999, padding: "8px 14px", fontFamily: MONO, fontSize: 12, color: C.up, boxShadow: "0 8px 30px rgba(0,0,0,0.5)", animation: spotifyAnim }}>
-          <span style={{ color: "#1DB954", fontSize: 13 }}>♫</span> Spotify · playing on Vantage Desk
+          <span style={{ color: "#1DB954", fontSize: 13 }}>♫</span> Spotify · playing on MarketMinds Desk
         </div>
       )}
       {/* not connected (or no Premium) → fall back to the no-login preview embed */}
@@ -12699,7 +12716,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       }}
       </Overlay>
 
-      {/* ===== in-app browser: opens a broker/site inside Vantage (with a tab fallback for framed-blocked sites) ===== */}
+      {/* ===== in-app browser: opens a broker/site inside MarketMinds (with a tab fallback for framed-blocked sites) ===== */}
       {/* This one fills the screen rather than sitting in the middle of it, so
           the backdrop drops its centring and the panel takes the space with
           flex: 1. The scale in the entrance would fight a full-bleed frame, but
@@ -12938,7 +12955,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
             <h2 className="v-deskhead-title" style={{ margin: 0, fontFamily: SANS, fontSize: 19, fontWeight: 700, letterSpacing: "-0.012em", color: C.text }}>{t("AI Desk")}</h2>
             <span className="v-deskhead-tools">
               {/* ONE utility menu — exports (Excel / Word / PowerPoint /
-                  report, all generated inside Vantage) on top, the desk's
+                  report, all generated inside MarketMinds) on top, the desk's
                   toggles below. It keeps the tour-export id: the tour step
                   spotlights this button when it talks about exporting, and the
                   exports are the first thing the open menu shows. */}
@@ -13523,7 +13540,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         )}
 
 
-        {/* --- Vantage Calendar (native, left rail) --- */}
+        {/* --- MarketMinds Calendar (native, left rail) --- */}
         {panels.calendar && (
           <div id="app-calendar-panel" style={{ background: C.panel, border: `1px solid ${C.panelEdge}`, borderRadius: R.lg, overflow: "hidden" }}>
             <div style={panelHead({ divider: false, pad: "16px 16px 4px" })}>
@@ -14051,8 +14068,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                           : liveLocked
                             ? <>Linking a live account is a <b style={{ color: C.accentText }}>{planLabel(FEATURE_PLAN.brokers)}</b> feature. {lockChip("brokers")}</>
                             : anyFirstParty
-                              ? t("Where Vantage already holds the brokerage's own key it links directly — no sign-in, nothing to type, nobody in the middle. Any other opens your brokerage's own sign-in through Plaid, which never shows Vantage your password and reads positions only.")
-                              : t("Opens your brokerage's own sign-in through Plaid. Vantage never sees your brokerage password, and reads positions only.")}
+                              ? t("Where MarketMinds already holds the brokerage's own key it links directly — no sign-in, nothing to type, nobody in the middle. Any other opens your brokerage's own sign-in through Plaid, which never shows MarketMinds your password and reads positions only.")
+                              : t("Opens your brokerage's own sign-in through Plaid. MarketMinds never sees your brokerage password, and reads positions only.")}
                       </div>
                       <button onClick={() => setBrokerSheet(false)} style={{ ...button("ghost", "sm"), width: "100%", padding: 7, borderRadius: R.sm, fontSize: 12 }}>{t("Cancel")}</button>
                     </div>
@@ -14434,9 +14451,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
              outline on a 480px box is the loudest thing on the screen and it
              was spent on a container. The reference has no border at all; this
              takes the standard hairline, and the green goes on the one button.
-           · The brand line was "VANTAGE · GETTING STARTED" in accent-coloured
+           · The brand line was "MARKETMINDS · GETTING STARTED" in accent-coloured
              uppercase sans at 700 — a wordmark from the previous system. The
-             reference sets the mark, "Vantage" in text at 700, and the eyebrow
+             reference sets the mark, "MarketMinds" in text at 700, and the eyebrow
              in mono. That is the block the auth gate and the homepage already
              use, so all three front doors now match.
            · Each row's call to action was accent TEXT with an arrow. Four
@@ -14461,8 +14478,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         panel={{ width: 600, maxWidth: "94vw", maxHeight: "92vh", overflowY: "auto", background: C.surface, border: `1px solid ${C.edge}`, borderRadius: R.xl, padding: 30, boxShadow: SHADOW.xl }}>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <VantageMark size={38} />
-              <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 25, letterSpacing: "-0.020em", color: C.text }}>Vantage</span>
+              <MarketMindsMark size={38} />
+              <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 25, letterSpacing: "-0.020em", color: C.text }}>MarketMinds</span>
               <span style={{ ...TYPE.eyebrow, color: C.faint }}>{t("Getting started")}</span>
             </div>
 
@@ -14772,7 +14789,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                           note={!brokerServer?.configured
                             ? t("No aggregator is configured on this server, so only demonstration books are available.")
                             : prefs.portfolioLive
-                              ? t("Your real accounts, read through Plaid. Positions only — Vantage never sees your brokerage password.")
+                              ? t("Your real accounts, read through Plaid. Positions only — MarketMinds never sees your brokerage password.")
                               : t("Demonstration books only — Connect links a labelled demo book instead of a real account.")}>
                           <Segmented label={t("Portfolio")} tone="accent" value={prefs.portfolioLive ? "live" : "demo"}
                             options={[["demo", t("Demo")], ["live", t("Live"), !planAllows("brokers")]]}
@@ -14993,7 +15010,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                         </SetRow>
 
                         <button
-                          onClick={() => speak("preview", `This is ${CHARACTERS.find(c => c.id === characterId)?.name} at the Vantage desk. ${selected} is currently trading at ${fmt(selectedRow?.price)}.`)}
+                          onClick={() => speak("preview", `This is ${CHARACTERS.find(c => c.id === characterId)?.name} at the MarketMinds desk. ${selected} is currently trading at ${fmt(selectedRow?.price)}.`)}
                           style={{ ...button("ghost", "sm"), alignSelf: "flex-start", color: C.accentText, borderColor: C.accentEdge, padding: "9px 16px", fontSize: 13 }}>
                           ▶ {t("Preview voice")}
                         </button>

@@ -1,5 +1,5 @@
 // ============================================================
-// Vantage backend — accounts, subscriptions, and Zoom + Google Meet.
+// MarketMinds backend — accounts, subscriptions, and Zoom + Google Meet.
 // Dependency-free (Node 18+ built-ins only). Holds every server-side secret
 // (OAuth client secrets, Stripe key) that a browser must never see, runs the
 // OAuth code flow, and stores per-user data in gitignored JSON files.
@@ -346,7 +346,7 @@ async function runMarketAgent(email) {
   if (!agent?.enabled) return { skipped: "disabled" };
   const quota = canUseAi(email); if (!quota.allowed) return { skipped: "quota" };
   const rows = await marketSnapshot(agent.symbols);
-  const prompt = `You are Vantage's market-brief agent. Create a concise, factual daily briefing from this quote snapshot only: ${JSON.stringify(rows)}. Explain notable moves and uncertainty. Do not give buy/sell recommendations, price targets, or imply real-time news. End with: \"Information only, not financial advice.\"`;
+  const prompt = `You are MarketMinds's market-brief agent. Create a concise, factual daily briefing from this quote snapshot only: ${JSON.stringify(rows)}. Explain notable moves and uncertainty. Do not give buy/sell recommendations, price targets, or imply real-time news. End with: \"Information only, not financial advice.\"`;
   const text = await askVertex(prompt);
   const usage = recordAiRun(email, prompt.length, "success", { model: VERTEX.model, trigger: "scheduled", symbols: rows.map(r => r.sym), outputChars: text.length });
   AI_USAGE[email].latestBrief = { at: new Date().toISOString(), symbols: rows.map(r => r.sym), text };
@@ -687,7 +687,7 @@ async function createZoom(email, topic) {
   const tok = await accessToken(email, "zoom");
   const r = await fetch("https://api.zoom.us/v2/users/me/meetings", {
     method: "POST", headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ topic: topic || "Vantage Market Briefing", type: 1, settings: { join_before_host: true } }), // type 1 = instant
+    body: JSON.stringify({ topic: topic || "MarketMinds Market Briefing", type: 1, settings: { join_before_host: true } }), // type 1 = instant
   });
   const j = await r.json();
   if (!r.ok) throw new Error(j.message || `Zoom HTTP ${r.status}`);
@@ -699,7 +699,7 @@ async function createGoogle(email, topic) {
   const r = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1", {
     method: "POST", headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      summary: topic || "Vantage Market Briefing",
+      summary: topic || "MarketMinds Market Briefing",
       start: { dateTime: start.toISOString() }, end: { dateTime: end.toISOString() },
       conferenceData: { createRequest: { requestId: crypto.randomUUID(), conferenceSolutionKey: { type: "hangoutsMeet" } } },
     }),
@@ -1339,7 +1339,7 @@ const routeRequest = async (req, res) => {
       // reached the server. A per-character bill needs an account to charge it
       // to, so identity is required here and nowhere else in the media routes.
       const email = emailFromReq(req, url);
-      if (!email) return send(res, 401, { error: "The studio voice needs a signed-in Vantage account." });
+      if (!email) return send(res, 401, { error: "The studio voice needs a signed-in MarketMinds account." });
       const user = USERS[email];
       if (user?.plan !== "desk") {
         return send(res, 403, { error: "The studio voice is a Trading Floor feature. Every plan can use your browser's own voice." });
@@ -1572,7 +1572,7 @@ const routeRequest = async (req, res) => {
             "Content-Type": "application/json",
             // Attribution headers, not secrets — OpenRouter uses them for rankings.
             "HTTP-Referer": APP_ORIGIN,
-            "X-Title": "Vantage",
+            "X-Title": "MarketMinds",
           },
           body: JSON.stringify({ model: useModel, stream: true, messages }),
         });
@@ -1818,7 +1818,7 @@ const routeRequest = async (req, res) => {
         // dead ?token=, gets this sentence as a bare page, and the server log
         // stays blank — indistinguishable from nobody having pressed connect.
         schwabLog(`connect refused — ${url.searchParams.get("token") ? "the token sent is not a live session" : "no token was sent (the browser thinks it is signed in and the API does not)"}`);
-        return send(res, 401, "Sign in to Vantage first, then connect your Schwab account.");
+        return send(res, 401, "Sign in to MarketMinds first, then connect your Schwab account.");
       }
       const gate = gateBrokerPlan(email);
       if (gate) return send(res, 403, gate.error);
@@ -1884,7 +1884,7 @@ const routeRequest = async (req, res) => {
 
     // Step 1 of a real link: mint a Plaid Link token. The browser opens Plaid's
     // own UI with it — the account credentials are typed into Plaid, never into
-    // Vantage and never into this server.
+    // MarketMinds and never into this server.
     if (p === "/api/brokers/link" && req.method === "POST") {
       // Configuration is checked BEFORE the session. "Sign in first" is the
       // wrong answer to a feature that is not switched on at all — it sends the
@@ -1901,7 +1901,7 @@ const routeRequest = async (req, res) => {
         // Stable per account so Plaid can recognise a returning user, and
         // hashed so their email is not a Plaid-side identifier.
         user: { client_user_id: crypto.createHash("sha256").update(email).digest("hex").slice(0, 32) },
-        client_name: "Vantage",
+        client_name: "MarketMinds",
         products: ["investments"],
         country_codes: ["US"],
         language: "en",
@@ -2223,7 +2223,7 @@ const routeRequest = async (req, res) => {
     if (login) {
       const prov = login[1], c = CFG[prov];
       const email = emailFromReq(req, url);
-      if (!email) return send(res, 401, "Sign in to Vantage first, then connect your account.");
+      if (!email) return send(res, 401, "Sign in to MarketMinds first, then connect your account.");
       if (!c.id || !c.secret) return send(res, 400, `${prov} is not configured — set ${prov.toUpperCase()}_CLIENT_ID / _SECRET in .env`);
       const state = crypto.randomBytes(16).toString("hex");
       pendingState.set(state, { prov, email }); // remember WHO is connecting, for the callback
@@ -2344,7 +2344,7 @@ function schwabCallbackServed() {
 
 server.listen(PORT, () => {
   const on = (k) => (CFG[k].id && CFG[k].secret) ? "configured" : "NOT configured (.env)";
-  console.log(`Vantage backend → ${PUBLIC_ORIGIN}`);
+  console.log(`MarketMinds backend → ${PUBLIC_ORIGIN}`);
   console.log(`  auth: on · billing: ${STRIPE.secret ? "configured" : "simulated (no STRIPE_SECRET_KEY)"}`);
   console.log(`  zoom: ${on("zoom")} · google: ${on("google")}`);
   console.log(`  brokerage links: ${plaidConfigured() ? `plaid (${PLAID.env})` : "demo book only (no PLAID_CLIENT_ID)"}`);

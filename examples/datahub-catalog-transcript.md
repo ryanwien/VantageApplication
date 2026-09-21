@@ -7,7 +7,7 @@ including the source badge and the latency the UI reported.
 **The badge is the thing to watch.** It names what actually produced the answer:
 
 - `DataHub + Ollama (local)` — the catalog returned the fact, and the local model phrased it.
-- `DataHub (catalog)` — **the model is not in the path at all.** On a confirmed gap, Vantage
+- `DataHub (catalog)` — **the model is not in the path at all.** On a confirmed gap, MarketMinds
   removes the language model entirely and prints the catalog's own facts, so there is nothing
   left to hallucinate with.
 

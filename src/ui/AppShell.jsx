@@ -3,7 +3,7 @@
 //  live status, account menu, and a command palette.
 //
 //  WHAT PROBLEM THIS SOLVES
-//  Vantage previously had no navigation at all. Every surface — charts, news,
+//  MarketMinds previously had no navigation at all. Every surface — charts, news,
 //  portfolio, the AI desk, games, settings — lived in one long scroll of
 //  toggleable panels, discoverable only by scrolling or by already knowing it
 //  was there. This shell gives the app a spine: a persistent place that says
@@ -22,7 +22,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { C, SANS, DISPLAY, TYPE, R, SP, SHADOW, Z, MOTION, button, chip } from "./theme.js";
-import VantageMark from "./VantageMark.jsx";
+import MarketMindsMark from "./MarketMindsMark.jsx";
 // `icon` on a nav section, a command or a menu item is a DeskIcon NAME, not a
 // glyph. It used to be a box-drawing character (◈ ▤ ▧ ◧ ▦ ◆ ⚙) rendered as
 // text, which at 13px on a dark bar is five slightly different grey
@@ -36,17 +36,17 @@ export function BrandMark({ compact = false, onClick }) {
   return (
     <button
       onClick={onClick}
-      aria-label="Vantage — go to the desk"
+      aria-label="MarketMinds — go to the desk"
       className="v-tap"
       style={{ display: "flex", alignItems: "center", gap: 9, background: "none", border: "none", cursor: "pointer", padding: 0 }}
     >
       {/* The mark: a V drawn as a price line, dot at the terminus — see
-          VantageMark for what it is meant to say. 26px is all a header logo
+          MarketMindsMark for what it is meant to say. 26px is all a header logo
           ever gets, so 26px is the size it has to survive. */}
-      <VantageMark size={26} />
+      <MarketMindsMark size={26} />
       {!compact && (
         <span className="v-grad-text" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 16, letterSpacing: "-0.025em" }}>
-          VANTAGE
+          MARKETMINDS
         </span>
       )}
     </button>

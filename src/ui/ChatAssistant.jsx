@@ -30,7 +30,7 @@ import { C, MONO, SANS, TYPE, R, SP, SHADOW, MOTION, button } from "./theme.js";
 import RichText from "./RichText.jsx";
 import Waveform from "./Waveform.jsx";
 import { Shuttle } from "./DeskMotion.jsx";
-import VantageMark from "./VantageMark.jsx";
+import MarketMindsMark from "./MarketMindsMark.jsx";
 
 // Green text, not a filled chip. Three bordered pills under every answer turned
 // a ten-turn thread into a wall of controls; as text they sit in the provenance
@@ -278,7 +278,7 @@ function EmptyState({ suggestions, onPick, subject }) {
   return (
     <div style={{ padding: `${SP[8]}px ${SP[4]}px`, textAlign: "center" }}>
       <div style={{ display: "grid", placeItems: "center", margin: "0 auto 14px" }}>
-        <VantageMark size={46} radius={11} />
+        <MarketMindsMark size={46} radius={11} />
       </div>
       <div style={{ ...TYPE.title, fontSize: 16, marginBottom: 6 }}>Ask the desk</div>
       <div style={{ ...TYPE.bodySm, color: C.muted, maxWidth: 340, margin: "0 auto 18px" }}>
@@ -500,7 +500,7 @@ export default function ChatAssistant({
           padding: "11px 14px", borderBottom: `1px solid ${C.edge}`,
           background: C.surfaceSunken, flexShrink: 0,
         }}>
-          <VantageMark size={20} radius={6} />
+          <MarketMindsMark size={20} radius={6} />
           <span style={{ ...TYPE.eyebrow, color: C.muted }}>AI Assistant</span>
           {subject && (
             <span style={{ ...TYPE.num, fontSize: 12, color: C.accentSoft, background: C.accentGlow, border: `1px solid ${C.accentEdge}`, borderRadius: R.pill, padding: "2px 9px" }}>

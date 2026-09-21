@@ -110,7 +110,7 @@ export default {
   "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Noch etwas. Meine Antworten kommen von externen Modellen auf deine Rechnung, sie brauchen also deinen Schlüssel. Alles andere ist optional. Das war die Tour!",
   // settings footer + MEET tab
   "Close": "Schließen", "Apply": "Übernehmen",
-  "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Starten Sie sofort ein neues Meeting in einem Browser-Tab (nutzt Ihre bestehende Anmeldung) und teilen Sie dann den Vantage-Bildschirm. Keine Schlüssel, kein OAuth.",
+  "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share MarketMinds. No keys, no OAuth.": "Starten Sie sofort ein neues Meeting in einem Browser-Tab (nutzt Ihre bestehende Anmeldung) und teilen Sie dann den MarketMinds-Bildschirm. Keine Schlüssel, kein OAuth.",
   "New Google Meet": "Neues Google Meet", "New Zoom meeting": "Neues Zoom-Meeting",
   "Join": "Beitreten", "end": "beenden",
   "paste your meeting link to pin it as LIVE…": "Meeting-Link einfügen, um ihn als LIVE anzuheften…",
@@ -275,7 +275,7 @@ export default {
   "The market,": "Der Markt,",
   "Type AMD and press Enter. Quote, chart, and a spoken read of the session in one motion.": "Tippe AMD und drück Enter. Kurs, Chart und eine gesprochene Lesung der Sitzung in einem Zug.",
   "Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know.": "Tippe ein Kürzel und bekomm Kurs, Chart und eine gesprochene Lesung der Sitzung — von einer Moderation, die sagt, wenn sie es nicht weiß.",
-  "Vantage — an AI market desk. Not investment advice.": "Vantage — ein KI-Marktdesk. Keine Anlageberatung.",
+  "MarketMinds — an AI market desk. Not investment advice.": "MarketMinds — ein KI-Marktdesk. Keine Anlageberatung.",
   "forever": "dauerhaft",
   "on air.": "auf Sendung.",
   "{who} is reading this answer": "{who} liest diese Antwort",

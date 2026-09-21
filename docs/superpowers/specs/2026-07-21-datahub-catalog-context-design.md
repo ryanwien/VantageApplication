@@ -1,4 +1,4 @@
-# DataHub catalog context for the Vantage desk agent
+# DataHub catalog context for the MarketMinds desk agent
 
 **Date:** 2026-07-21
 **Status:** approved, pending implementation plan
@@ -6,7 +6,7 @@
 
 ## Context
 
-Vantage's AI desk is already an agent: `askDesk` (`React.jsx:6218`) is a command pipeline
+MarketMinds's AI desk is already an agent: `askDesk` (`React.jsx:6218`) is a command pipeline
 that matches intents (export, full chart, video, market events, portfolio, price alerts,
 calendar) and falls through to an LLM (`askOllama` / `askOpenAICompat` / `askGemini`) whose
 answer the anchor reads aloud.
@@ -17,7 +17,7 @@ that, sourced from a real DataHub instance.
 
 **Why:** The Agent Hackathon's thesis is that agents do real work only when they have
 complete context on organizational data, and DataHub is the context platform that supplies
-it. Vantage is a genuine tool-using agent but had **zero** DataHub integration. This closes
+it. MarketMinds is a genuine tool-using agent but had **zero** DataHub integration. This closes
 that gap honestly rather than claiming a fit that does not exist.
 
 ## Goals

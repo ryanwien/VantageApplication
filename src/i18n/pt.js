@@ -109,7 +109,7 @@ export default {
   "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Uma última coisa. As minhas respostas vêm de modelos externos faturados à tua conta, por isso precisam da tua chave. Tudo o resto é opcional. Fim da visita!",
   // settings footer + MEET tab
   "Close": "Fechar", "Apply": "Aplicar",
-  "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Inicie instantaneamente uma nova reunião num separador do navegador (usa a sessão que já tem iniciada) e depois partilhe o ecrã do Vantage. Sem chaves, sem OAuth.",
+  "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share MarketMinds. No keys, no OAuth.": "Inicie instantaneamente uma nova reunião num separador do navegador (usa a sessão que já tem iniciada) e depois partilhe o ecrã do MarketMinds. Sem chaves, sem OAuth.",
   "New Google Meet": "Novo Google Meet", "New Zoom meeting": "Nova reunião Zoom",
   "Join": "Entrar", "end": "terminar",
   "paste your meeting link to pin it as LIVE…": "cole a ligação da sua reunião para a fixar como AO VIVO…",
@@ -274,7 +274,7 @@ export default {
   "The market,": "O mercado,",
   "Type AMD and press Enter. Quote, chart, and a spoken read of the session in one motion.": "Escreve AMD e carrega em Enter. Cotação, gráfico e uma leitura falada da sessão de uma só vez.",
   "Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know.": "Escreve um símbolo e recebe a cotação, o gráfico e uma leitura falada da sessão — de um apresentador que te diz quando não sabe.",
-  "Vantage — an AI market desk. Not investment advice.": "Vantage — uma bancada de mercados com IA. Não é aconselhamento de investimento.",
+  "MarketMinds — an AI market desk. Not investment advice.": "MarketMinds — uma bancada de mercados com IA. Não é aconselhamento de investimento.",
   "forever": "para sempre",
   "on air.": "no ar.",
   "{who} is reading this answer": "{who} está a ler esta resposta",

@@ -6,7 +6,7 @@
 
 ## Context
 
-Vantage's chart panel (`React.jsx` ~7650) renders the selected symbol's session tape as a
+MarketMinds's chart panel (`React.jsx` ~7650) renders the selected symbol's session tape as a
 Recharts area chart — 390 seeded one-minute bars in demo mode, an accumulating tape of 15-second
 Finnhub quote polls in live mode. The app already has a one-shot price-alert system
 (`React.jsx:5086`): alerts persist in localStorage, fire a banner + sting, and the anchor breaks

@@ -110,7 +110,7 @@ export default {
   "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Una última cosa. Mis respuestas vienen de modelos externos facturados a tu cuenta, así que necesitan tu clave. Todo lo demás es opcional. ¡Fin del recorrido!",
   // settings footer + MEET tab
   "Close": "Cerrar", "Apply": "Aplicar",
-  "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share Vantage. No keys, no OAuth.": "Inicia al instante una nueva reunión en una pestaña del navegador (usa la sesión que ya tengas iniciada) y comparte la pantalla de Vantage. Sin claves, sin OAuth.",
+  "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share MarketMinds. No keys, no OAuth.": "Inicia al instante una nueva reunión en una pestaña del navegador (usa la sesión que ya tengas iniciada) y comparte la pantalla de MarketMinds. Sin claves, sin OAuth.",
   "New Google Meet": "Nueva Google Meet", "New Zoom meeting": "Nueva reunión de Zoom",
   "Join": "Unirse", "end": "finalizar",
   "paste your meeting link to pin it as LIVE…": "pega el enlace de tu reunión para fijarla como EN DIRECTO…",
@@ -275,7 +275,7 @@ export default {
   "The market,": "El mercado,",
   "Type AMD and press Enter. Quote, chart, and a spoken read of the session in one motion.": "Escribe AMD y pulsa Enter. Cotización, gráfico y una lectura hablada de la sesión de una sola vez.",
   "Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know.": "Escribe un símbolo y obtén la cotización, el gráfico y una lectura hablada de la sesión, de un presentador que te dice cuándo no lo sabe.",
-  "Vantage — an AI market desk. Not investment advice.": "Vantage: un escritorio de mercados con IA. No es asesoramiento de inversión.",
+  "MarketMinds — an AI market desk. Not investment advice.": "MarketMinds: un escritorio de mercados con IA. No es asesoramiento de inversión.",
   "forever": "para siempre",
   "on air.": "en directo.",
   "{who} is reading this answer": "{who} está leyendo esta respuesta",

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Vantage — AMD Radeon Cloud one-shot setup (Track 2, AMD AI DevMaster)
+# MarketMinds — AMD Radeon Cloud one-shot setup (Track 2, AMD AI DevMaster)
 # Run inside a Radeon Cloud instance (JupyterLab terminal or SSH):
 #   bash scripts/radeon-setup.sh
 # Installs Ollama (ROCm backend) + llama3.1, serves it with the browser
-# origin allowed, installs Node 20, and starts Vantage. Then open:
+# origin allowed, installs Node 20, and starts MarketMinds. Then open:
 #   http://127.0.0.1:5173/?local=1
 # From your laptop, tunnel first:  ssh -L 5173:localhost:5173 <user>@<host> -p <port>
 # ============================================================================
@@ -36,18 +36,18 @@ step "3/6 Pull the model (llama3.1 8B Q4_K_M — ~4.9 GB, one-time)"
 ollama pull llama3.1
 # Optional latency-demo model (~1.3 GB):  ollama pull llama3.2:1b
 
-step "4/6 Node 20 (Vantage needs Node 20+)"
+step "4/6 Node 20 (MarketMinds needs Node 20+)"
 if ! command -v node >/dev/null 2>&1 || [ "$(node -e 'process.stdout.write(process.versions.node.split(".")[0])')" -lt 20 ]; then
   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
   sudo apt-get install -y nodejs
 fi
 node --version
 
-step "5/6 Install deps + start Vantage"
+step "5/6 Install deps + start MarketMinds"
 npm install
 nohup npm run dev -- --host 0.0.0.0 --port 5173 > /tmp/vantage.log 2>&1 &
 sleep 5
-curl -sf -o /dev/null http://localhost:5173/ && echo "Vantage serving on :5173"
+curl -sf -o /dev/null http://localhost:5173/ && echo "MarketMinds serving on :5173"
 
 step "6/6 PROOF — the demo claim depends on this line reading '100% GPU'"
 curl -s http://localhost:11434/api/chat -d '{"model":"llama3.1","stream":false,"messages":[{"role":"user","content":"say OK"}]}' >/dev/null

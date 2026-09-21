@@ -12,7 +12,7 @@
 //       Access token lives 30 MINUTES; the refresh token lives 7 DAYS. Both
 //       numbers are short enough to be a design constraint rather than a
 //       detail: a link refreshes its access token on almost every use, and a
-//       user who does not open Vantage for a week has to reconnect. The server
+//       user who does not open MarketMinds for a week has to reconnect. The server
 //       stores both and re-auths on demand.
 //    2. GET /trader/v1/accounts/accountNumbers  →  the account HASHES.
 //       This is the step that is easy to miss and fails confusingly: the API

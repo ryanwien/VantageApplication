@@ -9,7 +9,7 @@
 Bundle A (merged) added the local-inference proof UI. Bundle B adds four
 user-preference settings, chosen as the *honest* subset of a larger trading-settings
 brainstorm. The rejected items (order-execution defaults, one-click trading, slippage
-tolerance, extended-hours trading) were dropped because Vantage has **no order-execution,
+tolerance, extended-hours trading) were dropped because MarketMinds has **no order-execution,
 brokerage, or paper-trading code** (verified: zero matches for `placeOrder`/`submitOrder`/
 `slippage`/etc.), and building settings for a trading engine that doesn't exist would imply
 a capability the app lacks — the same false-claim problem Bundle A's honesty work fixed.
@@ -30,7 +30,7 @@ Existing hooks this bundle builds on:
 
 ## Non-goals (explicit, for honesty)
 
-- **No** "real-time streaming" refresh label. Vantage polls Finnhub's rate-limited REST
+- **No** "real-time streaming" refresh label. MarketMinds polls Finnhub's rate-limited REST
   free tier; a "real-time" option that is actually 1s polling would be a false claim.
   True WebSocket streaming is a separate future integration, out of scope here.
 - **No** filled-order or margin-call notifications (no trading engine).

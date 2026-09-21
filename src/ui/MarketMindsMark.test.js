@@ -1,27 +1,27 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 
-// The mark is drawn twice: as SVG in VantageMark.jsx for the DOM, and again with
-// canvas calls in React.jsx (drawVantageMark) for the exported badge and the
+// The mark is drawn twice: as SVG in MarketMindsMark.jsx for the DOM, and again with
+// canvas calls in React.jsx (drawMarketMindsMark) for the exported badge and the
 // in-scene station ident, because canvas cannot render React. A comment asks
 // whoever edits one to edit the other, which is exactly the kind of instruction
 // that gets missed — and the failure is silent, because nothing renders both at
 // once. Nudge the SVG's dot two pixels and the exported logo keeps the old one
 // forever. This pins them together instead.
-const svg = readFileSync(new URL("./VantageMark.jsx", import.meta.url), "utf8");
+const svg = readFileSync(new URL("./MarketMindsMark.jsx", import.meta.url), "utf8");
 const app = readFileSync(new URL("../../React.jsx", import.meta.url), "utf8");
 // Bounded to the function body — React.jsx is ten thousand lines of other
 // coordinates and colours, and an unbounded slice silently matches all of them.
-const canvasStart = app.indexOf("function drawVantageMark");
+const canvasStart = app.indexOf("function drawMarketMindsMark");
 const canvas = app.slice(canvasStart, app.indexOf("\n}", canvasStart));
 
 const num = (src, re, name) => {
   const m = src.match(re);
-  if (!m) throw new Error(`VantageMark drift check: could not read ${name} — the shape of the source changed, so update this test alongside it.`);
+  if (!m) throw new Error(`MarketMindsMark drift check: could not read ${name} — the shape of the source changed, so update this test alongside it.`);
   return m.slice(1).map(Number);
 };
 
-describe("VantageMark: the SVG and its canvas twin", () => {
+describe("MarketMindsMark: the SVG and its canvas twin", () => {
   it("share the same tile — position, size and corner radius", () => {
     // SVG rx is radius - 0.75 (the rect is inset by half the 1.5 stroke); the
     // component's default radius is 8, so the canvas literal should be 7.25.

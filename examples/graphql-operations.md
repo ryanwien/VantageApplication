@@ -1,4 +1,4 @@
-# The queries Vantage can send — the complete list
+# The queries MarketMinds can send — the complete list
 
 These three operations are the **entire** reachable surface of the DataHub integration.
 They are quoted from [`src/datahub/catalog.js`](../src/datahub/catalog.js) and are the actual
@@ -28,7 +28,7 @@ Gate: `isKnownOp` — [`src/datahub/catalog.js:129`](../src/datahub/catalog.js#L
 Find a dataset by name. Capped at 5 results.
 
 ```graphql
-query VantageSearch($q: String!) {
+query MarketMindsSearch($q: String!) {
   searchAcrossEntities(input: { types: [DATASET], query: $q, start: 0, count: 5 }) {
     searchResults { entity { urn ... on Dataset {
       name
@@ -46,7 +46,7 @@ Variables: `{ q: <search term> }`
 Fetch one dataset by URN — description, platform, owners, schema.
 
 ```graphql
-query VantageEntity($urn: String!) {
+query MarketMindsEntity($urn: String!) {
   dataset(urn: $urn) {
     urn
     name
@@ -63,7 +63,7 @@ Variables: `{ urn: <dataset urn> }`
 Walk the lineage graph in one direction. Capped at 10 results.
 
 ```graphql
-query VantageLineage($urn: String!, $direction: LineageDirection!) {
+query MarketMindsLineage($urn: String!, $direction: LineageDirection!) {
   searchAcrossLineage(input: { urn: $urn, direction: $direction, start: 0, count: 10 }) {
     searchResults { entity { urn ... on Dataset { name platform { name } } } }
   }
