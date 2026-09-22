@@ -32,7 +32,7 @@ export const WEAK_PASSWORDS = new Set([
   "password", "password1", "password123", "12345678", "123456789", "1234567890",
   "qwerty123", "qwertyuiop", "iloveyou", "admin123", "welcome1", "letmein1",
   "abc12345", "trustno1", "monkey123", "sunshine1", "princess", "football",
-  "baseball", "dragon123", "passw0rd", "vantage1", "vantage123", "changeme",
+  "baseball", "dragon123", "passw0rd", "marketnarrator1", "marketnarrator123", "narrator123", "changeme",
 ]);
 
 /**

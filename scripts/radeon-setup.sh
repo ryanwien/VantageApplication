@@ -45,7 +45,7 @@ node --version
 
 step "5/6 Install deps + start MarketNarrator"
 npm install
-nohup npm run dev -- --host 0.0.0.0 --port 5173 > /tmp/vantage.log 2>&1 &
+nohup npm run dev -- --host 0.0.0.0 --port 5173 > /tmp/marketnarrator.log 2>&1 &
 sleep 5
 curl -sf -o /dev/null http://localhost:5173/ && echo "MarketNarrator serving on :5173"
 

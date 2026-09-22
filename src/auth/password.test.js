@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { passwordCheck, PW_MIN } from "./password.js";
+import { readFileSync } from "node:fs";
+import { passwordCheck, PW_MIN, WEAK_PASSWORDS } from "./password.js";
 
 describe("passwordCheck — the blocking gate", () => {
   it("rejects an empty password", () => {
@@ -89,5 +90,39 @@ describe("passwordCheck — the advisory score", () => {
       labels.add(r.label);
     }
     expect(labels.size).toBeGreaterThan(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The blocklist's own comment says it carries "the ones this app's own name
+// invites". That is a promise about a moving target: the app has been renamed
+// twice, and each time the entries went stale silently — the list kept guarding
+// the previous product name while users were being handed the new one. Nothing
+// failed, because a blocklist that blocks the wrong word still blocks something.
+//
+// This derives the name from package.json rather than hardcoding it, so the
+// next rename either updates the list or turns this red.
+// ---------------------------------------------------------------------------
+describe("the blocklist tracks the product's actual name", () => {
+  const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
+  // "marketnarrator-dashboard" -> "marketnarrator"
+  const product = pkg.name.split("-")[0];
+
+  it("derives a product name worth guarding", () => {
+    expect(product.length).toBeGreaterThan(3);
+  });
+
+  it("rejects the product name with the suffixes people actually append", () => {
+    for (const pw of [`${product}1`, `${product}123`]) {
+      const r = passwordCheck(pw);
+      expect(r.ok, `${pw} should be refused as a guessable password`).toBe(false);
+    }
+  });
+
+  it("carries no entry for a name the product no longer has", () => {
+    // Left behind after a rename, a stale entry is dead weight that reads as
+    // protection. Anything in the list shaped like a former brand fails here.
+    const stale = [...WEAK_PASSWORDS].filter(p => /^(vantage|marketminds|tape)\d*$/.test(p));
+    expect(stale).toEqual([]);
   });
 });

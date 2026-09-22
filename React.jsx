@@ -9769,7 +9769,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       apiKey: (m.id === "openrouter" || m.id === "gemini") ? "" : m.apiKey,
       ...(localDemo ? {} : { enabled: m.id === "openrouter" }),
     })));
-    if (dropped) console.info(`[vantage] ${dropped} stored provider key entr${dropped === 1 ? "y" : "ies"} removed — the server holds the keys now.`);
+    if (dropped) console.info(`[marketnarrator] ${dropped} stored provider key entr${dropped === 1 ? "y" : "ies"} removed — the server holds the keys now.`);
   }, []);
 
 
@@ -11171,7 +11171,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
 
     // "What is MarketNarrator?" is answered by the product, not by a model — see
     // MARKETNARRATOR_ABOUT for why.
-    if (/\b(what|what's|whats|tell me about|explain)\b.{0,26}\b(vantage|this (app|application|platform|tool|site|thing)|am i (looking at|using))\b/i.test(q) || /^\s*(about|what is this)\s*\??\s*$/i.test(q)) {
+    if (/\b(what|what's|whats|tell me about|explain)\b.{0,26}\b(market ?narrator|this (app|application|platform|tool|site|thing)|am i (looking at|using))\b/i.test(q) || /^\s*(about|what is this)\s*\??\s*$/i.test(q)) {
       pushDeskAnswer(MARKETNARRATOR_ABOUT);
       return; // desk-handled — no model fan-out
     }
