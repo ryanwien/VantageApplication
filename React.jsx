@@ -267,15 +267,15 @@ function drawMarketNarratorMark(ctx, x, y, size, tile = "#46a758", ink = "#0b0e1
   ctx.fillStyle = tile; ctx.fill();
   ctx.strokeStyle = edge; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.strokeStyle = ink; ctx.lineWidth = 3.1; ctx.lineCap = "round"; ctx.lineJoin = "round";
-  ctx.beginPath(); ctx.moveTo(8, 10); ctx.lineTo(16, 23); ctx.lineTo(24, 10); ctx.stroke();
-  ctx.beginPath(); ctx.arc(24, 10, 2.8, 0, Math.PI * 2); ctx.fillStyle = dot; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(8, 23); ctx.lineTo(8, 9); ctx.lineTo(24, 23); ctx.lineTo(24, 9); ctx.stroke();
+  ctx.beginPath(); ctx.arc(24, 9, 2.8, 0, Math.PI * 2); ctx.fillStyle = dot; ctx.fill();
   ctx.restore();
 }
 
 // MARKETNARRATOR wordmark badge (PNG data URL) for branding exported documents — built once, cached
 const WORDMARK = "MARKETNARRATOR";
 const WORDMARK_FONT = "700 34px 'Schibsted Grotesk', Arial, sans-serif";
-const SUBMARK = "MARKET INTELLIGENCE";
+const SUBMARK = "A SPOKEN READ OF THE SESSION";
 const SUBMARK_FONT = "12px monospace";
 let _logoCache = null;
 function makeLogoDataUrl() {
