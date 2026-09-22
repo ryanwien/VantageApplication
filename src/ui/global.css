@@ -1,5 +1,5 @@
 /* ============================================================
-   MarketMinds global stylesheet — the things inline styles cannot do:
+   MarketNarrator global stylesheet — the things inline styles cannot do:
    resets, fonts, scrollbars, focus rings, selection, keyframes.
 
    Everything here is deliberately low-specificity so component-level
@@ -1019,7 +1019,7 @@ html.v-scrollfx .v-scrollin.v-now { opacity: 1; animation: none; }
 }
 
 /* ---------- the mark comes on air ----------
-   The logo performing its own description, once, at arrival: MarketMindsMark.jsx
+   The logo performing its own description, once, at arrival: MarketNarratorMark.jsx
    calls the glyph "a V drawn as a price line, with a dot at its right
    terminus", so on the landing page the line PLOTS — down the left arm, up
    the right — and the dot strikes on the frame the stroke reaches it, one ink

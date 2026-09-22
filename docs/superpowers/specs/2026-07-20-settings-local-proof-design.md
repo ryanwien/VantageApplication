@@ -6,7 +6,7 @@
 
 ## Context
 
-The MarketMinds settings page has six tabs (`ACCOUNT · START · DATA · AI · VOICE · MEET`,
+The MarketNarrator settings page has six tabs (`ACCOUNT · START · DATA · AI · VOICE · MEET`,
 defined at `React.jsx:7837`). The START tab already does onboarding well: a one-key
 path, a status board of ●/○ chips that deep-link into the owning tab, and full i18n.
 

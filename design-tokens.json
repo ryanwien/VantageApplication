@@ -1,5 +1,5 @@
 {
-  "$description": "MarketMinds design tokens — W3C Design Tokens format, generated from src/ui/theme.js (MarketMinds redesign handoff). Import into Figma with a variables-import plugin (e.g. 'Tokens Studio' or 'Variables Import/Export') to get an editable variable collection. theme.js stays the source of truth: regenerate this file when the theme changes.",
+  "$description": "MarketNarrator design tokens — W3C Design Tokens format, generated from src/ui/theme.js (MarketNarrator redesign handoff). Import into Figma with a variables-import plugin (e.g. 'Tokens Studio' or 'Variables Import/Export') to get an editable variable collection. theme.js stays the source of truth: regenerate this file when the theme changes.",
   "surface": {
     "$description": "Note that 'alt' is DARKER than the card surface, not lighter: dropdowns and floating chips read as cut into the page rather than lifted off it, so ordering these by brightness would misrepresent the ladder.",
     "base":   { "$type": "color", "$value": "#0b0e13", "$description": "Page and app background" },

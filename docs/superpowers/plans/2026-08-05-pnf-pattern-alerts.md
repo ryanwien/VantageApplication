@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** A Point & Figure chart mode in MarketMinds's main chart panel with an 18-pattern StockCharts-style detector, plus watchlist pattern scanning wired into the existing anchor break-in alerts and a P&F SIGNALS rail panel.
+**Goal:** A Point & Figure chart mode in MarketNarrator's main chart panel with an 18-pattern StockCharts-style detector, plus watchlist pattern scanning wired into the existing anchor break-in alerts and a P&F SIGNALS rail panel.
 
 **Architecture:** Two new pure modules (`src/pnf/pnf.js` engine, `src/pnf/patterns.js` detector) hold every piece of logic that can be wrong, pinned by Vitest. `React.jsx` only feeds the session tape in and renders what comes out: a LINE / P&F header toggle, an inline-SVG chart, a scanner effect reusing `pushBreaking`, and one new rail panel.
 

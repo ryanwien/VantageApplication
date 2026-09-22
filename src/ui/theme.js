@@ -1,5 +1,5 @@
 // ============================================================
-//  MarketMinds design system — the single source of truth for colour, type,
+//  MarketNarrator design system — the single source of truth for colour, type,
 //  spacing, radius and elevation.
 //
 //  WHY THIS FILE EXISTS
@@ -8,7 +8,7 @@
 //  9,000-line find-and-replace. Now the palette is data: change a value here
 //  and every panel, button and chart in the app follows.
 //
-//  THE LOOK — the MarketMinds redesign (see the handoff README + reference file)
+//  THE LOOK — the MarketNarrator redesign (see the handoff README + reference file)
 //  Near-black canvas (#0b0e13) with a surface ladder, a cool grey text ramp
 //  topping out at #e6e8eb (there is no pure white in this system), hairline
 //  borders, and ONE accent: green #46a758 for the single primary action and

@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- **No "real-time streaming" label anywhere.** Refresh options are `Manual · 5s · 15s · 30s`; copy says "refresh interval". MarketMinds polls a rate-limited REST API; a streaming claim would be false.
+- **No "real-time streaming" label anywhere.** Refresh options are `Manual · 5s · 15s · 30s`; copy says "refresh interval". MarketNarrator polls a rate-limited REST API; a streaming claim would be false.
 - **Notifications are in-app only, price-triggers + breaking-news only.** No SMS/email, no filled-order/margin-call types (no delivery backend, no trading engine).
 - **Preferences persist to `localStorage["tape-prefs"]`** as one JSON object; `tape-breaking` migrates in on first load.
 - **Colorblind palette:** up `#3B82F6`, down `#F59E0B`. **Default palette:** up `#2FD37A`, down `#F6465D` (the existing `C.up`/`C.down` at `React.jsx:77-78`).

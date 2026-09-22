@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Give MarketMinds's desk agent real DataHub context — search, schema, ownership, and lineage — so catalog questions are answered from a live metadata graph and read on air.
+**Goal:** Give MarketNarrator's desk agent real DataHub context — search, schema, ownership, and lineage — so catalog questions are answered from a live metadata graph and read on air.
 
 **Architecture:** All derivation lives in one pure, Vitest-tested ESM module (`src/datahub/catalog.js`). The dependency-free Node backend imports that module's query definitions and proxies them to DataHub GMS with a server-side token. `askDesk` gains one intent branch that fetches context and hands it to the existing model cascade.
 
@@ -231,7 +231,7 @@ Expected: FAIL — `GRAPHQL_OPS` is not exported.
 Append to `src/datahub/catalog.js`:
 
 ```js
-const SEARCH_QUERY = `query MarketMindsSearch($q: String!) {
+const SEARCH_QUERY = `query MarketNarratorSearch($q: String!) {
   searchAcrossEntities(input: { types: [DATASET], query: $q, start: 0, count: 5 }) {
     searchResults { entity { urn ... on Dataset {
       name
@@ -241,7 +241,7 @@ const SEARCH_QUERY = `query MarketMindsSearch($q: String!) {
   }
 }`;
 
-const ENTITY_QUERY = `query MarketMindsEntity($urn: String!) {
+const ENTITY_QUERY = `query MarketNarratorEntity($urn: String!) {
   dataset(urn: $urn) {
     urn
     name
@@ -252,7 +252,7 @@ const ENTITY_QUERY = `query MarketMindsEntity($urn: String!) {
   }
 }`;
 
-const LINEAGE_QUERY = `query MarketMindsLineage($urn: String!, $direction: LineageDirection!) {
+const LINEAGE_QUERY = `query MarketNarratorLineage($urn: String!, $direction: LineageDirection!) {
   searchAcrossLineage(input: { urn: $urn, direction: $direction, start: 0, count: 10 }) {
     searchResults { entity { urn ... on Dataset { name platform { name } } } }
   }

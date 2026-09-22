@@ -65,7 +65,7 @@ export function detectCatalogIntent(text) {
   return { kind, term };
 }
 
-const SEARCH_QUERY = `query MarketMindsSearch($q: String!) {
+const SEARCH_QUERY = `query MarketNarratorSearch($q: String!) {
   searchAcrossEntities(input: { types: [DATASET], query: $q, start: 0, count: 5 }) {
     searchResults { entity { urn ... on Dataset {
       name
@@ -75,7 +75,7 @@ const SEARCH_QUERY = `query MarketMindsSearch($q: String!) {
   }
 }`;
 
-const ENTITY_QUERY = `query MarketMindsEntity($urn: String!) {
+const ENTITY_QUERY = `query MarketNarratorEntity($urn: String!) {
   dataset(urn: $urn) {
     urn
     name
@@ -86,7 +86,7 @@ const ENTITY_QUERY = `query MarketMindsEntity($urn: String!) {
   }
 }`;
 
-const LINEAGE_QUERY = `query MarketMindsLineage($urn: String!, $direction: LineageDirection!) {
+const LINEAGE_QUERY = `query MarketNarratorLineage($urn: String!, $direction: LineageDirection!) {
   searchAcrossLineage(input: { urn: $urn, direction: $direction, start: 0, count: 10 }) {
     searchResults { entity { urn ... on Dataset { name platform { name } } } }
   }

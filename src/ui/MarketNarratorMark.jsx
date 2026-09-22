@@ -1,5 +1,5 @@
 // ============================================================
-//  MarketMindsMark — the product's logo.
+//  MarketNarratorMark — the product's logo.
 //
 //  WHAT IT IS
 //  A V drawn as a price line, with a dot at its right terminus.
@@ -36,7 +36,7 @@
 //  WHY A COMPONENT
 //  The mark appeared in five places as five hand-rolled spans, which is how a
 //  logo quietly drifts into five slightly different logos. One source now.
-//  The canvas twin lives in React.jsx (drawMarketMindsMark) for the exporters and
+//  The canvas twin lives in React.jsx (drawMarketNarratorMark) for the exporters and
 //  the broadcast scenes, which cannot render React — if the geometry below
 //  changes, change that too.
 //
@@ -59,7 +59,7 @@ const EDGE = "#46a758";   // no hairline: a filled tile needs no outline to sit 
 const INK = "#0b0e13";    // near-black glyph, 6.3:1 on the tile
 const DOT = "#4cc38a";    // accent light — the redesign's on-air colour
 
-export default function MarketMindsMark({
+export default function MarketNarratorMark({
   size = 26, tile = TILE, edge = EDGE, ink = INK, dot = DOT, radius = 8, title, ignite = false,
 }) {
   return (

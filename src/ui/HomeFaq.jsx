@@ -50,7 +50,7 @@ export default function HomeFaq({ t = (x) => x }) {
     ],
     [
       t("Is any of this investment advice?"),
-      t("No. MarketMinds reports the session and reads it back to you. It does not tell you what to buy, and nothing in it should be treated as a recommendation."),
+      t("No. MarketNarrator reports the session and reads it back to you. It does not tell you what to buy, and nothing in it should be treated as a recommendation."),
     ],
   ];
 

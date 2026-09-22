@@ -1,4 +1,4 @@
-# Examples — artifacts MarketMinds produces
+# Examples — artifacts MarketNarrator produces
 
 Everything here is **readable in the GitHub file viewer**. Nothing needs to be run,
 downloaded, cloned, or opened in Office to judge it.
@@ -44,7 +44,7 @@ failure this project exists to prevent.
 
 ## What is NOT here, and why
 
-MarketMinds also exports **Excel (.xlsx), Word (.docx) and PowerPoint (.pptx)**. Those are
+MarketNarrator also exports **Excel (.xlsx), Word (.docx) and PowerPoint (.pptx)**. Those are
 deliberately not committed: they are binary, so a judge would have to download them and open
 Office — the opposite of what this folder is for. The export code is short and readable
 instead — [`exporters.js`](../exporters.js): `exportExcel` ([56](../exporters.js#L56)),

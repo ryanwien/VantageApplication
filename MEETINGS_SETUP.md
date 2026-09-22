@@ -1,4 +1,4 @@
-# MarketMinds Meetings — Zoom & Google Meet setup
+# MarketNarrator Meetings — Zoom & Google Meet setup
 
 Create real Zoom / Google Meet meetings from the dashboard. Because a browser can't safely
 hold OAuth **secrets**, this runs through a tiny local backend (`server/index.js`, no npm

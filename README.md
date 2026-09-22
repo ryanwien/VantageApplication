@@ -1,4 +1,4 @@
-# MarketMinds
+# MarketNarrator
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
@@ -26,7 +26,7 @@ optional — the app is fully usable without it.
 
 ```mermaid
 flowchart TD
-    U([User]) --> UI["MarketMinds SPA<br/>runs in the browser"]
+    U([User]) --> UI["MarketNarrator SPA<br/>runs in the browser"]
 
     UI --> DESK{AI desk}
     DESK -->|cloud key| CLOUD["OpenRouter / Claude<br/>OpenAI / Gemini"]
@@ -97,7 +97,7 @@ never see, and adds three independent layers — **each optional**:
 |-------|--------------|-------|
 | **Accounts** (`/api/auth/*`) | Real sign-up / login with scrypt-hashed passwords + session tokens | nothing (works as soon as the backend runs) |
 | **Billing** (`/api/billing/*`) | Real **Stripe Checkout** for paid plans (test mode) | your own Stripe test keys |
-| **Hosted AI** (`/api/ai/brief`) | MarketMinds-operated Gemini market briefs, metering, and audit logs | Vertex AI service account |
+| **Hosted AI** (`/api/ai/brief`) | MarketNarrator-operated Gemini market briefs, metering, and audit logs | Vertex AI service account |
 
 If the backend isn't running, the app falls back gracefully: accounts run **client-side** in
 localStorage and paid plans unlock as a clearly labelled **simulation**.
@@ -214,7 +214,7 @@ Like everything else here, this has two tiers:
    the anchor's spoken brief. Works offline and with the server stopped, which is the point.
 2. **Real holdings (aggregator)** — a **Trading Floor ($39/mo)** feature. Set `PLAID_CLIENT_ID` /
    `PLAID_SECRET` and the same button
-   opens Plaid Link. Credentials are typed into Plaid's own UI; MarketMinds never sees a brokerage
+   opens Plaid Link. Credentials are typed into Plaid's own UI; MarketNarrator never sees a brokerage
    password and reads positions only. The access token stays in `server/brokers.json`
    (gitignored) and is never included in a response. The plan gate is enforced on the server
    (`brokerPlanGate`), not only in the browser — it guards a stored credential for somebody's
@@ -347,14 +347,14 @@ It covers what's deliberate and what's a prototype shortcut — the client-side 
 client-trusted Stripe redirect, where API keys are held, and how to report a vulnerability
 privately.
 
-Short version: MarketMinds is a prototype. It runs entirely in the browser by default, and the
+Short version: MarketNarrator is a prototype. It runs entirely in the browser by default, and the
 optional Node backend is dev/local-oriented.
 
 ---
 
 ## Disclaimer
 
-MarketMinds is a market-information and entertainment dashboard. It is **not financial advice**, and
+MarketNarrator is a market-information and entertainment dashboard. It is **not financial advice**, and
 nothing shown is a recommendation to buy or sell. Market data may be delayed, simulated, or
 inaccurate — don't rely on it for trading decisions.
 

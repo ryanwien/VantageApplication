@@ -20,7 +20,7 @@ Please give me a chance to patch before disclosing publicly.
 
 ## What this project is
 
-MarketMinds is a **prototype and demo**, not hardened production software. It runs entirely in the
+MarketNarrator is a **prototype and demo**, not hardened production software. It runs entirely in the
 browser by default; the Node backend is optional and dev/local-oriented. Read the notes below
 before exposing any part of it beyond your own machine.
 
@@ -51,7 +51,7 @@ still welcome, but the notes explain what's deliberate.
 ## API keys and where they go
 
 Keys you enter in Settings are held in your browser's `localStorage` and sent **only** to the
-provider they belong to. They are never forwarded to a MarketMinds server — there isn't one in the
+provider they belong to. They are never forwarded to a MarketNarrator server — there isn't one in the
 default configuration.
 
 The DataHub integration is the exception by design: its access token is held **server-side** in

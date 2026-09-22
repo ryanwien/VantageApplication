@@ -1,5 +1,5 @@
 // ============================================================
-//  MarketMinds REST client — one typed surface over the backend in server/index.js.
+//  MarketNarrator REST client — one typed surface over the backend in server/index.js.
 //
 //  WHY
 //  Calls to /api/* used to be ~15 hand-rolled fetch() sites scattered through
@@ -9,7 +9,7 @@
 //  what the backend can actually do.
 //
 //  THE ONE RULE THAT SHAPES THIS FILE
-//  The backend is OPTIONAL. MarketMinds runs fully in the browser with no server at
+//  The backend is OPTIONAL. MarketNarrator runs fully in the browser with no server at
 //  all, so "cannot reach /api" is a normal state, not an error to shout about.
 //  Every call therefore fails soft and reports *why* via a typed error, and
 //  `probe()` tells the UI whether to offer backend features in the first place.
@@ -76,7 +76,7 @@ async function request(path, { method = "GET", body, auth = true, timeout = DEFA
     // expected zero-setup state, so it gets its own kind rather than "http".
     const timedOut = ctrl.signal.reason === "timeout";
     throw new ApiError(
-      timedOut ? "The server took too long to respond." : "No MarketMinds backend is running.",
+      timedOut ? "The server took too long to respond." : "No MarketNarrator backend is running.",
       { kind: timedOut ? "timeout" : "offline" },
     );
   } finally {
@@ -91,7 +91,7 @@ async function request(path, { method = "GET", body, auth = true, timeout = DEFA
     try { data = JSON.parse(text); }
     catch {
       // An HTML error page instead of JSON usually means a proxy answered, not the API.
-      if (res.ok) throw new ApiError("The server sent a response MarketMinds could not read.", { status: res.status, kind: "parse" });
+      if (res.ok) throw new ApiError("The server sent a response MarketNarrator could not read.", { status: res.status, kind: "parse" });
     }
   }
 

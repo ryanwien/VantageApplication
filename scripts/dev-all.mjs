@@ -2,7 +2,7 @@
 //  One process that owns both halves of the dev environment.
 //
 //  WHY THIS EXISTS
-//  MarketMinds in dev is two servers: Vite on 5173, and the backend on 8787 that
+//  MarketNarrator in dev is two servers: Vite on 5173, and the backend on 8787 that
 //  holds every key the browser must never see. Vite proxies /api to it. Run
 //  separately, they do not die together — and the way they fail is asymmetric:
 //  a supervisor that restarts the tab-backed dev server has no reason to

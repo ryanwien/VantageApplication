@@ -39,7 +39,7 @@
 // ============================================================
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { C, MONO, SANS } from "./theme.js";
-import MarketMindsMark from "./MarketMindsMark.jsx";
+import MarketNarratorMark from "./MarketNarratorMark.jsx";
 
 // How long a step holds. Matches the 4.7s the video gave each one, which was
 // picked to read two lines without hurrying.
@@ -316,7 +316,7 @@ export default function HomeTour({ t = (x) => x }) {
             {/* ---- the app, bleeding off the bottom of the card ---- */}
             <div className="v-tour-app">
               <div className="v-tour-chrome">
-                <MarketMindsMark size={13} />
+                <MarketNarratorMark size={13} />
                 <span className="v-tour-cmd">&gt; {TYPED[step]}<i className="vt-pulse" /></span>
                 <span className="v-tour-live"><i /> LIVE</span>
                 <span className="v-tour-clock">16:02</span>

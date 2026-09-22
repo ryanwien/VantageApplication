@@ -37,7 +37,7 @@
 
 import React, { useEffect, useState } from "react";
 import { C, GRAD, MONO, SANS, TYPE, R, SHADOW, button } from "./theme.js";
-import MarketMindsMark from "./MarketMindsMark.jsx";
+import MarketNarratorMark from "./MarketNarratorMark.jsx";
 import HeroPlate from "./HeroPlate.jsx";
 import HomeShowcase from "./HomeShowcase.jsx";
 import HomeBand from "./HomeBand.jsx";
@@ -314,8 +314,8 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x, 
           {/* The one mark that ignites: its V plots itself and the dot strikes at
               ~0.6s — the same frame the hero's lamp begins its flicker (55% of
               v-heroignite's 1.1s). The mark comes on air; the studio answers. */}
-          <MarketMindsMark size={26} ignite />
-          <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 17, letterSpacing: "-0.015em" }}>MarketMinds</span>
+          <MarketNarratorMark size={26} ignite />
+          <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 17, letterSpacing: "-0.015em" }}>MarketNarrator</span>
         </span>
         {/* Product and Data are the same link. Both scroll to #home-features —
             there is no separate data section to point at — so on a phone,
@@ -525,9 +525,9 @@ export default function HomePage({ onStart, onSignIn, plans = [], t = (x) => x, 
         <HomeFaq t={t} />
 
         <footer className="v-scrollin" style={{ marginTop: 64, paddingTop: 22, paddingBottom: 48, borderTop: `1px solid ${C.edge}`, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-          <MarketMindsMark size={20} />
+          <MarketNarratorMark size={20} />
           <span style={{ fontFamily: SANS, fontSize: 13, color: C.faint }}>
-            {t("MarketMinds — an AI market desk. Not investment advice.")}
+            {t("MarketNarrator — an AI market desk. Not investment advice.")}
           </span>
           <button onClick={onSignIn} className="v-taprow" style={{ ...navLink, marginLeft: "auto", color: C.muted }}>{t("Sign in")}</button>
         </footer>

@@ -109,7 +109,7 @@ export default {
   "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Un'ultima cosa. Le mie risposte vengono da modelli esterni fatturati sul tuo conto, quindi serve la tua chiave. Tutto il resto è facoltativo. Fine del tour!",
   // settings footer + MEET tab
   "Close": "Chiudi", "Apply": "Applica",
-  "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share MarketMinds. No keys, no OAuth.": "Avvia all'istante una nuova riunione in una scheda del browser (usa la sessione con cui hai già effettuato l'accesso), poi condividi lo schermo di MarketMinds. Nessuna chiave, nessun OAuth.",
+  "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share MarketNarrator. No keys, no OAuth.": "Avvia all'istante una nuova riunione in una scheda del browser (usa la sessione con cui hai già effettuato l'accesso), poi condividi lo schermo di MarketNarrator. Nessuna chiave, nessun OAuth.",
   "New Google Meet": "Nuovo Google Meet", "New Zoom meeting": "Nuova riunione Zoom",
   "Join": "Partecipa", "end": "termina",
   "paste your meeting link to pin it as LIVE…": "incolla il link della tua riunione per fissarlo come IN DIRETTA…",
@@ -274,7 +274,7 @@ export default {
   "The market,": "Il mercato,",
   "Type AMD and press Enter. Quote, chart, and a spoken read of the session in one motion.": "Scrivi AMD e premi Invio. Quotazione, grafico e una lettura parlata della seduta in un solo gesto.",
   "Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know.": "Scrivi un simbolo e ottieni quotazione, grafico e una lettura parlata della seduta — da un conduttore che ti dice quando non lo sa.",
-  "MarketMinds — an AI market desk. Not investment advice.": "MarketMinds — un desk di mercato IA. Non è consulenza finanziaria.",
+  "MarketNarrator — an AI market desk. Not investment advice.": "MarketNarrator — un desk di mercato IA. Non è consulenza finanziaria.",
   "forever": "per sempre",
   "on air.": "in onda.",
   "{who} is reading this answer": "{who} sta leggendo questa risposta",

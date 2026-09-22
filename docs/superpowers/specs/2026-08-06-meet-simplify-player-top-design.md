@@ -10,7 +10,7 @@ client secrets through the browser).
 
 The MEET tab keeps only the zero-setup surface: the "Go Live" card (New Google Meet / New
 Zoom meeting buttons) and the pin-a-link-as-LIVE row. Removed: the "Or, for meetings
-created & tracked inside MarketMinds… needs .env credentials" explainer, the red
+created & tracked inside MarketNarrator… needs .env credentials" explainer, the red
 "Backend not reachable — node --env-file=.env server/index.js" box, the Zoom/Google
 connect cards, and the RECENT MEETINGS list. State/handlers that only served that section
 (meetStatus, refreshMeetStatus, createMeeting, disconnectMeet, meetBusy, meetErr,

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make local inference visible in the MarketMinds settings AI tab — a local/cloud banner, Ollama GPU-residency telemetry, a reversible demo preset, and promoted multi-turn memory controls.
+**Goal:** Make local inference visible in the MarketNarrator settings AI tab — a local/cloud banner, Ollama GPU-residency telemetry, a reversible demo preset, and promoted multi-turn memory controls.
 
 **Architecture:** All derived logic moves into one new pure module, `src/settings/localProof.js`, unit-tested with Vitest. `React.jsx` imports from it and renders. Pure logic is separated from the 675 KB `React.jsx` component file so it can be tested at all — `React.jsx` today has no test seam.
 

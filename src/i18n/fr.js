@@ -110,7 +110,7 @@ export default {
   "One last thing. My answers come from external models billed to your account, so they need your key. Everything else is optional. That's the tour!": "Une dernière chose. Mes réponses viennent de modèles externes facturés sur votre compte, il leur faut donc votre clé. Tout le reste est optionnel. Fin de la visite !",
   // settings footer + MEET tab
   "Close": "Fermer", "Apply": "Appliquer",
-  "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share MarketMinds. No keys, no OAuth.": "Démarrez instantanément une nouvelle réunion dans un onglet du navigateur (utilise la session déjà ouverte), puis partagez l'écran de MarketMinds. Aucune clé, aucun OAuth.",
+  "Instantly start a new meeting in a browser tab (uses whatever you're already logged into), then screen-share MarketNarrator. No keys, no OAuth.": "Démarrez instantanément une nouvelle réunion dans un onglet du navigateur (utilise la session déjà ouverte), puis partagez l'écran de MarketNarrator. Aucune clé, aucun OAuth.",
   "New Google Meet": "Nouveau Google Meet", "New Zoom meeting": "Nouvelle réunion Zoom",
   "Join": "Rejoindre", "end": "terminer",
   "paste your meeting link to pin it as LIVE…": "collez le lien de votre réunion pour l'épingler comme EN DIRECT…",
@@ -275,7 +275,7 @@ export default {
   "The market,": "Le marché,",
   "Type AMD and press Enter. Quote, chart, and a spoken read of the session in one motion.": "Tapez AMD et appuyez sur Entrée. Cotation, graphique et lecture parlée de la séance d'un seul geste.",
   "Type a ticker and get the quote, the chart and a spoken read of the session — from an anchor that tells you when it doesn't know.": "Tapez un symbole et obtenez la cotation, le graphique et une lecture parlée de la séance — par un présentateur qui vous dit quand il ne sait pas.",
-  "MarketMinds — an AI market desk. Not investment advice.": "MarketMinds — un pupitre de marché IA. Ceci n'est pas un conseil en investissement.",
+  "MarketNarrator — an AI market desk. Not investment advice.": "MarketNarrator — un pupitre de marché IA. Ceci n'est pas un conseil en investissement.",
   "forever": "à vie",
   "on air.": "à l'antenne.",
   "{who} is reading this answer": "{who} lit cette réponse",
