@@ -12,7 +12,7 @@ import { readFileSync } from "node:fs";
 // This is not hypothetical. The V→N change updated the component and its canvas
 // twin, which these tests covered, and left the favicon a V — so the app said one
 // thing and the browser tab said another, and no test noticed. The favicon is now
-// pinned here too. (Two copies still live in video/vantage-explainer/index.html,
+// pinned here too. (Two copies still live in video/explainer/index.html,
 // which is a standalone composition rather than app source; they are updated by
 // hand and deliberately not asserted from here.)
 const svg = readFileSync(new URL("./MarketNarratorMark.jsx", import.meta.url), "utf8");
