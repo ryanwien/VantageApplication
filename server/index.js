@@ -905,21 +905,31 @@ const breakerNote = (name, ok) => {
 // film genres is not a thing that changes while a process is up.
 const genreCache = new Map();
 
-// ---- quotes, from either of two providers ----
+// ---- quotes ----
 //
-// Finnhub was the single point of failure for the whole live surface: quotes,
-// search, earnings, news. If it went down or repriced, live mode went with it.
+// ONE provider, deliberately, after having had two.
 //
-// The second provider needs no new key and no new vendor, because it is
-// already in this file. Finnhub's free tier answers 403 on /stock/candle, so
-// /api/candles has been proxying Yahoo's chart endpoint for a while — and that
-// same response carries a full quote in its `meta`. Verified against AAPL:
-// regularMarketPrice, chartPreviousClose, regularMarketDayHigh/Low and
-// regularMarketTime are all there. Open is the one field it does not carry, and
-// the candles in the same payload have it — first non-null open of the session.
+// The second was Yahoo's query1.finance.yahoo.com chart endpoint, reached for
+// its `meta` block, which carries a full quote. It worked, it needed no key,
+// and it is gone anyway: that endpoint is undocumented and unlicensed. Yahoo
+// publishes no terms under which a server may poll it, and this app charges
+// money for what it draws from it. Market-data licensing is one of the few
+// areas where vendors reliably do enforce, and a failover is not worth the
+// letter.
 //
-// Both are normalized to Finnhub's quote shape, because that is what the
-// browser already parses.
+// What that costs, honestly: Finnhub is a single point of failure again for
+// quotes, and the breaker below now has nothing to fail over TO — it can only
+// report that the tape has stopped. That is the trade. A stopped tape is a
+// visible, explainable outage; an unlicensed one is a legal problem that does
+// not announce itself.
+//
+// The plumbing is deliberately unchanged — QUOTE_PROVIDERS is still a list,
+// quoteOne still walks it, and /api/status still prints it. A licensed second
+// provider (Twelve Data, Tiingo, Polygon, or Finnhub's own paid tier) drops
+// into the array and needs nothing else.
+//
+// Quotes are normalized to Finnhub's shape, because that is what the browser
+// already parses — keep that true of anything added here.
 const shapeQuote = (o, src) => ({ c: o.c, d: o.d, dp: o.dp, o: o.o, h: o.h, l: o.l, pc: o.pc, t: o.t, src });
 
 // Distinguishes the two failures that must never be confused: "unknown" is a
@@ -939,38 +949,13 @@ async function finnhubQuote(sym) {
   return shapeQuote(j, "finnhub");
 }
 
-async function yahooQuote(sym) {
-  // Yahoo spells a class share BRK-B where Finnhub spells it BRK.B.
-  const y = sym.replace(/\./g, "-");
-  const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(y)}?interval=5m&range=1d`, {
-    // Without a browser UA this endpoint returns 429 to some hosts.
-    headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36" },
-    signal: AbortSignal.timeout(8000),
-  });
-  if (r.status === 404) return QUOTE_UNKNOWN;   // verified: ZZZZQQ → 404 "Not Found"
-  if (!r.ok) throw new Error(`http_${r.status}`);
-  const j = await r.json();
-  const meta = j?.chart?.result?.[0]?.meta;
-  const c = meta?.regularMarketPrice, pc = meta?.chartPreviousClose ?? meta?.previousClose;
-  if (typeof c !== "number" || typeof pc !== "number") return QUOTE_UNKNOWN;
-  const opens = j.chart.result[0]?.indicators?.quote?.[0]?.open || [];
-  return shapeQuote({
-    c, pc,
-    d: c - pc,
-    dp: pc ? ((c - pc) / pc) * 100 : 0,
-    o: opens.find(v => typeof v === "number") ?? null,
-    h: meta.regularMarketDayHigh ?? null,
-    l: meta.regularMarketDayLow ?? null,
-    t: meta.regularMarketTime ?? null,
-  }, "yahoo");
-}
 
 // Ask each provider in turn, skipping any that is currently sitting out.
 //
 // "unknown" from the first provider still asks the second — the two do not
 // list identical universes, and a second opinion on one symbol is cheap once
 // it is cached. Only when EVERY provider says unknown is a symbol unknown.
-const QUOTE_PROVIDERS = [["finnhub", finnhubQuote], ["yahoo", yahooQuote]];
+const QUOTE_PROVIDERS = [["finnhub", finnhubQuote]];
 
 async function quoteOne(sym) {
   let sawUnknown = false, lastErr = null;
@@ -1120,11 +1105,12 @@ const routeRequest = async (req, res) => {
     // Accepts a comma-separated list so a watchlist refresh is one request
     // rather than one per symbol — the old client fanned out N calls a tick.
     if (p === "/api/quote" && req.method === "GET") {
-      // No longer gated on FINNHUB_KEY. The Yahoo fallback needs no key, so a
-      // server with no Finnhub key at all can still answer this — which is the
-      // whole point of having a second provider. It 503s only when every
-      // provider is unusable, which is checked after the calls rather than
-      // guessed from configuration.
+      // Still not gated on FINNHUB_KEY, though the keyless fallback that
+      // originally justified that is gone. The reason survives it: this
+      // reports failure from what the providers actually DID, not from what
+      // configuration suggests they would do. An unconfigured provider throws
+      // "unconfigured", quoteOne collects it, and the caller gets one honest
+      // 502 below rather than a 503 guessed before anything was tried.
       const rl = rateLimit(`q:${clientIp(req)}`, ANON_QUOTE_PER_HOUR, 3600000);
       if (!rl.ok) return send(res, 429,
         { error: `Rate limit reached (${rl.limit} per hour).`, retryInSec: Math.ceil(rl.resetMs / 1000) },
@@ -1167,6 +1153,20 @@ const routeRequest = async (req, res) => {
     // It is an UNDOCUMENTED endpoint. It can change shape or start refusing us
     // at any time, so every failure here is soft: the client falls back to the
     // poll-only tape it used to have, and the chart still works.
+    //
+    // ⚠ UNLICENSED, AND KNOWINGLY SO. This is the same Yahoo host the quote
+    // failover was removed from — removed because there is no terms-of-service
+    // under which a server may poll it. It survives HERE only because nothing
+    // licensed replaces it on the current plan: Finnhub 403s on /stock/candle
+    // below its paid tier, so deleting this deletes the intraday chart rather
+    // than re-routing it. That is a bill to pay, not a bug to fix — the
+    // replacement is a licensed history feed (Twelve Data, Tiingo, Polygon, or
+    // Finnhub paid), and this comment should go with it.
+    //
+    // Note also the browser user-agent below. It is there because the endpoint
+    // 429s hosts that identify honestly, which makes it evasion of an access
+    // control rather than merely use of an undocumented one. Whoever licenses
+    // the replacement should delete that header in the same change.
     if (p === "/api/candles" && req.method === "GET") {
       const rl = rateLimit(`cd:${clientIp(req)}`, ANON_QUOTE_PER_HOUR, 3600000);
       if (!rl.ok) return send(res, 429,
@@ -2165,12 +2165,13 @@ const routeRequest = async (req, res) => {
       const status = {};
       status.ai = { configured: !!OPENROUTER.key, model: OPENROUTER.model };
       status.youtube = { configured: !!YOUTUBE_KEY };
-      // `configured` is now true if ANY provider can answer, which is what the
-      // caller is really asking. Yahoo needs no key, so this is effectively
-      // always true — and `providers` is the honest detail underneath it: which
-      // one is carrying the tape, and which is sitting out a failure. A
-      // failover nobody can see is the thing worth avoiding, so it is printed
-      // rather than inferred.
+      // `configured` is true if ANY provider can answer, which is what the
+      // caller is really asking. With Finnhub alone that now tracks the key
+      // again — the expression is left general so that adding a licensed
+      // second provider needs no edit here. `providers` is the honest detail
+      // underneath it: which one is carrying the tape, and which is sitting
+      // out a failure. A failover nobody can see is the thing worth avoiding,
+      // so it is printed rather than inferred.
       status.quotes = {
         configured: !!FINNHUB_KEY || QUOTE_PROVIDERS.some(([n]) => n !== "finnhub"),
         primary: !!FINNHUB_KEY,
