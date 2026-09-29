@@ -42,6 +42,7 @@ import DeskIcon from "./DeskIcon.jsx";
 import Waveform from "./Waveform.jsx";
 import VideoFrame, { ytId, ytThumb, ytThumbIsReal } from "./VideoFrame.jsx";
 import { clock, relAge } from "../lib/time.js";
+import { compactCount } from "../video/video.js";
 import useSpeechProgress from "./useSpeechProgress.js";
 import { Flap, Roll, Shuttle, printIn } from "./DeskMotion.jsx";
 import { toneOf, toneLabel, wireTone, categoryOf, sourceColor, sourceOf, ageOf, spanLabel } from "../news/news.js";
@@ -321,11 +322,35 @@ function VideoCard({ video, playing, onPlay, onStop }) {
           fontSize: canPlay ? 10 : 13, paddingLeft: canPlay ? 2 : 0,
           boxShadow: canPlay ? "0 12px 40px rgba(0,0,0,0.5)" : "none",
         }}>&#9654;</span>
+        {/* LIVE rides the thumbnail rather than the text, because the thumbnail
+            is what you look at first and a still frame of a live stream looks
+            exactly like a still frame of a recording.
+
+            GREEN, not the broadcast red every instinct reaches for. theme.js
+            moved on-air from coral to green deliberately — "on air is a
+            positive state" — and the logo's own dot is the accent light for the
+            same reason. A red pill here would be the one thing in the product
+            claiming a semantic the palette does not have. */}
+        {video.live && (
+          <span style={{
+            position: "absolute", left: 4, top: 4, display: "inline-flex", alignItems: "center", gap: 4,
+            background: "rgba(11,14,19,0.86)", border: `1px solid ${C.liveEdge}`, borderRadius: 20,
+            padding: "2px 6px", fontFamily: MONO, fontSize: 8.5, letterSpacing: "0.8px", color: C.live,
+          }}>
+            <span style={{ width: 4, height: 4, borderRadius: "50%", background: C.live }} />LIVE
+          </span>
+        )}
       </span>
       <span style={{ minWidth: 0, flex: 1 }}>
         <span style={{ display: "block", ...TYPE.bodySm, color: C.text, lineHeight: 1.4 }}>{video.title}</span>
         <span style={{ display: "block", ...TYPE.eyebrowSm, color: C.faint, marginTop: 4 }}>
-          {video.channel} &#183; {canPlay ? "plays here" : "opens on YouTube ↗"}
+          {/* Concurrent viewers, where there are any — the only count that means
+              anything about something nobody has finished watching. A stream
+              whose owner hides the number falls back to the ordinary line
+              rather than printing a confident zero. */}
+          {video.channel} &#183; {video.live && video.viewers
+            ? `${compactCount(video.viewers)} watching`
+            : canPlay ? "plays here" : "opens on YouTube ↗"}
         </span>
       </span>
     </Row>
@@ -350,6 +375,7 @@ function CardSkeleton() {
 export default function NewsDesk({
   items = [],          // already newest-first: the caller owns the order, so an index means the same thing on both sides
   videos = [],
+  live = [],           // market broadcasts on air right now, already allowlisted and ranked by the server
   subject,
   loadedFor,
   busy = false,
@@ -613,7 +639,15 @@ export default function NewsDesk({
 
         {busy && !hasContent && [0, 1, 2].map(i => <CardSkeleton key={i} />)}
 
-        {!busy && !hasContent && !error && (
+        {/* `!live.length` matters: this block says "Nothing on the wire yet",
+            and with the ON AIR rail below it that sentence was printed directly
+            above four running broadcasts. The rail is not a substitute for the
+            headlines you have not loaded — the Load button above stays exactly
+            as it was — but a panel demonstrably showing something must not also
+            announce that it is empty. hasContent is left alone on purpose: it
+            means NEWS content, and it is what decides whether that button reads
+            "Load" or "Refresh". */}
+        {!busy && !hasContent && !error && !live.length && (
           <div style={{ textAlign: "center", padding: `${SP[8]}px ${SP[4]}px` }}>
             <div style={{ fontSize: 26, marginBottom: 10, opacity: 0.5 }} aria-hidden="true">📡</div>
             <div style={{ ...TYPE.heading, marginBottom: 5 }}>Nothing on the wire yet</div>
@@ -646,6 +680,28 @@ export default function NewsDesk({
             onRead={onReadStory ? (item) => onReadStory(item, i) : null}
             onAsk={onAskStory} />
         ))}
+
+        {/* ON AIR sits ABOVE video coverage, and that order is the whole point:
+            a desk that has something running right now should say so before it
+            offers you a recording of this morning. The rail simply is not there
+            when nothing is on — an empty "ON AIR NOW" heading would be the
+            panel advertising its own silence, and outside market hours the
+            server answers [] without spending a search to find that out. */}
+        {live.length > 0 && (
+          <>
+            <div style={{ ...railLabel, marginTop: SP[3], color: C.live, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: C.live }} />ON AIR NOW
+            </div>
+            <div style={{ display: "grid", gap: SP[2], gridTemplateColumns: compact ? "1fr" : "repeat(auto-fill, minmax(300px, 1fr))" }}>
+              {live.map((v, i) => (
+                <VideoCard key={v.url || `l${i}`} video={v}
+                  playing={playingVideo === v.url}
+                  onPlay={() => { setPlayingVideo(v.url); onPlayVideo?.(v); }}
+                  onStop={() => setPlayingVideo(null)} />
+              ))}
+            </div>
+          </>
+        )}
 
         {videos.length > 0 && (
           <>

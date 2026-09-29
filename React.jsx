@@ -8440,6 +8440,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   const [news, setNews] = useState(null);
   const [newsBusy, setNewsBusy] = useState(false);
   const [newsErr, setNewsErr] = useState("");
+  // Market broadcasts on air right now. Never an error state: the server
+  // answers [] outside market hours and [] when nothing it trusts is running,
+  // and both are true statements rather than failures. A desk that cannot say
+  // what is on simply does not offer the rail.
+  const [liveNow, setLiveNow] = useState([]);
   const [newsFor, setNewsFor] = useState("");
   // When the wire last landed, and which of the three paths it came in on.
   // The footer prints both: "refreshed 4 minutes ago" is a fact the panel
@@ -10705,6 +10710,36 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     return Array.isArray(data.videos) ? data.videos : [];
   }, [planAllows]);
 
+  // ---- what is on air right now ----
+  // Deliberately quieter than searchYouTube: this one never throws and never
+  // surfaces a message. Every way it can fail — no key on the server, outside
+  // market hours, nothing the allowlist trusts is running, the backend not
+  // there at all — has the same correct outcome, which is a desk with no ON AIR
+  // rail. There is no sentence to write about that, and the rail's absence
+  // already says it better than a banner would.
+  //
+  // The server owns the expensive parts: one shared 15-minute cache for every
+  // caller, an exchange-clock gate so an off-hours poll costs no quota, and the
+  // channel allowlist. This is a fetch and a setState.
+  const fetchLiveNow = useCallback(async () => {
+    if (!planAllows("youtube")) return;
+    try {
+      const r = await fetch("/api/youtube/live");
+      if (!r.ok) return;                       // 503/429/502 all mean "no rail"
+      const data = await r.json();
+      setLiveNow(Array.isArray(data.live) ? data.live : []);
+    } catch { /* no backend — the desk runs without one, so this is normal */ }
+  }, [planAllows]);
+
+  useEffect(() => {
+    fetchLiveNow();
+    // Five minutes against the server's fifteen: most of these are cache hits
+    // costing nothing, and it bounds how long the rail can show a stream that
+    // has already gone off air.
+    const iv = setInterval(fetchLiveNow, 5 * 60 * 1000);
+    return () => clearInterval(iv);
+  }, [fetchLiveNow]);
+
   // Claude with live web search — the accurate path (real URLs)
   const newsViaClaude = useCallback(async () => {
     const r = await fetch(`${getClaudeBaseUrl()}/messages`, {
@@ -12265,11 +12300,18 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // ---- news & video, as a chat attachment ----
   // News is the answer to "load the news", so it belongs where the answers are.
   // Keeps #sec-news so the News nav item still lands on it.
-  const newsPanel = panels.news && (news?.news?.length > 0 || news?.videos?.length > 0 || newsBusy || newsErr) && (
+  // `liveNow.length` is in this condition on purpose. Everything else here is
+  // about a news load you asked for; a live broadcast is not — it is running
+  // whether or not anybody pressed anything, and a desk that knows CNBC is on
+  // air should not keep that to itself until you happen to request headlines
+  // for a ticker. It stays inside this panel rather than getting its own
+  // because the panel is news AND video, and a stream is video.
+  const newsPanel = panels.news && (news?.news?.length > 0 || news?.videos?.length > 0 || liveNow.length > 0 || newsBusy || newsErr) && (
     <div key="news" id="sec-news" className="v-scrollin" style={{ minWidth: 0 }}>
       <NewsDesk
         items={orderedNews}
         videos={news?.videos || []}
+        live={liveNow}
         subject={selected}
         loadedFor={newsFor}
         busy={newsBusy}

@@ -47,6 +47,7 @@ import {
   rhOperatorMatches,
 } from "../src/brokers/robinhood.js";
 import { makeEd25519Signer } from "../src/brokers/robinhood-sign.js";
+import { LIVE_CHANNEL_IDS, inLiveWindow, pickLive } from "../src/video/live.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
@@ -80,6 +81,22 @@ const SPOTIFY_PLAYLIST = process.env.SPOTIFY_PLAYLIST || "https://open.spotify.c
 // Anonymous callers get a spend guard instead of an account quota.
 const ANON_AI_PER_HOUR = Number(process.env.ANON_AI_PER_HOUR || 6);
 const ANON_YT_PER_HOUR = Number(process.env.ANON_YT_PER_HOUR || 20);
+
+// ---- the live rail ----
+// The allowlist, why it exists, and how to verify a new row before adding it
+// are all in src/video/live.js, where they can be unit-tested. This is only
+// the deployment override: set YOUTUBE_LIVE_CHANNELS to a comma-separated
+// list of channel ids to tune the rail without a deploy.
+const YT_LIVE_CHANNELS = process.env.YOUTUBE_LIVE_CHANNELS
+  ? process.env.YOUTUBE_LIVE_CHANNELS.split(",").map(v => v.trim()).filter(Boolean)
+  : LIVE_CHANNEL_IDS;
+
+// The candidate pool the allowlist filters. Chosen by measurement, not taste:
+// against the same list, "finance" surfaced four allowlisted broadcasters where
+// "stock market" surfaced three and "market news live" two. The query only
+// decides who gets CONSIDERED — the allowlist decides who is shown — so a
+// broader word is strictly better here than a more precise one.
+const YT_LIVE_QUERY = process.env.YOUTUBE_LIVE_QUERY || "finance";
 const ANON_QUOTE_PER_HOUR = Number(process.env.ANON_QUOTE_PER_HOUR || 1000);  // a watchlist tick is one call
 const ANON_TTS_PER_HOUR = Number(process.env.ANON_TTS_PER_HOUR || 30);   // speech is billed per character
 // X-Forwarded-For is caller-controlled unless something we run sets it, and a
@@ -832,6 +849,12 @@ const TTL = {
   news: 5 * 60 * 1000,
   earnings: 30 * 60 * 1000,  // a calendar of scheduled dates
   search: 6 * 60 * 60 * 1000, // "what ticker is Coca-Cola" does not change
+  // Both of these exist because a YouTube search costs 100 of a 10,000/day
+  // budget — the single most expensive call this server makes. /api/youtube/search
+  // had NO cache at all: at 20/hour/IP that is 2,000 units an hour from one
+  // caller, so five busy callers could exhaust the day's quota before lunch.
+  ytSearch: 30 * 60 * 1000,
+  ytLive: 15 * 60 * 1000,
 };
 const answerCache = new Map();
 
@@ -991,7 +1014,11 @@ function rateLimit(key, limit, windowMs) {
 async function ytDetails(ids) {
   if (!ids.length || !YOUTUBE_KEY) return {};
   const api = new URL("https://www.googleapis.com/youtube/v3/videos");
-  api.search = new URLSearchParams({ part: "snippet,contentDetails,statistics", id: ids.join(","), key: YOUTUBE_KEY });
+  // liveStreamingDetails costs nothing extra — videos.list is 1 unit for the
+  // call, not per part — and it is the only place the truth about a broadcast
+  // lives. search.list will happily keep listing a stream for a while after it
+  // ends; actualEndTime below is how we find out.
+  api.search = new URLSearchParams({ part: "snippet,contentDetails,statistics,liveStreamingDetails", id: ids.join(","), key: YOUTUBE_KEY });
   let r;
   try { r = await fetch(api, { signal: AbortSignal.timeout(8000) }); } catch { return {}; }
   if (!r.ok) return {};
@@ -1004,10 +1031,81 @@ async function ytDetails(ids) {
       publishedAt: it.snippet?.publishedAt || null,
       duration: it.contentDetails?.duration || null,
       views: Number(it.statistics?.viewCount) || null,
+      // A broadcast is live when YouTube says so AND has not ended. Both halves
+      // matter: liveBroadcastContent lags, so actualEndTime is the tiebreak.
+      live: it.snippet?.liveBroadcastContent === "live" && !it.liveStreamingDetails?.actualEndTime,
+      // Concurrent viewers, not lifetime views — the one number that means
+      // something about a stream nobody has finished watching. Absent on a
+      // broadcast whose owner hides it, which is why it stays nullable.
+      viewers: Number(it.liveStreamingDetails?.concurrentViewers) || null,
+      startedAt: it.liveStreamingDetails?.actualStartTime || null,
     };
   }
   return out;
 }
+// Current time on the exchange's clock. React.jsx carries its own copy of this
+// for the anchor's trading day; this one exists because the live rail gates a
+// 100-unit call on it, and a gate that trusts the caller's clock is not a gate.
+function etNowServer() {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York", hour12: false,
+      weekday: "short", hour: "2-digit", minute: "2-digit",
+    }).formatToParts(new Date());
+    const g = (t) => parts.find(p => p.type === t)?.value;
+    let h = parseInt(g("hour"), 10); if (h === 24) h = 0;
+    const dayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+    return { day: dayMap[g("weekday")] ?? new Date().getDay(), mins: h * 60 + parseInt(g("minute"), 10) };
+  } catch {
+    const d = new Date();
+    return { day: d.getDay(), mins: d.getHours() * 60 + d.getMinutes() };
+  }
+}
+
+// Whether the live rail is worth a 100-unit search right now. The window and
+// the quota arithmetic behind it are in src/video/live.js; the clock stays
+// here, because a gate that trusts the caller's clock is not a gate.
+const liveWindowOpen = () => inLiveWindow(etNowServer());
+
+// search.list + the videos.list enrichment, as one call. 100 quota units and 1.
+//
+// Extracted when the live rail became a second caller: the interesting code
+// here is not the fetch, it is deciding whose fault a failure is. Google
+// reports a rejected key as 400, not 403, so status alone blames the caller for
+// the server's problem. Anything naming the key or the quota is ours.
+async function ytSearchCall(params) {
+  const api = new URL("https://www.googleapis.com/youtube/v3/search");
+  api.search = new URLSearchParams({ part: "snippet", type: "video", videoEmbeddable: "true", key: YOUTUBE_KEY, ...params });
+
+  let r;
+  try { r = await fetch(api, { signal: AbortSignal.timeout(8000) }); }
+  catch { throw Object.assign(new Error("x"), { code: 502, msg: "Could not reach YouTube." }); }
+  if (!r.ok) {
+    let detail = "";
+    try { detail = (await r.json())?.error?.message || ""; } catch { /* no body */ }
+    const ours = r.status === 403 || /api key|quota/i.test(detail);
+    throw Object.assign(new Error("x"), {
+      code: ours ? 502 : r.status,
+      msg: ours ? "The server's YouTube key was rejected or is out of quota." : (detail || `YouTube HTTP ${r.status}`),
+    });
+  }
+  const data = await r.json();
+  const decode = (t) => String(t || "").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+  const videos = (data.items || []).filter(it => it.id?.videoId).map(it => ({
+    id: it.id.videoId,
+    title: decode(it.snippet?.title) || "",
+    channel: it.snippet?.channelTitle || "YouTube",
+    channelId: it.snippet?.channelId || null,
+    url: `https://www.youtube.com/watch?v=${it.id.videoId}`,
+  }));
+  // Enrichment is best-effort by design: ytDetails swallows its own errors and
+  // returns {}, so a lookup that fails costs the caller a chapter strip, not
+  // the search results it already paid 100 units for.
+  const details = await ytDetails(videos.map(v => v.id));
+  for (const v of videos) Object.assign(v, details[v.id] || {});
+  return videos;
+}
+
 const clientIp = (req) =>
   (TRUST_PROXY ? String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() : "") ||
   req.socket?.remoteAddress || "unknown";
@@ -1644,35 +1742,63 @@ const routeRequest = async (req, res) => {
       const q = String(url.searchParams.get("q") || "").trim().slice(0, 120);
       if (!q) return send(res, 400, { error: "Pass ?q=search+terms." });
       const max = Math.min(10, Math.max(1, Number(url.searchParams.get("max")) || 3));
-      const api = new URL("https://www.googleapis.com/youtube/v3/search");
-      api.search = new URLSearchParams({ part: "snippet", type: "video", videoEmbeddable: "true", maxResults: String(max), q, key: YOUTUBE_KEY });
 
-      let r;
-      try { r = await fetch(api, { signal: AbortSignal.timeout(8000) }); }
-      catch { return send(res, 502, { error: "Could not reach YouTube." }); }
-      if (!r.ok) {
-        let detail = "";
-        try { detail = (await r.json())?.error?.message || ""; } catch { /* no body */ }
-        // Google reports a bad key as 400, not 403, so status alone misattributes
-        // it to the caller. Anything naming the key is ours to fix, not theirs.
-        const ours = r.status === 403 || /api key|quota/i.test(detail);
-        return send(res, ours ? 502 : r.status,
-          { error: ours ? "The server's YouTube key was rejected or is out of quota." : (detail || `YouTube HTTP ${r.status}`) });
-      }
-      const data = await r.json();
-      const decode = (s) => String(s || "").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"');
-      const videos = (data.items || []).filter(it => it.id?.videoId).map(it => ({
-        id: it.id.videoId,
-        title: decode(it.snippet?.title) || q,
-        channel: it.snippet?.channelTitle || "YouTube",
-        url: `https://www.youtube.com/watch?v=${it.id.videoId}`,
-      }));
-      // Enrichment is best-effort by design: ytDetails swallows its own errors
-      // and returns {}, so a lookup that fails costs the caller a chapter strip,
-      // not the search results it already paid 100 units for.
-      const details = await ytDetails(videos.map(v => v.id));
-      for (const v of videos) Object.assign(v, details[v.id] || {});
+      // On the shared cache now. The per-IP limiter above bounds how fast ONE
+      // caller can spend; it does nothing about the same query arriving from
+      // everywhere, and this app's busiest search is a template — `${symbol}
+      // stock` — so the distinct-query count is about the size of a watchlist,
+      // not the number of requests.
+      let videos;
+      try { videos = await cached(`yt:${q}:${max}`, TTL.ytSearch, () => ytSearchCall({ maxResults: String(max), q })); }
+      catch (e) { return send(res, e.code || 502, { error: e.msg || "YouTube search failed." }); }
       return send(res, 200, { q, videos });
+    }
+
+    // ---- WHAT IS ON AIR RIGHT NOW ----
+    // A rail of live market broadcasts, which is a different question from
+    // search and is answered differently.
+    //
+    // NOT a search the caller controls. eventType=live plus a market phrase
+    // returns mostly signal rooms and crypto bait — see YT_LIVE_CHANNELS — so
+    // the query is fixed, the result is filtered to known publishers, and the
+    // caller can widen neither. A parameter here would be a parameter for
+    // choosing what gets embedded next to somebody's real portfolio.
+    if (p === "/api/youtube/live" && req.method === "GET") {
+      if (!YOUTUBE_KEY) return send(res, 503, { error: "Video search is not configured on this server (set YOUTUBE_API_KEY)." });
+
+      // Off-air is a real answer, not a failure — and it costs no quota, which
+      // is the whole point of reading the clock before reaching for the key.
+      if (!liveWindowOpen()) return send(res, 200, { live: [], onAir: false, reason: "off-hours" });
+
+      // A hundred times the search allowance, because this is served from one
+      // shared cache entry: a second caller inside the TTL spends nothing.
+      const rl = rateLimit(`ytlive:${clientIp(req)}`, ANON_YT_PER_HOUR * 100, 3600000);
+      if (!rl.ok) return send(res, 429,
+        { error: `Rate limit reached (${rl.limit} per hour).`, retryInSec: Math.ceil(rl.resetMs / 1000) },
+        { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
+
+      let live;
+      try {
+        live = await cached("yt:live", TTL.ytLive, async () => {
+          // order=viewCount puts the real broadcasters above the bait inside the
+          // candidate pool, which makes the allowlist's job smaller. 25 is the
+          // widest net one call buys, and it costs the same as 5.
+          const found = await ytSearchCall({ eventType: "live", order: "viewCount", maxResults: "25", q: YT_LIVE_QUERY });
+          // Allowlist, then liveness, then viewers — see pickLive(). The second
+          // filter matters as much as the first: ytDetails resolved each hit
+          // against videos.list, so `live` is the broadcast's own status rather
+          // than what search claimed, and search keeps listing a stream for a
+          // while after it ends.
+          return pickLive(found, YT_LIVE_CHANNELS);
+        });
+      } catch (e) {
+        // Logged, not just returned. A shaped error (e.msg) is one we chose to
+        // raise; anything else is a bug in here, and the caller's 502 is the
+        // only evidence it ever happened unless the reason is written down.
+        if (!e?.msg) console.error("[youtube/live] unexpected:", e);
+        return send(res, e.code || 502, { error: e.msg || "Could not read what is on air." });
+      }
+      return send(res, 200, { live, onAir: true });
     }
 
     // ---- DATAHUB (read-only catalog context) ----
