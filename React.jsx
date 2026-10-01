@@ -10697,7 +10697,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // ---- YouTube Data API: real, embeddable search results (no hallucinated IDs) ----
   const searchYouTube = useCallback(async (query, max = 3) => {
     if (!planAllows("youtube")) return []; // plan-gated: real video results need Pro Desk
-    const r = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}&max=${max}`);
+    // A timeout, because this had none while every other call in the app has
+    // one. A search is the most expensive thing the backend does — a cold
+    // query measured 2.5s through the proxy against 175ms warm — and an
+    // unbounded wait for a garnish is how a stall becomes a stuck panel.
+    // Twelve seconds is past the server's own 8s upstream abort, so this fires
+    // only when the backend itself has stopped answering.
+    let r;
+    try { r = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}&max=${max}`, { signal: AbortSignal.timeout(12000) }); }
+    catch { return []; }   // aborted or offline — the desk simply has no clips
     // Video search simply not being configured is not an error worth surfacing —
     // the desk just has no clips to show.
     if (r.status === 503) return [];
@@ -10821,10 +10829,22 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         }
       }
 
-      // real embeddable videos from the YouTube Data API always win, if a key is set
-      if (canSearchVideos) {
-        try { const vids = await searchYouTube(`${selected} stock`, 3); if (vids.length) parsed.videos = vids; } catch { /* keep model list */ }
-      }
+      // THE STORIES LAND HERE, BEFORE ANY VIDEO SEARCH.
+      //
+      // They used to land after one, and that is how "load news for anything
+      // except the default symbol" became a spinner that never stopped. The
+      // YouTube search was awaited on the line above this one; searchYouTube is
+      // a plain fetch with no timeout, and a catch cannot rescue a promise that
+      // never settles — so a stalled video lookup took setNews, setNewsBusy(false)
+      // and the whole panel down with it.
+      //
+      // It looked symbol-specific because it is: the server caches that search
+      // per query, and the default symbol's query is always the warm one.
+      // Measured through the proxy — AMD 175ms, PLTR 645ms, COIN 2557ms. AMD
+      // was never waiting. Everything else was.
+      //
+      // Stories are the payload; clips are a garnish. Nothing about a headline
+      // should be gated on a video provider being quick, or awake.
       setNews(parsed); setNewsFor(selected);
       setNewsAt(Date.now()); setNewsSrc(parsed._src || "");
       // A new wire invalidates the bulletin that was running on the old one:
@@ -10833,6 +10853,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // headlines.
       stopSpeak(); setAirIndex(null); setAirAuto(false);
       setMeansByTitle({}); meansAsked.current = new Set();
+
+      // Clips follow on their own time. Real embeddable results from the Data
+      // API still win over whatever a model listed — they just no longer win
+      // by making everyone wait for them.
+      //
+      // The identity check is the whole guard against a slow search landing on
+      // the wrong wire: if a newer load has already replaced `news`, `cur` is
+      // not `parsed` and these clips are dropped rather than stapled onto
+      // somebody else's headlines. Deliberately not awaited, so nothing here
+      // can reach setNewsBusy below.
+      if (canSearchVideos) {
+        searchYouTube(`${selected} stock`, 3)
+          .then(vids => { if (vids.length) setNews(cur => (cur === parsed ? { ...cur, videos: vids } : cur)); })
+          .catch(() => { /* no clips; the stories are already on screen */ });
+      }
     } catch (e) {
       setNewsErr(humanizeError(e));
     } finally {
