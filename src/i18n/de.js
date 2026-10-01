@@ -295,6 +295,7 @@ export default {
   "Portfolio on desk": "Portfolio aufs Pult",
   "Searching…": "Suche läuft…",
   "latest {sym} headlines and video": "aktuelle Schlagzeilen und Videos zu {sym}",
+  "No {sym} headlines came back — try again in a minute.": "Für {sym} kamen keine Schlagzeilen zurück — in einer Minute erneut versuchen.",
   "positions and P&L": "Positionen und Ergebnis",
   "the full {sym} chart": "das vollständige {sym}-Chart",
   "your events and market earnings": "deine Termine und die Quartalszahlen",

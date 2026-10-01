@@ -100,6 +100,13 @@ export const CHATTER = new Set([
   // talking to the desk about the desk, or steering it mid-answer
   "you", "desk", "anchor", "bot", "test", "testing",
   "stop", "wait", "again", "repeat", "nevermind", "nvm", "anyway",
+  // Asking the desk for one of its own panels. `news` is four letters, so the
+  // length rule sent it to the chart as a ticker called NEWS — while the
+  // empty desk's own card says "Load the news". Nobody types it hoping for a
+  // chart. It passes the bar for this list the same way `stop` does: it is a
+  // word addressed to the desk. $NEWS still charts, and so does NEWS once it
+  // is on your watchlist, because the known-symbol check runs first.
+  "news",
 ]);
 
 // Which kind of talking this is, or null for "this is not talking".

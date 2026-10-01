@@ -294,6 +294,7 @@ export default {
   "Portfolio on desk": "Portafoglio in postazione",
   "Searching…": "Ricerca in corso…",
   "latest {sym} headlines and video": "ultime notizie e video su {sym}",
+  "No {sym} headlines came back — try again in a minute.": "Nessuna notizia su {sym} — riprova tra un minuto.",
   "positions and P&L": "posizioni e risultato",
   "the full {sym} chart": "il grafico completo di {sym}",
   "your events and market earnings": "i tuoi eventi e le trimestrali",

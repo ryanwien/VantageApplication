@@ -294,6 +294,7 @@ export default {
   "Portfolio on desk": "Carteira na mesa",
   "Searching…": "A procurar…",
   "latest {sym} headlines and video": "últimas notícias e vídeo de {sym}",
+  "No {sym} headlines came back — try again in a minute.": "Não chegaram notícias de {sym} — tenta de novo daqui a um minuto.",
   "positions and P&L": "posições e resultado",
   "the full {sym} chart": "o gráfico completo de {sym}",
   "your events and market earnings": "os teus eventos e os resultados do mercado",

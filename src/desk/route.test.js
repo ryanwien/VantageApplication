@@ -68,6 +68,31 @@ describe("a word that is both", () => {
   });
 });
 
+describe("asking the desk for its own news", () => {
+  // The empty desk shows a card that reads "Load the news". Typing `news` — the
+  // shortest way to say the same thing — charted a ticker called NEWS, because
+  // four letters was the whole test. It is a word addressed to the desk.
+  it("sends a bare `news` to the desk, not the chart", () => {
+    expect(route("news")).toEqual({ kind: "ask", text: "news" });
+    expect(route("NEWS").kind).toBe("ask");
+  });
+
+  // Every way of insisting still works, in the same order as for any other
+  // speech word: the watchlist first, then the dollar sign.
+  it("still charts NEWS when somebody means the ticker", () => {
+    expect(route("news", new Set([...KNOWN, "NEWS"])).kind).toBe("chart");
+    expect(route("$NEWS")).toEqual({ kind: "chart", text: "NEWS" });
+  });
+
+  // The sentences were never the router's problem — they always reached the
+  // desk. They reached it and found nothing listening, which React.jsx's news
+  // intent fixes. Pinned here so a routing change cannot quietly divert them.
+  it.each(["load news", "load the news", "show me the headlines", "latest news"])(
+    "hands %j to the desk",
+    (s) => expect(route(s).kind).toBe("ask"),
+  );
+});
+
 describe("sentences and commands", () => {
   it("asks anything with a space in it", () => {
     expect(route("why is the market down today").kind).toBe("ask");

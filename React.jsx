@@ -8458,6 +8458,19 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // and one story read from its card (which stops, and offers Next).
   const [airIndex, setAirIndex] = useState(null);
   const [airAuto, setAirAuto] = useState(false);
+  // Whether the news bulletin itself is on air, for fetchNews to read without
+  // taking airIndex as a dependency (which would rebuild it, and re-arm the
+  // follow effect below, every time the bulletin stepped to the next story).
+  const bulletinAiringRef = useRef(false);
+  useEffect(() => { bulletinAiringRef.current = airIndex != null || airAuto; }, [airIndex, airAuto]);
+  // Every news load takes a ticket; only the newest is allowed to land. Clicking
+  // down a watchlist starts loads in quick succession and they do not finish in
+  // order — without this, whichever answered LAST won, so a slow AMZN response
+  // could paint over the META wire you had already moved on to.
+  const newsSeq = useRef(0);
+  // The symbol the newest load was started for. The follow effect checks it so
+  // that a load already in flight for this symbol is not started a second time.
+  const newsRequestedFor = useRef(null);
   // The desk's plain-language translation, keyed by headline so re-reading a
   // story it already explained costs nothing. Bounded by the wire.
   const [meansByTitle, setMeansByTitle] = useState({});
@@ -10796,7 +10809,28 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   //   1. the MarketNarrator backend's /api/news (REST; server-side Finnhub key)
   //   2. Finnhub company-news, direct REST with the user's own key
   //   3. AI web search (the original path — the only one that needs no keys/backend)
-  const fetchNews = useCallback(async () => {
+  // `follow` is set only by the effect that keeps an open wire on the current
+  // symbol — every other caller is a person pressing something, and passes
+  // nothing (NewsDesk's Refresh may hand in a click event, which has no
+  // `follow` and reads as a press, correctly).
+  const fetchNews = useCallback(async (opts) => {
+    const follow = !!opts?.follow;
+    const ticket = ++newsSeq.current;
+    newsRequestedFor.current = selected;
+    const latest = () => ticket === newsSeq.current;
+    // Loading the news reveals the panel it loads into. Every caller is somebody
+    // asking to SEE the news — the empty desk's card, the typed command, the
+    // palette — and the panel can be switched off in settings, where it stays
+    // switched off in localStorage across visits.
+    //
+    // Only the palette did this, at its own call site. The card and the typed
+    // command did not, so with the panel off they fetched a full wire into a
+    // panel that never rendered: the desk cards vanished and nothing replaced
+    // them, which reads exactly as a button that does nothing. The top nav's
+    // News item worked all along because navigateSection turns the panel on
+    // before scrolling. Here rather than at each call site, because three call
+    // sites is how one of them came to have it and two did not.
+    setPanels(p => (p.news ? p : { ...p, news: true }));
     setNewsBusy(true); setNewsErr("");
     try {
       let parsed = null;
@@ -10829,6 +10863,27 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         }
       }
 
+      // A LOAD THAT FOUND NOTHING MUST SAY SO.
+      //
+      // An empty result used to be stored like any other. deskHasResult counts
+      // stories and clips, so an empty one reads as "nothing loaded": the four
+      // empty-desk cards come straight back, the button resets to "Load the
+      // news", and no sentence anywhere says a load happened at all. From the
+      // chair that is indistinguishable from a click that did nothing.
+      //
+      // With no stories there is also nothing to be quick FOR, so this is the
+      // one case where waiting on the video search is right — and it is bounded
+      // now, by searchYouTube's own timeout. Clips alone are a real result. No
+      // clips either is an error, worded as what happened rather than as a fault.
+      let clipsSettled = false;
+      if (!parsed.news?.length && !parsed.videos?.length) {
+        clipsSettled = true;   // the search below IS the clip lookup for this load
+        if (canSearchVideos) {
+          try { const vids = await searchYouTube(`${selected} stock`, 3); if (vids.length) parsed.videos = vids; } catch { /* fall through to the message */ }
+        }
+        if (!parsed.videos?.length) throw new Error(t("No {sym} headlines came back — try again in a minute.").replace("{sym}", selected));
+      }
+
       // THE STORIES LAND HERE, BEFORE ANY VIDEO SEARCH.
       //
       // They used to land after one, and that is how "load news for anything
@@ -10845,13 +10900,24 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       //
       // Stories are the payload; clips are a garnish. Nothing about a headline
       // should be gated on a video provider being quick, or awake.
+      //
+      // Overtaken loads stop here, before touching anything. A newer load owns
+      // the panel now, and it will set everything below itself.
+      if (!latest()) return;
       setNews(parsed); setNewsFor(selected);
       setNewsAt(Date.now()); setNewsSrc(parsed._src || "");
       // A new wire invalidates the bulletin that was running on the old one:
       // "story 3 of 8" would otherwise keep counting a list that no longer
       // exists. The translations go with it, since they were about those
       // headlines.
-      stopSpeak(); setAirIndex(null); setAirAuto(false);
+      //
+      // When the wire changed because you moved to another symbol, only the
+      // BULLETIN is silenced. stopSpeak() stops every voice, and a click on the
+      // watchlist is not a request to cut the anchor off mid-answer to an
+      // unrelated question. A wire you asked for by hand still stops everything,
+      // as it always has.
+      if (!follow || bulletinAiringRef.current) stopSpeak();
+      setAirIndex(null); setAirAuto(false);
       setMeansByTitle({}); meansAsked.current = new Set();
 
       // Clips follow on their own time. Real embeddable results from the Data
@@ -10863,17 +10929,56 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // not `parsed` and these clips are dropped rather than stapled onto
       // somebody else's headlines. Deliberately not awaited, so nothing here
       // can reach setNewsBusy below.
-      if (canSearchVideos) {
+      if (canSearchVideos && !clipsSettled) {
         searchYouTube(`${selected} stock`, 3)
           .then(vids => { if (vids.length) setNews(cur => (cur === parsed ? { ...cur, videos: vids } : cur)); })
           .catch(() => { /* no clips; the stories are already on screen */ });
       }
     } catch (e) {
-      setNewsErr(humanizeError(e));
+      // An overtaken load's failure belongs to a symbol you have left.
+      if (latest()) setNewsErr(humanizeError(e));
     } finally {
-      setNewsBusy(false);
+      // Only the newest load may say loading is over — an older one finishing
+      // first would otherwise clear the spinner while the current one is still
+      // out, and the panel would sit there looking idle and stale.
+      if (latest()) setNewsBusy(false);
     }
-  }, [selected, canSearchVideos, searchYouTube, anthropicApiKey, aiModels, meetStatus, newsViaClaude, newsViaModel, stopSpeak]);
+  }, [selected, canSearchVideos, searchYouTube, anthropicApiKey, aiModels, meetStatus, newsViaClaude, newsViaModel, stopSpeak, t]);
+
+  // ---- the wire follows the symbol ----
+  // Moving to another symbol — a watchlist row, the tape, a typed ticker,
+  // anything that changes `selected` — used to leave the panel on the old
+  // wire with "Showing AMD — refresh for TSLA" and wait for a press. An open
+  // wire now follows you.
+  //
+  // Only an OPEN one. If the news was never loaded, or the panel is switched
+  // off, changing symbol loads nothing: fetchNews reveals the panel, so
+  // following a wire nobody opened would force it on for everyone who scrolls
+  // a watchlist. Reopening a hidden panel re-runs this, so the wire it shows is
+  // the current symbol's rather than a stale one.
+  //
+  // The 350ms settle is for scrubbing: clicking down five rows in a second
+  // should fetch the fifth, not all five. And a load already out for this
+  // symbol is not started twice — this effect re-runs whenever fetchNews is
+  // rebuilt, which happens for reasons that have nothing to do with the symbol.
+  useEffect(() => {
+    if (!panels.news || !news) return;
+    if (newsFor === selected) {
+      // Back on the symbol the panel already shows, while a load is still out
+      // — or has failed — for one you left. Retire it: a fresh ticket means it
+      // can no longer land on top of this wire, and its spinner and its error
+      // belonged to a symbol that is no longer on screen.
+      if (newsRequestedFor.current && newsRequestedFor.current !== selected) {
+        newsSeq.current++;
+        newsRequestedFor.current = selected;
+        setNewsBusy(false); setNewsErr("");
+      }
+      return;
+    }
+    if (newsRequestedFor.current === selected) return;
+    const id = setTimeout(() => fetchNews({ follow: true }), 350);
+    return () => clearTimeout(id);
+  }, [selected, news, newsFor, panels.news, fetchNews]);
 
   // always hand the browser a valid, openable URL — fall back to a Google search if a model omitted/mangled one
   const newsHref = (n) => (n?.url && /^https?:\/\//.test(n.url)) ? n.url : `https://www.google.com/search?q=${encodeURIComponent(`${newsFor || selected} ${n?.title || ""}`.trim())}`;
@@ -11385,6 +11490,23 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       deskReply(n
         ? `Your portfolio is on the desk — ${n} position${n === 1 ? "" : "s"}${brokerTotals.length ? ` across ${brokerTotals.length} linked account${brokerTotals.length === 1 ? "" : "s"}` : ""}, ${portTotals.pnl >= 0 ? "up" : "down"} ${fmt(Math.abs(portTotals.pnl))} (${portTotals.pnlPct >= 0 ? "+" : ""}${portTotals.pnlPct.toFixed(2)}%).`
         : "Your portfolio is empty — add a symbol, share count and cost below, or link a brokerage account, and I'll track it from then on.");
+      return; // desk-handled
+    }
+
+    // news intent: "load news", "load the news", "show me the headlines", "news".
+    //
+    // The empty desk offers a card that says "Load the news", and typing those
+    // exact words did not load the news: portfolio and calendar had a phrase
+    // the desk recognised, news never did, so the sentence went to the model
+    // as a question and came back as an answer ABOUT news instead of the news.
+    //
+    // Anchored at both ends on purpose. This catches someone asking the desk
+    // to fetch — a verb, maybe "the", maybe "latest", then news or headlines,
+    // and nothing else. "What's the news on AMD's earnings?" and "summarize the
+    // news" are questions about the news, and they still go to the model.
+    if (/^\s*(?:please\s+)?(?:(?:load|show|get|open|pull\s+up|bring\s+up|fetch|refresh|reload|give)\s+(?:me\s+)?)?(?:the\s+)?(?:latest\s+)?(?:news|headlines)(?:\s+please)?\s*[.!?]*\s*$/i.test(q)) {
+      fetchNews();
+      deskReply(`Pulling the ${selected} wire — headlines and video are coming onto the desk.`);
       return; // desk-handled
     }
 
@@ -11928,7 +12050,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     // rendering at a different size, in a colour it chose for itself.
     { id: "cmd:settings", label: "Open settings", icon: "settings", group: "Action", keywords: ["keys", "api", "preferences", "config"], run: () => { setSettingsTab("quick"); setShowSettings(true); } },
     { id: "cmd:account", label: "Account & plan", icon: "plan", group: "Action", keywords: ["billing", "subscription", "upgrade"], run: () => { setSettingsTab("account"); setShowSettings(true); } },
-    { id: "cmd:news", label: `Load news for ${selected}`, icon: "news", group: "Action", keywords: ["headlines", "search"], run: () => { setPanels(p => ({ ...p, news: true })); fetchNews(); } },
+    { id: "cmd:news", label: `Load news for ${selected}`, icon: "news", group: "Action", keywords: ["headlines", "search"], run: () => fetchNews() },   // fetchNews reveals the panel itself now
     { id: "cmd:export-xlsx", label: "Export to Excel", icon: "sheet", group: "Export", keywords: ["xlsx", "spreadsheet", "download"], run: () => openExportPreview("xlsx") },
     { id: "cmd:export-docx", label: "Export to Word", icon: "report", group: "Export", keywords: ["docx", "document", "download"], run: () => openExportPreview("docx") },
     { id: "cmd:export-pptx", label: "Export to PowerPoint", icon: "deck", group: "Export", keywords: ["pptx", "slides", "deck", "download"], run: () => openExportPreview("pptx") },
