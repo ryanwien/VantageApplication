@@ -858,6 +858,15 @@ const TTL = {
 };
 const answerCache = new Map();
 
+// Whether cached(key, ttlMs, …) would answer without calling produce() — a
+// fresh body, or a call already in flight to join. For limiters that exist to
+// protect an upstream budget: an answer that never leaves this process spent
+// none of it, so it should not spend the caller's allowance either.
+function servedFromCache(key, ttlMs) {
+  const hit = answerCache.get(key);
+  return !!hit && (!!hit.pending || Date.now() - hit.at < ttlMs);
+}
+
 async function cached(key, ttlMs, produce) {
   const hit = answerCache.get(key);
   if (hit) {
@@ -1734,14 +1743,25 @@ const routeRequest = async (req, res) => {
 
     if (p === "/api/youtube/search" && req.method === "GET") {
       if (!YOUTUBE_KEY) return send(res, 503, { error: "Video search is not configured on this server (set YOUTUBE_API_KEY)." });
-      const rl = rateLimit(`yt:${clientIp(req)}`, ANON_YT_PER_HOUR, 3600000);
-      if (!rl.ok) return send(res, 429,
-        { error: `Rate limit reached (${rl.limit} per hour).`, retryInSec: Math.ceil(rl.resetMs / 1000) },
-        { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
-
       const q = String(url.searchParams.get("q") || "").trim().slice(0, 120);
       if (!q) return send(res, 400, { error: "Pass ?q=search+terms." });
       const max = Math.min(10, Math.max(1, Number(url.searchParams.get("max")) || 3));
+      const key = `yt:${q}:${max}`;
+
+      // The limiter guards the 10,000-unit daily budget, so it charges only for
+      // searches that actually reach YouTube. It used to run before the cache
+      // and charge for everything — including answers this server already had,
+      // which cost nothing. Once the news began following the symbol, every
+      // watchlist click became a search, and twenty of them in an hour
+      // (revisits included) exhausted the allowance: VIDEO COVERAGE then went
+      // quietly empty for the rest of the hour, from a cache that could have
+      // answered most of those clicks for free.
+      if (!servedFromCache(key, TTL.ytSearch)) {
+        const rl = rateLimit(`yt:${clientIp(req)}`, ANON_YT_PER_HOUR, 3600000);
+        if (!rl.ok) return send(res, 429,
+          { error: `Rate limit reached (${rl.limit} per hour).`, retryInSec: Math.ceil(rl.resetMs / 1000) },
+          { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) });
+      }
 
       // On the shared cache now. The per-IP limiter above bounds how fast ONE
       // caller can spend; it does nothing about the same query arriving from
@@ -1749,7 +1769,7 @@ const routeRequest = async (req, res) => {
       // stock` — so the distinct-query count is about the size of a watchlist,
       // not the number of requests.
       let videos;
-      try { videos = await cached(`yt:${q}:${max}`, TTL.ytSearch, () => ytSearchCall({ maxResults: String(max), q })); }
+      try { videos = await cached(key, TTL.ytSearch, () => ytSearchCall({ maxResults: String(max), q })); }
       catch (e) { return send(res, e.code || 502, { error: e.msg || "YouTube search failed." }); }
       return send(res, 200, { q, videos });
     }
