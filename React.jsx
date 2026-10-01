@@ -10945,24 +10945,53 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     }
   }, [selected, canSearchVideos, searchYouTube, anthropicApiKey, aiModels, meetStatus, newsViaClaude, newsViaModel, stopSpeak, t]);
 
-  // ---- the wire follows the symbol ----
-  // Moving to another symbol — a watchlist row, the tape, a typed ticker,
-  // anything that changes `selected` — used to leave the panel on the old
-  // wire with "Showing AMD — refresh for TSLA" and wait for a press. An open
-  // wire now follows you.
+  // ---- the news follows the symbol ----
+  // Changing symbol — a watchlist row, the tape, a typed ticker, anything that
+  // changes `selected` — loads that symbol's news. It used to leave the panel
+  // on the old wire with "Showing AMD — refresh for TSLA" and wait for a press.
   //
-  // Only an OPEN one. If the news was never loaded, or the panel is switched
-  // off, changing symbol loads nothing: fetchNews reveals the panel, so
-  // following a wire nobody opened would force it on for everyone who scrolls
-  // a watchlist. Reopening a hidden panel re-runs this, so the wire it shows is
-  // the current symbol's rather than a stale one.
+  // The first version of this followed only a wire that was already OPEN, to
+  // avoid forcing the panel on for people who had hidden it. That was the wrong
+  // line to draw: with the panel switched off in a saved setting from weeks
+  // earlier — the exact state this was reported from — or simply with no news
+  // loaded yet, changing symbol did nothing at all, which is the complaint
+  // this exists to fix.
+  //
+  // So it follows by default, and stands down for exactly two things:
+  //
+  //  · The first paint. Opening the app is not a symbol change, and loading
+  //    news on arrival would replace the empty desk's four cards before
+  //    anybody saw them. Nothing loads until the symbol actually moves.
+  //  · A panel you CLOSED. Switching it off while you use the app — its ✕, or
+  //    the settings toggle — means "not now", and is honoured until you open it
+  //    again by any route. A panel that was already off when the page loaded is
+  //    a stale preference, not a decision made in front of this screen, and
+  //    does not count.
   //
   // The 350ms settle is for scrubbing: clicking down five rows in a second
-  // should fetch the fifth, not all five. And a load already out for this
-  // symbol is not started twice — this effect re-runs whenever fetchNews is
-  // rebuilt, which happens for reasons that have nothing to do with the symbol.
+  // fetches the fifth. A load already out for this symbol is not started twice
+  // — this effect re-runs whenever fetchNews is rebuilt, for reasons that have
+  // nothing to do with the symbol.
+  //
+  // Cost worth knowing: each new symbol is also a YouTube search for its clips,
+  // 100 units of a 10,000/day budget on a cold symbol. Repeats inside the
+  // server's 30-minute cache are free, so this is ~100 DISTINCT symbols a day.
+  const newsClosedByUser = useRef(false);
+  const newsPanelWasOn = useRef(panels.news);
   useEffect(() => {
-    if (!panels.news || !news) return;
+    // Declared before the follow effect so it runs first in the same commit:
+    // a ✕ and a symbol change landing together must see the ✕.
+    if (newsPanelWasOn.current && !panels.news) newsClosedByUser.current = true;
+    if (!newsPanelWasOn.current && panels.news) newsClosedByUser.current = false;
+    newsPanelWasOn.current = panels.news;
+  }, [panels.news]);
+  const firstSymbol = useRef(selected);
+  const symbolHasMoved = useRef(false);
+
+  useEffect(() => {
+    if (selected !== firstSymbol.current) symbolHasMoved.current = true;
+    if (!panels.news && newsClosedByUser.current) return;
+    if (!news && !symbolHasMoved.current) return;
     if (newsFor === selected) {
       // Back on the symbol the panel already shows, while a load is still out
       // — or has failed — for one you left. Retire it: a fresh ticket means it
@@ -12324,8 +12353,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   })();
   // Does the desk have a result showing? Gates the "on the desk" verb cards,
   // which exist to fill the space when it does not.
+  // News counts only while its panel is showing. Closing the news desk with ✕
+  // switches the panel off but leaves the stories in state — so they used to go
+  // on counting as "something on the desk", the four empty-desk cards stayed
+  // hidden, and the column was left blank with no way back except the top nav.
+  // Hidden news is not on the desk; the cards (Load the news among them) return.
   const deskHasResult = !!aiResponses.nav || deskCalendar || deskPortfolio || !!videoDesk
-    || !!(news && (news.news?.length > 0 || news.videos?.length > 0)) || newsBusy || !!newsErr || !!writtenReport;
+    || (panels.news && (!!(news && (news.news?.length > 0 || news.videos?.length > 0)) || newsBusy || !!newsErr)) || !!writtenReport;
 
   // ---- the navigator's answer, as a chat attachment ----
   const navPanel = aiResponses.nav && (
