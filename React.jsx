@@ -10743,6 +10743,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // caller, an exchange-clock gate so an off-hours poll costs no quota, and the
   // channel allowlist. This is a fetch and a setState.
   const fetchLiveNow = useCallback(async () => {
+    // Switched off in Settings → YouTube with the news: no rail, and no request
+    // either. Emptied rather than left as it was, so turning it off takes the
+    // rail away at once instead of at the next five-minute poll.
+    if (!prefs.video.live) { setLiveNow([]); return; }
     if (!planAllows("youtube")) return;
     try {
       const r = await fetch("/api/youtube/live");
@@ -10750,7 +10754,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       const data = await r.json();
       setLiveNow(Array.isArray(data.live) ? data.live : []);
     } catch { /* no backend — the desk runs without one, so this is normal */ }
-  }, [planAllows]);
+  }, [planAllows, prefs.video.live]);
 
   useEffect(() => {
     fetchLiveNow();
@@ -10875,10 +10879,15 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // one case where waiting on the video search is right — and it is bounded
       // now, by searchYouTube's own timeout. Clips alone are a real result. No
       // clips either is an error, worded as what happened rather than as a fault.
+      // Settings → YouTube with the news. With coverage off there is no clip
+      // search at all — not a search whose result is thrown away — and a
+      // model's own video list is dropped too, so VIDEO COVERAGE stays empty.
+      const wantClips = canSearchVideos && prefs.video.coverage;
+      if (!prefs.video.coverage) parsed.videos = [];
       let clipsSettled = false;
       if (!parsed.news?.length && !parsed.videos?.length) {
         clipsSettled = true;   // the search below IS the clip lookup for this load
-        if (canSearchVideos) {
+        if (wantClips) {
           try { const vids = await searchYouTube(`${selected} stock`, 3); if (vids.length) parsed.videos = vids; } catch { /* fall through to the message */ }
         }
         if (!parsed.videos?.length) throw new Error(t("No {sym} headlines came back — try again in a minute.").replace("{sym}", selected));
@@ -10929,7 +10938,13 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // not `parsed` and these clips are dropped rather than stapled onto
       // somebody else's headlines. Deliberately not awaited, so nothing here
       // can reach setNewsBusy below.
-      if (canSearchVideos && !clipsSettled) {
+      // ON AIR NOW comes up with the news. The rail polls every five minutes on
+      // its own; asking now means the broadcasts beside a wire you just loaded
+      // are the ones on air as it landed. Served from the server's shared
+      // 15-minute cache, so this costs no quota of its own.
+      if (prefs.video.live) fetchLiveNow();
+
+      if (wantClips && !clipsSettled) {
         searchYouTube(`${selected} stock`, 3)
           .then(vids => { if (vids.length) setNews(cur => (cur === parsed ? { ...cur, videos: vids } : cur)); })
           .catch(() => { /* no clips; the stories are already on screen */ });
@@ -10943,7 +10958,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // out, and the panel would sit there looking idle and stale.
       if (latest()) setNewsBusy(false);
     }
-  }, [selected, canSearchVideos, searchYouTube, anthropicApiKey, aiModels, meetStatus, newsViaClaude, newsViaModel, stopSpeak, t]);
+  }, [selected, canSearchVideos, searchYouTube, anthropicApiKey, aiModels, meetStatus, newsViaClaude, newsViaModel, stopSpeak, t, prefs.video.coverage, prefs.video.live, fetchLiveNow]);
 
   // ---- the news follows the symbol ----
   // Changing symbol — a watchlist row, the tape, a typed ticker, anything that
@@ -12501,7 +12516,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     <div key="news" id="sec-news" className="v-scrollin" style={{ minWidth: 0 }}>
       <NewsDesk
         items={orderedNews}
-        videos={news?.videos || []}
+        // Coverage switched off hides clips already on screen, not only future
+        // searches — a switch that waits for the next load to take effect
+        // reads as a switch that did nothing.
+        videos={prefs.video.coverage ? (news?.videos || []) : []}
         live={liveNow}
         subject={selected}
         loadedFor={newsFor}
@@ -15023,11 +15041,33 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                       </div>
                     </SetSection>
 
+                    {/* Two kinds of YouTube ride the news, and they are different
+                        things: a broadcast that is on air right now, and a
+                        recording about the symbol. They get a switch each,
+                        rather than one for "video", because wanting the live
+                        desks beside your stories and not a wall of recorded
+                        hot takes — or the reverse — is a real preference. */}
+                    <SetSection title={t("YouTube with the news")}
+                      note={t("What loads beside the headlines when you open the news.")}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        <SetRow label={t("Live broadcasts")}
+                          note={t("ON AIR NOW — market channels streaming right now, refreshed each time the news loads.")}>
+                          <Toggle checked={prefs.video.live} label={t("Live broadcasts")}
+                            onChange={() => setPref("video", { ...prefs.video, live: !prefs.video.live })} />
+                        </SetRow>
+                        <SetRow label={t("Video coverage")}
+                          note={t("Recorded YouTube videos about the symbol, found when its news loads.")}>
+                          <Toggle checked={prefs.video.coverage} label={t("Video coverage")}
+                            onChange={() => setPref("video", { ...prefs.video, coverage: !prefs.video.coverage })} />
+                        </SetRow>
+                      </div>
+                    </SetSection>
+
                     <SetSection title={t("In-app alerts")}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         {[["priceTriggers", t("Price triggers")], ["breakingNews", t("Breaking news")], ["pnfPatterns", t("P&F pattern alerts")]].map(([key, label]) => (
                           <SetRow key={key} label={label}>
-                            <Toggle checked={prefs.notify[key]}
+                            <Toggle checked={prefs.notify[key]} label={label}
                               onChange={() => setPref("notify", { ...prefs.notify, [key]: !prefs.notify[key] })} />
                           </SetRow>
                         ))}

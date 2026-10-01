@@ -17,6 +17,14 @@ export const DEFAULT_PREFS = {
   // All off by default — break-ins (sound + speech) are opt-in, not something a
   // first visit should have to discover how to silence.
   notify: { priceTriggers: false, breakingNews: false, pnfPatterns: false },
+  // What the news desk brings in from YouTube beside the stories: `live` is the
+  // ON AIR NOW rail (market channels streaming right now), `coverage` is
+  // recorded videos about the symbol (VIDEO COVERAGE). Both default TRUE for the
+  // same reason portfolioLive does — this shipped with both already on, so the
+  // switch exists to opt OUT, and an install that never chose must keep what it
+  // had. Off also stops the fetching behind it, not just the drawing: coverage
+  // is a YouTube search per symbol, 100 units of a 10,000/day budget.
+  video: { live: true, coverage: true },
 };
 
 const ALLOWED_REFRESH = new Set([0, 5000, 15000, 30000]);
@@ -49,6 +57,18 @@ export function loadPrefs(rawString, legacyBreaking) {
     // links back into demo books on the first load after this shipped.
     portfolioLive: "portfolioLive" in stored ? !!stored.portfolioLive : DEFAULT_PREFS.portfolioLive,
     notify,
+    video: loadVideo(stored.video),
+  };
+}
+
+// Same rule as portfolioLive, per key: absent means never chosen, which reads
+// as the default. Anything that is not a plain object is corrupt and falls back
+// whole, rather than being half-applied.
+function loadVideo(v) {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return { ...DEFAULT_PREFS.video };
+  return {
+    live: "live" in v ? !!v.live : DEFAULT_PREFS.video.live,
+    coverage: "coverage" in v ? !!v.coverage : DEFAULT_PREFS.video.coverage,
   };
 }
 

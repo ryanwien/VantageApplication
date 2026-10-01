@@ -55,6 +55,36 @@ describe("loadPrefs", () => {
   });
 });
 
+describe("loadPrefs: YouTube with the news", () => {
+  // Both rails shipped switched on, so an install that never chose must keep
+  // them. This is the line a `!!stored.video.live` would have broken: every
+  // existing install would have lost both rails on the first load after it.
+  it("keeps live and coverage on when they were never chosen", () => {
+    expect(loadPrefs(null).video).toEqual({ live: true, coverage: true });
+    expect(loadPrefs("{}").video).toEqual({ live: true, coverage: true });
+    expect(loadPrefs('{"colorBlind":true}').video).toEqual({ live: true, coverage: true });
+  });
+
+  it("honours each switch on its own", () => {
+    expect(loadPrefs('{"video":{"live":false}}').video).toEqual({ live: false, coverage: true });
+    expect(loadPrefs('{"video":{"coverage":false}}').video).toEqual({ live: true, coverage: false });
+    expect(loadPrefs('{"video":{"live":false,"coverage":false}}').video).toEqual({ live: false, coverage: false });
+  });
+
+  it("falls back whole, never half, when the stored value is not an object", () => {
+    for (const bad of ['"oops"', "42", "true", "[1,2]", "null"]) {
+      expect(() => loadPrefs(`{"video":${bad}}`)).not.toThrow();
+      expect(loadPrefs(`{"video":${bad}}`).video).toEqual(DEFAULT_PREFS.video);
+    }
+  });
+
+  it("does not share the defaults object, so editing one install's prefs cannot edit the defaults", () => {
+    const p = loadPrefs(null);
+    p.video.live = false;
+    expect(DEFAULT_PREFS.video.live).toBe(true);
+  });
+});
+
 const PALETTE = { up: "#2FD37A", down: "#F6465D", flat: "#8A94A6" };
 
 describe("directionColor", () => {
