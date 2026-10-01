@@ -12653,6 +12653,41 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   ].filter(Boolean);
   const deskAttachments = deskPanels.length ? <>{deskPanels}</> : null;
 
+  // ---- ↺ : back to an empty desk ----
+  // The composer's ↺ was "Clear conversation" and cleared exactly that — the
+  // chat thread. Everything the desk had OPENED beside the thread (news,
+  // portfolio, calendar, a report, a video, the streaming catalog) is a
+  // separate list of attachments, and none of it moved. So you pressed it, the
+  // messages went, the button hid itself because there were no messages left,
+  // and the desk looked untouched. It now returns the desk to where it starts:
+  // the four cards.
+  //
+  // NEWS IS CLEARED, NOT SWITCHED OFF. The news ✕ turns the panel off, and that
+  // is persisted — a panel left off by a stale setting is exactly how "Load the
+  // news" came to load into nothing. A reset is not a preference about the
+  // panel, so the stories go and the panel stays on. The in-flight load, if
+  // any, is retired, and the follow effect is told this symbol is handled, so
+  // the wire you just cleared does not reload itself 350ms later.
+  //
+  // A GAME IS LEFT ALONE. It has its own exit, and a button labelled for the
+  // conversation should not discard a game in progress.
+  const clearDesk = () => {
+    stopAsk(); stopSpeak(); stopAir();
+    setChatThread([]);
+    setAiResponses(p => { const { nav, ...rest } = p; return rest; });
+    setDeskCalendar(false); setDeskPortfolio(false);
+    setWrittenReport(""); setReportSym("");
+    setVideoDesk(null); setVideoSummary(null); setPlayer(null);
+    setCatalog(null); setCatalogPick(null); setCatalogDetails(null);
+    newsSeq.current++;
+    newsRequestedFor.current = selected;
+    setNews(null); setNewsFor(null); setNewsErr(""); setNewsBusy(false);
+  };
+  // ↺ is offered whenever there is something for it to clear. It used to need
+  // a chat message, so news opened from a card — no message — left nothing to
+  // press.
+  const deskClearable = chatThread.length > 0 || deskHasResult || !!player || !!catalog;
+
   // ---------- the session, riding the answer ----------
   // Everything else the desk produces already rides the conversation (see
   // deskPanels above); the session was the one answer that still lived only in
@@ -13511,7 +13546,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                 </div>
               )}
               onSend={(text) => askDesk(text)}
-              onClear={() => { stopAsk(); setChatThread([]); }}
+              onClear={clearDesk}
+              canClear={deskClearable}
+              clearLabel="Clear the desk"
               /* Retry re-asks the question that produced the failed answer, not
                  the last thing typed — by the time someone hits it they may have
                  typed something else into the composer. The user turn sits

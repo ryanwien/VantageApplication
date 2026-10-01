@@ -308,6 +308,11 @@ export default function ChatAssistant({
   onSend,
   onRetry,
   onClear,
+  // Whether there is anything to clear. Defaults to "there are messages", which
+  // was the only test before; the desk passes its own, because what it clears
+  // is more than the thread.
+  canClear,
+  clearLabel = "Clear conversation",
   onStop,           // abort an answer in flight; the stop control only appears if given
   onSpeak,          // read a turn aloud; the desk wires this to its TTS engine
   speakingId,       // id of the message currently being spoken, if any
@@ -517,8 +522,8 @@ export default function ChatAssistant({
               <Shuttle width={14} height={10} />THINKING
             </span>
           )}
-          {messages.length > 0 && onClear && (
-            <button onClick={onClear} title="Clear conversation"
+          {(canClear ?? messages.length > 0) && onClear && (
+            <button onClick={onClear} title={clearLabel}
               style={{ ...button("quiet", "sm"), padding: "4px 8px", fontSize: 11 }}>
               Clear
             </button>
@@ -670,8 +675,8 @@ export default function ChatAssistant({
 
               The auto margin is layout, not targeting: once the row wraps,
               Clear belongs at the far end of the control line, away from Ask. */}
-          {compact && messages.length > 0 && onClear && (
-            <button onClick={onClear} aria-label="Clear conversation" title="Clear conversation" className="v-tap v-clearx"
+          {compact && (canClear ?? messages.length > 0) && onClear && (
+            <button onClick={onClear} aria-label={clearLabel} title={clearLabel} className="v-tap v-clearx"
               style={{
                 background: "transparent", border: "none", color: C.faint, cursor: "pointer",
                 fontSize: 14, padding: "6px 4px", flexShrink: 0,
