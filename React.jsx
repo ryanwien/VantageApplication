@@ -38,6 +38,7 @@ import ChunkBoundary from "./src/ui/ChunkBoundary.jsx";
 import Sparkline from "./src/ui/Sparkline.jsx";
 import RichText from "./src/ui/RichText.jsx";
 import Toggle, { ToggleGlyph } from "./src/ui/Toggle.jsx";
+import { anchorGender, browserVoiceForAnchor, studioVoiceForAnchor, defaultBrowserSlots, defaultStudioSlots } from "./src/voice/gender.js";
 import Overlay from "./src/ui/Overlay.jsx";
 import { api, ApiError, tokenStore } from "./src/api/client.js";
 import {
@@ -501,29 +502,33 @@ async function finnhubSearch(query) {
 // Nova is the exception and stays light: white IS the costume on a spacesuit.
 // It comes down out of clipping (0.798 to 0.56) rather than to the rule.
 const CHARACTERS = [
-  { id: "sterling", name: "Sterling", skin: "#D9A57E", hairColor: "#2A2118", hair: "short", suit: "#1B2231", shirt: "#B9BCC1", tieBase: true, accessory: "headset" },
-  { id: "vega", name: "Vega", skin: "#C68863", hairColor: "#3B2417", hair: "long", suit: "#2A2133", shirt: "#C2BABD", tieBase: false, accessory: "earpiece", earrings: true },
-  { id: "kwan", name: "Kwan", skin: "#E8C39E", hairColor: "#151515", hair: "short", suit: "#232A24", shirt: "#B9BCC1", tieBase: true, accessory: "headset", glasses: true },
-  { id: "moss", name: "Moss", skin: "#B97F5C", hairColor: "#9A9A9A", hair: "bald", beard: true, suit: "#2E2A20", shirt: "#C0BCAE", tieBase: true, accessory: "earpiece" },
+  { id: "sterling", name: "Sterling", voice: "male", skin: "#D9A57E", hairColor: "#2A2118", hair: "short", suit: "#1B2231", shirt: "#B9BCC1", tieBase: true, accessory: "headset" },
+  { id: "vega", name: "Vega", voice: "female", skin: "#C68863", hairColor: "#3B2417", hair: "long", suit: "#2A2133", shirt: "#C2BABD", tieBase: false, accessory: "earpiece", earrings: true },
+  { id: "kwan", name: "Kwan", voice: "male", skin: "#E8C39E", hairColor: "#151515", hair: "short", suit: "#232A24", shirt: "#B9BCC1", tieBase: true, accessory: "headset", glasses: true },
+  { id: "moss", name: "Moss", voice: "male", skin: "#B97F5C", hairColor: "#9A9A9A", hair: "bald", beard: true, suit: "#2E2A20", shirt: "#C0BCAE", tieBase: true, accessory: "earpiece" },
   { id: "tick3r", name: "TICK-3R", robot: true, suit: "#20262F" },
-  { id: "pax", name: "Pax", skin: "#D9A57E", hairColor: "#241A12", hair: "short", suit: "#241C33", shirt: "#141821", tieBase: false, accessory: "headset", hat: "podcast" },
-  { id: "sir-gaine", name: "Sir Gaine", skin: "#D9A57E", hairColor: "#2A2118", hair: "short", suit: "#3A414D", shirt: "#B4BCCC", tieBase: false, hat: "knight" },
-  { id: "mordo", name: "Mordo", skin: "#C68863", hairColor: "#C9C4B8", hair: "short", beard: true, suit: "#2A1E44", shirt: "#3A2A66", tieBase: false, hat: "wizard" },
-  { id: "nova", name: "Nova", skin: "#C68863", hairColor: "#1A1A1A", hair: "short", suit: "#C3C5CB", shirt: "#A8AEB9", tieBase: false, hat: "astronaut" },
-  { id: "marina", name: "Marina", skin: "#E8C39E", hairColor: "#1FA9A0", hair: "long", suit: "#186A72", shirt: "#2FD3C6", tieBase: false, earrings: true, hat: "mermaid" },
-  { id: "aurora", name: "Aurora", skin: "#E8C6A8", hairColor: "#6B3B1F", hair: "long", suit: "#7A2E5A", shirt: "#E9A8C8", tieBase: false, earrings: true, hat: "crown" },
-  { id: "diana", name: "Diana", skin: "#C68863", hairColor: "#1A1512", hair: "long", suit: "#2E5A3A", shirt: "#C9A24B", tieBase: false, earrings: true, hat: "amazon" },
-  // genre anchors — each genre has a male + female option so the roster stays gender-balanced
-  { id: "blaze", name: "Blaze", skin: "#C68863", hairColor: "#1A1A1A", hair: "short", suit: "#3B4A2F", shirt: "#5A6B3F", tieBase: false, hat: "action" },
-  { id: "zara", name: "Zara", skin: "#C68863", hairColor: "#1A1A1A", hair: "long", suit: "#3B4A2F", shirt: "#5A6B3F", tieBase: false, earrings: true, hat: "action" },
-  { id: "kit", name: "Kit", skin: "#D9A57E", hairColor: "#4A3421", hair: "short", suit: "#6B5334", shirt: "#8A6F45", tieBase: false, hat: "explorer" },
-  { id: "sienna", name: "Sienna", skin: "#D9A57E", hairColor: "#4A3421", hair: "long", suit: "#6B5334", shirt: "#8A6F45", tieBase: false, earrings: true, hat: "explorer" },
-  { id: "vesper", name: "Vesper", skin: "#CFC9CE", hairColor: "#0A0A0A", hair: "short", suit: "#14121A", shirt: "#3A0E14", tieBase: false, hat: "horror" },
-  { id: "lilith", name: "Lilith", skin: "#CFC9CE", hairColor: "#0A0A0A", hair: "long", suit: "#14121A", shirt: "#3A0E14", tieBase: false, earrings: true, hat: "horror" },
-  { id: "colt", name: "Colt", skin: "#C68863", hairColor: "#3B2417", hair: "short", beard: true, suit: "#5A3A24", shirt: "#8A5A34", tieBase: false, hat: "cowboy" },
-  { id: "dakota", name: "Dakota", skin: "#D9A57E", hairColor: "#5A3A1E", hair: "long", suit: "#5A3A24", shirt: "#8A5A34", tieBase: false, earrings: true, hat: "cowboy" },
-  { id: "marlowe", name: "Marlowe", skin: "#B9A9A0", hairColor: "#20201F", hair: "short", suit: "#2E2E30", shirt: "#BCBCBC", tieBase: true, hat: "noir" },
-  { id: "vivienne", name: "Vivienne", skin: "#CDB8AE", hairColor: "#20201F", hair: "long", suit: "#2E2E30", shirt: "#BCBCBC", tieBase: false, earrings: true, hat: "noir" },
+  { id: "pax", name: "Pax", voice: "male", skin: "#D9A57E", hairColor: "#241A12", hair: "short", suit: "#241C33", shirt: "#141821", tieBase: false, accessory: "headset", hat: "podcast" },
+  { id: "sir-gaine", name: "Sir Gaine", voice: "male", skin: "#D9A57E", hairColor: "#2A2118", hair: "short", suit: "#3A414D", shirt: "#B4BCCC", tieBase: false, hat: "knight" },
+  { id: "mordo", name: "Mordo", voice: "male", skin: "#C68863", hairColor: "#C9C4B8", hair: "short", beard: true, suit: "#2A1E44", shirt: "#3A2A66", tieBase: false, hat: "wizard" },
+  { id: "nova", name: "Nova", voice: "male", skin: "#C68863", hairColor: "#1A1A1A", hair: "short", suit: "#C3C5CB", shirt: "#A8AEB9", tieBase: false, hat: "astronaut" },
+  { id: "marina", name: "Marina", voice: "female", skin: "#E8C39E", hairColor: "#1FA9A0", hair: "long", suit: "#186A72", shirt: "#2FD3C6", tieBase: false, earrings: true, hat: "mermaid" },
+  { id: "aurora", name: "Aurora", voice: "female", skin: "#E8C6A8", hairColor: "#6B3B1F", hair: "long", suit: "#7A2E5A", shirt: "#E9A8C8", tieBase: false, earrings: true, hat: "crown" },
+  { id: "diana", name: "Diana", voice: "female", skin: "#C68863", hairColor: "#1A1512", hair: "long", suit: "#2E5A3A", shirt: "#C9A24B", tieBase: false, earrings: true, hat: "amazon" },
+  // genre anchors — each genre has a male + female option so the roster stays gender-balanced.
+  //
+  // `voice` on every character is which voice speaks for them — see
+  // src/voice/gender.js. It is set here, by hand, and never inferred from the
+  // drawing. TICK-3R has none on purpose: a robot uses whatever voice you chose.
+  { id: "blaze", name: "Blaze", voice: "male", skin: "#C68863", hairColor: "#1A1A1A", hair: "short", suit: "#3B4A2F", shirt: "#5A6B3F", tieBase: false, hat: "action" },
+  { id: "zara", name: "Zara", voice: "female", skin: "#C68863", hairColor: "#1A1A1A", hair: "long", suit: "#3B4A2F", shirt: "#5A6B3F", tieBase: false, earrings: true, hat: "action" },
+  { id: "kit", name: "Kit", voice: "male", skin: "#D9A57E", hairColor: "#4A3421", hair: "short", suit: "#6B5334", shirt: "#8A6F45", tieBase: false, hat: "explorer" },
+  { id: "sienna", name: "Sienna", voice: "female", skin: "#D9A57E", hairColor: "#4A3421", hair: "long", suit: "#6B5334", shirt: "#8A6F45", tieBase: false, earrings: true, hat: "explorer" },
+  { id: "vesper", name: "Vesper", voice: "male", skin: "#CFC9CE", hairColor: "#0A0A0A", hair: "short", suit: "#14121A", shirt: "#3A0E14", tieBase: false, hat: "horror" },
+  { id: "lilith", name: "Lilith", voice: "female", skin: "#CFC9CE", hairColor: "#0A0A0A", hair: "long", suit: "#14121A", shirt: "#3A0E14", tieBase: false, earrings: true, hat: "horror" },
+  { id: "colt", name: "Colt", voice: "male", skin: "#C68863", hairColor: "#3B2417", hair: "short", beard: true, suit: "#5A3A24", shirt: "#8A5A34", tieBase: false, hat: "cowboy" },
+  { id: "dakota", name: "Dakota", voice: "female", skin: "#D9A57E", hairColor: "#5A3A1E", hair: "long", suit: "#5A3A24", shirt: "#8A5A34", tieBase: false, earrings: true, hat: "cowboy" },
+  { id: "marlowe", name: "Marlowe", voice: "male", skin: "#B9A9A0", hairColor: "#20201F", hair: "short", suit: "#2E2E30", shirt: "#BCBCBC", tieBase: true, hat: "noir" },
+  { id: "vivienne", name: "Vivienne", voice: "female", skin: "#CDB8AE", hairColor: "#20201F", hair: "long", suit: "#2E2E30", shirt: "#BCBCBC", tieBase: false, earrings: true, hat: "noir" },
 ];
 
 // What MarketNarrator is, in the product's own words. One constant, because two places
@@ -7123,7 +7128,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   // plan-gated: ElevenLabs needs Trading Floor. If the plan drops below it, fall back to free browser TTS.
   useEffect(() => { if (voiceEngine === "elevenlabs" && !planAllows("elevenlabs")) setVoiceEngine("browser"); }, [voiceEngine, planAllows]);
   const [elevenVoices, setElevenVoices] = useState([]);
-  const [elevenVoiceId, setElevenVoiceId] = useState("");
+  // One studio voice per anchor gender — see the browser slots below for why
+  // a single picker could not do this.
+  const [studioSlots, setStudioSlots] = useState({ female: "", male: "" });
   const [elevenErr, setElevenErr] = useState("");
   const [speakingId, setSpeakingId] = useState(null);
   // Mirrors speakingId for the code that reads it OUTSIDE a render: the demo
@@ -7134,12 +7141,30 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   const speakingIdRef = useRef(null);
   useEffect(() => { speakingIdRef.current = speakingId; }, [speakingId]);
   const [voices, setVoices] = useState([]);
-  const [voiceName, setVoiceName] = useState("");
+  // The voice female anchors speak with, and the one male anchors (and
+  // TICK-3R) speak with. Filled with the best match per gender once the
+  // browser lists its voices; whatever is picked in Settings is used exactly.
+  const [voiceSlots, setVoiceSlots] = useState({ female: "", male: "" });
   const [autoSpeak, setAutoSpeak] = useState(true);
   const [speechRate, setSpeechRate] = useState(1.06);
   const [musicVolume, setMusicVolume] = useState(0.8);
   const [soundVolume, setSoundVolume] = useState(0.65);
   const [characterId, setCharacterId] = useState("sterling");
+  // Which voice the anchor on screen speaks with — "female", "male", or null
+  // for TICK-3R. Every read below picks its voice through this, so changing
+  // anchor changes the voice on the very next sentence.
+  const anchorVoice = anchorGender(CHARACTERS.find(c => c.id === characterId));
+  // A machine with no voice of the anchor's gender installed still speaks —
+  // silence would be worse — but says so, once per gender per session, rather
+  // than leaving Vega talking like David with no explanation.
+  const voiceMissWarned = useRef({});
+  const noteVoiceFit = (fits) => {
+    if (fits || !anchorVoice || voiceMissWarned.current[anchorVoice]) return;
+    voiceMissWarned.current[anchorVoice] = true;
+    setCmdMsg(anchorVoice === "female"
+      ? t("No female voice is installed for this language, so the anchor is using your chosen voice.")
+      : t("No male voice is installed for this language, so the anchor is using your chosen voice."));
+  };
   const [crewId, setCrewId] = useState("off"); // 'auto' | 'off' | character id
   const [envId, setEnvId] = useState("newsroom");
 
@@ -7215,9 +7240,9 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       const r = await fetch("/api/voices");
       if (!r.ok) throw await serverError(r, "Studio voices");
       const data = await r.json();
-      const vs = (data.voices || []).map(v => ({ id: v.voice_id, name: v.name }));
+      const vs = (data.voices || []).map(v => ({ id: v.voice_id, name: v.name, gender: v.labels?.gender || null }));
       setElevenVoices(vs);
-      setElevenVoiceId(prev => prev || vs[0]?.id || "");
+      setStudioSlots(prev => { const d = defaultStudioSlots(vs); return { female: prev.female || d.female, male: prev.male || d.male }; });
       setElevenErr("");
     } catch (e) {
       setElevenErr(humanizeError(e));
@@ -7237,7 +7262,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       const v = window.speechSynthesis?.getVoices?.() || [];
       if (v.length) {
         setVoices(v);
-        setVoiceName(prev => prev || (v.find(x => x.lang.startsWith("en") && x.localService) || v.find(x => x.lang.startsWith("en")) || v[0]).name);
+        setVoiceSlots(prev => { const d = defaultBrowserSlots(v, "en"); return { female: prev.female || d.female, male: prev.male || d.male }; });
       }
     };
     load();
@@ -7272,7 +7297,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
   const authHdr = useMemo(() => (account?.token ? { Authorization: `Bearer ${account.token}` } : {}), [account?.token]);
 
   const speakEleven = useCallback(async (id, text, onDone) => {
-    if (!canUseStudioVoice || !elevenVoiceId) { setCmdMsg(t("Pick a studio voice in settings")); return; }
+    // The studio voice in the anchor's slot — female anchors' or male anchors'.
+    const studioPick = studioVoiceForAnchor({ gender: anchorVoice, voices: elevenVoices, slots: studioSlots });
+    if (!canUseStudioVoice || !studioPick.id) { setCmdMsg(t("Pick a studio voice in settings")); return; }
+    noteVoiceFit(studioPick.fits);
     try {
       setSpeakingId(id);
       // The token is the point. /api/tts used to take anyone's word for it and
@@ -7284,7 +7312,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
         {
           method: "POST",
           headers: { "Content-Type": "application/json", ...authHdr },
-          body: JSON.stringify({ text, voiceId: elevenVoiceId }),
+          body: JSON.stringify({ text, voiceId: studioPick.id }),
         }
       );
       // A refusal here is about the ACCOUNT, not the audio: not signed in, not
@@ -7357,7 +7385,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       analyserRef.current = null;
       setSpeakingId(cur => (cur === id ? null : cur));
     }
-  }, [elevenVoiceId, speechRate, authHdr]);
+  }, [studioSlots, speechRate, authHdr, anchorVoice, elevenVoices]);
 
   // `onDone` fires when a read reaches its end on its own — never when it is
   // stopped, replaced or errors. That distinction is the whole reason the News
@@ -7369,8 +7397,11 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     if (!window.speechSynthesis) { setCmdMsg("This browser doesn't support speech synthesis"); return; }
     const u = new SpeechSynthesisUtterance(text);
     u.lang = TTS_LANG[lang] || "en-US"; // speak in the chosen language
-    const v = (lang !== "en" ? voices.find(x => (x.lang || "").toLowerCase().startsWith(lang)) : null) || voices.find(x => x.name === voiceName);
-    if (v) u.voice = v; // prefer a voice matching the language, else the chosen/default voice
+    // The voice in the anchor's slot, exactly as picked — unless it cannot speak
+    // the app's language, when the best voice of the anchor's gender stands in.
+    const { voice: v, fits } = browserVoiceForAnchor({ gender: anchorVoice, voices, lang, slots: voiceSlots });
+    if (v) u.voice = v;
+    noteVoiceFit(fits);
     u.rate = speechRate; u.pitch = 1.0;
     // Timed from onstart rather than from here: speak() defers by 60ms and the
     // synth may queue behind whatever it was already saying, so a clock started
@@ -7415,7 +7446,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       window.speechSynthesis.resume();
       window.speechSynthesis.speak(u);
     }, 60);
-  }, [voices, voiceName, speechRate, voiceEngine, speakEleven, stopSpeak]);
+  }, [voices, voiceSlots, speechRate, voiceEngine, speakEleven, stopSpeak, anchorVoice, lang]);
 
   // watchdog: if the anchor is flagged "talking" (browser TTS) but the synth isn't actually
   // speaking or queued, clear it — otherwise a blocked/interrupted utterance leaves the mouth
@@ -7459,7 +7490,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     const st = streamRef.current;                 // capture: a newer stream replaces this object
     const u = new SpeechSynthesisUtterance(text);
     u.lang = TTS_LANG[lang] || "en-US"; // speak in the chosen language
-    const v = (lang !== "en" ? voices.find(x => (x.lang || "").toLowerCase().startsWith(lang)) : null) || voices.find(x => x.name === voiceName);
+    const { voice: v } = browserVoiceForAnchor({ gender: anchorVoice, voices, lang, slots: voiceSlots });
     if (v) u.voice = v;
     u.rate = speechRate; u.pitch = 1.0;
     u.onboundary = onWordBoundary;
@@ -7472,7 +7503,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     u.onend = done; u.onerror = done;
     window.speechSynthesis.resume();
     window.speechSynthesis.speak(u);               // queues behind earlier sentences — continuous speech
-  }, [voices, voiceName, speechRate]);
+  }, [voices, voiceSlots, speechRate, anchorVoice, lang]);
 
   const beginStreamSpeak = useCallback((id) => {
     stopSpeak();                                    // clears prior speech + resets the stream object
@@ -15260,13 +15291,26 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                             onChange={(v, locked) => { if (locked) { setSettingsTab("account"); return; } setVoiceEngine(v); }} />
                         </SetRow>
 
-                        {voiceEngine === "elevenlabs" && elevenVoices.length > 0 && (
-                          <SetRow label={t("Studio voice")} htmlFor="voice-eleven">
-                            <Picker id="voice-eleven" label={t("Studio voice")} value={elevenVoiceId} onChange={setElevenVoiceId}
-                              placeholder={t("Search voices…")}
-                              options={elevenVoices.map(v => ({ value: v.id, label: v.name }))} />
-                          </SetRow>
-                        )}
+                        {/* A voice per anchor gender. Each list puts that gender's
+                            voices first but offers every one: a pick outside it
+                            is a choice, and it is honoured. */}
+                        {voiceEngine === "elevenlabs" && elevenVoices.length > 0 && (() => {
+                          const options = (g) => [...elevenVoices]
+                            .sort((a, b) => (b.gender === g) - (a.gender === g))
+                            .map(v => ({ value: v.id, label: v.name, note: v.gender === "female" ? t("female") : v.gender === "male" ? t("male") : undefined }));
+                          return (<>
+                            <SetRow label={t("Female anchors")} htmlFor="voice-eleven-f">
+                              <Picker id="voice-eleven-f" label={t("Female anchors")} value={studioSlots.female}
+                                onChange={id => setStudioSlots(s => ({ ...s, female: id }))}
+                                placeholder={t("Search voices…")} options={options("female")} />
+                            </SetRow>
+                            <SetRow label={t("Male anchors")} note={t("Also used by TICK-3R.")} htmlFor="voice-eleven-m">
+                              <Picker id="voice-eleven-m" label={t("Male anchors")} value={studioSlots.male}
+                                onChange={id => setStudioSlots(s => ({ ...s, male: id }))}
+                                placeholder={t("Search voices…")} options={options("male")} />
+                            </SetRow>
+                          </>);
+                        })()}
                         {voiceEngine === "elevenlabs" && elevenErr && (
                           <div style={{ fontFamily: SANS, fontSize: 13, color: C.down, lineHeight: 1.6 }}>{elevenErr}</div>
                         )}
@@ -15274,12 +15318,8 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                           <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint }}>{t("Loading voices…")}</div>
                         )}
 
-                        {voiceEngine === "browser" && (
-                          <SetRow label={t("Browser voice")} htmlFor="voice-browser"
-                            note={voices.length > 0 ? t("{n} available on this device").replace("{n}", String(voices.length)) : undefined}>
-                            <Picker id="voice-browser" label={t("Browser voice")} value={voiceName} onChange={setVoiceName}
-                              placeholder={t("Search voices…")}
-                              options={(() => {
+                        {voiceEngine === "browser" && (() => {
+                          const options = (() => {
                                 // Every voice the OS/browser exposes is free — group them all by language, current language first
                                 const cur = (TTS_LANG[lang] || "en-US").slice(0, 2);
                                 const langName = (code) => { try { return new Intl.DisplayNames([lang], { type: "language" }).of(code) || code; } catch { return code; } };
@@ -15293,9 +15333,21 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                                   value: v.name, label: v.name, group: langName(k),
                                   note: v.localService ? t("local") : t("network"),
                                 })));
-                              })()} />
-                          </SetRow>
-                        )}
+                          })();
+                          return (<>
+                            <SetRow label={t("Female anchors")} htmlFor="voice-browser-f"
+                              note={voices.length > 0 ? t("{n} available on this device").replace("{n}", String(voices.length)) : undefined}>
+                              <Picker id="voice-browser-f" label={t("Female anchors")} value={voiceSlots.female}
+                                onChange={name => setVoiceSlots(s => ({ ...s, female: name }))}
+                                placeholder={t("Search voices…")} options={options} />
+                            </SetRow>
+                            <SetRow label={t("Male anchors")} note={t("Also used by TICK-3R.")} htmlFor="voice-browser-m">
+                              <Picker id="voice-browser-m" label={t("Male anchors")} value={voiceSlots.male}
+                                onChange={name => setVoiceSlots(s => ({ ...s, male: name }))}
+                                placeholder={t("Search voices…")} options={options} />
+                            </SetRow>
+                          </>);
+                        })()}
 
                         <SetRow label={t("Background crew")} htmlFor="voice-crew" note={t("A second voice to react and hand over to.")}>
                           <Picker id="voice-crew" label={t("Background crew")} value={crewId} onChange={setCrewId}
