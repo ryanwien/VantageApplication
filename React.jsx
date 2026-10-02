@@ -56,6 +56,7 @@ import NewsDesk from "./src/ui/NewsDesk.jsx";
 import VideoFrame, { ytId } from "./src/ui/VideoFrame.jsx";
 import VideoDesk from "./src/ui/VideoDesk.jsx";
 import { ytDurationSec, parseChapters, chapterMentions, relAge, summaryRows } from "./src/video/video.js";
+import { isMarketVideo } from "./src/video/market.js";
 import { newestFirst, sourceOf } from "./src/news/news.js";
 import { clock } from "./src/lib/time.js";
 import useSpeechProgress from "./src/ui/useSpeechProgress.js";
@@ -120,8 +121,8 @@ import HomePage from "./src/ui/HomePage.jsx";
    ------------------------------------------------------------
    WHAT IT IS
      A single-page React app: a live/simulated market dashboard where an animated news
-     anchor charts stocks, answers questions out loud, reads the news, plays trailers,
-     hosts games, tracks a portfolio, and rings the opening bell on a real trading-day clock.
+     anchor charts stocks, answers questions out loud, reads the news, puts live
+     market TV on air, hosts games, tracks a portfolio, and rings the opening bell on a real trading-day clock.
 
    DATA MODES
      • Demo (default, zero setup) — a seeded random-walk market engine drives prices.
@@ -129,7 +130,7 @@ import HomePage from "./src/ui/HomePage.jsx";
 
    OPTIONAL KEYS (each unlocks one extra; the app is fully usable with none):
      • AI desk answers — OpenRouter (primary) / Claude / OpenAI / Gemini / Ollama / LM Studio / Proton
-     • Finnhub  → live quotes + earnings calendar    • TMDB    → streaming catalog + trailers
+     • Finnhub  → live quotes + earnings calendar    • TMDB    → streaming catalog
      • YouTube  → real embeddable video results       • ElevenLabs → studio-grade anchor voice
    All keys live in the browser's localStorage only (never sent anywhere but their own API).
 
@@ -751,7 +752,7 @@ const TOUR_STEPS = [
   // export path. The spoken line names no ticker on purpose — a synthesiser
   // reads NVDA as a word.
   { target: "tour-ask", title: "The AI desk", body: "One box for everything. Type a ticker and press Enter to chart it, or ask a question in plain words — “why is NVDA down?”, “alert me when NVDA hits 150”, “write a report and export ppt”. “ADD TSLA” and “DEL TSLA” manage your watchlist.", say: "One box for everything. Type a ticker to chart it, or just ask me a question in plain words — why a stock moved, or, alert me when it hits a price, and I'll watch the session for you." },
-  { target: "tour-response", title: "Answers, news & Watch", body: "Answers, news, and the streaming catalog land here. Trailers play right inside.", say: "Answers, news, and the streaming catalog all appear here, in one place." },
+  { target: "tour-response", title: "Answers, news & Watch", body: "Answers, news, and the streaming catalog land here.", say: "Answers, news, and the streaming catalog all appear here, in one place." },
   { target: "tour-export", title: "Export & edit anything", body: "Export the session as Word, PowerPoint or Excel. A review step lets you edit everything before it saves.", say: "Export your session as Word, PowerPoint or Excel. You can edit everything before it saves." },
   { target: "tour-ticker", title: "Ticker tape", body: "Your watchlist scrolls across the top. Flip DEMO to LIVE in settings for real Finnhub quotes.", say: "Your watchlist scrolls across the ticker tape. Switch to live Finnhub quotes in settings and it stays live." },
   { target: "app-calendar-panel", title: "Market calendar", body: "Add your events and I announce them on air when they're due. Market events merge in automatically.", say: "Add events to your calendar and I'll announce them on air when they're due." },
@@ -762,7 +763,7 @@ const TOUR_STEPS = [
 const MISSIONS = [
   { id: "chart", label: "Chart a stock", hint: "type a ticker up top" },
   { id: "ask", label: "Ask the desk a question", hint: "use the ? box" },
-  { id: "watch", label: "Play a trailer or film in-desk", hint: "“what's on netflix” or “free movies”" },
+  { id: "watch", label: "Play a market video or film in-desk", hint: "“show me a video on NVDA” or “free movies”" },
   { id: "nav", label: "Open a broker or in-app chart", hint: "“take me to Robinhood”" },
   { id: "bell", label: "Ring the opening bell", hint: "“ring the bell”" },
   { id: "export", label: "Export a report", hint: "“download excel”" },
@@ -10500,19 +10501,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     runBrowse({ service: svc, region: "US" }, `/api/tmdb/discover?kind=${kind}&provider=${svc.tmdb}&region=US`, kind), [runBrowse]);
   const browsePopular = useCallback((kind = "movie") =>
     runBrowse({ popular: true }, `/api/tmdb/trending?kind=${kind}`, kind), [runBrowse]);
-  const playTrailer = useCallback(async (item, svc) => {
-    if (!planAllows("tmdb")) return; // plan-gated: TMDB trailers need Pro Desk
-    if (!canBrowseCatalog) return;
-    try {
-      const r = await fetch(`/api/tmdb/videos?kind=${item.kind}&id=${item.id}`);
-      const d = await r.json();
-      const vids = (d.results || []).filter(v => v.site === "YouTube");
-      const t = vids.find(v => v.type === "Trailer") || vids.find(v => v.type === "Teaser") || vids[0];
-      completeMission("watch");
-      if (t) setPlayer({ id: t.key, title: `${item.title} — Trailer`, channel: svc?.name || "Trailer", url: `https://www.youtube.com/watch?v=${t.key}` });
-      else setPlayer({ id: null, title: `${item.title} — Trailer`, channel: svc?.name || "", brief: "No trailer on file — use the search link to find it.", url: `https://www.youtube.com/results?search_query=${encodeURIComponent(item.title + " trailer")}` });
-    } catch { /* trailer is a bonus */ }
-  }, [canBrowseCatalog, completeMission]);
   const browseArchive = useCallback(async (query) => {
     setCatalogPick(null); setCatalogDetails(null);
     setCatalog({ archive: true, loading: true, items: [], query });
@@ -10931,6 +10919,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       // search at all — not a search whose result is thrown away — and a
       // model's own video list is dropped too, so VIDEO COVERAGE stays empty.
       const wantClips = canSearchVideos && prefs.video.coverage;
+      // A model's video list gets the same stocks-only check the server puts
+      // on search results (src/video/market.js). It was asked for videos about
+      // the stock and usually lists them, but "usually" is not the rule.
+      parsed.videos = (parsed.videos || []).filter(isMarketVideo);
       if (!prefs.video.coverage) parsed.videos = [];
       let clipsSettled = false;
       if (!parsed.news?.length && !parsed.videos?.length) {
@@ -11215,7 +11207,10 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
       const clean = text.replace(/```json|```/g, "").trim();
       const a = clean.indexOf("{"), z = clean.lastIndexOf("}");
-      const videos = JSON.parse(clean.slice(a, z + 1)).videos || [];
+      // Only market coverage plays on the desk, whoever found it — the brief is
+      // the model's own two sentences on what the video covers, and it is
+      // what the check reads when the title alone does not say.
+      const videos = (JSON.parse(clean.slice(a, z + 1)).videos || []).filter(isMarketVideo);
       if (videos.length === 0) throw new Error(`No video coverage found for ${topic} — try different wording`);
       const first = videos[0];
       const id = ytId(first.url);
@@ -12212,7 +12207,6 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       onOpen={openTitle}
       onStopRead={stopSpeak}
       onKind={(k) => (catalog.popular ? browsePopular(k) : browseCatalog(catalog.service, k))}
-      onTrailer={(it) => playTrailer(it, catalog.service)}
       onWatchOn={catalog.service ? (it) => openEmbed(catalog.service.search(it.title), catalog.service.name) : null}
       // Only when there is a model to ask. A button that hands six titles to
       // nothing is a button that does nothing.
@@ -14853,7 +14847,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
             </div>
 
             <div style={{ ...TYPE.body, color: C.muted, marginTop: 16 }}>
-              {t("Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:")}
+              {t("Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even puts live market TV on air. Pick how you'd like to learn it:")}
             </div>
 
             {/* The question every new user actually has, answered before they
@@ -15253,7 +15247,7 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
                         </div>
                         <div style={{ color: canBrowseCatalog ? C.muted : C.faint }}>
                           {canBrowseCatalog
-                            ? `● ${t("Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.")}`
+                            ? `● ${t("Netflix / Disney+ / Hulu libraries are provided by this server — no key needed on this device.")}`
                             : `○ ${t("Not configured on this server — public-domain films via \"free movies …\" still play in-desk.")}`}
                           {" "}{lockChip("tmdb")}
                         </div>

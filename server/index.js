@@ -48,6 +48,7 @@ import {
 } from "../src/brokers/robinhood.js";
 import { makeEd25519Signer } from "../src/brokers/robinhood-sign.js";
 import { LIVE_CHANNEL_IDS, inLiveWindow, pickLive } from "../src/video/live.js";
+import { isMarketVideo, marketQuery } from "../src/video/market.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 8787);
@@ -1037,6 +1038,11 @@ async function ytDetails(ids) {
   for (const it of data.items || []) {
     out[it.id] = {
       description: it.snippet?.description || "",
+      // Category and tags are what isMarketVideo() reads besides the title:
+      // the category to veto Music and Gaming outright, the tags as a little
+      // extra evidence. Both arrive in the snippet this call already pays for.
+      categoryId: it.snippet?.categoryId || null,
+      tags: Array.isArray(it.snippet?.tags) ? it.snippet.tags.slice(0, 30) : [],
       publishedAt: it.snippet?.publishedAt || null,
       duration: it.contentDetails?.duration || null,
       views: Number(it.statistics?.viewCount) || null,
@@ -1106,6 +1112,10 @@ async function ytSearchCall(params) {
     channel: it.snippet?.channelTitle || "YouTube",
     channelId: it.snippet?.channelId || null,
     url: `https://www.youtube.com/watch?v=${it.id.videoId}`,
+    // search.list's own description is cut to a sentence or two, and the full
+    // one from ytDetails replaces it below. It is kept anyway: if that lookup
+    // fails, this is the only lead isMarketVideo() has besides the title.
+    description: decode(it.snippet?.description) || "",
   }));
   // Enrichment is best-effort by design: ytDetails swallows its own errors and
   // returns {}, so a lookup that fails costs the caller a chapter strip, not
@@ -1499,7 +1509,7 @@ const routeRequest = async (req, res) => {
     }
 
     // ---- TMDB (server-held key) ----
-    // Three fixed endpoints rather than a pass-through path parameter: an
+    // Fixed endpoints rather than a pass-through path parameter: an
     // arbitrary-path proxy is an SSRF hole and a way to spend the key on
     // whatever the caller fancies. Every input is validated before it is used.
     if (p.startsWith("/api/tmdb/") && req.method === "GET") {
@@ -1520,10 +1530,6 @@ const routeRequest = async (req, res) => {
         upstream = `${base}/discover/${kind}?${key}&with_watch_providers=${provider}&watch_region=${region}&sort_by=popularity.desc`;
       } else if (p === "/api/tmdb/trending") {
         upstream = `${base}/trending/${kind}/week?${key}`;
-      } else if (p === "/api/tmdb/videos") {
-        const id = url.searchParams.get("id");
-        if (!num(id)) return send(res, 400, { error: "id must be a TMDB id." });
-        upstream = `${base}/${kind}/${id}/videos?${key}`;
       } else if (p === "/api/tmdb/genres") {
         // discover and trending return genre_IDS. The names live here, in a
         // list that changes about once a decade — so it is answered from
@@ -1743,8 +1749,13 @@ const routeRequest = async (req, res) => {
 
     if (p === "/api/youtube/search" && req.method === "GET") {
       if (!YOUTUBE_KEY) return send(res, 503, { error: "Video search is not configured on this server (set YOUTUBE_API_KEY)." });
-      const q = String(url.searchParams.get("q") || "").trim().slice(0, 120);
-      if (!q) return send(res, 400, { error: "Pass ?q=search+terms." });
+      const asked = String(url.searchParams.get("q") || "").trim().slice(0, 120);
+      if (!asked) return send(res, 400, { error: "Pass ?q=search+terms." });
+      // This is a stock-market video search, not a YouTube search. The query
+      // is said in market terms before it goes out ("cats" goes as "cats
+      // stock market"), and every result is checked on the way back — see
+      // src/video/market.js for both, and for what used to get through.
+      const q = marketQuery(asked);
       const max = Math.min(10, Math.max(1, Number(url.searchParams.get("max")) || 3));
       const key = `yt:${q}:${max}`;
 
@@ -1768,8 +1779,18 @@ const routeRequest = async (req, res) => {
       // everywhere, and this app's busiest search is a template — `${symbol}
       // stock` — so the distinct-query count is about the size of a watchlist,
       // not the number of requests.
+      //
+      // It asks for more than it returns, because the check can only remove.
+      // A search costs 100 units whether it brings back 3 results or 25, and
+      // the details lookup is one unit for up to 50 — so the extra candidates
+      // are free, and they are what keeps VIDEO COVERAGE full after the
+      // off-topic ones are gone.
       let videos;
-      try { videos = await cached(key, TTL.ytSearch, () => ytSearchCall({ maxResults: String(max), q })); }
+      try {
+        videos = await cached(key, TTL.ytSearch, async () =>
+          (await ytSearchCall({ maxResults: String(Math.min(25, Math.max(10, max * 3))), q }))
+            .filter(isMarketVideo).slice(0, max));
+      }
       catch (e) { return send(res, e.code || 502, { error: e.msg || "YouTube search failed." }); }
       return send(res, 200, { q, videos });
     }
@@ -1804,11 +1825,13 @@ const routeRequest = async (req, res) => {
           // candidate pool, which makes the allowlist's job smaller. 25 is the
           // widest net one call buys, and it costs the same as 5.
           const found = await ytSearchCall({ eventType: "live", order: "viewCount", maxResults: "25", q: YT_LIVE_QUERY });
-          // Allowlist, then liveness, then viewers — see pickLive(). The second
-          // filter matters as much as the first: ytDetails resolved each hit
-          // against videos.list, so `live` is the broadcast's own status rather
-          // than what search claimed, and search keeps listing a stream for a
-          // while after it ends.
+          // Allowlist, then topic, then liveness, then viewers — see pickLive().
+          // The topic check is there because a trusted publisher still streams
+          // things that are not markets. The liveness filter matters as much
+          // as the allowlist: ytDetails resolved each hit against videos.list,
+          // so `live` is the broadcast's own status rather than what search
+          // claimed, and search keeps listing a stream for a while after it
+          // ends.
           return pickLive(found, YT_LIVE_CHANNELS);
         });
       } catch (e) {

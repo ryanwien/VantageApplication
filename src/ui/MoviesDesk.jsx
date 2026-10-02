@@ -124,7 +124,7 @@ function TitleCard({ item, rank, index, open, onOpen, archive }) {
 }
 
 // ---------- the summary, once a title is open ----------
-function Summary({ item, heading, rank, speaking, details, onTrailer, onWatchOn, serviceName, onStop }) {
+function Summary({ item, heading, rank, speaking, details, onWatchOn, serviceName, onStop }) {
   const rating = ratingText(item.rating);
   // The runtime only exists once the details call lands; until then the line
   // is year · genre and grows a middle when there is one to grow.
@@ -177,7 +177,9 @@ function Summary({ item, heading, rank, speaking, details, onTrailer, onWatchOn,
           {onWatchOn && serviceName && (
             <button onClick={onWatchOn} className="v-outline" style={outlineBtn}>Watch on {serviceName} &#8599;</button>
           )}
-          {onTrailer && <button onClick={onTrailer} className="v-outline" style={outlineBtn}>Play trailer</button>}
+          {/* No "Play trailer". Trailers are YouTube videos, and the only
+              YouTube this product plays is market coverage — see
+              src/video/market.js. */}
         </span>
       </div>
     </div>
@@ -193,7 +195,6 @@ export default function MoviesDesk({
   onOpen,             // (item, index) => void
   onStopRead,
   onKind,             // (kind) => void
-  onTrailer,
   onWatchOn,
   onAskPick,          // "Ask the desk to pick one"
   onClose,
@@ -290,7 +291,6 @@ export default function MoviesDesk({
           {pick && !archive && (
             <Summary key={pick.archiveId || pick.id} item={pick} heading={name.toUpperCase()} rank={pickIndex >= 0 ? pickIndex + 1 : null}
               speaking={speaking} details={pickDetails} serviceName={catalog.service?.name}
-              onTrailer={onTrailer ? () => onTrailer(pick) : null}
               onWatchOn={onWatchOn && catalog.service ? () => onWatchOn(pick) : null}
               onStop={onStopRead} />
           )}

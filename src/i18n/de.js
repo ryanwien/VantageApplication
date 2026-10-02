@@ -73,7 +73,7 @@ export default {
   "Live quotes are not configured on this server.": "Live-Kurse sind auf diesem Server nicht eingerichtet.",
   "Real, embeddable video results are provided by this server — no key needed on this device.": "Echte, einbettbare Videoergebnisse liefert dieser Server — kein Schlüssel auf diesem Gerät nötig.",
   "Not configured on this server — \"show videos of …\" asks the AI to guess instead.": "Auf diesem Server nicht eingerichtet — „zeig Videos von …“ lässt stattdessen die KI raten.",
-  "Netflix / Disney+ / Hulu libraries and trailers are provided by this server — no key needed on this device.": "Netflix- / Disney+- / Hulu-Kataloge und Trailer liefert dieser Server — kein Schlüssel auf diesem Gerät nötig.",
+  "Netflix / Disney+ / Hulu libraries are provided by this server — no key needed on this device.": "Netflix- / Disney+- / Hulu-Kataloge liefert dieser Server — kein Schlüssel auf diesem Gerät nötig.",
   "Not configured on this server — public-domain films via \"free movies …\" still play in-desk.": "Auf diesem Server nicht eingerichtet — gemeinfreie Filme über „free movies …“ laufen weiter im Desk.",
   "Studio voice is provided by this server — no key needed on this device.": "Die Studio-Stimme liefert dieser Server — kein Schlüssel auf diesem Gerät nötig.",
   "Studio voice is not configured on this server.": "Die Studio-Stimme ist auf diesem Server nicht eingerichtet.",
@@ -109,7 +109,7 @@ export default {
   "Add events to your calendar and I'll announce them on air when they're due.": "Trag Termine in deinen Kalender ein und ich melde sie auf Sendung, wenn sie fällig sind.",
   "The AI desk": "Das KI-Pult",
   "Answers, news & Watch": "Antworten, Nachrichten & Ansehen",
-  "Answers, news, and the streaming catalog land here. Trailers play right inside.": "Antworten, Nachrichten und der Streaming-Katalog landen hier. Trailer laufen direkt hier.",
+  "Answers, news, and the streaming catalog land here.": "Antworten, Nachrichten und der Streaming-Katalog landen hier.",
   "Answers, news, and the streaming catalog all appear here, in one place.": "Antworten, Nachrichten und der Streaming-Katalog erscheinen alle hier, an einem Ort.",
   "Ticker tape": "Kursband",
   "Why setup? (mostly optional)": "Warum einrichten? (meist optional)",
@@ -376,7 +376,7 @@ export default {
   "Bulls against Bears — checkmate, or win on the clock.": "Bullen gegen Bären — Schachmatt, oder Sieg auf Zeit.",
   "Watch me demo it": "Demo ansehen",
   
-  "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even plays trailers. Pick how you'd like to learn it:": "Dein KI-Marktdesk — ein animierter Moderator, der Charts zeichnet, laut antwortet, die Nachrichten liest und sogar Trailer abspielt. Wähle, wie du es lernen willst:",
+  "Your AI market desk — an animated anchor that charts stocks, answers out loud, reads the news, even puts live market TV on air. Pick how you'd like to learn it:": "Dein KI-Marktdesk — ein animierter Moderator, der Charts zeichnet, laut antwortet, die Nachrichten liest und sogar Live-Börsen-TV auf Sendung bringt. Wähle, wie du es lernen willst:",
   "games": "Spiele",
   // --- settings: the plain-language sidebar ---
   "write analyst report": "Analystenbericht schreiben",

@@ -70,7 +70,20 @@ describe("live rail: when it is worth spending a search", () => {
 });
 
 describe("live rail: what survives to the screen", () => {
-  const vid = (o) => ({ id: "x", channelId: "UCEAZeUIeJs0IjQiqTCdVSIg", live: true, viewers: 1, ...o });
+  const vid = (o) => ({ id: "x", channelId: "UCEAZeUIeJs0IjQiqTCdVSIg", live: true, viewers: 1,
+    title: "Yahoo Finance 24/7 Stream: Daily Market Coverage & more", ...o });
+
+  it("drops a trusted publisher's broadcast that is not about markets", () => {
+    // The allowlist says who may be on the rail, not what they are airing.
+    // Reuters is on it, and most of what Reuters streams is not markets.
+    const reuters = "UChqUTb7kYRX8-EiaN3XFrSQ";
+    const out = pickLive([
+      vid({ id: "funeral", channelId: reuters, viewers: 90000, title: "LIVE: State funeral procession",
+        description: "Reuters live coverage of the funeral procession." }),
+      vid({ id: "fed", channelId: reuters, viewers: 500, title: "LIVE: Fed chair speaks after rate decision" }),
+    ]);
+    expect(out.map(v => v.id)).toEqual(["fed"]);
+  });
 
   it("keeps only allowlisted publishers", () => {
     // The scam row is the reason this module exists, so it is in the fixture

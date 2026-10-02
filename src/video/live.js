@@ -30,6 +30,8 @@
 //  puts a stranger's livestream inside a finance product.
 // ============================================================
 
+import { isMarketVideo } from "./market.js";
+
 // id → the name it resolved to, kept beside it so a future reader can re-verify
 // a row without re-deriving what it was supposed to be.
 //
@@ -80,11 +82,15 @@ export function inLiveWindow({ day, mins } = {}) {
 
 // ---- what survives to the rail ----
 //
-// Two filters, and they are not the same test. The allowlist answers "should
-// this be on screen at all". `live` answers "is it actually on right now" —
-// and that one comes from videos.list, not from search, because search keeps
-// listing a broadcast for a while after it ends. Trusting search here is how a
-// rail ends up showing a dead stream captioned LIVE.
+// Three filters, and they are not the same test. The allowlist answers "is
+// this a publisher we trust". isMarketVideo answers "is THIS broadcast about
+// stocks" — which the allowlist cannot, because a publisher is not its
+// programming: Reuters streams war and state funerals far more often than
+// markets, and Fox Business runs political speeches end to end. `live`
+// answers "is it actually on right now" — and that one comes from
+// videos.list, not from search, because search keeps listing a broadcast for
+// a while after it ends. Trusting search here is how a rail ends up showing a
+// dead stream captioned LIVE.
 //
 // Sorted by concurrent viewers, which is the only ranking that means anything
 // for something nobody has finished watching. A stream that hides its viewer
@@ -94,6 +100,7 @@ export function pickLive(videos, allowed = LIVE_CHANNEL_IDS) {
   const ok = new Set(allowed);
   return (Array.isArray(videos) ? videos : [])
     .filter(v => v && v.channelId && ok.has(v.channelId))
+    .filter(isMarketVideo)
     .filter(v => v.live === true)
     .sort((a, b) => (b.viewers || 0) - (a.viewers || 0));
 }

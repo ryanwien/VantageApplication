@@ -8,7 +8,7 @@
 
 A browser market dashboard fronted by an animated AI "broadcast desk." A single-page React app
 where an animated news anchor charts stocks, answers questions out loud, reads the news, plays
-trailers, hosts games, tracks a portfolio, and rings the opening bell on a real trading-day clock.
+live market TV, hosts games, tracks a portfolio, and rings the opening bell on a real trading-day clock.
 
 The dashboard runs **fully in the browser with zero setup**. Everything below (live data, AI answers,
 studio voice, accounts, subscriptions) is **optional** and layers on top.
@@ -80,7 +80,7 @@ API, never to us. Enter them in **settings** (⚙, top-right).
 |-----|---------|-------|---------------------|
 | OpenRouter / Claude / OpenAI / Gemini / Ollama / LM Studio | AI desk answers | settings → AI | [openrouter.ai/keys](https://openrouter.ai/keys) · [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
 | Finnhub | Live quotes + earnings calendar | settings → DATA | [finnhub.io/dashboard](https://finnhub.io/dashboard) |
-| TMDB | Streaming catalog + trailers | settings → START/DATA | [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api) |
+| TMDB | Streaming catalog | settings → START/DATA | [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api) |
 | YouTube | Real embeddable video results | settings → DATA | [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) |
 | ElevenLabs | Studio-grade anchor voice | settings → VOICE | [elevenlabs.io/app/settings/api-keys](https://elevenlabs.io/app/settings/api-keys) |
 
