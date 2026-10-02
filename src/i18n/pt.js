@@ -387,6 +387,7 @@ export default {
   "No quote for {sym} right now.": "Sem cotação para {sym} neste momento.",
   "The live feed is busy — slowing down and trying again.": "O feed em direto está sobrecarregado — a abrandar e a tentar de novo.",
   "The live feed is having trouble. Prices will catch up on the next update.": "O feed em direto está com problemas. Os preços atualizam-se na próxima ronda.",
+  "Can't reach the live feed right now. Prices will catch up when it's back.": "Não é possível ligar ao feed em direto neste momento. Os preços atualizam-se quando ele voltar.",
   "The live feed is rate-limiting us — {sym} will catch up on the next update.": "O feed em direto está a limitar-nos — {sym} atualiza na próxima ronda.",
   "The live feed rejected this server's key.": "O feed em direto rejeitou a chave deste servidor.",
   "The live feed turned down that request.": "O feed em direto recusou esse pedido.",

@@ -388,6 +388,7 @@ export default {
   "No quote for {sym} right now.": "Gerade kein Kurs für {sym}.",
   "The live feed is busy — slowing down and trying again.": "Der Live-Feed ist ausgelastet — wir drosseln und versuchen es erneut.",
   "The live feed is having trouble. Prices will catch up on the next update.": "Der Live-Feed hat gerade Probleme. Die Kurse holen beim nächsten Update auf.",
+  "Can't reach the live feed right now. Prices will catch up when it's back.": "Der Live-Feed ist gerade nicht erreichbar. Die Kurse holen auf, sobald er wieder da ist.",
   "The live feed is rate-limiting us — {sym} will catch up on the next update.": "Der Live-Feed drosselt uns — {sym} holt beim nächsten Update auf.",
   "The live feed rejected this server's key.": "Der Live-Feed hat den Schlüssel dieses Servers abgelehnt.",
   "The live feed turned down that request.": "Der Live-Feed hat diese Anfrage abgelehnt.",

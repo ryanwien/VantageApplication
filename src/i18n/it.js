@@ -387,6 +387,7 @@ export default {
   "No quote for {sym} right now.": "Nessuna quotazione per {sym} in questo momento.",
   "The live feed is busy — slowing down and trying again.": "Il feed in diretta è sovraccarico — rallento e riprovo.",
   "The live feed is having trouble. Prices will catch up on the next update.": "Il feed in diretta ha problemi. I prezzi si aggiorneranno al prossimo giro.",
+  "Can't reach the live feed right now. Prices will catch up when it's back.": "Il feed in diretta non è raggiungibile adesso. I prezzi si aggiorneranno appena torna.",
   "The live feed is rate-limiting us — {sym} will catch up on the next update.": "Il feed in diretta ci sta limitando — {sym} si aggiornerà al prossimo giro.",
   "The live feed rejected this server's key.": "Il feed in diretta ha rifiutato la chiave di questo server.",
   "The live feed turned down that request.": "Il feed in diretta ha rifiutato quella richiesta.",

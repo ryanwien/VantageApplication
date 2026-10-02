@@ -434,6 +434,14 @@ async function serverError(r, label) {
 const humanizeError = (input) => {
   let s = String(input?.message ?? input ?? "").trim();
   if (!s) return "something went wrong — try again";
+  // The browser's own words for "this request never got an answer". Each
+  // engine has its own — Chrome "Failed to fetch", Firefox "NetworkError when
+  // attempting to fetch resource.", Safari "Load failed" — and none of them is
+  // a sentence to show anybody. They have no HTTP code, so the line below used
+  // to wave them through as "already human".
+  if (/^(failed to fetch|networkerror when attempting to fetch resource\.?|load failed|network request failed)$/i.test(s)) {
+    return "couldn't reach the server — check your connection and try again";
+  }
   const m = s.match(/HTTP\s+(\d{3})/i);
   if (!m) return s; // already human (e.g. "model not found — run: ollama pull …")
   const code = Number(m[1]);
@@ -6890,7 +6898,16 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
     // hits for one refresh and drained the per-IP quota in minutes.
     let r;
     try { r = await fetch(`/api/quote?symbols=${syms.map(encodeURIComponent).join(",")}`); }
-    catch (e) { setLiveErr({ text: humanizeError(e), soft: false }); return false; }
+    catch {
+      // The backend did not answer at all — offline, restarting, or not
+      // running. src/api/client.js treats that as a normal state for this app,
+      // and every branch below that DID get an answer, even a 500, is the soft
+      // amber kind. This was the only red banner the live feed could raise, and
+      // it printed the browser's own words: "Failed to fetch". Same treatment
+      // as a 500 now — say what happened, and let the next poll catch up.
+      setLiveErr({ text: t("Can't reach the live feed right now. Prices will catch up when it's back."), soft: true });
+      return false;
+    }
     if (r.status === 429) { setLiveErr({ text: t("The live feed is busy — slowing down and trying again."), soft: true }); return true; }
     if (!r.ok) {
       // A status number tells the reader nothing they can act on. Say what

@@ -388,6 +388,7 @@ export default {
   "No quote for {sym} right now.": "Pas de cours pour {sym} en ce moment.",
   "The live feed is busy — slowing down and trying again.": "Le flux en direct est saturé — on ralentit et on réessaie.",
   "The live feed is having trouble. Prices will catch up on the next update.": "Le flux en direct a un problème. Les cours se remettront à jour au prochain rafraîchissement.",
+  "Can't reach the live feed right now. Prices will catch up when it's back.": "Le flux en direct est injoignable pour le moment. Les cours se remettront à jour dès son retour.",
   "The live feed is rate-limiting us — {sym} will catch up on the next update.": "Le flux en direct nous limite — {sym} se remettra à jour au prochain rafraîchissement.",
   "The live feed rejected this server's key.": "Le flux en direct a refusé la clé de ce serveur.",
   "The live feed turned down that request.": "Le flux en direct a refusé cette requête.",
