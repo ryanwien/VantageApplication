@@ -7,6 +7,8 @@
     "dev": "vite",
     "dev:all": "node scripts/dev-all.mjs",
     "server": "node --env-file=.env server/index.js",
+    "server:beta": "node --env-file=.env --env-file=.env.beta server/index.js",
+    "beta": "node scripts/beta.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",

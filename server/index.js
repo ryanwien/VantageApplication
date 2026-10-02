@@ -103,6 +103,21 @@ const ANON_TTS_PER_HOUR = Number(process.env.ANON_TTS_PER_HOUR || 30);   // spee
 // X-Forwarded-For is caller-controlled unless something we run sets it, and a
 // spoofable IP makes a per-IP limit decorative. Only honoured when declared.
 const TRUST_PROXY = process.env.TRUST_PROXY === "1";
+
+// ---- the beta invite list ----
+// Comma-separated emails. When set, only these addresses can CREATE an account
+// — by email or through Google/Yahoo sign-in. Accounts that already exist log
+// in as before, so turning this on locks nobody out.
+//
+// It exists because a beta goes out as a link in an email, and a link travels.
+// The testers signed NDAs; whoever they forward it to did not, and every
+// account on this server spends its keys. Unset, sign-up is open, as it always
+// was on a machine nobody else can reach.
+const BETA_INVITES = new Set(String(process.env.BETA_INVITES || "")
+  .split(",").map(s => s.trim().toLowerCase()).filter(Boolean));
+const invited = (email) => BETA_INVITES.size === 0 || BETA_INVITES.has(String(email || "").toLowerCase());
+const NOT_INVITED = "This beta is invite-only, and that email isn't on the list. Sign up with the address your invite was sent to.";
+
 // The token is OPTIONAL: the local quickstart runs with metadata-service auth disabled and
 // accepts unauthenticated queries. A deployed DataHub will require the token. So "configured"
 // means we know where GMS is; the Authorization header is attached only when a token exists.
@@ -1125,8 +1140,14 @@ async function ytSearchCall(params) {
   return videos;
 }
 
+// Behind a declared proxy, Cloudflare's own header comes first. Cloudflare sets
+// CF-Connecting-IP itself and overwrites whatever a caller sends, whereas it
+// APPENDS to X-Forwarded-For — so the first X-Forwarded-For entry is whatever
+// the caller typed. Without a trusted proxy every request through a tunnel
+// arrives from 127.0.0.1, and all testers share one set of per-IP allowances.
 const clientIp = (req) =>
-  (TRUST_PROXY ? String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() : "") ||
+  (TRUST_PROXY ? String(req.headers["cf-connecting-ip"] || "").trim()
+    || String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() : "") ||
   req.socket?.remoteAddress || "unknown";
 
 // ---- request router ----
@@ -1185,6 +1206,7 @@ const routeRequest = async (req, res) => {
       const { email, name, password, plan, legalVersion } = await readBody(req);
       const em = String(email || "").trim().toLowerCase();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return send(res, 400, { error: "Enter a valid email." });
+      if (!invited(em)) return send(res, 403, { error: NOT_INVITED });
       if (String(password || "").length < 6) return send(res, 400, { error: "Password must be at least 6 characters." });
       if (USERS[em]) return send(res, 409, { error: "An account with that email already exists — log in instead." });
       const { salt, hash } = hashPw(password);
@@ -2253,6 +2275,9 @@ const routeRequest = async (req, res) => {
       const { email, name } = await socialProfile(prov, code);
       let rec = USERS[email];
       if (!rec) { // first time via this provider → create a passwordless account
+        // The same invite list as email sign-up. Without it, "Sign in with
+        // Google" would be a way around the list for anyone with a Google account.
+        if (!invited(email)) return send(res, 403, NOT_INVITED);
         rec = USERS[email] = { email, name, plan: "free", provider: prov, agreedAt: Date.now(), legalVersion: null, createdAt: Date.now() };
         writeJSON(USERS_FILE, USERS);
       }

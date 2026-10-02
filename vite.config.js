@@ -43,4 +43,15 @@ export default defineConfig({
       '/api': { target: 'http://localhost:8787', changeOrigin: true },
     },
   },
+  // What a beta tester's link points at, through a Cloudflare tunnel. The
+  // PREVIEW server, never the dev server: dev serves every file under the
+  // project root — server/users.json, password hashes and all — to anyone who
+  // asks for it by path, while preview serves only the built site in dist/.
+  // It inherits host and the /api proxy from `server` above; the one addition
+  // is the tunnel's hostnames, which Vite otherwise refuses to answer.
+  preview: {
+    port: 4173,
+    strictPort: true,
+    allowedHosts: ['.trycloudflare.com'],
+  },
 });
