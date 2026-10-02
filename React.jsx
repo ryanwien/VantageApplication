@@ -11602,6 +11602,39 @@ function MarketDashboard({ account, onSignOut, onChangePlan, billingCfg, billing
       return; // desk-handled
     }
 
+    // News for a NAMED symbol: "load TSLA news", "TSLA news", "news for Apple",
+    // "show me the latest NVDA headlines". These went to the model, so you had
+    // to change symbol first and ask for news second.
+    //
+    // Now the desk moves to the symbol and the news follows it — the follow
+    // effect loads the wire on any symbol change. Turning the panel on first
+    // also lifts a close you made earlier this session, because naming a
+    // symbol and asking for its news is asking to see it.
+    //
+    // The word before "news" is checked against a short stop list, because the
+    // pattern alone would read "load the news" as a ticker called THE and
+    // "breaking news" as BREAKING. Anything else is handed to resolveTyped,
+    // which turns company names into tickers and refuses words that are not
+    // symbols — so "load fake news" ends in "couldn't find", not in a chart.
+    {
+      const verb = String.raw`(?:please\s+)?(?:(?:load|show|get|open|pull\s+up|bring\s+up|fetch|refresh|give)\s+(?:me\s+)?)?(?:the\s+)?(?:latest\s+)?`;
+      const named = new RegExp(String.raw`^\s*${verb}\$?([A-Za-z][A-Za-z.]{0,14})(?:'s)?\s+(?:news|headlines)(?:\s+please)?\s*[.!?]*\s*$`, "i").exec(q)
+        || new RegExp(String.raw`^\s*${verb}(?:news|headlines)\s+(?:for|on|about)\s+\$?([A-Za-z][A-Za-z.]{0,14})\s*[.!?]*\s*$`, "i").exec(q);
+      const NOT_A_SYMBOL = /^(the|latest|me|my|some|any|more|all|today|todays|top|big|breaking|market|markets|stock|stocks|good|bad|fake|real|recent|new|old|local|world|business|financial|economic|tech|general|daily|morning|evening|nightly)$/i;
+      if (named && !NOT_A_SYMBOL.test(named[1])) {
+        const asked = named[1];
+        (async () => {
+          const sym = await resolveTyped(asked);
+          if (!sym) { deskReply(`I couldn't find a symbol called “${asked}”.`); return; }
+          setPanels(p => (p.news ? p : { ...p, news: true }));
+          if (sym === selected) fetchNews();
+          else chartQuery(sym);
+          deskReply(`Pulling the ${sym} wire — headlines and video are coming onto the desk.`);
+        })();
+        return; // desk-handled
+      }
+    }
+
     // price-alert intent: "alert me when NVDA hits 150", "notify me if TSLA drops below 200"
     const alertReq = parseAlertIntent(q);
     if (alertReq) { addPriceAlert(alertReq); return; }
